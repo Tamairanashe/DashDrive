@@ -20,4 +20,24 @@ function requireAdmin(req, res, next) {
     }
 }
 
-module.exports = { requireAdmin };
+function requireSuperAdmin(req, res, next) {
+    try {
+        const role = req.headers["x-user-role"];
+
+        if (role !== "super_admin") {
+            return res.status(403).json({
+                success: false,
+                message: "SuperAdmin access required",
+            });
+        }
+
+        next();
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "RBAC middleware error",
+        });
+    }
+}
+
+module.exports = { requireAdmin, requireSuperAdmin };

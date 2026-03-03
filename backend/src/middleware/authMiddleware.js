@@ -1,16 +1,12 @@
-const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'dashdrive_enterprise_secret';
-
 /**
- * Middleware to verify Merchant JWT tokens.
+ * Generic Authentication Middleware (Works for Merchant & Mobile)
  */
-const authenticateMerchant = (req, res, next) => {
+const authenticate = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader);
 
     if (!token) {
-        return res.status(401).json({ error: 'Access Denied: No Token Provided' });
+        return res.status(401).json({ success: false, error: 'Access Denied: No Token Provided' });
     }
 
     try {
@@ -18,8 +14,18 @@ const authenticateMerchant = (req, res, next) => {
         req.user = verified;
         next();
     } catch (err) {
-        res.status(400).json({ error: 'Invalid Token' });
+        res.status(401).json({ success: false, error: 'Invalid or Expired Token' });
     }
+};
+
+/**
+ * Pilot-only Access Control
+ */
+const requirePilot = (req, res, next) => {
+    if (!req.user || !req.user.is_pilot) {
+        return res.status(403).json({ success: false, error: 'Forbidden: Pilot access required' });
+    }
+    next();
 };
 
 /**
@@ -28,10 +34,10 @@ const authenticateMerchant = (req, res, next) => {
 const authorizeRole = (requiredRoles) => {
     return (req, res, next) => {
         if (!req.user || !requiredRoles.includes(req.user.role)) {
-            return res.status(403).json({ error: 'Forbidden: Insufficient Permissions' });
+            return res.status(403).json({ success: false, error: 'Forbidden: Insufficient Permissions' });
         }
         next();
     };
 };
 
-module.exports = { authenticateMerchant, authorizeRole };
+module.exports = { authenticate, authenticateMerchant: authenticate, authorizeRole, requirePilot };

@@ -4,6 +4,78 @@ const marketingService = require("../../services/admin/marketing.service");
  * Uber-Style Marketing & Offers Controller
  */
 
+// --- Campaigns ---
+
+exports.listCampaigns = async (req, res) => {
+    try {
+        const organizationId = req.headers["x-organization-id"];
+        const { store_id, status } = req.query;
+
+        const campaigns = await marketingService.getCampaigns(organizationId, {
+            storeId: store_id,
+            status
+        });
+
+        return res.json({
+            success: true,
+            data: campaigns
+        });
+    } catch (error) {
+        console.error("List Campaigns Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch campaigns"
+        });
+    }
+};
+
+exports.createCampaign = async (req, res) => {
+    try {
+        const organizationId = req.headers["x-organization-id"];
+        const campaignData = { ...req.body, organization_id: organizationId };
+
+        const campaign = await marketingService.createCampaign(campaignData);
+
+        return res.json({
+            success: true,
+            data: campaign,
+            message: "Campaign created successfully"
+        });
+    } catch (error) {
+        console.error("Create Campaign Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to create campaign"
+        });
+    }
+};
+
+// --- Ads ---
+
+exports.listAds = async (req, res) => {
+    try {
+        const organizationId = req.headers["x-organization-id"];
+        const { campaign_id } = req.query;
+
+        const ads = await marketingService.getAds(organizationId, {
+            campaignId: campaign_id
+        });
+
+        return res.json({
+            success: true,
+            data: ads
+        });
+    } catch (error) {
+        console.error("List Ads Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch ads"
+        });
+    }
+};
+
+// --- Offers ---
+
 exports.listOffers = async (req, res) => {
     try {
         const organizationId = req.headers["x-organization-id"];

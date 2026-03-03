@@ -1,9 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = require("../../config/supabase");
 
 /**
  * Uber-Style Customer & Feedback Service
@@ -60,6 +55,60 @@ exports.updateFeedbackStatus = async (feedbackId, status) => {
     if (error) throw error;
     return data;
 };
+
+// --- Customer Groups ---
+
+exports.getGroups = async (organizationId) => {
+    const { data, error } = await supabase
+        .from("customer_groups")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
+};
+
+exports.createGroup = async (groupData) => {
+    const { data, error } = await supabase
+        .from("customer_groups")
+        .insert([groupData])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+// --- Engagements ---
+
+exports.getEngagements = async (organizationId, { customerId }) => {
+    let query = supabase
+        .from("customer_engagements")
+        .select("*")
+        .eq("organization_id", organizationId);
+
+    if (customerId) {
+        query = query.eq("customer_id", customerId);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+};
+
+exports.createEngagement = async (engagementData) => {
+    const { data, error } = await supabase
+        .from("customer_engagements")
+        .insert([engagementData])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+// --- Insights & Analytics ---
 
 exports.getInsights = async (organizationId) => {
     // Aggregated insights

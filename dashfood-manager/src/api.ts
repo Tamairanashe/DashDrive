@@ -1,13 +1,8 @@
 const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000') + '/api';
 
-/**
- * Enterprise API Utility for DashDrive Merchant Portal.
- * Handles Bearer token injection and error handling.
- */
 export const fetchFromAdmin = async (endpoint: string, options: RequestInit = {}) => {
     let token = localStorage.getItem('merchant_token');
 
-    // Auto-login for development if no token exists
     if (!token && endpoint !== '/auth/login') {
         try {
             const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {

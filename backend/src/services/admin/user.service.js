@@ -1,9 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = require("../../config/supabase");
 
 /**
  * Uber-Style User & Team Management Service
@@ -14,7 +9,7 @@ exports.getTeamMembers = async (organizationId, storeId) => {
     let query = supabase
         .from("users")
         .select("*, roles(name)")
-        .eq("tenant_id", organizationId);
+        .eq("organization_id", organizationId);
 
     if (storeId) {
         query = query.eq("store_id", storeId);

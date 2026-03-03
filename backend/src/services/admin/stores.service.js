@@ -1,20 +1,17 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = require("../../config/supabase");
 
 /**
  * Uber-Style Store Management Service
  * Handles multi-location status, hours, and config.
  */
 exports.getAllStores = async (organizationId) => {
-    const { data, error } = await supabase
+    let query = supabase
         .from("stores")
-        .select("*, regions(name)")
-        .eq("organization_id", organizationId)
-        .order("name", { ascending: true });
+        .select("*, regions(name)");
+    query = query.eq("organization_id", organizationId);
+    query = query.order("name", { ascending: true });
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data;

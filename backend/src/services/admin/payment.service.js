@@ -1,9 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = require("../../config/supabase");
 
 /**
  * Uber-Style Payment & Financial Service
@@ -45,13 +40,65 @@ exports.getInvoices = async (organizationId, { storeId, limit = 50 }) => {
     return data;
 };
 
+// --- Bank Accounts ---
+
+exports.getBankAccounts = async (organizationId) => {
+    const { data, error } = await supabase
+        .from("bank_accounts")
+        .select("*")
+        .eq("organization_id", organizationId);
+
+    if (error) throw error;
+    return data;
+};
+
+exports.addBankAccount = async (bankData) => {
+    const { data, error } = await supabase
+        .from("bank_accounts")
+        .insert([bankData])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+// --- Tax Identities ---
+
+exports.getTaxIdentity = async (organizationId) => {
+    const { data, error } = await supabase
+        .from("tax_identities")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // Handle "No rows found"
+    return data;
+};
+
+exports.updateTaxIdentity = async (organizationId, taxData) => {
+    const { data, error } = await supabase
+        .from("tax_identities")
+        .upsert({
+            ...taxData,
+            organization_id: organizationId,
+            updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+// --- Summary & Analytics ---
+
 exports.getFinancialSummary = async (organizationId, { storeId }) => {
     // Current Period Accruals
     let query = supabase
         .from("merchant_invoices")
-        .select("net_amount, commission, tax, fees")
-        .eq("organization_id", organizationId)
-        .eq("status", "unpaid");
+        .select("net_amount, commission, tax, fees, status")
+        .eq("organization_id", organizationId);
 
     if (storeId) {
         query = query.eq("store_id", storeId);
@@ -61,7 +108,7 @@ exports.getFinancialSummary = async (organizationId, { storeId }) => {
     if (error) throw error;
 
     const summary = invoices.reduce((acc, inv) => {
-        acc.pending_balance += Number(inv.net_amount);
+        if (inv.status === 'unpaid') acc.pending_balance += Number(inv.net_amount);
         acc.total_commission += Number(inv.commission);
         acc.total_tax += Number(inv.tax);
         acc.total_fees += Number(inv.fees);

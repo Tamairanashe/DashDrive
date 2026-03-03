@@ -55,14 +55,40 @@ const seed = async () => {
                 .select().single();
             if (storeErr) throw storeErr;
             store = newStore;
+        } else {
+            // Ensure it's active
+            await supabase.from('stores').update({ is_active: true }).eq('id', store.id);
         }
         console.log("✅ Store Ready:", store.name);
 
-        // 4. Orders (Append only for now)
+        // 4. Roles
+        const { data: adminRole } = await supabase.from('roles').select('*').eq('name', 'super_admin').maybeSingle();
+        let roleId = adminRole?.id;
+        if (!adminRole) {
+            console.log("  Creating SuperAdmin Role...");
+            const { data: newRole } = await supabase.from('roles').insert({ name: 'super_admin', permissions: { all: true } }).select().single();
+            roleId = newRole.id;
+        }
+
+        // 5. Global SuperAdmin User
+        const adminEmail = 'platform@dashdrive.com';
+        let { data: adminUser } = await supabase.from('users').select('*').eq('email', adminEmail).maybeSingle();
+        if (!adminUser) {
+            console.log("  Creating Platform SuperAdmin...");
+            const { data: newUser } = await supabase.from('users').insert({
+                email: adminEmail,
+                full_name: 'Platform God',
+                role_id: roleId,
+                status: 'active'
+            }).select().single();
+            adminUser = newUser;
+        }
+
+        // 6. Orders (Unified Naming)
         const orders = [
             {
                 store_id: store.id,
-                tenant_id: org.id,
+                organization_id: org.id,
                 customer_name: 'Justin Chithu',
                 total_amount: 45.50,
                 status: 'completed',
@@ -70,34 +96,104 @@ const seed = async () => {
                 accepted_at: new Date(Date.now() - 3500000).toISOString(),
                 ready_at: new Date(Date.now() - 3000000).toISOString(),
                 completed_at: new Date(Date.now() - 2500000).toISOString()
-            },
-            {
-                store_id: store.id,
-                tenant_id: org.id,
-                customer_name: 'Alice Smith',
-                total_amount: 22.00,
-                status: 'in_progress',
-                created_at: new Date(Date.now() - 600000).toISOString()
-            },
-            {
-                store_id: store.id,
-                tenant_id: org.id,
-                customer_name: 'Bob Jones',
-                total_amount: 15.75,
-                status: 'new',
-                created_at: new Date().toISOString()
             }
         ];
 
         const { data: createdOrders, error: orderErr } = await supabase
             .from('orders')
-            .insert(orders)
+            .upsert(orders)
             .select();
 
         if (orderErr) throw orderErr;
-        console.log(`✅ ${createdOrders.length} Orders Created.`);
+        console.log(`✅ Orders Seeded.`);
 
-        console.log("🚀 Seeding Complete!");
+        // 7. Menu Structure
+        console.log("  Seeding Menus...");
+        let { data: category } = await supabase.from('menu_categories')
+            .select('*')
+            .eq('store_id', store.id)
+            .eq('name', 'Main Course')
+            .maybeSingle();
+
+        if (!category) {
+            console.log("  Creating Category...");
+            const { data: newCat, error: catErr } = await supabase.from('menu_categories')
+                .insert({ store_id: store.id, name: 'Main Course', is_active: true })
+                .select().single();
+            if (catErr) {
+                console.error("  ❌ Category Creation Error:", catErr.message, catErr.details);
+                throw catErr;
+            }
+            if (!newCat) {
+                console.error("  ❌ Category created but no data returned. Check RLS or triggers.");
+                throw new Error("Category creation returned null data");
+            }
+            category = newCat;
+        }
+
+        let { data: menuItem } = await supabase.from('menu_items')
+            .select('*')
+            .eq('category_id', category.id)
+            .eq('name', 'Signature Burger')
+            .maybeSingle();
+
+        if (!menuItem) {
+            console.log("  Creating MenuItem...");
+            const { data: newItem, error: itemErr } = await supabase.from('menu_items')
+                .insert({ category_id: category.id, name: 'Signature Burger', price: 15.00, is_active: true })
+                .select().single();
+            if (itemErr) {
+                console.error("  ❌ MenuItem Creation Error:", itemErr.message, itemErr.details);
+                throw itemErr;
+            }
+            if (!newItem) {
+                console.error("  ❌ MenuItem created but no data returned. Check RLS or triggers.");
+                throw new Error("MenuItem creation returned null data");
+            }
+            menuItem = newItem;
+        }
+
+        console.log("✅ Menus Seeded.");
+
+        // 8. Drivers (Mobile)
+        await supabase.from('drivers').upsert([
+            { external_id: 'PILOT-342', name: 'John Smith', status: 'online' }
+        ], { onConflict: 'external_id' });
+        console.log("✅ Drivers Seeded.");
+
+        // 5b. Pilot User
+        const pilotEmail = 'pilot@dashdrive.com';
+        let { data: pilotUser } = await supabase.from('users').select('*').eq('email', pilotEmail).maybeSingle();
+        if (!pilotUser) {
+            console.log("  Creating Pilot User...");
+            const { data: newUser, error: pilotErr } = await supabase.from('users').insert({
+                email: pilotEmail,
+                full_name: 'Test Pilot',
+                status: 'active'
+            }).select().single();
+            if (pilotErr) {
+                console.error("  ❌ Pilot User Creation Failed:", pilotErr.message);
+                throw pilotErr;
+            }
+            pilotUser = newUser;
+        }
+
+        // 5c. Driver Profile
+        const { data: driver, error: drvErr } = await supabase.from('drivers').upsert([
+            {
+                user_id: pilotUser.id,
+                external_id: 'PILOT-999',
+                name: 'Test Pilot',
+                status: 'online',
+                latitude: 51.5074,
+                longitude: -0.1278
+            }
+        ], { onConflict: 'user_id' }).select().single();
+        if (drvErr) {
+            console.error("  ❌ Driver Profile Creation Failed:", drvErr.message);
+            throw drvErr;
+        }
+        console.log("✅ Pilot & Driver Ready.");
         process.exit(0);
     } catch (err) {
         console.error("❌ Seeding Failed:", err.message);

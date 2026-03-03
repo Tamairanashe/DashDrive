@@ -1,15 +1,10 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = require("../../config/supabase");
 
 exports.getAdminOverview = async (organizationId, storeId = null) => {
     let query = supabase.from("orders").select("id, total_amount, accepted_at, ready_at");
 
     if (organizationId) {
-        query = query.eq("tenant_id", organizationId);
+        query = query.eq("organization_id", organizationId);
     }
     if (storeId) {
         query = query.eq("store_id", storeId);
@@ -48,7 +43,7 @@ exports.getKPIs = async (organizationId, storeId = null) => {
     let query = supabase.from("orders").select("status", { count: "exact" });
 
     if (organizationId) {
-        query = query.eq("tenant_id", organizationId);
+        query = query.eq("organization_id", organizationId);
     }
     if (storeId) {
         query = query.eq("store_id", storeId);

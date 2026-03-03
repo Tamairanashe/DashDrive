@@ -1,9 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = require("../../config/supabase");
 
 /**
  * Uber-Style Orders Admin Service
@@ -25,7 +20,7 @@ exports.getOrders = async ({
 
     // 1. Multi-tenant Scope
     if (organizationId) {
-        query = query.eq("tenant_id", organizationId);
+        query = query.eq("organization_id", organizationId);
     }
     if (storeId) {
         query = query.eq("store_id", storeId);

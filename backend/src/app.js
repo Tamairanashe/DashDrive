@@ -34,12 +34,16 @@ const webhookRoutes = require('./routes/webhookRoutes');
 const merchantRoutes = require('./routes/merchantRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require("./routes/admin.routes");
+const platformRoutes = require("./routes/platform.routes");
+const mobileRoutes = require("./routes/mobile.routes");
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/admin', adminRoutes); // Uber Manager Replica Layer
+app.use('/api/admin', adminRoutes); // Merchant-specific Admin Layer
+app.use('/api/platform', platformRoutes); // Global Platform SuperAdmin Layer
+app.use('/api/mobile', mobileRoutes); // Unified Rider & Pilot Mobile Layer
 app.use('/webhooks', webhookRoutes);
 
 // Health Check

@@ -1,84 +1,19 @@
 @import "tailwindcss";
 
-@layer theme {
-    :root {
-        --color-primary: #3C50E0;
-        --color-secondary: #131118;
-        --color-success: #10B981;
-        --color-danger: #FB5454;
-        --color-warning: #FFA70B;
-        --color-info: #3BA2B8;
-        --color-gray: #EFF4FB;
-        --color-black: #1C2434;
-        --color-white: #FFFFFF;
-        --color-stroke: #E2E8F0;
-        --color-strokedark: #2E3A47;
-        --color-boxdark: #24303F;
-        --color-boxdark-2: #1A222C;
-        --color-body: #64748B;
-        --color-bodydark: #8A99AF;
-        --color-bodydark1: #DEE4EE;
-        --color-bodydark2: #8A99AF;
-
-        /* TailAdmin Meta Colors */
-        --color-meta-1: #FB5454;
-        --color-meta-2: #EFF4FB;
-        --color-meta-3: #10B981;
-        --color-meta-4: #313D4A;
-        --color-meta-5: #259AE6;
-        --color-meta-6: #FFBA00;
-        --color-meta-7: #FF6766;
-        --color-meta-8: #F0950C;
-        --color-meta-9: #E5E7EB;
-
-        --radius-standard: 8px;
-        --radius-premium: 12px;
-    }
+:root {
+    --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 body {
-    margin: 0;
-    font-family: 'Satoshi', 'Inter', sans-serif;
-    background-color: #F1F5F9;
-    color: #64748B;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-@layer utilities {
-    .text-title-md2 {
-        @apply text-[26px] font-bold leading-[30px] text-black dark:text-white;
-    }
-
-    .text-title-sm {
-        @apply text-[18px] font-bold leading-[22px] text-black dark:text-white;
-    }
-
-    .shadow-default {
-        box-shadow: 0px 8px 13px -3px rgba(0, 0, 0, 0.07);
-    }
-
-    .card-premium {
-        background: #ffffff;
-        border-radius: var(--radius-standard);
-        border: 1px solid #E2E8F0;
-        box-shadow: 0px 8px 13px -3px rgba(0, 0, 0, 0.07);
-        transition: all 0.3s ease;
-    }
-
-    .card-premium:hover {
-        box-shadow: 0px 10px 20px -5px rgba(0, 0, 0, 0.1);
-    }
-
-    .sidebar-item-active {
-        background-color: #333A48;
-        color: #ffffff;
-    }
-
-    .bg-gray-2 {
-        background-color: #F7F9FC;
-    }
-
-    .dark .bg-gray-2 {
-        background-color: #313D4A;
-    }
+/* Custom styles for premium look */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
