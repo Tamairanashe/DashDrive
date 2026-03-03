@@ -1,17 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --color-primary: #00A884;
-  --color-bg-main: #F4F6F9;
-  --color-bg-sidebar: #F5F7FA;
+
+  /* Color Hijacking: Redirecting Slate to Zinc */
+  --color-slate-50: var(--color-zinc-50);
+  --color-slate-100: var(--color-zinc-100);
+  --color-slate-200: var(--color-zinc-200);
+  --color-slate-300: var(--color-zinc-300);
+  --color-slate-400: var(--color-zinc-400);
+  --color-slate-500: var(--color-zinc-500);
+  --color-slate-600: var(--color-zinc-600);
+  --color-slate-700: var(--color-zinc-700);
+  --color-slate-800: var(--color-zinc-800);
+  --color-slate-900: var(--color-zinc-900);
+  --color-slate-950: var(--color-zinc-950);
+
+  /* Primary Redirect */
+  --color-primary: var(--color-zinc-900);
+  --color-primary-foreground: var(--color-zinc-50);
+
+  --color-bg-main: var(--color-zinc-50);
+  --color-bg-sidebar: var(--color-white);
 }
 
 @layer base {
   body {
-    @apply font-sans bg-bg-main text-slate-900 antialiased;
+    @apply font-sans bg-bg-main text-zinc-900 antialiased;
   }
 }
 

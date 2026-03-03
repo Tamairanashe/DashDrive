@@ -27,4 +27,19 @@ export class RidersController {
     getAvailable(@Param('countryCode') countryCode: string) {
         return this.ridersService.getAvailableRiders(countryCode);
     }
+
+    @Patch(':id/location')
+    @ApiOperation({ summary: 'Update rider real-time GPS location' })
+    updateLocation(
+        @Param('id') id: string,
+        @Body() location: { latitude: number; longitude: number }
+    ) {
+        return this.ridersService.updateLocation(id, location);
+    }
+
+    @Get(':id')
+    @ApiOperation({ summary: 'Get rider profile and performance stats' })
+    findOne(@Param('id') id: string) {
+        return this.ridersService.findOne(id);
+    }
 }

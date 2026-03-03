@@ -143,4 +143,24 @@ export class AnalyticsService {
             count: c._count.id
         }));
     }
+
+    async getCountryPerformance(merchantId: string) {
+        const performance = await this.prisma.$queryRawUnsafe(`
+            SELECT 
+                c.name as "countryName",
+                c.code as "countryCode",
+                COUNT(o.id) as "totalOrders",
+                SUM(o."totalAmount") as "totalRevenue",
+                o.currency
+            FROM "Order" o
+            JOIN "Store" s ON o."storeId" = s.id
+            JOIN "Country" c ON s."currency" = c.currency -- Crude join, ideally store has countryId
+            WHERE o."merchantId" = '${merchantId}'
+            AND o."status" = 'DELIVERED'
+            GROUP BY c.name, c.code, o.currency
+            ORDER BY "totalRevenue" DESC
+        `);
+
+        return performance;
+    }
 }

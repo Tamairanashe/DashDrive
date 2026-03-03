@@ -5,12 +5,16 @@ import { generateOrderNumber } from '../../common/utils/order-number.util';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { OrderStatus } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+import { CommissionService } from '../commission/commission.service';
 
 @Injectable()
 export class OrdersService {
     constructor(
         private prisma: PrismaService,
         private ordersGateway: OrdersGateway,
+        private notificationsService: NotificationsService,
+        private commissionService: CommissionService,
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
     ) { }
 
@@ -82,6 +86,9 @@ export class OrdersService {
         // Notify merchant in real-time
         this.ordersGateway.emitNewOrder(storeId, order);
 
+        // Notify via multi-channel (Final Elite Module integration)
+        await this.notificationsService.notifyOrderConfirmed(order);
+
         return order;
     }
 
@@ -114,6 +121,9 @@ export class OrdersService {
         if (status === OrderStatus.DELIVERED) {
             await this.cacheManager.del(`analytics:snapshot:${merchantId}:all`);
             await this.cacheManager.del(`analytics:snapshot:${merchantId}:${order.storeId}`);
+
+            // Trigger Automated Settlement
+            await this.commissionService.processOrderSettlement(orderId);
         }
 
         // Notify merchant/customer of status update

@@ -268,23 +268,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div className={cn(
-      "fixed left-0 top-0 bottom-0 flex flex-col bg-white border-r border-slate-100 transition-all duration-500 ease-in-out z-50 shadow-2xl shadow-slate-200/50",
+      "fixed left-0 top-0 bottom-0 flex flex-col bg-white border-r border-zinc-100 transition-all duration-500 ease-in-out z-50 shadow-2xl shadow-zinc-200/50",
       isCollapsed ? "w-24" : "w-72"
     )}>
       {/* Sidebar Header */}
       <div className="p-8 pb-4 flex items-center justify-between">
         {!isCollapsed && (
           <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
-            <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/10">
-              <Rocket className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-lg shadow-zinc-900/10">
+              <Rocket className="w-5 h-5 text-zinc-50" />
             </div>
-            <span className="text-xl font-display font-black text-slate-900 tracking-tight">DashDrive</span>
+            <span className="text-xl font-sans font-black text-zinc-900 tracking-tight">DashDrive</span>
           </div>
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
-            "p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:text-slate-900 transition-all duration-300 border border-slate-100",
+            "p-2.5 rounded-xl bg-zinc-50 text-zinc-400 hover:text-zinc-900 transition-all duration-300 border border-zinc-100",
             isCollapsed && "mx-auto"
           )}
         >
@@ -297,7 +297,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {navGroups.map((group) => (
           <div key={group.group} className="space-y-4">
             {!isCollapsed && (
-              <h3 className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] ml-2 animate-in fade-in slide-in-from-bottom-2 duration-700">
+              <h3 className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.2em] ml-2 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 {group.group}
               </h3>
             )}
@@ -315,8 +315,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className={cn(
                       "w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative",
                       currentView === item.label
-                        ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20"
-                        : "text-slate-400 hover:text-slate-900 hover:bg-slate-50",
+                        ? "bg-zinc-900 text-white shadow-xl shadow-zinc-900/20"
+                        : "text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50",
                       isCollapsed && "justify-center"
                     )}
                   >
@@ -344,13 +344,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           className={cn(
                             "w-full text-left px-4 py-2 text-xs font-bold transition-all duration-300 rounded-xl relative",
                             currentView === subItem
-                              ? "text-primary"
-                              : "text-slate-400 hover:text-slate-900 hover:translate-x-1"
+                              ? "text-zinc-900"
+                              : "text-zinc-400 hover:text-zinc-900 hover:translate-x-1"
                           )}
                         >
                           <div className={cn(
                             "absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full transition-all duration-300 scale-0",
-                            currentView === subItem && "bg-primary scale-100"
+                            currentView === subItem && "bg-zinc-900 scale-100"
                           )} />
                           {subItem}
                         </button>
@@ -370,17 +370,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           "flex items-center gap-4",
           isCollapsed && "flex-col items-center"
         )}>
-          <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-black shadow-lg">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-white font-black shadow-lg">
             A
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-black text-slate-900 truncate">Alex J.</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Admin v2.4</p>
+              <p className="text-sm font-black text-zinc-900 truncate">Alex J.</p>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Admin v2.4</p>
             </div>
           )}
           {!isCollapsed && (
-            <button className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
+            <button className="p-2 text-zinc-300 hover:text-rose-500 transition-colors">
               <LogOut className="w-5 h-5" />
             </button>
           )}

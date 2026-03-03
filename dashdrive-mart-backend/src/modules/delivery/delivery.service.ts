@@ -1,10 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { DeliveryStatus, OrderStatus } from '@prisma/client';
+import { DeliveryStatus, OrderStatus, RiskEventType, RiskActorType, RiskDecision } from '@prisma/client';
+import { FraudService } from '../fraud/fraud.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { DispatchService } from '../dispatch/dispatch.service';
+import { RidersService } from '../riders/riders.service';
 
 @Injectable()
 export class DeliveryService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private notificationsService: NotificationsService,
+        private dispatchService: DispatchService,
+        private ridersService: RidersService,
+        private fraudService: FraudService,
+    ) { }
 
     async createDelivery(orderId: string) {
         return this.prisma.delivery.create({
@@ -38,24 +48,32 @@ export class DeliveryService {
             data: { status: OrderStatus.ASSIGNED_TO_RIDER }
         });
 
+        // Increment rider load for AI dispatch
+        await this.ridersService.incrementLoad(riderId);
+
+        // Notify via multi-channel
+        const deliveryWithOrder = await this.getDeliveryByOrder(orderId);
+        if (deliveryWithOrder?.rider && deliveryWithOrder.order) {
+            await this.notificationsService.notifyRiderAssigned(
+                orderId,
+                deliveryWithOrder.rider,
+                { phone: deliveryWithOrder.order.customerPhone }
+            );
+        }
+
         return updatedDelivery;
     }
 
-    async autoAssignRider(orderId: string, countryCode: string) {
-        const availableRiders = await this.prisma.rider.findMany({
-            where: {
-                isOnline: true,
-                isActive: true,
-                countryCode,
-            },
-            take: 1, // Simple nearest-neighbor proxy logic for MVP
-        });
-
-        if (!availableRiders.length) {
-            return null; // Handle "No riders available" gracefully for batching/retries
+    async autoAssignRider(orderId: string, countryCode?: string) {
+        // Use AI Dispatch Service to find the best rider
+        let bestRider;
+        try {
+            bestRider = await this.dispatchService.findBestRider(orderId);
+        } catch (error) {
+            return null; // Handle "No riders available" gracefully
         }
 
-        return this.assignRider(orderId, availableRiders[0].id);
+        return this.assignRider(orderId, bestRider.id);
     }
 
     async updateStatus(orderId: string, status: DeliveryStatus) {
@@ -79,6 +97,33 @@ export class DeliveryService {
                 where: { id: orderId },
                 data: { status: orderStatus }
             });
+        }
+
+        // Decrement rider load if delivered or cancelled
+        if (status === DeliveryStatus.DELIVERED) {
+            if (delivery.riderId) {
+                // Fraud check for delivery collusion
+                const risk = await this.fraudService.evaluate(
+                    RiskEventType.DELIVERY,
+                    delivery.riderId,
+                    RiskActorType.RIDER,
+                    delivery.orderId,
+                );
+
+                if (risk.decision === RiskDecision.BLOCKED) {
+                    // In a real scenario, we might still mark it delivered but hold the funds
+                    // For now, we'll flag it
+                    this.prisma.riskEvent.update({
+                        where: { id: risk.id },
+                        data: { reasons: { ...(risk.reasons as any), note: 'Critical risk on delivery' } }
+                    });
+                }
+                await this.ridersService.decrementLoad(delivery.riderId);
+            }
+        } else if (status === DeliveryStatus.CANCELLED) {
+            if (delivery.riderId) {
+                await this.ridersService.decrementLoad(delivery.riderId);
+            }
         }
 
         return delivery;

@@ -72,4 +72,11 @@ export class AnalyticsController {
     ) {
         return this.analyticsService.getOrderStatusBreakdown(req.user.sub, storeId);
     }
+
+    @Get('country-performance')
+    @ApiOperation({ summary: 'Get performance metrics by country' })
+    @ApiResponse({ status: 200, description: 'Return revenue and orders by country' })
+    getCountryPerformance(@Req() req: any) {
+        return this.analyticsService.getCountryPerformance(req.user.sub);
+    }
 }

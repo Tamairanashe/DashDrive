@@ -12,8 +12,8 @@ const statCards = [
         trend: '+18.2%',
         isPositive: true,
         icon: DollarSign,
-        color: 'bg-emerald-500',
-        lightColor: 'bg-emerald-50'
+        color: 'bg-zinc-900',
+        lightColor: 'bg-zinc-50'
     },
     {
         title: 'Total Orders',
@@ -21,8 +21,8 @@ const statCards = [
         trend: '+12.5%',
         isPositive: true,
         icon: ShoppingCart,
-        color: 'bg-blue-500',
-        lightColor: 'bg-blue-50'
+        color: 'bg-zinc-900',
+        lightColor: 'bg-zinc-50'
     },
     {
         title: 'Total Product',
@@ -30,8 +30,8 @@ const statCards = [
         trend: '-2.3%',
         isPositive: false,
         icon: Package,
-        color: 'bg-indigo-500',
-        lightColor: 'bg-indigo-50'
+        color: 'bg-zinc-900',
+        lightColor: 'bg-zinc-50'
     },
     {
         title: 'Active Customers',
@@ -39,8 +39,8 @@ const statCards = [
         trend: '+24.6%',
         isPositive: true,
         icon: Users,
-        color: 'bg-orange-500',
-        lightColor: 'bg-orange-50'
+        color: 'bg-zinc-900',
+        lightColor: 'bg-zinc-50'
     },
 ];
 
@@ -117,8 +117,8 @@ export function Dashboard() {
                             <AreaChart data={lineData}>
                                 <defs>
                                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#00b050" stopOpacity={0.1} />
-                                        <stop offset="95%" stopColor="#00b050" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#18181b" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="#18181b" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -141,7 +141,7 @@ export function Dashboard() {
                                 <Area
                                     type="monotone"
                                     dataKey="value"
-                                    stroke="#00b050"
+                                    stroke="#18181b"
                                     strokeWidth={3}
                                     fillOpacity={1}
                                     fill="url(#colorValue)"

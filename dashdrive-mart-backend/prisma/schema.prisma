@@ -9,9 +9,9 @@ datasource db {
 model Country {
   id        String   @id @default(uuid())
   name      String
-  code      String   @unique  // ZW, KE, NG
-  currency  String   // USD, ZWL, KES, NGN
-  timezone  String   // Africa/Harare, Africa/Nairobi
+  code      String   @unique // ZW, KE, NG
+  currency  String // USD, ZWL, KES, NGN
+  timezone  String // Africa/Harare, Africa/Nairobi
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
@@ -28,129 +28,135 @@ model Merchant {
   isVerified   Boolean  @default(false)
   createdAt    DateTime @default(now())
 
-  country      Country  @relation(fields: [countryId], references: [id])
-  stores       Store[]
+  country Country @relation(fields: [countryId], references: [id])
+  stores  Store[]
 }
 
 model Store {
-  id          String   @id @default(uuid())
-  merchantId  String
-  name        String
-  address     String
-  city        String
-  currency    String
-  timezone    String
-  taxRate     Float    @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  merchantId String
+  name       String
+  address    String
+  city       String
+  currency   String
+  timezone   String
+  taxRate        Float    @default(0)
+  commissionRate Float    @default(0.10) // Fixed: Added dynamic commission rate
+  isActive       Boolean  @default(true)
+  createdAt  DateTime @default(now())
 
-  merchant    Merchant @relation(fields: [merchantId], references: [id])
-  products    Product[]
-  orders      Order[]
-  categories  Category[]
+  merchant      Merchant       @relation(fields: [merchantId], references: [id])
+  products      Product[]
+  orders        Order[]
+  categories    Category[]
+  promotions    Promotion[]
+  coupons       Coupon[]
+  featuredItems FeaturedItem[]
 }
 
 model Category {
-  id          String   @id @default(uuid())
-  storeId     String
-  merchantId  String
-  name        String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  storeId    String
+  merchantId String
+  name       String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
 
-  store       Store    @relation(fields: [storeId], references: [id])
-  products    Product[]
+  store    Store     @relation(fields: [storeId], references: [id])
+  products Product[]
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  storeId     String
-  merchantId   String   // Denormalized for efficient multi-tenant queries
-  categoryId  String?
-  name        String
-  description String?
-  basePrice   Float
-  sku         String?  @unique
-  stock       Int      @default(0)
-  lowStockThreshold Int @default(5)
-  images      String[]
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(uuid())
+  storeId           String
+  merchantId        String // Denormalized for efficient multi-tenant queries
+  categoryId        String?
+  name              String
+  description       String?
+  basePrice         Float
+  sku               String?  @unique
+  stock             Int      @default(0)
+  lowStockThreshold Int      @default(5)
+  images            String[]
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  store       Store    @relation(fields: [storeId], references: [id])
-  category    Category? @relation(fields: [categoryId], references: [id])
-  variants    ProductVariant[]
+  store          Store            @relation(fields: [storeId], references: [id])
+  category       Category?        @relation(fields: [categoryId], references: [id])
+  variants       ProductVariant[]
   modifierGroups ModifierGroup[]
+  featuredItems  FeaturedItem[]
 }
 
 model ProductVariant {
-  id          String   @id @default(uuid())
-  productId   String
-  name        String   // e.g., Large, Small, Red, Blue
-  sku         String?  @unique
-  price       Float?   // Override base price if set
-  stock       Int      @default(0)
-  createdAt   DateTime @default(now())
-  
-  product     Product  @relation(fields: [productId], references: [id])
+  id        String   @id @default(uuid())
+  productId String
+  name      String // e.g., Large, Small, Red, Blue
+  sku       String?  @unique
+  price     Float? // Override base price if set
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
 }
 
 model ModifierGroup {
-  id          String   @id @default(uuid())
-  productId   String
-  name        String   // e.g., Choose your crust, Extra toppings
-  minSelect   Int      @default(0)
-  maxSelect   Int      @default(1)
-  createdAt   DateTime @default(now())
-  
-  product     Product  @relation(fields: [productId], references: [id])
-  modifiers   Modifier[]
+  id        String   @id @default(uuid())
+  productId String
+  name      String // e.g., Choose your crust, Extra toppings
+  minSelect Int      @default(0)
+  maxSelect Int      @default(1)
+  createdAt DateTime @default(now())
+
+  product   Product    @relation(fields: [productId], references: [id])
+  modifiers Modifier[]
 }
 
 model Modifier {
   id              String   @id @default(uuid())
   modifierGroupId String
-  name            String   // e.g., Pepperoni, Thin Crust
+  name            String // e.g., Pepperoni, Thin Crust
   price           Float    @default(0)
-  stock           Int?     // Optional stock for modifiers
+  stock           Int? // Optional stock for modifiers
   createdAt       DateTime @default(now())
-  
-  group           ModifierGroup @relation(fields: [modifierGroupId], references: [id])
+
+  group ModifierGroup @relation(fields: [modifierGroupId], references: [id])
 }
 
 model InventoryLog {
-  id          String   @id @default(uuid())
-  productId   String
-  variantId   String?
-  change      Int
-  reason      String   // e.g., RESTOCK, SALE, ADJUSTMENT
-  merchantId  String
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  productId  String
+  variantId  String?
+  change     Int
+  reason     String // e.g., RESTOCK, SALE, ADJUSTMENT
+  merchantId String
+  createdAt  DateTime @default(now())
 }
 
 model Order {
-  id           String   @id @default(uuid())
-  storeId      String
-  merchantId   String   // Denormalized for efficient multi-tenant queries
-  orderNumber  String   @unique
-  status       OrderStatus @default(PENDING)
-  currency     String   // IMPORTANT for multi-country
-  subtotal     Float
-  taxAmount    Float    @default(0)
-  deliveryFee  Float    @default(0)
-  totalAmount  Float
-  customerName String?
-  customerPhone String?
+  id              String      @id @default(uuid())
+  storeId         String
+  merchantId      String // Denormalized for efficient multi-tenant queries
+  orderNumber     String      @unique
+  status          OrderStatus @default(PENDING)
+  currency        String // IMPORTANT for multi-country
+  subtotal        Float
+  taxAmount       Float       @default(0)
+  deliveryFee     Float       @default(0)
+  totalAmount     Float
+  customerName    String?
+  customerPhone   String?
   deliveryAddress String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  store        Store    @relation(fields: [storeId], references: [id])
-  items        OrderItem[]
+  store         Store                @relation(fields: [storeId], references: [id])
+  items         OrderItem[]
   statusHistory OrderStatusHistory[]
   transactions  Transaction[]
   delivery      Delivery?
+  deliveryOffer DeliveryOffer? @relation("OrderToDeliveryOffer")
 
   @@index([storeId])
   @@index([merchantId])
@@ -158,8 +164,62 @@ model Order {
   @@index([createdAt])
 }
 
+model Promotion {
+  id          String   @id @default(uuid())
+  storeId     String
+  merchantId  String
+  name        String
+  description String?
+  bannerImage String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+}
+
+model Coupon {
+  id                String       @id @default(uuid())
+  storeId           String
+  merchantId        String
+  code              String       @unique
+  discountType      DiscountType @default(PERCENTAGE)
+  discountValue     Float
+  minOrderAmount    Float        @default(0)
+  maxDiscountAmount Float?
+  usageLimit        Int?
+  usedCount         Int          @default(0)
+  startDate         DateTime
+  endDate           DateTime
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model FeaturedItem {
+  id         String   @id @default(uuid())
+  storeId    String
+  merchantId String
+  productId  String
+  boostLevel Float    @default(1.5)
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  store   Store   @relation(fields: [storeId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
 model OrderItem {
-  id         String  @id @default(uuid())
+  id         String @id @default(uuid())
   orderId    String
   productId  String
   name       String
@@ -167,37 +227,37 @@ model OrderItem {
   unitPrice  Float
   totalPrice Float
 
-  order      Order   @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
   @@index([productId])
 }
 
 model OrderStatusHistory {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   orderId   String
   status    OrderStatus
   note      String?
-  createdAt DateTime @default(now())
+  createdAt DateTime    @default(now())
 
-  order     Order    @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 }
 
 model Transaction {
-  id                     String   @id @default(uuid())
-  orderId                String
-  storeId                String
-  merchantId             String
-  gateway                String   // stripe, paystack, paynow
-  gatewayTransactionId   String?
-  currency               String
-  amount                 Float
-  status                 PaymentStatus @default(PENDING)
-  paymentMethod          String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                   String        @id @default(uuid())
+  orderId              String
+  storeId              String
+  merchantId           String
+  gateway              String // stripe, paystack, paynow
+  gatewayTransactionId String?
+  currency             String
+  amount               Float
+  status               PaymentStatus @default(PENDING)
+  paymentMethod        String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
-  order                  Order    @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 }
 
 enum PaymentStatus {
@@ -219,34 +279,87 @@ enum OrderStatus {
 }
 
 model Rider {
-  id           String   @id @default(uuid())
+  id           String  @id @default(uuid())
   name         String
-  phone        String   @unique
+  phone        String  @unique
   email        String?
-  vehicleType  String   // bike, car, scooter
+  vehicleType  String // bike, car, scooter
   licensePlate String?
-  isOnline     Boolean  @default(false)
-  isActive     Boolean  @default(true)
+  isOnline     Boolean @default(false)
+  isActive     Boolean @default(true)
   countryCode  String
-  createdAt    DateTime @default(now())
 
-  deliveries   Delivery[]
+  // AI Dispatch Fields
+  latitude        Float?
+  longitude       Float?
+  rating          Float  @default(5.0)
+  totalDeliveries Int    @default(0)
+  currentLoad     Int    @default(0) // active orders
+
+  createdAt DateTime @default(now())
+
+  deliveries Delivery[]
+  bids       RiderBid[]
 }
 
 model Delivery {
-  id          String   @id @default(uuid())
-  orderId     String   @unique
+  id          String         @id @default(uuid())
+  orderId     String         @unique
   riderId     String?
   status      DeliveryStatus @default(PENDING)
   pickupTime  DateTime?
   deliveredAt DateTime?
   distanceKm  Float?
   deliveryFee Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-  order       Order    @relation(fields: [orderId], references: [id])
-  rider       Rider?   @relation(fields: [riderId], references: [id])
+  order Order  @relation(fields: [orderId], references: [id])
+  rider Rider? @relation(fields: [riderId], references: [id])
+}
+
+model DeliveryOffer {
+  id          String      @id @default(uuid())
+  orderId     String      @unique
+  proposedFee Float
+  currency    String
+  expiresAt   DateTime
+  status      OfferStatus @default(OPEN)
+  createdAt   DateTime    @default(now())
+
+  order Order @relation("OrderToDeliveryOffer", fields: [orderId], references: [id])
+  bids  RiderBid[]
+}
+
+model RiderBid {
+  id        String   @id @default(uuid())
+  offerId   String
+  riderId   String
+  bidAmount Float
+  createdAt DateTime @default(now())
+
+  offer DeliveryOffer @relation(fields: [offerId], references: [id])
+  rider Rider         @relation(fields: [riderId], references: [id])
+}
+
+enum OfferStatus {
+  OPEN
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model Zone {
+  id              String   @id @default(uuid())
+  name            String
+  countryCode     String
+  minLat          Float
+  maxLat          Float
+  minLng          Float
+  maxLng          Float
+  surgeMultiplier Float    @default(1.0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
 }
 
 enum DeliveryStatus {
@@ -258,4 +371,91 @@ enum DeliveryStatus {
   DELIVERED
   FAILED
   CANCELLED
+}
+
+model Wallet {
+  id        String          @id @default(uuid())
+  ownerType WalletOwnerType
+  ownerId   String
+  currency  String
+  balance   Float           @default(0)
+  isFrozen  Boolean         @default(false)
+  createdAt DateTime        @default(now())
+
+  ledgerEntries      LedgerEntry[]
+  withdrawalRequests WithdrawalRequest[]
+
+  @@unique([ownerType, ownerId, currency])
+}
+
+enum WalletOwnerType {
+  MERCHANT
+  RIDER
+  PLATFORM
+}
+
+model LedgerEntry {
+  id          String     @id @default(uuid())
+  walletId    String
+  amount      Float
+  type        LedgerType
+  referenceId String?
+  description String?
+  createdAt   DateTime   @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+enum LedgerType {
+  CREDIT
+  DEBIT
+}
+
+model WithdrawalRequest {
+  id        String           @id @default(uuid())
+  walletId  String
+  amount    Float
+  status    WithdrawalStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model RiskEvent {
+  id          String        @id @default(uuid())
+  eventType   RiskEventType
+  referenceId String
+  actorId     String
+  actorType   RiskActorType
+  riskScore   Float
+  decision    RiskDecision
+  reasons     Json?
+  createdAt   DateTime      @default(now())
+}
+
+enum RiskEventType {
+  ORDER
+  PAYMENT
+  WITHDRAWAL
+  DELIVERY
+  WALLET
+}
+
+enum RiskActorType {
+  CUSTOMER
+  MERCHANT
+  RIDER
+}
+
+enum RiskDecision {
+  APPROVED
+  REVIEW
+  BLOCKED
 }
