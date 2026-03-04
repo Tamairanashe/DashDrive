@@ -9,9 +9,9 @@ services:
     startCommand: node src/server.js
     envVars:
       - key: PORT
-        value: "8000"
+        value: 8000
       - key: NODE_VERSION
-        value: "22"
+        value: 22
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
@@ -33,15 +33,15 @@ services:
     startCommand: npm run start:prod
     envVars:
       - key: PORT
-        value: "3000"
+        value: 3000
       - key: NODE_VERSION
-        value: "22"
+        value: 22
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
         sync: false
       - key: REDIS_HOST
-        value: "localhost"
+        value: localhost
 
   # 3. Admin Backend (NestJS + Prisma)
   - type: web
@@ -53,9 +53,9 @@ services:
     startCommand: npm run start:prod
     envVars:
       - key: PORT
-        value: "3001"
+        value: 3001
       - key: NODE_VERSION
-        value: "22"
+        value: 22
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
