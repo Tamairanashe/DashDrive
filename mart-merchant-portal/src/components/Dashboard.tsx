@@ -1,9 +1,13 @@
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Users, Filter } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Users, Filter, RefreshCw, Download, Calendar } from 'lucide-react';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
     PieChart, Pie, Cell
 } from 'recharts';
+import { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
+import { StatusBadge } from './common/StatusBadge';
+import { DashboardSkeleton, CardSkeleton } from './common/SkeletonLoader';
+import { PageHeader } from './common/PageHeader';
 
 const statCards = [
     {
@@ -61,40 +65,72 @@ const pieData = [
     { name: 'Meat', value: 17000, color: '#fca5a5' },
 ];
 
-const products = [
+const productsData = [
     { name: 'Fresh Milk', sold: '342 sold', price: '$684.00', image: 'https://images.unsplash.com/photo-1550583724-125581cc255b?w=100&h=100&fit=crop' },
     { name: 'Wheat Bread', sold: '256 sold', price: '$512.00', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=100&h=100&fit=crop' },
     { name: 'Emerald Velvet', sold: '154 sold', price: '$355.90', image: 'https://images.unsplash.com/photo-1621236304198-651a21733b09?w=100&h=100&fit=crop' },
 ];
 
-const recentOrders = [
-    { id: '1', product: 'Fresh Dairy', date: 'May 5', status: 'Received', price: '$145.80', customer: 'M-Starlight', image: 'https://images.unsplash.com/photo-1550583724-125581cc255b?w=50&h=50&fit=crop' },
-    { id: '2', product: 'Vegetables', date: 'May 4', status: 'Received', price: '$210.30', customer: 'Serene W', image: 'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?w=50&h=50&fit=crop' },
-    { id: '3', product: 'Rang Eggs', date: 'May 3', status: 'Received', price: '$298.40', customer: 'James D', image: 'https://images.unsplash.com/photo-1518562180175-34a163b1a9a6?w=50&h=50&fit=crop' },
+const recentOrdersData = [
+    { id: '1', product: 'Fresh Dairy', date: 'May 5', status: 'Delivered', price: '$145.80', customer: 'M-Starlight', image: 'https://images.unsplash.com/photo-1550583724-125581cc255b?w=50&h=50&fit=crop' },
+    { id: '2', product: 'Vegetables', date: 'May 4', status: 'Processing', price: '$210.30', customer: 'Serene W', image: 'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?w=50&h=50&fit=crop' },
+    { id: '3', product: 'Rang Eggs', date: 'May 3', status: 'Incoming', price: '$298.40', customer: 'James D', image: 'https://images.unsplash.com/photo-1518562180175-34a163b1a9a6?w=50&h=50&fit=crop' },
 ];
 
 export function Dashboard() {
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setIsLoading(false), 2000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (isLoading) {
+        return <DashboardSkeleton />;
+    }
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <PageHeader
+                title="Business Overview"
+                description="Real-time performance metrics and store analytics."
+                icon={TrendingUp}
+                actions={
+                    <div className="flex items-center gap-3">
+                        <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-100 text-gray-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
+                            <Calendar size={14} />
+                            Last 30 Days
+                        </button>
+                        <button className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg hover:shadow-gray-200">
+                            <Download size={16} />
+                            Download Report
+                        </button>
+                    </div>
+                }
+            />
+
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((card, idx) => (
-                    <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={idx} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                         <div className="flex items-center justify-between mb-4">
-                            <div className={cn("p-2.5 rounded-xl text-white", card.color)}>
+                            <div className={cn("p-3 rounded-2xl text-white shadow-lg transition-transform group-hover:scale-110", card.color)}>
                                 <card.icon size={20} />
                             </div>
                             <div className={cn(
-                                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold",
+                                "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter",
                                 card.isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
                             )}>
                                 {card.isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                                 {card.trend}
                             </div>
                         </div>
-                        <p className="text-gray-400 text-sm font-medium">{card.title}</p>
-                        <h3 className="text-2xl font-bold text-gray-800 mt-1">{card.value}</h3>
-                        <p className="text-[10px] text-gray-400 mt-1">this week</p>
+                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">{card.title}</p>
+                        <h3 className="text-2xl font-black text-gray-800 mt-1 tracking-tighter">{card.value}</h3>
+                        <div className="flex items-center gap-1.5 mt-2">
+                            <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Live metrics</p>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -201,7 +237,7 @@ export function Dashboard() {
                         </select>
                     </div>
                     <div className="space-y-6">
-                        {products.map((product, idx) => (
+                        {productsData.map((product, idx) => (
                             <div key={idx} className="flex items-center gap-4">
                                 <img src={product.image} alt={product.name} className="size-12 rounded-xl object-cover" />
                                 <div className="flex-1">
@@ -236,7 +272,7 @@ export function Dashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {recentOrders.map((order) => (
+                                {recentOrdersData.map((order) => (
                                     <tr key={order.id} className="group hover:bg-gray-50/50 transition-colors">
                                         <td className="py-4 text-sm text-gray-500">{order.id}</td>
                                         <td className="py-4">
@@ -247,9 +283,7 @@ export function Dashboard() {
                                         </td>
                                         <td className="py-4 text-sm text-gray-800">{order.date}</td>
                                         <td className="py-4">
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600">
-                                                {order.status}
-                                            </span>
+                                            <StatusBadge status={order.status as any} />
                                         </td>
                                         <td className="py-4 text-sm font-bold text-gray-800">{order.price}</td>
                                         <td className="py-4 text-sm text-gray-800">{order.customer}</td>

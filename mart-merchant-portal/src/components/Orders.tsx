@@ -1,11 +1,16 @@
 import {
     TrendingUp, TrendingDown, ClipboardList, Box,
     XCircle, Search, Filter, MoreHorizontal,
-    ChevronLeft, ChevronRight, Truck, AlertCircle, FileText, Printer, Check
+    ChevronLeft, ChevronRight, Truck, AlertCircle, FileText, Printer, Check,
+    RefreshCw, Download
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
 import { OrderDetail } from './OrderDetail';
+import { StatusBadge } from './common/StatusBadge';
+import { EmptyState } from './common/EmptyState';
+import { TableRowSkeleton } from './common/SkeletonLoader';
+import { PageHeader } from './common/PageHeader';
 
 const stats = [
     { label: 'Total New Orders', value: '3,842', trend: '+12%', isPositive: true, icon: ClipboardList, color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -21,18 +26,25 @@ const tabs = [
     { id: 'Delivered', label: 'Delivered', count: 45 },
 ];
 
-const orders = [
-    { id: '#GR-284730', urgency: 'Expedited', shipBy: 'EOD', product: 'Coconut Clarity', items: 4, customer: 'Darrell Steward', customerType: 'New Customer', date: 'Feb 21, 2026', amount: '$153.50', method: 'Paid by Mastercard', status: 'Incoming', color: 'bg-blue-50 text-blue-600', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Darrell', productImg: 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=100&h=100&fit=crop' },
-    { id: '#GR-284640', urgency: 'Normal', shipBy: 'Tomorrow', product: 'Fresh Butter', items: 3, customer: 'Esther Howard', customerType: 'Pro Customer', date: 'Feb 21, 2026', amount: '$42.00', method: 'Cash on Delivery', status: 'Processing', color: 'bg-amber-50 text-amber-600', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Esther', productImg: 'https://images.unsplash.com/photo-1549392848-d42edee1af20?w=100&h=100&fit=crop' },
-    { id: '#GR-284530', urgency: 'Overdue', shipBy: 'Yesterday', product: 'Fresh Rice', items: 3, customer: 'Dianne Russell', customerType: 'Pro Customer', date: 'Feb 20, 2026', amount: '$135.00', method: 'Paid by Mastercard', status: 'Incoming', color: 'bg-red-50 text-red-600', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dianne', productImg: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=100&h=100&fit=crop' },
+const ordersData = [
+    { id: '#GR-284730', urgency: 'Expedited', shipBy: 'EOD', product: 'Coconut Clarity', items: 4, customer: 'Darrell Steward', customerType: 'New Customer', date: 'Feb 21, 2026', amount: '$153.50', method: 'Paid by Mastercard', status: 'Incoming', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Darrell', productImg: 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=100&h=100&fit=crop' },
+    { id: '#GR-284640', urgency: 'Normal', shipBy: 'Tomorrow', product: 'Fresh Butter', items: 3, customer: 'Esther Howard', customerType: 'Pro Customer', date: 'Feb 21, 2026', amount: '$42.00', method: 'Cash on Delivery', status: 'Processing', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Esther', productImg: 'https://images.unsplash.com/photo-1549392848-d42edee1af20?w=100&h=100&fit=crop' },
+    { id: '#GR-284530', urgency: 'Overdue', shipBy: 'Yesterday', product: 'Fresh Rice', items: 3, customer: 'Dianne Russell', customerType: 'Pro Customer', date: 'Feb 20, 2026', amount: '$135.00', method: 'Paid by Mastercard', status: 'Incoming', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dianne', productImg: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=100&h=100&fit=crop' },
 ];
 
 export function Orders() {
+    const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('All');
     const [showMenu, setShowMenu] = useState<string | null>(null);
     const [view, setView] = useState<'list' | 'details'>('list');
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+
+    useEffect(() => {
+        // Simulate initial loading
+        const timer = setTimeout(() => setIsLoading(false), 1500);
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleOrderClick = (id: string) => {
         setSelectedOrderId(id);
@@ -51,7 +63,22 @@ export function Orders() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            <PageHeader
+                title="Orders Management"
+                description="Monitor and fulfill incoming customer orders in real-time."
+                icon={ClipboardList}
+                actions={
+                    <>
+                        <button className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg hover:shadow-gray-200">
+                            <Download size={16} />
+                            Export Orders
+                        </button>
+                    </>
+                }
+            />
+
             {/* Stats Section */}
+            {/* ... */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat, idx) => (
                     <div key={idx} className="bg-white p-6 rounded-3xl border border-gray-100 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
@@ -158,101 +185,116 @@ export function Orders() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {orders.map((order, idx) => (
-                                    <tr key={idx} className="group hover:bg-gray-50/50 transition-all cursor-default">
-                                        <td className="py-6 pl-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedOrders.includes(order.id)}
-                                                onChange={() => toggleSelect(order.id)}
-                                                className="size-5 rounded-lg border-gray-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                {isLoading ? (
+                                    [1, 2, 3, 4, 5].map((i) => <TableRowSkeleton key={i} />)
+                                ) : ordersData.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="py-12 px-8">
+                                            <EmptyState
+                                                title="No orders found"
+                                                description="When customers place orders, they will appear here in real-time."
+                                                action={{
+                                                    label: 'Refresh Feed',
+                                                    onClick: () => {
+                                                        setIsLoading(true);
+                                                        setTimeout(() => setIsLoading(false), 1000);
+                                                    }
+                                                }}
                                             />
                                         </td>
-                                        <td className="py-6 min-w-[240px]">
-                                            <div className="flex items-center gap-4">
-                                                <div className="relative shrink-0">
-                                                    <img src={order.productImg} alt="" className="size-12 rounded-2xl object-cover border border-gray-50 shadow-sm" />
-                                                    {order.urgency === 'Expedited' && (
-                                                        <div className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full border-2 border-white animate-pulse">
-                                                            <AlertCircle size={10} />
+                                    </tr>
+                                ) : (
+                                    ordersData.map((order, idx) => (
+                                        <tr key={idx} className="group hover:bg-gray-50/50 transition-all cursor-default">
+                                            <td className="py-6 pl-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedOrders.includes(order.id)}
+                                                    onChange={() => toggleSelect(order.id)}
+                                                    className="size-5 rounded-lg border-gray-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </td>
+                                            <td className="py-6 min-w-[240px]">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="relative shrink-0">
+                                                        <img src={order.productImg} alt="" className="size-12 rounded-2xl object-cover border border-gray-50 shadow-sm" />
+                                                        {order.urgency === 'Expedited' && (
+                                                            <div className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full border-2 border-white animate-pulse">
+                                                                <AlertCircle size={10} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="max-w-[160px]">
+                                                        <button
+                                                            onClick={() => handleOrderClick(order.id)}
+                                                            className="text-sm font-black text-gray-800 leading-tight uppercase tracking-tighter hover:text-blue-600 transition-colors"
+                                                        >
+                                                            {order.id}
+                                                        </button>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className={cn(
+                                                                "text-[9px] font-black px-1.5 py-0.5 rounded-lg uppercase tracking-tight",
+                                                                order.urgency === 'Overdue' ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"
+                                                            )}>
+                                                                {order.shipBy}
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-300 font-bold">{order.date}</span>
                                                         </div>
-                                                    )}
-                                                </div>
-                                                <div className="max-w-[160px]">
-                                                    <button
-                                                        onClick={() => handleOrderClick(order.id)}
-                                                        className="text-sm font-black text-gray-800 leading-tight uppercase tracking-tighter hover:text-blue-600 transition-colors"
-                                                    >
-                                                        {order.id}
-                                                    </button>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <span className={cn(
-                                                            "text-[9px] font-black px-1.5 py-0.5 rounded-lg uppercase tracking-tight",
-                                                            order.urgency === 'Overdue' ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"
-                                                        )}>
-                                                            {order.shipBy}
-                                                        </span>
-                                                        <span className="text-[10px] text-gray-300 font-bold">{order.date}</span>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-6">
-                                            <div className="flex items-center gap-3">
-                                                <img src={order.avatar} alt="" className="size-9 rounded-full border-2 border-white shadow-sm ring-1 ring-gray-100" />
-                                                <div>
-                                                    <p className="text-sm font-bold text-gray-800 leading-tight">{order.customer}</p>
-                                                    <p className="text-[10px] text-gray-400 font-medium tracking-tight mt-0.5">{order.customerType}</p>
+                                            </td>
+                                            <td className="py-6">
+                                                <div className="flex items-center gap-3">
+                                                    <img src={order.avatar} alt="" className="size-9 rounded-full border-2 border-white shadow-sm ring-1 ring-gray-100" />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-800 leading-tight">{order.customer}</p>
+                                                        <p className="text-[10px] text-gray-400 font-medium tracking-tight mt-0.5">{order.customerType}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-6 text-center">
-                                            <span className="text-xs font-black text-gray-500 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">{order.items}</span>
-                                        </td>
-                                        <td className="py-6">
-                                            <p className="text-sm font-black text-gray-800 leading-tight tracking-tighter">{order.amount}</p>
-                                            <p className="text-[10px] text-gray-400 font-medium tracking-tight mt-0.5 uppercase italic">{order.method}</p>
-                                        </td>
-                                        <td className="py-6 text-center">
-                                            <span className={cn(
-                                                "px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest inline-block shadow-sm ring-1 ring-inset ring-gray-100/10",
-                                                order.color
-                                            )}>
-                                                {order.status}
-                                            </span>
-                                        </td>
-                                        <td className="py-6 text-right relative pr-4">
-                                            <div className="flex items-center justify-end gap-2">
-                                                {order.status === 'Incoming' && (
-                                                    <button className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all">
-                                                        <Check size={18} />
+                                            </td>
+                                            <td className="py-6 text-center">
+                                                <span className="text-xs font-black text-gray-500 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">{order.items}</span>
+                                            </td>
+                                            <td className="py-6">
+                                                <p className="text-sm font-black text-gray-800 leading-tight tracking-tighter">{order.amount}</p>
+                                                <p className="text-[10px] text-gray-400 font-medium tracking-tight mt-0.5 uppercase italic">{order.method}</p>
+                                            </td>
+                                            <td className="py-6 text-center">
+                                                <StatusBadge status={order.status} />
+                                            </td>
+                                            <td className="py-6 text-right relative pr-4">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {order.status === 'Incoming' && (
+                                                        <button className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all">
+                                                            <Check size={18} />
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => setShowMenu(showMenu === order.id ? null : order.id)}
+                                                        className="p-2 hover:bg-gray-100 rounded-xl text-gray-300 hover:text-gray-800 transition-all border border-transparent hover:border-gray-100"
+                                                    >
+                                                        <MoreHorizontal size={20} />
                                                     </button>
-                                                )}
-                                                <button
-                                                    onClick={() => setShowMenu(showMenu === order.id ? null : order.id)}
-                                                    className="p-2 hover:bg-gray-100 rounded-xl text-gray-300 hover:text-gray-800 transition-all border border-transparent hover:border-gray-100"
-                                                >
-                                                    <MoreHorizontal size={20} />
-                                                </button>
-                                            </div>
+                                                </div>
 
-                                            {showMenu === order.id && (
-                                                <div className="absolute right-6 top-16 bg-white border border-gray-100 rounded-2xl shadow-2xl z-20 w-44 py-2 text-left animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-                                                    <button className="w-full px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                                        <Printer size={16} className="text-gray-400" /> Print Slip
-                                                    </button>
-                                                    <button className="w-full px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                                        <FileText size={16} className="text-gray-400" /> View Details
-                                                    </button>
-                                                    <div className="h-px bg-gray-50 my-1 mx-2" />
-                                                    <button className="w-full px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors">
-                                                        <XCircle size={16} /> Cancel Order
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
+                                                {showMenu === order.id && (
+                                                    <div className="absolute right-6 top-16 bg-white border border-gray-100 rounded-2xl shadow-2xl z-20 w-44 py-2 text-left animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                                                        <button className="w-full px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                                            <Printer size={16} className="text-gray-400" /> Print Slip
+                                                        </button>
+                                                        <button className="w-full px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                                            <FileText size={16} className="text-gray-400" /> View Details
+                                                        </button>
+                                                        <div className="h-px bg-gray-50 my-1 mx-2" />
+                                                        <button className="w-full px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors">
+                                                            <XCircle size={16} /> Cancel Order
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
