@@ -1,62 +1,66 @@
+# Render Blueprint for DashDrive Backend Stack
+# This file defines the infrastructure for all three backend services.
+# Render should automatically detect this file at the repository root.
+
 services:
-  # 1. Main Shared Backend (Legacy)
+  # 1. Main Shared Backend (Legacy Node.js)
   - type: web
-    name: "dashdrive-backend"
-    runtime: "node"
-    plan: "free"
-    rootDir: "backend"
-    buildCommand: "npm install"
-    startCommand: "node src/server.js"
+    name: dashdrive-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/server.js
     envVars:
-      - key: "PORT"
-        value: "8000"
-      - key: "NODE_VERSION"
-        value: "22"
-      - key: "SUPABASE_URL"
+      - key: PORT
+        value: 8000
+      - key: NODE_VERSION
+        value: 22
+      - key: SUPABASE_URL
         sync: false
-      - key: "SUPABASE_SERVICE_ROLE_KEY"
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: "JWT_SECRET"
+      - key: JWT_SECRET
         sync: false
-      - key: "BACKEND_API_KEY"
+      - key: BACKEND_API_KEY
         sync: false
-      - key: "FRONTEND_URL"
+      - key: FRONTEND_URL
         sync: false
 
   # 2. Mart Merchant Backend (NestJS + Prisma)
   - type: web
-    name: "dashdrive-mart-backend"
-    runtime: "node"
-    plan: "free"
-    rootDir: "dashdrive-mart-backend"
-    buildCommand: "npm install && npx prisma generate && npm run build"
-    startCommand: "npm run start:prod"
+    name: dashdrive-mart-backend
+    runtime: node
+    plan: free
+    rootDir: dashdrive-mart-backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
     envVars:
-      - key: "PORT"
-        value: "3000"
-      - key: "NODE_VERSION"
-        value: "22"
-      - key: "DATABASE_URL"
+      - key: PORT
+        value: 3000
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL
         sync: false
-      - key: "JWT_SECRET"
+      - key: JWT_SECRET
         sync: false
-      - key: "REDIS_HOST"
-        value: "localhost"
+      - key: REDIS_HOST
+        value: localhost
 
   # 3. Admin Backend (NestJS + Prisma)
   - type: web
-    name: "dashdrive-admin-backend"
-    runtime: "node"
-    plan: "free"
-    rootDir: "dashdrive-admin-backend"
-    buildCommand: "npm install && npx prisma generate && npm run build"
-    startCommand: "npm run start:prod"
+    name: dashdrive-admin-backend
+    runtime: node
+    plan: free
+    rootDir: dashdrive-admin-backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
     envVars:
-      - key: "PORT"
-        value: "3001"
-      - key: "NODE_VERSION"
-        value: "22"
-      - key: "DATABASE_URL"
+      - key: PORT
+        value: 3001
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL
         sync: false
-      - key: "JWT_SECRET"
+      - key: JWT_SECRET
         sync: false
