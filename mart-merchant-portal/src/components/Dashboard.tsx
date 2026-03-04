@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Users, Filter, RefreshCw, Download, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Users, Filter, Download, Calendar } from 'lucide-react';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
     PieChart, Pie, Cell
@@ -6,7 +6,7 @@ import {
 import { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
 import { StatusBadge } from './common/StatusBadge';
-import { DashboardSkeleton, CardSkeleton } from './common/SkeletonLoader';
+import { DashboardSkeleton } from './common/SkeletonLoader';
 import { PageHeader } from './common/PageHeader';
 
 const statCards = [
