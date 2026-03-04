@@ -21,6 +21,7 @@ import { StoresModule } from '../../stores/stores.module';
         AuthModule,
         AnalyticsModule,
         OrdersModule,
+        ProductsModule,
         WalletModule,
         MerchantsModule,
         StoresModule,
