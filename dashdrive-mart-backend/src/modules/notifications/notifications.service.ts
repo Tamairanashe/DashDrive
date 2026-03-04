@@ -1,25 +1,38 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Queue } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class NotificationsService {
     private readonly logger = new Logger(NotificationsService.name);
-    private notificationQueue: Queue;
+    private notificationQueue: any;
 
     constructor(private prisma: PrismaService) {
-        this.notificationQueue = new Queue('notifications', {
-            connection: {
-                host: process.env.REDIS_HOST || 'localhost',
-                port: parseInt(process.env.REDIS_PORT || '6379'),
-            },
-        });
-        this.notificationQueue.on('error', (error) => {
-            this.logger.error(`BullMQ Queue Error: ${error.message}`);
-        });
+        this.initQueue();
+    }
+
+    private async initQueue() {
+        try {
+            const { Queue } = await import('bullmq');
+            this.notificationQueue = new Queue('notifications', {
+                connection: {
+                    host: process.env.REDIS_HOST || 'localhost',
+                    port: parseInt(process.env.REDIS_PORT || '6379'),
+                },
+            });
+            this.notificationQueue.on('error', (error) => {
+                this.logger.error(`BullMQ Queue Error: ${error.message}`);
+            });
+            this.logger.log('🚀 Notifications Queue Initialized');
+        } catch (error) {
+            this.logger.error(`Failed to initialize Notifications Queue: ${error.message}`);
+        }
     }
 
     async sendEmail(to: string, subject: string, template: string, context: any) {
+        if (!this.notificationQueue) {
+            this.logger.warn(`Queue not ready, skipping email to ${to}`);
+            return;
+        }
         this.logger.log(`Queueing email to ${to}: ${subject}`);
         await this.notificationQueue.add('send-email', {
             type: 'EMAIL',

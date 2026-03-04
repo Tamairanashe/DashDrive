@@ -27,7 +27,6 @@ import { MobileModule } from './modules/mobile/mobile.module';
 import { EventBusModule } from './modules/event-bus/event-bus.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-yet';
 
 @Module({
   imports: [
@@ -36,6 +35,7 @@ import { redisStore } from 'cache-manager-redis-yet';
       isGlobal: true,
       useFactory: async () => {
         try {
+          const { redisStore } = await import('cache-manager-redis-yet');
           return {
             store: await redisStore({
               socket: {

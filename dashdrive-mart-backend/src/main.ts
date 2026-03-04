@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  console.log('🔄 Starting Dashdrive Mart Backend...');
   const app = await NestFactory.create(AppModule);
 
   // Security Middleware

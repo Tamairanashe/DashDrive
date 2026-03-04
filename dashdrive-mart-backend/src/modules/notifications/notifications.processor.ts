@@ -1,10 +1,10 @@
-import { Processor, Worker, Job } from 'bullmq';
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 
+@Injectable()
 export class NotificationsProcessor {
     private readonly logger = new Logger(NotificationsProcessor.name);
-    private worker: Worker;
+    private worker: any;
 
     constructor() {
         // Initialize Firebase Admin (Assuming service account path is in env)
@@ -17,33 +17,43 @@ export class NotificationsProcessor {
             this.logger.warn('FIREBASE_SERVICE_ACCOUNT_PATH not found. Push notifications will be simulated.');
         }
 
-        this.worker = new Worker(
-            'notifications',
-            async (job: Job) => {
-                await this.processNotification(job);
-            },
-            {
-                connection: {
-                    host: process.env.REDIS_HOST || 'localhost',
-                    port: parseInt(process.env.REDIS_PORT || '6379'),
-                },
-            }
-        );
-
-        this.worker.on('error', (error) => {
-            this.logger.error(`BullMQ Worker Error: ${error.message}`);
-        });
-
-        this.worker.on('completed', (job) => {
-            this.logger.log(`Job ${job.id} has completed!`);
-        });
-
-        this.worker.on('failed', (job, err) => {
-            this.logger.error(`Job ${job?.id} failed with ${err.message}`);
-        });
+        this.initWorker();
     }
 
-    private async processNotification(job: Job) {
+    private async initWorker() {
+        try {
+            const { Worker } = await import('bullmq');
+            this.worker = new Worker(
+                'notifications',
+                async (job: any) => {
+                    await this.processNotification(job);
+                },
+                {
+                    connection: {
+                        host: process.env.REDIS_HOST || 'localhost',
+                        port: parseInt(process.env.REDIS_PORT || '6379'),
+                    },
+                }
+            );
+
+            this.worker.on('error', (error) => {
+                this.logger.error(`BullMQ Worker Error: ${error.message}`);
+            });
+
+            this.worker.on('completed', (job) => {
+                this.logger.log(`Job ${job.id} has completed!`);
+            });
+
+            this.worker.on('failed', (job, err) => {
+                this.logger.error(`Job ${job?.id} failed with ${err.message}`);
+            });
+            this.logger.log('🚀 Notifications Worker Initialized');
+        } catch (error) {
+            this.logger.error(`Failed to initialize Notifications Worker: ${error.message}`);
+        }
+    }
+
+    private async processNotification(job: any) {
         const { type, to, subject, template, context, phoneNumber, message, targetToken, title, body, data } = job.data;
 
         switch (type) {
