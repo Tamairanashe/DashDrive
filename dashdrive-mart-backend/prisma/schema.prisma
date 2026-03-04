@@ -26,10 +26,14 @@ model Merchant {
   storeName    String
   phone        String?
   isVerified   Boolean  @default(false)
+  pushToken    String?
+  deviceId     String? // Track mobile device
+  deviceName   String? // e.g., iPhone 15
   createdAt    DateTime @default(now())
 
-  country Country @relation(fields: [countryId], references: [id])
-  stores  Store[]
+  country       Country                @relation(fields: [countryId], references: [id])
+  stores        Store[]
+  notifications MerchantNotification[]
 }
 
 model Store {
@@ -52,6 +56,7 @@ model Store {
   promotions    Promotion[]
   coupons       Coupon[]
   featuredItems FeaturedItem[]
+  businessHours BusinessHours[]
 }
 
 model Category {
@@ -458,4 +463,33 @@ enum RiskDecision {
   APPROVED
   REVIEW
   BLOCKED
+}
+
+model MerchantNotification {
+  id         String   @id @default(uuid())
+  merchantId String
+  title      String
+  body       String
+  data       Json? // Extra meta data
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@index([createdAt])
+}
+
+model BusinessHours {
+  id        String   @id @default(uuid())
+  storeId   String
+  dayOfWeek Int // 0-6 (Sunday-Saturday)
+  openTime  String // HH:mm
+  closeTime String // HH:mm
+  isOpen    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, dayOfWeek])
 }

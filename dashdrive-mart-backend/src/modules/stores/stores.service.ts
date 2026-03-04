@@ -30,7 +30,14 @@ export class StoresService {
 
     async findOne(id: string, merchantId: string) {
         return this.prisma.store.findFirst({
-            where: { id, merchantId, isActive: true },
+            where: { id, merchantId },
+        });
+    }
+
+    async update(id: string, merchantId: string, data: any) {
+        return this.prisma.store.update({
+            where: { id, merchantId },
+            data,
         });
     }
 }

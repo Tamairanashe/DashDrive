@@ -165,6 +165,23 @@ export class WalletService {
         });
     }
 
+    async getWalletSummary(ownerType: WalletOwnerType, ownerId: string, currency: string) {
+        const wallet = await this.getWallet(ownerType, ownerId, currency);
+        const transactions = await this.prisma.ledgerEntry.findMany({
+            where: { walletId: wallet.id },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+        });
+
+        return {
+            walletId: wallet.id,
+            balance: wallet.balance,
+            currency: wallet.currency,
+            isFrozen: wallet.isFrozen,
+            recentTransactions: transactions,
+        };
+    }
+
     async setFrozenStatus(walletId: string, isFrozen: boolean) {
         return this.prisma.wallet.update({
             where: { id: walletId },

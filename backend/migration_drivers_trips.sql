@@ -17,7 +17,10 @@ CREATE TABLE IF NOT EXISTS public.drivers (
 CREATE TABLE IF NOT EXISTS public.trips (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     external_id TEXT UNIQUE NOT NULL, -- e.g. 'TRIP-ABC123'
-    rider_id TEXT NOT NULL,
+    rider_id UUID NOT NULL, -- Linked to users.id
+    driver_id UUID REFERENCES public.drivers(id), -- Null if negotiating
+    origin JSONB NOT NULL, -- { address: string, lat: number, lng: number }
+    destination JSONB NOT NULL, -- { address: string, lat: number, lng: number }
     initial_offer DECIMAL(10,2) NOT NULL,
     current_price DECIMAL(10,2) NOT NULL,
     final_price DECIMAL(10,2),

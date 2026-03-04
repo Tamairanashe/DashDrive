@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class NotificationsService {
     private readonly logger = new Logger(NotificationsService.name);
     private notificationQueue: Queue;
 
-    constructor() {
+    constructor(private prisma: PrismaService) {
         this.notificationQueue = new Queue('notifications', {
             connection: {
                 host: process.env.REDIS_HOST || 'localhost',
@@ -36,6 +37,7 @@ export class NotificationsService {
     }
 
     async sendPush(targetToken: string, title: string, body: string, data?: any) {
+        if (!targetToken) return;
         this.logger.log(`Queueing Push notification to ${targetToken}`);
         await this.notificationQueue.add('send-push', {
             type: 'PUSH',
@@ -48,13 +50,20 @@ export class NotificationsService {
 
     // Helper methods for specific business events
     async notifyOrderConfirmed(order: any) {
-        // Notify Merchant
-        await this.sendPush(
-            'merchant_topic', // Simplified
-            'New Order Confirmed!',
-            `Order #${order.orderNumber} is ready for processing.`,
-            { orderId: order.id }
-        );
+        // Fetch merchant push token
+        const merchant = await (this.prisma.merchant as any).findUnique({
+            where: { id: (order as any).merchantId },
+            select: { pushToken: true }
+        });
+
+        if (merchant?.pushToken) {
+            await this.sendPush(
+                merchant.pushToken,
+                'New Order Confirmed!',
+                `Order #${(order as any).orderNumber} is ready for processing.`,
+                { orderId: (order as any).id }
+            );
+        }
 
         // Notify Customer
         if (order.customerPhone) {

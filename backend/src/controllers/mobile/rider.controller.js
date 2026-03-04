@@ -6,10 +6,11 @@ const riderService = require("../../services/mobile/rider.service");
 
 exports.searchMarketplace = async (req, res) => {
     try {
-        const { query, category, lat, lng } = req.query;
+        const { q, category, type, lat, lng } = req.query;
 
-        const results = await riderService.searchStores(query, {
+        const results = await riderService.searchStores(q, {
             category,
+            type,
             location: lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null
         });
 
@@ -47,7 +48,7 @@ exports.getStoreDetails = async (req, res) => {
 exports.createOrder = async (req, res) => {
     try {
         const { store_id, organization_id, items, total_amount, delivery_address } = req.body;
-        const userId = req.user?.id; // Injected by auth middleware
+        const userId = req.user?.id;
 
         const order = await riderService.processMobileOrder({
             userId,
@@ -55,7 +56,8 @@ exports.createOrder = async (req, res) => {
             organizationId: organization_id,
             items,
             totalAmount: total_amount,
-            deliveryAddress: delivery_address
+            deliveryAddress: delivery_address,
+            type: req.body.type
         });
 
         return res.json({
@@ -86,6 +88,59 @@ exports.getActiveOrders = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to fetch active orders"
+        });
+    }
+};
+
+exports.requestRide = async (req, res) => {
+    try {
+        const { origin, destination, initial_offer } = req.body;
+        const userId = req.user?.id;
+
+        const trip = await riderService.requestRide({
+            userId,
+            origin,
+            destination,
+            initialOffer: initial_offer
+        });
+
+        return res.json({
+            success: true,
+            data: trip,
+            message: "Ride request broadcasted! Waiting for bids... 🚗"
+        });
+    } catch (error) {
+        console.error("Request Ride Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to request ride"
+        });
+    }
+};
+
+exports.requestParcel = async (req, res) => {
+    try {
+        const { origin, destination, initial_offer, metadata } = req.body;
+        const userId = req.user?.id;
+
+        const trip = await riderService.requestParcel({
+            userId,
+            origin,
+            destination,
+            initialOffer: initial_offer,
+            metadata: metadata || {}
+        });
+
+        return res.json({
+            success: true,
+            data: trip,
+            message: "Parcel delivery request broadcasted! 📦"
+        });
+    } catch (error) {
+        console.error("Request Parcel Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to request parcel delivery"
         });
     }
 };

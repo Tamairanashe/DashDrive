@@ -153,7 +153,7 @@ export const FoodDashboard: React.FC = () => {
                         <div className="bg-white p-8 rounded-[32px] shadow-soft border border-slate-100/50">
                             <h4 className="text-[10px] font-small-caps font-bold text-slate-400 tracking-[0.25em] mb-8">Peak Order Velocity</h4>
                             <div className="h-[200px]">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                     <AreaChart data={peakHoursData}>
                                         <defs>
                                             <linearGradient id="foodGradient" x1="0" y1="0" x2="0" y2="1">
@@ -207,7 +207,7 @@ export const FoodDashboard: React.FC = () => {
                     <div className="bg-white p-8 rounded-[32px] shadow-soft border border-slate-100/50">
                         <h3 className="text-[10px] font-small-caps font-bold text-slate-400 tracking-[0.25em] mb-8">Real-time Order Status</h3>
                         <div className="h-[240px] relative">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <PieChart>
                                     <Pie
                                         data={statusData}

@@ -64,6 +64,7 @@ import {
   Lock,
   Building2
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils';
 
 interface NavItem {
@@ -85,6 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   setIsCollapsed
 }) => {
+  const { user, logout } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Insights', 'Management', 'Shopping', 'Parcel Delivery', 'SERVICES']);
 
   const navGroups: { group: string; items: NavItem[] }[] = [
@@ -371,16 +373,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isCollapsed && "flex-col items-center"
         )}>
           <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-white font-black shadow-lg">
-            A
+            {user?.name?.charAt(0) || 'A'}
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-black text-zinc-900 truncate">Alex J.</p>
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Admin v2.4</p>
+              <p className="text-sm font-black text-zinc-900 truncate">{user?.name || 'Admin'}</p>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'Administrator'}</p>
             </div>
           )}
           {!isCollapsed && (
-            <button className="p-2 text-zinc-300 hover:text-rose-500 transition-colors">
+            <button
+              onClick={logout}
+              className="p-2 text-zinc-300 hover:text-rose-500 transition-colors"
+            >
               <LogOut className="w-5 h-5" />
             </button>
           )}

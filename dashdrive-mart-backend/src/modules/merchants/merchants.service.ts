@@ -22,13 +22,36 @@ export class MerchantsService {
 
         const hashedPassword = await bcrypt.hash(data.password, 10);
 
-        return this.prisma.merchant.create({
-            data: {
-                email: data.email,
-                passwordHash: hashedPassword,
-                storeName: data.storeName,
-                countryId: country.id,
-            },
+        return this.prisma.$transaction(async (tx) => {
+            const merchant = await tx.merchant.create({
+                data: {
+                    email: data.email,
+                    passwordHash: hashedPassword,
+                    storeName: data.storeName,
+                    countryId: country.id,
+                },
+            });
+
+            const store = await tx.store.create({
+                data: {
+                    merchantId: merchant.id,
+                    name: data.storeName,
+                    address: 'Pending Setup',
+                    city: 'Pending Setup',
+                    currency: country.currency,
+                    timezone: country.timezone,
+                    isActive: false, // Inactive until onboarding is complete
+                },
+            });
+
+            return { merchant, store };
+        });
+    }
+
+    async updatePushToken(merchantId: string, pushToken: string) {
+        return this.prisma.merchant.update({
+            where: { id: merchantId },
+            data: { pushToken },
         });
     }
 

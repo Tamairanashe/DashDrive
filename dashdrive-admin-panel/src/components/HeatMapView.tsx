@@ -907,7 +907,7 @@ export const HeatMapView = () => {
               <div className="bg-white rounded-[24px] shadow-soft border border-slate-100 p-6">
                 <h3 className="text-xs font-bold text-slate-800 mb-6">Service breakdown</h3>
                 <div className="h-[200px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <PieChart>
                       <Pie
                         data={serviceBreakdownData}

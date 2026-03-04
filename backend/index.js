@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -35,6 +36,14 @@ const io = new Server(server, {
         methods: ["GET", "POST"]
     }
 });
+
+// Route Imports
+const mobileRoutes = require('./src/routes/mobile.routes');
+const merchantRoutes = require('./src/routes/merchant.routes');
+
+// API Routes
+app.use('/api/mobile', mobileRoutes);
+app.use('/api/merchant', merchantRoutes);
 
 // Initial driver and trip state will be managed via Supabase
 let drivers = [];
@@ -107,83 +116,14 @@ setInterval(async () => {
     });
 }, 2000);
 
+const { handleNegotiation } = require('./src/controllers/negotiationController');
+
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
     socket.emit('driversUpdate', drivers);
 
-    // Module B: Negotiation Engine Handler
-    socket.on('proposeFare', async (data) => {
-        const tripExternalId = `TRIP-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-        const newTrip = {
-            external_id: tripExternalId,
-            rider_id: data.riderId,
-            initial_offer: data.amount,
-            current_price: data.amount,
-            negotiation_history: [{ type: 'Rider Proposal', price: data.amount, time: new Date() }],
-            status: 'negotiating'
-        };
-
-        const { data: savedTrip, error } = await supabase.from('trips').insert(newTrip).select().single();
-
-        if (!error && savedTrip) {
-            activeTrips.push(savedTrip);
-            io.emit('newTripRequest', savedTrip);
-            console.log(`Fare proposed for ${tripExternalId}: $${data.amount}`);
-        }
-    });
-
-    socket.on('driverCounterOffer', async (data) => {
-        const tripIndex = activeTrips.findIndex(t => t.external_id === data.tripId || t.id === data.tripId);
-        if (tripIndex > -1) {
-            const trip = activeTrips[tripIndex];
-            const updatedHistory = [...trip.negotiation_history, {
-                type: 'Driver Counter',
-                driverId: data.driverId,
-                price: data.amount,
-                time: new Date()
-            }];
-
-            const { data: updatedTrip, error } = await supabase.from('trips')
-                .update({
-                    current_price: data.amount,
-                    negotiation_history: updatedHistory,
-                    updated_at: new Date()
-                })
-                .eq('id', trip.id)
-                .select()
-                .single();
-
-            if (!error && updatedTrip) {
-                activeTrips[tripIndex] = updatedTrip;
-                io.emit('tripUpdate', updatedTrip);
-                console.log(`Driver ${data.driverId} countered for ${data.tripId}: $${data.amount}`);
-            }
-        }
-    });
-
-    socket.on('acceptFare', async (data) => {
-        const tripIndex = activeTrips.findIndex(t => t.external_id === data.tripId || t.id === data.tripId);
-        if (tripIndex > -1) {
-            const trip = activeTrips[tripIndex];
-
-            const { data: updatedTrip, error } = await supabase.from('trips')
-                .update({
-                    status: 'matched',
-                    final_price: trip.current_price,
-                    updated_at: new Date()
-                })
-                .eq('id', trip.id)
-                .select()
-                .single();
-
-            if (!error && updatedTrip) {
-                // Remove from active list if it's no longer actively negotiating
-                activeTrips.splice(tripIndex, 1);
-                io.emit('tripMatched', updatedTrip);
-                console.log(`Trip ${data.tripId} matched at $${updatedTrip.final_price}`);
-            }
-        }
-    });
+    // Delegate all negotiation and chat logic to the unified controller
+    handleNegotiation(socket, io);
 
     // ==========================
     // DashFood Room Management
@@ -207,32 +147,35 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status, reason, userId } = req.body;
 
+    const { id } = req.params;
+    const { status, reason } = req.body;
+    const { orderService } = require('./src/controllers/merchant/order.controller'); // Fallback if not globally shared
+    const defaultOrderService = require('./src/services/merchant/order.service');
+
     console.log(`[DashFood] Authoritative Status Update: Order ${id} -> ${status}`);
 
     try {
-        const updateData = {
-            status,
-            updated_at: new Date()
-        };
-
-        // Server-side authoritative timestamps
-        if (status === 'in_progress') updateData.accepted_at = new Date();
-        if (status === 'ready') updateData.ready_at = new Date();
-        if (status === 'completed') updateData.completed_at = new Date();
-
-        const { data: updatedOrder, error } = await supabase
-            .from('orders')
-            .update(updateData)
-            .eq('id', id)
-            .select()
-            .single();
-
-        if (error) throw error;
+        let updatedOrder;
+        if (status === 'preparing') {
+            updatedOrder = await defaultOrderService.acceptOrder(id);
+        } else if (status === 'ready') {
+            updatedOrder = await defaultOrderService.markOrderReady(id);
+        } else {
+            // Fallback for other statuses
+            const { data, error } = await supabase
+                .from('orders')
+                .update({ status, updated_at: new Date() })
+                .eq('id', id)
+                .select()
+                .single();
+            if (error) throw error;
+            updatedOrder = data;
+        }
 
         // Broadcast to specific store room
         const broadcastPayload = { ...updatedOrder, reason };
         io.to(`store_${updatedOrder.store_id}`).emit('orderStatusChanged', broadcastPayload);
-        io.emit('orderStatusChanged', broadcastPayload); // Global fallback
+        io.emit('orderStatusChanged', broadcastPayload);
 
         res.json({ success: true, order: updatedOrder });
     } catch (err) {
@@ -302,7 +245,7 @@ app.post("/webhooks/new-order", validateApiKey, async (req, res) => {
                 total_amount: orderData.amount,
                 status: 'new',
                 store_id: orderData.store_id || '476e91d7-3b2a-4e83-680a-7f61ff95bf3c',
-                tenant_id: 'cfd01e92-8b1d-4afd-8d27-0a18aa8564ed',
+                organization_id: orderData.organization_id || 'cfd01e92-8b1d-4afd-8d27-0a18aa8564ed',
                 items: orderData.items || []
             })
             .select()

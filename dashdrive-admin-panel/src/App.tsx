@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAuth } from './context/AuthContext';
+import { LoginPage } from './pages/LoginPage';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { StatCard } from './components/StatCard';
@@ -90,10 +92,15 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  const { isAuthenticated } = useAuth();
   const [currentView, setCurrentView] = useState('Dashboard');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   const navigateToCustomer = (id: string) => {
     setSelectedCustomerId(id);

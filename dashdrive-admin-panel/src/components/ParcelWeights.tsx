@@ -4,7 +4,7 @@ import {
     Search,
     Maximize2,
     Zap,
-    Distance,
+    MapPin,
     DollarSign,
     Layers,
     TrendingUp,
@@ -175,10 +175,10 @@ export const ParcelWeights: React.FC = () => {
     );
 };
 
-const PricingMetric: React.FC<{ label: string, value: string, sub: string, color?: string }> = ({ label, value, sub, color }) => (
+const PricingMetric: React.FC<{ label: string, value: string, sub: string, color?: string }> = ({ label, value, sub, color = "text-slate-900" }) => (
     <div className="space-y-1">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-        <p className={cn("text-xl font-display font-black tracking-tight", color || "text-slate-900")}>{value}</p>
+        <p className={cn("text-xl font-display font-black tracking-tight", color)}>{value}</p>
         <p className="text-[9px] font-bold text-slate-300 uppercase">{sub}</p>
     </div>
 );

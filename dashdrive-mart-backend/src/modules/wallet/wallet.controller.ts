@@ -27,6 +27,13 @@ export class WalletController {
         return this.walletService.getTransactionHistory(wallet.id);
     }
 
+    @Get('summary')
+    @ApiOperation({ summary: 'Get wallet summary (balance + recent transactions)' })
+    async getSummary(@Request() req: any, @Query('currency') currency: string) {
+        const ownerType = req.user.role === 'rider' ? 'RIDER' : 'MERCHANT';
+        return this.walletService.getWalletSummary(ownerType as any, req.user.id, currency || 'USD');
+    }
+
     @Post('withdraw')
     @ApiOperation({ summary: 'Request a withdrawal' })
     async withdraw(@Request() req: any, @Body() data: { amount: number; currency: string }) {

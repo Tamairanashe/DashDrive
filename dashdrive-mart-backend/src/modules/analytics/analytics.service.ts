@@ -163,4 +163,63 @@ export class AnalyticsService {
 
         return performance;
     }
+
+    async getMobileTodayStats(merchantId: string, storeId?: string) {
+        if (storeId) await this.validateStoreOwnership(merchantId, storeId);
+
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const whereToday = {
+            merchantId,
+            ...(storeId && { storeId }),
+            createdAt: { gte: startOfDay, lte: endOfDay },
+        };
+
+        const [
+            todayRevenue,
+            todayOrdersCount,
+            pendingOrdersCount,
+            lowStockCount,
+            recentOrders,
+        ] = await Promise.all([
+            this.prisma.order.aggregate({
+                where: { ...whereToday, status: OrderStatus.DELIVERED },
+                _sum: { totalAmount: true },
+            }),
+            this.prisma.order.count({ where: whereToday }),
+            this.prisma.order.count({
+                where: { ...whereToday, status: OrderStatus.PENDING },
+            }),
+            (this.prisma.$queryRaw<any[]>`
+                    SELECT COUNT(*) as count 
+                    FROM "Product" 
+                    WHERE "merchantId" = ${merchantId}
+                    ${storeId ? `AND "storeId" = '${storeId}'` : ''}
+                    AND "stock" <= "lowStockThreshold"
+                    AND "isActive" = true
+                `).then(res => Number((res as any)[0].count)),
+            this.prisma.order.findMany({
+                where: {
+                    merchantId,
+                    ...(storeId && { storeId }),
+                    status: { in: [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.READY] },
+                },
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: { items: true },
+            }),
+        ]);
+
+        return {
+            revenue: todayRevenue._sum.totalAmount || 0,
+            todayOrders: todayOrdersCount,
+            pendingOrders: pendingOrdersCount,
+            lowStockAlerts: lowStockCount,
+            recentOrders,
+        };
+    }
 }

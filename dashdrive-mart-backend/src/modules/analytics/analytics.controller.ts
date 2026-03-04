@@ -79,4 +79,14 @@ export class AnalyticsController {
     getCountryPerformance(@Req() req: any) {
         return this.analyticsService.getCountryPerformance(req.user.sub);
     }
+
+    @Get('mobile/today')
+    @ApiOperation({ summary: 'Get aggregated today stats for mobile dashboard' })
+    @ApiResponse({ status: 200, description: 'Return today metrics and recent orders' })
+    getMobileTodayStats(
+        @Req() req: any,
+        @Query('storeId') storeId?: string
+    ) {
+        return this.analyticsService.getMobileTodayStats(req.user.sub, storeId);
+    }
 }

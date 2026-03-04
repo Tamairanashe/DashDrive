@@ -129,7 +129,46 @@ export class OrdersService {
         // Notify merchant/customer of status update
         this.ordersGateway.emitStatusUpdate(order.storeId, updatedOrder);
 
+        // Push Notification Triggers for Mobile App
+        await this.handleStatusPushNotifications(updatedOrder);
+
         return updatedOrder;
+    }
+
+    private async handleStatusPushNotifications(order: any) {
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: order.merchantId },
+            select: { pushToken: true }
+        });
+
+        if (!merchant?.pushToken) return;
+
+        let title = '';
+        let body = '';
+
+        switch (order.status) {
+            case OrderStatus.PREPARING:
+                title = 'Order in Preparation';
+                body = `Order #${order.orderNumber} is now being prepared.`;
+                break;
+            case OrderStatus.READY:
+                title = 'Order Ready!';
+                body = `Order #${order.orderNumber} is ready for pickup/delivery.`;
+                break;
+            case OrderStatus.CANCELLED:
+                title = 'Order Cancelled';
+                body = `Order #${order.orderNumber} has been cancelled.`;
+                break;
+        }
+
+        if (title && body) {
+            await this.notificationsService.sendPush(
+                merchant.pushToken,
+                title,
+                body,
+                { orderId: order.id, status: order.status }
+            );
+        }
     }
 
     async getOrderById(orderId: string, merchantId: string) {
