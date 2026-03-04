@@ -1,3 +1,5 @@
+const express = require("express");
+const router = express.Router();
 const { authenticate, requirePilot } = require("../middleware/authMiddleware");
 
 const authController = require("../controllers/mobile/auth.controller");
