@@ -24,6 +24,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
 import { CommissionModule } from './modules/commission/commission.module';
 import { FraudModule } from './modules/fraud/fraud.module';
 import { MobileModule } from './modules/mobile/mobile.module';
+import { EventBusModule } from './modules/event-bus/event-bus.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
@@ -66,6 +67,7 @@ import { redisStore } from 'cache-manager-redis-yet';
     CommissionModule,
     FraudModule,
     MobileModule,
+    EventBusModule,
   ],
   controllers: [AppController],
   providers: [AppService],

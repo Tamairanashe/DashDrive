@@ -7,6 +7,8 @@ import type { Cache } from 'cache-manager';
 import { OrderStatus } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CommissionService } from '../commission/commission.service';
+import { EventBusService } from '../event-bus/event-bus.service';
+import { PlatformEvent } from '../../common/events/platform-events';
 
 @Injectable()
 export class OrdersService {
@@ -15,6 +17,7 @@ export class OrdersService {
         private ordersGateway: OrdersGateway,
         private notificationsService: NotificationsService,
         private commissionService: CommissionService,
+        private eventBusService: EventBusService,
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
     ) { }
 
@@ -67,64 +70,18 @@ export class OrdersService {
             include: { items: true },
         });
 
-        // Deduct stock (important for marketplace)
-        for (const item of data.items) {
-            const product = await this.prisma.product.update({
-                where: { id: item.productId },
-                data: {
-                    stock: {
-                        decrement: item.quantity,
-                    },
-                },
-            });
-
-            if (product.stock <= product.lowStockThreshold) {
-                // Create inventory alert log
-                await this.prisma.inventoryAlert.create({
-                    data: {
-                        merchantId: order.merchantId,
-                        storeId: order.storeId,
-                        productId: product.id,
-                        stockLevel: product.stock,
-                    }
-                });
-
-                // Create persistent notification for mobile app inbox
-                await this.prisma.merchantNotification.create({
-                    data: {
-                        merchantId: order.merchantId,
-                        title: 'Low Stock Alert 📦',
-                        body: `"${product.name}" has only ${product.stock} items left.`,
-                        data: { productId: product.id, stock: product.stock }
-                    }
-                });
-
-                // Optional: Send active push as well
-                const devices = await this.prisma.merchantDevice.findMany({
-                    where: { merchantId: order.merchantId, NOT: { pushToken: null } },
-                    select: { pushToken: true }
-                });
-
-                for (const device of devices) {
-                    await this.notificationsService.sendPush(
-                        device.pushToken!,
-                        'Low Stock Alert 📦',
-                        `"${product.name}" is running low (${product.stock} items left).`,
-                        { productId: product.id }
-                    );
-                }
-            }
-        }
+        // Stock deduction and inventory alerts are now handled asynchronously by the InventoryConsumer
+        // reacting to the PlatformEvent.ORDER_CREATED event.
 
         // Invalidate analytics cache
         await this.cacheManager.del(`analytics:snapshot:${merchantId}:all`);
         await this.cacheManager.del(`analytics:snapshot:${merchantId}:${storeId}`);
 
-        // Notify merchant in real-time
+        // Notify merchant in real-time (UI)
         this.ordersGateway.emitNewOrder(storeId, order);
 
-        // Notify via multi-channel (Final Elite Module integration)
-        await this.notificationsService.notifyOrderConfirmed(order);
+        // Publish Order Created Event
+        await this.eventBusService.publish(PlatformEvent.ORDER_CREATED, order);
 
         return order;
     }
@@ -159,32 +116,21 @@ export class OrdersService {
             await this.cacheManager.del(`analytics:snapshot:${merchantId}:all`);
             await this.cacheManager.del(`analytics:snapshot:${merchantId}:${order.storeId}`);
 
-            // Aggregate daily stats for precomputed dashboard
-            const startOfToday = new Date();
-            startOfToday.setHours(0, 0, 0, 0);
-
-            await this.prisma.merchantDailyStats.upsert({
-                where: {
-                    storeId_date: {
-                        storeId: order.storeId,
-                        date: startOfToday,
-                    },
-                },
-                update: {
-                    ordersCount: { increment: 1 },
-                    revenue: { increment: updatedOrder.totalAmount },
-                },
-                create: {
-                    merchantId,
-                    storeId: order.storeId,
-                    date: startOfToday,
-                    ordersCount: 1,
-                    revenue: updatedOrder.totalAmount,
-                },
-            });
-
-            // Trigger Automated Settlement
-            await this.commissionService.processOrderSettlement(orderId);
+            // Publish Order Delivered Event
+            await this.eventBusService.publish(PlatformEvent.ORDER_DELIVERED, updatedOrder);
+        } else if (status === OrderStatus.CONFIRMED) {
+            // Publish Order Confirmed Event
+            await this.eventBusService.publish(PlatformEvent.ORDER_CONFIRMED, updatedOrder);
+        } else {
+            // Publish generic status update event
+            const eventMap: Record<string, PlatformEvent> = {
+                [OrderStatus.PREPARING]: PlatformEvent.ORDER_PREPARING,
+                [OrderStatus.READY]: PlatformEvent.ORDER_READY,
+                [OrderStatus.CANCELLED]: PlatformEvent.ORDER_CANCELLED,
+            };
+            if (eventMap[status]) {
+                await this.eventBusService.publish(eventMap[status], updatedOrder);
+            }
         }
 
         // Notify merchant/customer of status update
