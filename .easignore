@@ -1,0 +1,17 @@
+# Ignore all other projects in the monorepo to avoid symlink issues on Windows
+backend/
+dash-food-manager/
+dashdrive-admin-backend/
+dashdrive-admin-panel/
+dashdrive-landing-page/
+dashdrive-mart-backend/
+dashfood-mobile/
+docs/
+mart-merchant-portal/
+mobile-user/
+.vercel/
+**/node_modules/
+**/.git/
+**/.agents/
+**/.claude/
+**/.gemini/

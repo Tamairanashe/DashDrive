@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MobileAuthController } from './auth/mobile-auth.controller';
 import { MobileDashboardController } from './dashboard/mobile-dashboard.controller';
 import { MobileOrdersController } from './orders/mobile-orders.controller';
@@ -21,7 +21,7 @@ import { StoresModule } from '../../stores/stores.module';
         AuthModule,
         AnalyticsModule,
         OrdersModule,
-        ProductsModule,
+        forwardRef(() => ProductsModule),
         WalletModule,
         MerchantsModule,
         StoresModule,
