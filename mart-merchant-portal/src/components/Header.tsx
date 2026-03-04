@@ -1,4 +1,8 @@
 import { Search, Bell } from 'lucide-react';
+import { Layout, Input, Badge, Avatar, Typography, Space } from 'antd';
+
+const { Header: AntdHeader } = Layout;
+const { Title, Text } = Typography;
 
 interface HeaderProps {
     title: string;
@@ -7,44 +11,41 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
     return (
-        <header className="h-20 bg-white border-b border-gray-100 px-8 flex items-center justify-between sticky top-0 z-10">
-            <div>
-                <h1 className="text-xl font-bold text-gray-800">{title}</h1>
-                <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
+        <AntdHeader
+            className="bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-10"
+            style={{ height: '80px', lineHeight: 'normal', padding: '0 32px' }}
+        >
+            <div className="flex flex-col justify-center">
+                <Title level={4} style={{ margin: 0, fontWeight: 600, lineHeight: 1.2 }}>{title}</Title>
+                <Text type="secondary" style={{ fontSize: '12px', marginTop: 4, lineHeight: 1.5 }}>{subtitle}</Text>
             </div>
 
             <div className="flex items-center gap-6">
-                <div className="relative group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 size-4 group-focus-within:text-primary transition-colors" />
-                    <input
-                        type="text"
-                        placeholder="Search users, orders, products..."
-                        className="bg-gray-50 border border-transparent focus:border-primary/20 focus:bg-white rounded-xl py-2 pl-10 pr-4 text-sm w-80 outline-none transition-all"
-                    />
-                </div>
+                <Input
+                    prefix={<Search className="text-gray-400 size-4" />}
+                    placeholder="Search users, orders, products..."
+                    style={{ width: 320, borderRadius: 12 }}
+                    size="large"
+                />
 
-                <div className="flex items-center gap-4 border-l border-gray-100 pl-6">
-                    <button className="relative p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition-colors">
-                        <Bell size={20} />
-                        <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white" />
-                    </button>
+                <div className="flex items-center gap-5 border-l border-gray-100 pl-6 h-full">
+                    <Badge dot color="red" offset={[-4, 4]}>
+                        <div className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors flex items-center justify-center">
+                            <Bell size={20} />
+                        </div>
+                    </Badge>
 
-                    <div className="flex items-center gap-3 pl-2">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-sm font-bold text-gray-800 leading-none">Admin User</p>
-                            <p className="text-[10px] text-gray-400 mt-1">admin@company.com</p>
+                    <Space size="middle" className="cursor-pointer" align="center">
+                        <div className="text-right hidden sm:flex flex-col justify-center mt-1">
+                            <Text strong style={{ display: 'block', lineHeight: 1.2 }}>Admin User</Text>
+                            <Text type="secondary" style={{ fontSize: '10px', lineHeight: 1.5 }}>admin@company.com</Text>
                         </div>
-                        <div className="relative group cursor-pointer">
-                            <img
-                                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-                                alt="Profile"
-                                className="size-10 rounded-xl bg-gray-100 border-2 border-white shadow-sm"
-                            />
-                            <div className="absolute -bottom-1 -right-1 size-3 bg-emerald-500 rounded-full border-2 border-white" />
-                        </div>
-                    </div>
+                        <Badge dot color="#10b981" offset={[-6, 35]}>
+                            <Avatar src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" size={40} shape="square" style={{ borderRadius: 12, backgroundColor: '#f5f5f5' }} />
+                        </Badge>
+                    </Space>
                 </div>
             </div>
-        </header>
+        </AntdHeader>
     );
 }

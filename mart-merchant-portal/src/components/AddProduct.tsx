@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { ChevronDown, Plus, Minus, Upload } from 'lucide-react';
+import { Upload as UploadIcon } from 'lucide-react';
+import { Card, Typography, Input, Select, InputNumber, Button, Upload } from 'antd';
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
+const { Dragger } = Upload;
 
 export function AddProduct() {
     const [quantity, setQuantity] = useState(1);
@@ -7,179 +12,196 @@ export function AddProduct() {
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Products Description Section */}
-            <section className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-8">
-                    <h2 className="text-xl font-bold text-gray-800 mb-8">Products Description</h2>
+            <Card bordered={false} className="shadow-sm rounded-[32px] overflow-hidden" bodyStyle={{ padding: 32 }}>
+                <Title level={4} style={{ margin: 0, marginBottom: 32, fontWeight: 900, letterSpacing: '-0.02em' }}>Products Description</Title>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Product Name</label>
-                            <input
-                                type="text"
-                                placeholder="Enter product name"
-                                className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none transition-all"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Category</label>
-                            <div className="relative group">
-                                <select className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none appearance-none transition-all cursor-pointer">
-                                    <option>Select Category</option>
-                                    <option>Laptop</option>
-                                    <option>Accessories</option>
-                                    <option>Watch</option>
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 size-4 pointer-events-none group-focus-within:text-blue-600 transition-colors" />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Brand</label>
-                            <div className="relative group">
-                                <select className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none appearance-none transition-all cursor-pointer">
-                                    <option>Select Brand</option>
-                                    <option>ASUS</option>
-                                    <option>Apple</option>
-                                    <option>Samsung</option>
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 size-4 pointer-events-none group-focus-within:text-blue-600 transition-colors" />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Color</label>
-                            <div className="relative group">
-                                <select className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none appearance-none transition-all cursor-pointer">
-                                    <option>Select color</option>
-                                    <option>Space Gray</option>
-                                    <option>Silver</option>
-                                    <option>Gold</option>
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 size-4 pointer-events-none group-focus-within:text-blue-600 transition-colors" />
-                            </div>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Product Name</Text>
+                        <Input
+                            size="large"
+                            placeholder="Enter product name"
+                            style={{ borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '12px 16px' }}
+                        />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Weight (kg)</label>
-                            <input
-                                type="number"
-                                defaultValue={15}
-                                className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none transition-all"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Length (cm)</label>
-                            <input
-                                type="number"
-                                defaultValue={120}
-                                className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none transition-all"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Width (cm)</label>
-                            <input
-                                type="number"
-                                defaultValue={23}
-                                className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none transition-all"
-                            />
-                        </div>
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Category</Text>
+                        <Select
+                            size="large"
+                            defaultValue="Select Category"
+                            style={{ width: '100%', borderRadius: 12 }}
+                            className="bg-gray-50 border-none add-product-select"
+                            options={[
+                                { value: 'Select Category', label: 'Select Category' },
+                                { value: 'Laptop', label: 'Laptop' },
+                                { value: 'Accessories', label: 'Accessories' },
+                                { value: 'Watch', label: 'Watch' }
+                            ]}
+                        />
                     </div>
 
-                    <div className="space-y-2 mt-8">
-                        <label className="text-sm font-bold text-gray-700">Description</label>
-                        <textarea
-                            rows={4}
-                            placeholder="Receipt Info (optional)"
-                            className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none transition-all resize-none"
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Brand</Text>
+                        <Select
+                            size="large"
+                            defaultValue="Select Brand"
+                            style={{ width: '100%', borderRadius: 12 }}
+                            className="bg-gray-50 border-none add-product-select"
+                            options={[
+                                { value: 'Select Brand', label: 'Select Brand' },
+                                { value: 'ASUS', label: 'ASUS' },
+                                { value: 'Apple', label: 'Apple' },
+                                { value: 'Samsung', label: 'Samsung' }
+                            ]}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Color</Text>
+                        <Select
+                            size="large"
+                            defaultValue="Select color"
+                            style={{ width: '100%', borderRadius: 12 }}
+                            className="bg-gray-50 border-none add-product-select"
+                            options={[
+                                { value: 'Select color', label: 'Select color' },
+                                { value: 'Space Gray', label: 'Space Gray' },
+                                { value: 'Silver', label: 'Silver' },
+                                { value: 'Gold', label: 'Gold' }
+                            ]}
                         />
                     </div>
                 </div>
-            </section>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Weight (kg)</Text>
+                        <InputNumber
+                            size="large"
+                            defaultValue={15}
+                            style={{ width: '100%', borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '4px' }}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Length (cm)</Text>
+                        <InputNumber
+                            size="large"
+                            defaultValue={120}
+                            style={{ width: '100%', borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '4px' }}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Width (cm)</Text>
+                        <InputNumber
+                            size="large"
+                            defaultValue={23}
+                            style={{ width: '100%', borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '4px' }}
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Text strong style={{ fontSize: '14px', display: 'block' }}>Description</Text>
+                    <TextArea
+                        rows={4}
+                        placeholder="Receipt Info (optional)"
+                        style={{ borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '12px 16px', resize: 'none' }}
+                    />
+                </div>
+            </Card>
 
             {/* Pricing & Availability Section */}
-            <section className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-8">
-                    <h2 className="text-xl font-bold text-gray-800 mb-8">Pricing & Availability</h2>
+            <Card bordered={false} className="shadow-sm rounded-[32px] overflow-hidden" bodyStyle={{ padding: 32 }}>
+                <Title level={4} style={{ margin: 0, marginBottom: 32, fontWeight: 900, letterSpacing: '-0.02em' }}>Pricing & Availability</Title>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Weight (kg)</label>
-                            <input type="number" defaultValue={15} className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none transition-all" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Length (cm)</label>
-                            <input type="number" defaultValue={120} className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none transition-all" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Width (cm)</label>
-                            <input type="number" defaultValue={23} className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none transition-all" />
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Regular Price ($)</Text>
+                        <InputNumber
+                            size="large"
+                            placeholder="0.00"
+                            style={{ width: '100%', borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '4px' }}
+                        />
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Stock Quantity</label>
-                            <div className="flex items-center">
-                                <button
-                                    onClick={() => setQuantity(Math.max(0, quantity - 1))}
-                                    className="bg-gray-50 border border-gray-100 p-3 rounded-l-2xl hover:bg-gray-100 text-gray-500 transition-colors"
-                                >
-                                    <Minus size={18} />
-                                </button>
-                                <div className="flex-1 bg-gray-50 border-y border-gray-100 py-3 px-4 text-center text-sm font-bold text-gray-800">
-                                    {quantity}
-                                </div>
-                                <button
-                                    onClick={() => setQuantity(quantity + 1)}
-                                    className="bg-gray-50 border border-gray-100 p-3 rounded-r-2xl hover:bg-gray-100 text-gray-500 transition-colors"
-                                >
-                                    <Plus size={18} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Availability Status</label>
-                            <div className="relative group">
-                                <select className="w-full bg-gray-50 border border-transparent focus:border-blue-100 focus:bg-white rounded-2xl py-3 px-4 text-sm outline-none appearance-none transition-all cursor-pointer">
-                                    <option>Select Availability</option>
-                                    <option>In Stock</option>
-                                    <option>Out of Stock</option>
-                                    <option>Pre-order</option>
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 size-4 pointer-events-none group-focus-within:text-blue-600 transition-colors" />
-                            </div>
-                        </div>
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Sale Price ($)</Text>
+                        <InputNumber
+                            size="large"
+                            placeholder="0.00"
+                            style={{ width: '100%', borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '4px' }}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Discount (%)</Text>
+                        <InputNumber
+                            size="large"
+                            placeholder="0.00"
+                            style={{ width: '100%', borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '4px' }}
+                        />
                     </div>
                 </div>
-            </section>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Stock Quantity</Text>
+                        <InputNumber
+                            size="large"
+                            min={0}
+                            value={quantity}
+                            onChange={(val) => setQuantity(val || 0)}
+                            style={{ width: '100%', borderRadius: 12, backgroundColor: '#f9fafb', border: 'none', padding: '4px' }}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Text strong style={{ fontSize: '14px', display: 'block' }}>Availability Status</Text>
+                        <Select
+                            size="large"
+                            defaultValue="In Stock"
+                            style={{ width: '100%', borderRadius: 12 }}
+                            className="bg-gray-50 border-none add-product-select"
+                            options={[
+                                { value: 'In Stock', label: 'In Stock' },
+                                { value: 'Out of Stock', label: 'Out of Stock' },
+                                { value: 'Pre-order', label: 'Pre-order' }
+                            ]}
+                        />
+                    </div>
+                </div>
+            </Card>
 
             {/* Product Images Section */}
-            <section className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-8">
-                    <h2 className="text-xl font-bold text-gray-800 mb-8">Products Images</h2>
-
-                    <div className="border-2 border-dashed border-blue-100 rounded-3xl p-12 flex flex-col items-center justify-center text-center group hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer">
-                        <div className="size-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                            <Upload size={32} />
+            <Card bordered={false} className="shadow-sm rounded-[32px] overflow-hidden" bodyStyle={{ padding: 32 }}>
+                <Title level={4} style={{ margin: 0, marginBottom: 32, fontWeight: 900, letterSpacing: '-0.02em' }}>Products Images</Title>
+                <Dragger
+                    name="file"
+                    multiple={true}
+                    action="/upload.do"
+                    style={{ background: '#f8fafc', border: '2px dashed #bfdbfe', borderRadius: 24, padding: 48 }}
+                >
+                    <p className="ant-upload-drag-icon flex justify-center mb-6">
+                        <div className="size-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center transition-transform hover:scale-110">
+                            <UploadIcon size={32} />
                         </div>
-                        <p className="text-gray-800 font-bold mb-2">Click to upload <span className="text-gray-400 font-medium">or drag and drop SVG,</span></p>
-                        <p className="text-gray-400 text-sm font-medium">PNG, JPG or GIF (MAX. 800x400px)</p>
-                    </div>
-                </div>
-            </section>
+                    </p>
+                    <p className="ant-upload-text" style={{ fontWeight: 900, color: '#1f2937' }}>
+                        Click to upload <span style={{ fontWeight: 500, color: '#9ca3af' }}>or drag and drop SVG,</span>
+                    </p>
+                    <p className="ant-upload-hint" style={{ fontWeight: 500, color: '#9ca3af', fontSize: '14px' }}>
+                        PNG, JPG or GIF (MAX. 800x400px)
+                    </p>
+                </Dragger>
+            </Card>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-end gap-4">
-                <button className="px-8 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-50 transition-all">
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-4">
+                <Button size="large" style={{ borderRadius: 16, fontWeight: 900, height: 48, padding: '0 32px' }}>
                     Draft
-                </button>
-                <button className="px-8 py-3 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
+                </Button>
+                <Button type="primary" size="large" style={{ backgroundColor: '#2563eb', borderRadius: 16, fontWeight: 900, height: 48, padding: '0 32px' }} className="shadow-lg shadow-blue-100 w-full sm:w-auto">
                     Publish Product
-                </button>
+                </Button>
             </div>
         </div>
     );

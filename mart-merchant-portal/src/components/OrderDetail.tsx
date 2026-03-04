@@ -4,7 +4,9 @@ import {
     CheckCircle2, Send, AlertCircle,
     Undo2, MessageCircle
 } from 'lucide-react';
-import { cn } from '../utils/cn';
+import { Card, Table, Button, Typography, Tag, Timeline, Divider, Space } from 'antd';
+
+const { Title, Text } = Typography;
 
 interface OrderDetailProps {
     orderId: string;
@@ -52,194 +54,200 @@ export function OrderDetail({ orderId, onBack }: OrderDetailProps) {
         ]
     };
 
+    const columns = [
+        {
+            title: 'Item Detail',
+            key: 'item',
+            render: (_: any, record: any) => (
+                <div className="flex items-center gap-4">
+                    <img src={record.image} alt="" className="size-14 rounded-2xl object-cover border border-gray-50" />
+                    <div>
+                        <Text strong style={{ fontSize: '14px' }}>{record.name}</Text>
+                        <br />
+                        <Tag color="success" style={{ marginTop: 4, borderRadius: 12, border: 'none', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', padding: '0 8px' }}>
+                            {record.status}
+                        </Tag>
+                    </div>
+                </div>
+            )
+        },
+        {
+            title: 'Price',
+            dataIndex: 'price',
+            key: 'price',
+            render: (price: number) => <Text strong>${price.toFixed(2)}</Text>
+        },
+        {
+            title: 'Qty',
+            dataIndex: 'qty',
+            key: 'qty',
+            align: 'center' as const,
+            render: (qty: number) => <Text strong>{qty}</Text>
+        },
+        {
+            title: 'Total',
+            dataIndex: 'total',
+            key: 'total',
+            align: 'right' as const,
+            render: (total: number) => <Text strong style={{ fontSize: '15px', letterSpacing: '-0.02em' }}>${total.toFixed(2)}</Text>
+        }
+    ];
+
+    const timelineItems = order.timeline.map((event) => ({
+        color: event.current ? '#2563eb' : '#e5e7eb',
+        dot: event.current ? <div className="size-2.5 rounded-full bg-blue-600 ring-4 ring-blue-50" /> : undefined,
+        children: (
+            <div className="-mt-1 pb-4">
+                <Text strong style={{ display: 'block', fontSize: '14px' }}>{event.event}</Text>
+                <Text type="secondary" style={{ fontSize: '12px' }}>{event.desc}</Text>
+                <div className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">
+                    {event.date}, {event.time}
+                </div>
+            </div>
+        )
+    }));
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-800 transition-colors w-fit"
-                >
-                    <ChevronLeft size={20} /> Back to Orders
-                </button>
-                <div className="flex items-center gap-3">
-                    <button className="p-2.5 bg-white border border-gray-100 rounded-xl text-gray-500 hover:text-gray-800 transition-all shadow-sm">
-                        <Share2 size={18} />
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
-                        <Printer size={18} /> Print Packing Slip
-                    </button>
-                    <button className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-100">
-                        <CheckCircle2 size={18} /> Mark as Shipped
-                    </button>
-                </div>
+                <Button type="text" onClick={onBack} icon={<ChevronLeft size={18} />} style={{ fontWeight: 600, color: '#9ca3af', padding: 0 }}>
+                    Back to Orders
+                </Button>
+                <Space size="middle">
+                    <Button icon={<Share2 size={16} />} style={{ borderRadius: 12 }} />
+                    <Button icon={<Printer size={16} />} style={{ borderRadius: 12, fontWeight: 600 }}>
+                        Print Packing Slip
+                    </Button>
+                    <Button type="primary" icon={<CheckCircle2 size={16} />} style={{ borderRadius: 12, fontWeight: 600 }}>
+                        Mark as Shipped
+                    </Button>
+                </Space>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Order Stats & Items */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Order Snapshot */}
-                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+                    <Card bordered={false} className="shadow-sm rounded-3xl" bodyStyle={{ padding: 32 }}>
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h1 className="text-2xl font-black text-gray-800 uppercase tracking-tighter">Order {order.id}</h1>
-                                <p className="text-sm text-gray-400 mt-1 flex items-center gap-2 font-medium">
+                                <Title level={3} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+                                    Order {order.id}
+                                </Title>
+                                <Text type="secondary" style={{ fontSize: '14px', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
                                     <Clock size={14} /> {order.date}
-                                </p>
+                                </Text>
                             </div>
-                            <span className="px-5 py-2 bg-blue-50 text-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest">
+                            <Tag color="blue" style={{ padding: '4px 12px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', borderRadius: 12, border: 'none' }}>
                                 {order.status}
-                            </span>
+                            </Tag>
                         </div>
 
-                        <div className="overflow-x-auto mt-8">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="text-left border-b border-gray-50">
-                                        <th className="pb-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Item Detail</th>
-                                        <th className="pb-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Price</th>
-                                        <th className="pb-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Qty</th>
-                                        <th className="pb-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50">
-                                    {order.items.map((item) => (
-                                        <tr key={item.id} className="group">
-                                            <td className="py-5">
-                                                <div className="flex items-center gap-4">
-                                                    <img src={item.image} alt="" className="size-14 rounded-2xl object-cover border border-gray-50" />
-                                                    <div>
-                                                        <p className="text-sm font-bold text-gray-800">{item.name}</p>
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full mt-1 inline-block uppercase tracking-tight">
-                                                            {item.status}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-5 text-sm font-bold text-gray-800">${item.price.toFixed(2)}</td>
-                                            <td className="py-5 text-sm font-bold text-gray-800 text-center">{item.qty}</td>
-                                            <td className="py-5 text-sm font-black text-gray-800 text-right">${item.total.toFixed(2)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <Table
+                            columns={columns}
+                            dataSource={order.items}
+                            pagination={false}
+                            rowKey="id"
+                            className="custom-table"
+                            style={{ marginBottom: 24 }}
+                        />
 
-                        <div className="mt-8 pt-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                            <div className="flex flex-wrap gap-3">
-                                <button className="flex items-center gap-2 px-4 py-2 border border-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-50 transition-colors">
-                                    <FileText size={16} /> Packing Slip PDF
-                                </button>
-                                <button className="flex items-center gap-2 px-4 py-2 border border-purple-50 text-purple-600 rounded-xl text-xs font-bold hover:bg-purple-50 transition-colors">
-                                    <Send size={16} /> Email Customer
-                                </button>
-                            </div>
+                        <div className="pt-6 border-t border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <Space size="middle" wrap>
+                                <Button type="default" icon={<FileText size={16} className="text-blue-600" />} style={{ borderRadius: 12, fontWeight: 600, color: '#2563eb', borderColor: '#eff6ff', backgroundColor: '#fff' }}>
+                                    Packing Slip PDF
+                                </Button>
+                                <Button type="default" icon={<Send size={16} className="text-purple-600" />} style={{ borderRadius: 12, fontWeight: 600, color: '#9333ea', borderColor: '#faf5ff', backgroundColor: '#fff' }}>
+                                    Email Customer
+                                </Button>
+                            </Space>
                             <div className="w-full md:w-64 space-y-3">
-                                <div className="flex justify-between text-sm text-gray-400 font-medium">
-                                    <span>Subtotal</span>
-                                    <span className="text-gray-800 font-bold">${order.summary.subtotal.toFixed(2)}</span>
+                                <div className="flex justify-between text-sm">
+                                    <Text type="secondary" strong>Subtotal</Text>
+                                    <Text strong>${order.summary.subtotal.toFixed(2)}</Text>
                                 </div>
-                                <div className="flex justify-between text-sm text-gray-400 font-medium">
-                                    <span>Estimated Tax</span>
-                                    <span className="text-gray-800 font-bold">${order.summary.tax.toFixed(2)}</span>
+                                <div className="flex justify-between text-sm">
+                                    <Text type="secondary" strong>Estimated Tax</Text>
+                                    <Text strong>${order.summary.tax.toFixed(2)}</Text>
                                 </div>
-                                <div className="flex justify-between text-sm text-gray-400 font-medium">
-                                    <span>Shipping Fee</span>
-                                    <span className="text-gray-800 font-bold">${order.summary.shipping.toFixed(2)}</span>
+                                <div className="flex justify-between text-sm">
+                                    <Text type="secondary" strong>Shipping Fee</Text>
+                                    <Text strong>${order.summary.shipping.toFixed(2)}</Text>
                                 </div>
-                                <div className="flex justify-between text-lg font-black pt-2 border-t border-dashed border-gray-100 uppercase tracking-tighter">
-                                    <span className="text-gray-400">Total</span>
-                                    <span className="text-blue-600">${order.summary.total.toFixed(2)}</span>
+                                <Divider style={{ margin: '12px 0' }} dashed />
+                                <div className="flex justify-between items-center text-lg font-black uppercase tracking-tighter">
+                                    <Text type="secondary">Total</Text>
+                                    <Text style={{ color: '#2563eb', fontSize: '20px' }}>${order.summary.total.toFixed(2)}</Text>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+                        <Card bordered={false} className="shadow-sm rounded-3xl" bodyStyle={{ padding: 32 }}>
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
                                     <MapPin size={20} />
                                 </div>
-                                <h3 className="font-bold text-gray-800">Shipping Address</h3>
+                                <Title level={5} style={{ margin: 0 }}>Shipping Address</Title>
                             </div>
-                            <div className="text-sm text-gray-500 font-medium leading-relaxed">
-                                <p className="text-gray-800 font-bold mb-1">{order.customer.name}</p>
-                                <p>{order.shippingAddress.street}</p>
-                                <p>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}</p>
+                            <div className="text-sm font-medium leading-relaxed">
+                                <Text strong style={{ display: 'block', marginBottom: 4 }}>{order.customer.name}</Text>
+                                <Text type="secondary" style={{ display: 'block' }}>{order.shippingAddress.street}</Text>
+                                <Text type="secondary" style={{ display: 'block' }}>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}</Text>
                             </div>
-                        </div>
-                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+                        </Card>
+                        <Card bordered={false} className="shadow-sm rounded-3xl" bodyStyle={{ padding: 32 }}>
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-purple-50 text-purple-600 rounded-xl">
                                     <CreditCard size={20} />
                                 </div>
-                                <h3 className="font-bold text-gray-800">Billing Address</h3>
+                                <Title level={5} style={{ margin: 0 }}>Billing Address</Title>
                             </div>
-                            <div className="text-sm text-gray-500 font-medium leading-relaxed">
-                                <p className="text-gray-800 font-bold mb-1">{order.customer.name}</p>
-                                <p>{order.billingAddress.street}</p>
-                                <p>{order.billingAddress.city}, {order.billingAddress.state} {order.billingAddress.zip}</p>
+                            <div className="text-sm font-medium leading-relaxed">
+                                <Text strong style={{ display: 'block', marginBottom: 4 }}>{order.customer.name}</Text>
+                                <Text type="secondary" style={{ display: 'block' }}>{order.billingAddress.street}</Text>
+                                <Text type="secondary" style={{ display: 'block' }}>{order.billingAddress.city}, {order.billingAddress.state} {order.billingAddress.zip}</Text>
                             </div>
-                        </div>
+                        </Card>
                     </div>
                 </div>
 
                 {/* Right Column: Customer & Timeline */}
                 <div className="space-y-8">
                     {/* Customer Profile */}
-                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+                    <Card bordered={false} className="shadow-sm rounded-3xl" bodyStyle={{ padding: 32 }}>
                         <div className="flex items-center justify-between mb-8">
-                            <h3 className="font-bold text-gray-800">Customer Details</h3>
-                            <button className="p-2 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-blue-600 transition-colors">
-                                <MessageCircle size={18} />
-                            </button>
+                            <Title level={5} style={{ margin: 0 }}>Customer Details</Title>
+                            <Button type="text" shape="circle" icon={<MessageCircle size={18} />} style={{ color: '#9ca3af' }} />
                         </div>
                         <div className="flex items-center gap-4 mb-8">
                             <img src={order.customer.avatar} alt="" className="size-16 rounded-full border-4 border-gray-50" />
                             <div>
-                                <h4 className="font-black text-gray-800 uppercase tracking-tighter">{order.customer.name}</h4>
-                                <p className="text-xs text-gray-400 font-medium">{order.customer.email}</p>
+                                <Title level={5} style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '-0.02em', fontWeight: 900 }}>{order.customer.name}</Title>
+                                <Text type="secondary" style={{ fontSize: '12px', fontWeight: 500 }}>{order.customer.email}</Text>
                             </div>
                         </div>
                         <div className="space-y-4">
                             <div className="flex justify-between items-center bg-gray-50 p-3 rounded-2xl">
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order Count</span>
-                                <span className="text-sm font-bold text-gray-800">12 Orders</span>
+                                <Text type="secondary" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Order Count</Text>
+                                <Text strong>12 Orders</Text>
                             </div>
-                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-2xl text-emerald-600">
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lifetime Value</span>
-                                <span className="text-sm font-bold">$1,452.00</span>
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-2xl">
+                                <Text type="secondary" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Lifetime Value</Text>
+                                <Text strong style={{ color: '#059669' }}>$1,452.00</Text>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Timeline Audit Trail */}
-                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-                        <h3 className="font-bold text-gray-800 mb-8 flex items-center gap-2">
+                    <Card bordered={false} className="shadow-sm rounded-3xl" bodyStyle={{ padding: 32 }}>
+                        <Title level={5} style={{ margin: 0, marginBottom: 32, display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Activity size={18} className="text-amber-500" /> Order History
-                        </h3>
-                        <div className="space-y-8 relative">
-                            <div className="absolute left-[11px] top-2 bottom-6 w-0.5 bg-gray-50" />
-                            {order.timeline.map((event, idx) => (
-                                <div key={idx} className="flex gap-4 relative">
-                                    <div className={cn(
-                                        "size-6 rounded-full flex items-center justify-center shrink-0 z-10",
-                                        event.current ? "bg-blue-600 text-white shadow-lg shadow-blue-100" : "bg-gray-100 text-gray-400"
-                                    )}>
-                                        <div className={cn("size-2 rounded-full", event.current ? "bg-white" : "bg-gray-400")} />
-                                    </div>
-                                    <div className="flex-1 -mt-1">
-                                        <p className="text-sm font-bold text-gray-800">{event.event}</p>
-                                        <p className="text-xs text-gray-400 font-medium mt-0.5">{event.desc}</p>
-                                        <p className="text-[10px] font-bold text-gray-300 mt-2 uppercase tracking-tighter">
-                                            {event.date}, {event.time}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                        </Title>
+                        <Timeline items={timelineItems} style={{ marginTop: 16 }} />
+                    </Card>
 
                     {/* Quick Actions Support */}
                     <div className="bg-amber-50 rounded-3xl p-8 border border-amber-100">
@@ -248,9 +256,9 @@ export function OrderDetail({ orderId, onBack }: OrderDetailProps) {
                         </div>
                         <h3 className="font-bold text-amber-900 mb-2">Issue with Order?</h3>
                         <p className="text-sm text-amber-800/70 font-medium mb-6">Handle returns or partial refunds directly from here.</p>
-                        <button className="w-full flex items-center justify-center gap-2 py-3 bg-amber-900 text-white rounded-2xl text-sm font-bold hover:bg-amber-950 transition-all">
-                            <Undo2 size={18} /> Initiate Refund
-                        </button>
+                        <Button type="primary" block size="large" icon={<Undo2 size={18} />} style={{ backgroundColor: '#78350f', borderColor: '#78350f', borderRadius: 16, fontWeight: 700 }}>
+                            Initiate Refund
+                        </Button>
                     </div>
                 </div>
             </div>

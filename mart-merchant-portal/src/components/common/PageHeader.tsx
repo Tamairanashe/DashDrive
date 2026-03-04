@@ -1,6 +1,9 @@
 import React from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { Typography } from 'antd';
 import { cn } from '../../utils/cn';
+
+const { Title, Text } = Typography;
 
 interface PageHeaderProps {
     title: string;
@@ -13,21 +16,21 @@ interface PageHeaderProps {
 export function PageHeader({ title, description, icon: Icon, actions, className }: PageHeaderProps) {
     return (
         <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 lg:mb-12", className)}>
-            <div className="flex items-start gap-5">
+            <div className="flex items-start gap-4">
                 {Icon && (
-                    <div className="p-3.5 bg-gray-900 text-white rounded-[20px] shadow-xl shadow-gray-200 mt-0.5 group hover:scale-105 transition-transform duration-300">
-                        <Icon size={26} strokeWidth={2.5} />
+                    <div className="p-3 bg-zinc-900 text-white rounded-xl shadow-md mt-1 transition-transform duration-300">
+                        <Icon size={24} strokeWidth={1.5} />
                     </div>
                 )}
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-[0.02em] uppercase leading-none">
+                    <Title level={2} style={{ margin: 0, fontWeight: 500, letterSpacing: '-0.02em' }}>
                         {title}
-                    </h1>
+                    </Title>
                     {description && (
-                        <p className="text-sm font-bold text-gray-400 mt-2.5 uppercase tracking-wider flex items-center gap-2">
-                            <span className="size-1.5 rounded-full bg-blue-500" />
+                        <Text type="secondary" style={{ fontSize: '14px', marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                             {description}
-                        </p>
+                        </Text>
                     )}
                 </div>
             </div>

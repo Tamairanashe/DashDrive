@@ -7,6 +7,9 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer
 } from 'recharts';
+import { Card, Typography, Button } from 'antd';
+
+const { Title, Text } = Typography;
 
 const promoData = [
     { name: 'Jan', redemptions: 400, sales: 2400 },
@@ -28,26 +31,26 @@ export function MarketingOverview() {
                     { label: 'New Customers', value: '342', change: '+5.4%', icon: Users, color: 'indigo' },
                     { label: 'Click Rate', value: '4.2%', change: '+0.8%', icon: MousePointer2, color: 'amber' },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
+                    <Card key={i} bordered={false} hoverable className="shadow-sm rounded-[32px]">
                         <div className="flex items-center justify-between mb-4">
                             <div className={`p-2.5 bg-${stat.color}-50 text-${stat.color}-600 rounded-xl`}>
                                 <stat.icon size={20} />
                             </div>
                             <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">{stat.change}</span>
                         </div>
-                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</p>
-                        <p className="text-2xl font-black text-gray-800 tracking-tighter mt-1">{stat.value}</p>
-                    </div>
+                        <Text type="secondary" style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block' }}>{stat.label}</Text>
+                        <Title level={3} style={{ margin: 0, marginTop: 4, letterSpacing: '-0.02em', fontWeight: 900 }}>{stat.value}</Title>
+                    </Card>
                 ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Promotion Performance Chart */}
-                <div className="lg:col-span-2 bg-white rounded-[40px] border border-gray-100 shadow-sm p-8">
+                <Card bordered={false} className="lg:col-span-2 shadow-sm rounded-[40px]" bodyStyle={{ padding: 32 }}>
                     <div className="flex items-center justify-between mb-10">
                         <div>
-                            <h3 className="text-xl font-black text-gray-800 tracking-tight">Campaign Impact</h3>
-                            <p className="text-xs text-gray-400 font-medium mt-0.5">Incremental sales driven by promotions</p>
+                            <Title level={4} style={{ margin: 0 }}>Campaign Impact</Title>
+                            <Text type="secondary" style={{ fontSize: '12px', fontWeight: 500, marginTop: 4, display: 'block' }}>Incremental sales driven by promotions</Text>
                         </div>
                     </div>
                     <div className="h-[300px] w-full">
@@ -73,13 +76,13 @@ export function MarketingOverview() {
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </Card>
 
                 {/* Featured / Boosted Items */}
-                <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8">
+                <Card bordered={false} className="shadow-sm rounded-[40px]" bodyStyle={{ padding: 32 }}>
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-lg font-black text-gray-800 tracking-tight">Featured Items</h3>
-                        <button className="text-xs font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest">Manage</button>
+                        <Title level={4} style={{ margin: 0 }}>Featured Items</Title>
+                        <Button type="link" style={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '10px' }}>Manage</Button>
                     </div>
                     <div className="space-y-6">
                         {[
@@ -87,14 +90,14 @@ export function MarketingOverview() {
                             { name: 'Whole Milk 2L', sales: 89, boost: '1.8x', image: 'https://images.unsplash.com/photo-1550583726-2248277c63b2?auto=format&fit=crop&q=80&w=100&h=100' },
                             { name: 'Avocado Pack', sales: 212, boost: '3.1x', image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&q=80&w=100&h=100' },
                         ].map((item, i) => (
-                            <div key={i} className="flex items-center gap-4 group">
-                                <img src={item.image} alt={item.name} className="size-12 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform" />
+                            <div key={i} className="flex items-center gap-4 group hover:bg-gray-50 p-2 -mx-2 rounded-2xl transition-all cursor-pointer">
+                                <img src={item.image} alt={item.name} className="size-16 rounded-2xl object-cover shadow-sm group-hover:scale-105 transition-transform" />
                                 <div className="flex-1">
-                                    <p className="text-sm font-black text-gray-800 leading-tight">{item.name}</p>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{item.sales} sales</p>
+                                    <Text strong style={{ fontSize: '14px', display: 'block' }}>{item.name}</Text>
+                                    <Text type="secondary" style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.sales} Sales</Text>
                                 </div>
                                 <div className="text-right">
-                                    <div className="flex items-center gap-1 text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-lg">
+                                    <div className="flex items-center gap-1 text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">
                                         <Zap size={10} className="fill-emerald-500" />
                                         <span className="text-[10px] font-black">{item.boost}</span>
                                     </div>
@@ -102,16 +105,16 @@ export function MarketingOverview() {
                             </div>
                         ))}
                     </div>
-                    <div className="mt-8 p-6 bg-blue-50/50 rounded-3xl border border-blue-50">
+                    <div className="mt-8 p-6 bg-blue-50/50 rounded-3xl border border-blue-50/50">
                         <div className="flex items-start gap-4">
                             <Star className="text-blue-500 mt-1 shrink-0" size={18} />
                             <div>
-                                <p className="text-xs font-bold text-blue-900 leading-tight">Boost Visibility</p>
-                                <p className="text-[10px] text-blue-700/70 mt-1 leading-normal">Boosted items appear 30% more often in search results.</p>
+                                <Text strong style={{ color: '#1e3a8a', display: 'block', fontSize: '14px' }}>Boost Visibility</Text>
+                                <Text style={{ color: '#1d4ed8', fontSize: '12px', opacity: 0.8 }}>Boosted items appear 30% more often in search results.</Text>
                             </div>
                         </div>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     );
