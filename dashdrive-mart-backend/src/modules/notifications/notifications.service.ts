@@ -14,6 +14,9 @@ export class NotificationsService {
                 port: parseInt(process.env.REDIS_PORT || '6379'),
             },
         });
+        this.notificationQueue.on('error', (error) => {
+            this.logger.error(`BullMQ Queue Error: ${error.message}`);
+        });
     }
 
     async sendEmail(to: string, subject: string, template: string, context: any) {

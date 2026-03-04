@@ -39,4 +39,7 @@ async function bootstrap() {
   console.log(`🚀 Dashdrive Mart Backend running on: http://localhost:${port}/api/v1`);
   console.log(`📚 API Documentation: http://localhost:${port}/docs`);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('💥 Error during bootstrap:', err);
+  process.exit(1);
+});

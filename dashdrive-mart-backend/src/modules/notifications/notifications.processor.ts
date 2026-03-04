@@ -30,6 +30,10 @@ export class NotificationsProcessor {
             }
         );
 
+        this.worker.on('error', (error) => {
+            this.logger.error(`BullMQ Worker Error: ${error.message}`);
+        });
+
         this.worker.on('completed', (job) => {
             this.logger.log(`Job ${job.id} has completed!`);
         });

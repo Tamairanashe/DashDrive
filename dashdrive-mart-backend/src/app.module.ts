@@ -34,15 +34,24 @@ import { redisStore } from 'cache-manager-redis-yet';
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
-        store: await redisStore({
-          socket: {
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT || '6379'),
-          },
-          ttl: 600, // 10 minutes default cache
-        }),
-      }),
+      useFactory: async () => {
+        try {
+          return {
+            store: await redisStore({
+              socket: {
+                host: process.env.REDIS_HOST || 'localhost',
+                port: parseInt(process.env.REDIS_PORT || '6379'),
+              },
+              ttl: 600,
+            }),
+          };
+        } catch (error) {
+          console.warn('⚠️ Could not connect to Redis, falling back to in-memory cache:', error.message);
+          return {
+            ttl: 600,
+          };
+        }
+      },
     }),
     ScheduleModule.forRoot(),
     PrismaModule,
