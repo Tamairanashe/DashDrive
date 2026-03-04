@@ -26,14 +26,13 @@ model Merchant {
   storeName    String
   phone        String?
   isVerified   Boolean  @default(false)
-  pushToken    String?
-  deviceId     String? // Track mobile device
-  deviceName   String? // e.g., iPhone 15
+  pushToken    String? // Still useful for primary device or legacy
   createdAt    DateTime @default(now())
 
   country       Country                @relation(fields: [countryId], references: [id])
   stores        Store[]
   notifications MerchantNotification[]
+  devices       MerchantDevice[]
 }
 
 model Store {
@@ -44,10 +43,13 @@ model Store {
   city       String
   currency   String
   timezone   String
+  logoUrl        String?
   taxRate        Float    @default(0)
-  commissionRate Float    @default(0.10) // Fixed: Added dynamic commission rate
-  isActive       Boolean  @default(true)
-  createdAt  DateTime @default(now())
+  commissionRate Float    @default(0.10)
+  deliveryEnabled   Boolean  @default(true)
+  autoAcceptOrders  Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  createdAt      DateTime @default(now())
 
   merchant      Merchant       @relation(fields: [merchantId], references: [id])
   products      Product[]
@@ -57,6 +59,7 @@ model Store {
   coupons       Coupon[]
   featuredItems FeaturedItem[]
   businessHours BusinessHours[]
+  dailyStats    MerchantDailyStats[]
 }
 
 model Category {
@@ -92,6 +95,7 @@ model Product {
   variants       ProductVariant[]
   modifierGroups ModifierGroup[]
   featuredItems  FeaturedItem[]
+  inventoryAlerts InventoryAlert[]
 }
 
 model ProductVariant {
@@ -492,4 +496,47 @@ model BusinessHours {
   store Store @relation(fields: [storeId], references: [id])
 
   @@unique([storeId, dayOfWeek])
+}
+
+model MerchantDevice {
+  id          String   @id @default(uuid())
+  merchantId  String
+  deviceId    String
+  deviceName  String?
+  pushToken   String?
+  lastLogin   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@unique([merchantId, deviceId])
+}
+
+model InventoryAlert {
+  id         String   @id @default(uuid())
+  merchantId String
+  storeId    String
+  productId  String
+  stockLevel Int
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([merchantId])
+  @@index([storeId])
+}
+
+model MerchantDailyStats {
+  id            String   @id @default(uuid())
+  merchantId    String
+  storeId       String
+  date          DateTime
+  ordersCount   Int      @default(0)
+  revenue       Float    @default(0)
+  created_at    DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, date])
+  @@index([merchantId])
 }

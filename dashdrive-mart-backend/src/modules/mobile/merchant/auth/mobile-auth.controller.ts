@@ -16,7 +16,7 @@ export class MobileAuthController {
     @ApiOperation({ summary: 'Login for merchant mobile app' })
     @ApiResponse({ status: 200, description: 'Login successful' })
     async login(@Body() body: any) {
-        const { email, password, deviceId, deviceName } = body;
+        const { email, password, deviceId, deviceName, pushToken } = body;
 
         const loginResponse = await this.authService.login(email, password);
 
@@ -26,10 +26,26 @@ export class MobileAuthController {
             select: { id: true, storeName: true, email: true }
         });
 
-        if (merchant && (deviceId || deviceName)) {
-            await this.prisma.merchant.update({
-                where: { id: merchant.id },
-                data: { deviceId, deviceName },
+        if (merchant && deviceId) {
+            await this.prisma.merchantDevice.upsert({
+                where: {
+                    merchantId_deviceId: {
+                        merchantId: merchant.id,
+                        deviceId,
+                    },
+                },
+                update: {
+                    deviceName,
+                    pushToken,
+                    lastLogin: new Date(),
+                },
+                create: {
+                    merchantId: merchant.id,
+                    deviceId,
+                    deviceName,
+                    pushToken,
+                    lastLogin: new Date(),
+                },
             });
         }
 
@@ -41,9 +57,19 @@ export class MobileAuthController {
 
     @Post('logout')
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({ summary: 'Logout and clear device info' })
-    async logout(@Body() body: any) {
-        // In a real app, you might invalidate the JWT or clear push tokens here
+    @ApiOperation({ summary: 'Logout and clear device token' })
+    async logout(@Body() body: { merchantId: string, deviceId: string }) {
+        const { merchantId, deviceId } = body;
+
+        if (merchantId && deviceId) {
+            await this.prisma.merchantDevice.update({
+                where: {
+                    merchantId_deviceId: { merchantId, deviceId }
+                },
+                data: { pushToken: null }
+            });
+        }
+
         return { message: 'Logged out successfully' };
     }
 }

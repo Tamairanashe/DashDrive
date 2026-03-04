@@ -23,6 +23,7 @@ import { ZonesModule } from './modules/zones/zones.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { CommissionModule } from './modules/commission/commission.module';
 import { FraudModule } from './modules/fraud/fraud.module';
+import { MobileModule } from './modules/mobile/mobile.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
@@ -64,6 +65,7 @@ import { redisStore } from 'cache-manager-redis-yet';
     WalletModule,
     CommissionModule,
     FraudModule,
+    MobileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

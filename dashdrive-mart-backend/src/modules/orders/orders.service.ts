@@ -69,7 +69,7 @@ export class OrdersService {
 
         // Deduct stock (important for marketplace)
         for (const item of data.items) {
-            await this.prisma.product.update({
+            const product = await this.prisma.product.update({
                 where: { id: item.productId },
                 data: {
                     stock: {
@@ -77,6 +77,43 @@ export class OrdersService {
                     },
                 },
             });
+
+            if (product.stock <= product.lowStockThreshold) {
+                // Create inventory alert log
+                await this.prisma.inventoryAlert.create({
+                    data: {
+                        merchantId: order.merchantId,
+                        storeId: order.storeId,
+                        productId: product.id,
+                        stockLevel: product.stock,
+                    }
+                });
+
+                // Create persistent notification for mobile app inbox
+                await this.prisma.merchantNotification.create({
+                    data: {
+                        merchantId: order.merchantId,
+                        title: 'Low Stock Alert 📦',
+                        body: `"${product.name}" has only ${product.stock} items left.`,
+                        data: { productId: product.id, stock: product.stock }
+                    }
+                });
+
+                // Optional: Send active push as well
+                const devices = await this.prisma.merchantDevice.findMany({
+                    where: { merchantId: order.merchantId, NOT: { pushToken: null } },
+                    select: { pushToken: true }
+                });
+
+                for (const device of devices) {
+                    await this.notificationsService.sendPush(
+                        device.pushToken!,
+                        'Low Stock Alert 📦',
+                        `"${product.name}" is running low (${product.stock} items left).`,
+                        { productId: product.id }
+                    );
+                }
+            }
         }
 
         // Invalidate analytics cache
@@ -122,6 +159,30 @@ export class OrdersService {
             await this.cacheManager.del(`analytics:snapshot:${merchantId}:all`);
             await this.cacheManager.del(`analytics:snapshot:${merchantId}:${order.storeId}`);
 
+            // Aggregate daily stats for precomputed dashboard
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+
+            await this.prisma.merchantDailyStats.upsert({
+                where: {
+                    storeId_date: {
+                        storeId: order.storeId,
+                        date: startOfToday,
+                    },
+                },
+                update: {
+                    ordersCount: { increment: 1 },
+                    revenue: { increment: updatedOrder.totalAmount },
+                },
+                create: {
+                    merchantId,
+                    storeId: order.storeId,
+                    date: startOfToday,
+                    ordersCount: 1,
+                    revenue: updatedOrder.totalAmount,
+                },
+            });
+
             // Trigger Automated Settlement
             await this.commissionService.processOrderSettlement(orderId);
         }
@@ -136,12 +197,12 @@ export class OrdersService {
     }
 
     private async handleStatusPushNotifications(order: any) {
-        const merchant = await this.prisma.merchant.findUnique({
-            where: { id: order.merchantId },
+        const devices = await this.prisma.merchantDevice.findMany({
+            where: { merchantId: order.merchantId, NOT: { pushToken: null } },
             select: { pushToken: true }
         });
 
-        if (!merchant?.pushToken) return;
+        if (devices.length === 0) return;
 
         let title = '';
         let body = '';
@@ -162,11 +223,26 @@ export class OrdersService {
         }
 
         if (title && body) {
-            await this.notificationsService.sendPush(
-                merchant.pushToken,
-                title,
-                body,
-                { orderId: order.id, status: order.status }
+            // Log to database for persistent inbox
+            await this.prisma.merchantNotification.create({
+                data: {
+                    merchantId: order.merchantId,
+                    title,
+                    body,
+                    data: { orderId: order.id, status: order.status }
+                }
+            });
+
+            // Send push to all devices
+            await Promise.all(
+                devices.map(device =>
+                    this.notificationsService.sendPush(
+                        device.pushToken!,
+                        title,
+                        body,
+                        { orderId: order.id, status: order.status }
+                    )
+                )
             );
         }
     }

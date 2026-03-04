@@ -1,0 +1,42 @@
+services:
+  # 1. Main Shared Backend (Legacy)
+  - type: web
+    name: dashdrive-backend
+    runtime: node
+    plan: free
+    rootDirectory: backend
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: NODE_VERSION
+        value: 18
+
+  # 2. Mart Merchant Backend (NestJS + Prisma)
+  - type: web
+    name: dashdrive-mart-backend
+    runtime: node
+    plan: free
+    rootDirectory: dashdrive-mart-backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+
+  # 3. Admin Backend (NestJS + Prisma)
+  - type: web
+    name: dashdrive-admin-backend
+    runtime: node
+    plan: free
+    rootDirectory: dashdrive-admin-backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
