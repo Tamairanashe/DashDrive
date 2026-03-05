@@ -34,4 +34,13 @@ export class MerchantsController {
     updatePushToken(@Req() req: any, @Body() updateDto: UpdatePushTokenDto) {
         return this.merchantsService.updatePushToken(req.user.sub, updateDto.pushToken);
     }
+
+    @Post('store/onboard')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Submit store onboarding data' })
+    @ApiResponse({ status: 201, description: 'Onboarding data submitted for review' })
+    onboardStore(@Req() req: any, @Body() data: any) {
+        return this.merchantsService.onboardStore(req.user.sub, data);
+    }
 }

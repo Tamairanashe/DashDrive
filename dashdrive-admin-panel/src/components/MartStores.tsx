@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Search,
     Filter,
@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { cn } from '../utils';
 
+import { adminApi } from '../api/adminApi';
+
 interface MartStore {
     id: string;
     name: string;
@@ -35,67 +37,83 @@ interface MartStore {
     commission: string;
     logo: string;
 }
-
 const mockMartStores: MartStore[] = [
     {
-        id: 'STR-901',
-        name: 'Fresh Mart Supermarket',
-        owner: 'John Anderson',
-        zone: 'Gulshan 2',
+        id: 'STORE-001',
+        name: 'Pick n Pay Hyper',
+        owner: 'John Doe',
+        zone: 'Harare CBD',
         status: 'Active',
-        totalOrders: '1,248',
+        totalOrders: '1,240',
         rating: 4.8,
         earnings: '$12,450',
         inventoryStatus: 'Up to Date',
-        commission: '12%',
-        logo: 'https://logo.clearbit.com/kroger.com'
+        commission: '15%',
+        logo: 'https://via.placeholder.com/150'
     },
     {
-        id: 'STR-902',
-        name: 'Daily Needs Express',
-        owner: 'Sarah Connor',
-        zone: 'Banani',
+        id: 'STORE-002',
+        name: 'OK Supermarket',
+        owner: 'Jane Smith',
+        zone: 'Bulawayo Central',
         status: 'Pending',
         totalOrders: '0',
         rating: 0.0,
         earnings: '$0',
-        inventoryStatus: 'Up to Date',
-        commission: '15%',
-        logo: 'https://logo.clearbit.com/tesco.com'
-    },
-    {
-        id: 'STR-903',
-        name: 'Organic Greens Co.',
-        owner: 'Alice Wong',
-        zone: 'Dhanmondi',
-        status: 'Active',
-        totalOrders: '842',
-        rating: 4.9,
-        earnings: '$8,920',
         inventoryStatus: 'Low Stock',
-        commission: '10%',
-        logo: 'https://logo.clearbit.com/wholefoodsmarket.com'
-    },
-    {
-        id: 'STR-904',
-        name: 'Prime Liquor & Snacks',
-        owner: 'Bob Marley',
-        zone: 'Airport',
-        status: 'Suspended',
-        totalOrders: '312',
-        rating: 3.5,
-        earnings: '$2,100',
-        inventoryStatus: 'OOS Alerts',
-        commission: '18%',
-        logo: 'https://logo.clearbit.com/bevmo.com'
+        commission: '12%',
+        logo: 'https://via.placeholder.com/150'
     }
 ];
 
 export const MartStores: React.FC = () => {
     const [activeTab, setActiveTab] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
+    const [stores, setStores] = useState<MartStore[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const tabs = ['All', 'Pending Approval', 'Active', 'Suspended'];
+
+    useEffect(() => {
+        fetchStores();
+    }, [activeTab]);
+
+    const fetchStores = async () => {
+        setIsLoading(true);
+        try {
+            // Map the tab name to API status if needed
+            const statusMap: any = {
+                'Pending Approval': 'PENDING',
+                'Active': 'Active',
+                'Suspended': 'Suspended'
+            };
+            const status = statusMap[activeTab];
+            const response = await adminApi.stores.list({ status });
+
+            // Transform API data to UI model if necessary
+            const apiStores = response.data.data || [];
+            const mappedStores = apiStores.map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                owner: s.owner_name || 'New Merchant',
+                zone: s.regions?.name || 'Unassigned',
+                status: s.status === 'PENDING' ? 'Pending' : (s.is_active ? 'Active' : 'Suspended'),
+                totalOrders: '0',
+                rating: 0.0,
+                earnings: '$0',
+                inventoryStatus: 'Up to Date',
+                commission: '15%',
+                logo: s.logo_url || 'https://via.placeholder.com/150'
+            }));
+
+            setStores(mappedStores.length > 0 ? mappedStores : mockMartStores); // Fallback to mock if empty
+        } catch (error) {
+            console.error('Failed to fetch stores:', error);
+            setStores(mockMartStores);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -164,7 +182,11 @@ export const MartStores: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {mockMartStores.map((store) => (
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={6} className="px-8 py-12 text-center text-slate-400 font-medium">Loading stores...</td>
+                                </tr>
+                            ) : stores.map((store) => (
                                 <tr key={store.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">

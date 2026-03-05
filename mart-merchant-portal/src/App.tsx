@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ConfigProvider, message } from 'antd'
+import { ConfigProvider, App as AntApp } from 'antd'
 import { api } from './api'
 
 import { Layout as MartLayout } from './components/Layout'
@@ -60,10 +60,11 @@ function App() {
       const profile = await api.merchants.getProfile(storedToken);
       setMerchant(profile);
       setPortalType('mart');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch profile:', err);
-      // localStorage.removeItem('merchant_token'); // Don't remove yet, might be transient
-      // setToken(null);
+      if (err.message === 'Unauthorized' || err.status === 401) {
+        handleLogout();
+      }
     }
   };
 
@@ -83,8 +84,9 @@ function App() {
   }, []);
 
   if (!portalType) {
+    let authContent;
     if (authMode === 'landing') {
-      return (
+      authContent = (
         <LandingPage
           onSignIn={() => setAuthMode('login')}
           onDirectSignIn={() => setAuthMode('direct_login')}
@@ -93,22 +95,43 @@ function App() {
         />
       );
     } else if (authMode === 'login') {
-      return <Login onLogin={() => setToken(localStorage.getItem('merchant_token'))} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
+      authContent = <Login onLogin={() => setToken(localStorage.getItem('merchant_token'))} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
     } else if (authMode === 'direct_login') {
-      return <DirectLogin onLogin={() => { setToken(localStorage.getItem('merchant_token')); setPortalType('direct'); }} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
+      authContent = <DirectLogin onLogin={() => { setToken(localStorage.getItem('merchant_token')); setPortalType('direct'); }} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
     } else if (authMode === 'food_login') {
-      return <FoodLogin onLogin={() => setToken(localStorage.getItem('merchant_token'))} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
+      authContent = <FoodLogin onLogin={() => setToken(localStorage.getItem('merchant_token'))} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
     } else if (authMode === 'signup') {
-      return <SignUp onSignup={() => setAuthMode('email_verification')} onSwitchToLogin={() => setAuthMode('login')} />;
+      authContent = <SignUp onSignup={() => setAuthMode('email_verification')} onSwitchToLogin={() => setAuthMode('login')} />;
     } else if (authMode === 'forgot_password') {
-      return <ForgotPassword onBackToLogin={() => setAuthMode('login')} />;
+      authContent = <ForgotPassword onBackToLogin={() => setAuthMode('login')} />;
     } else if (authMode === 'email_verification') {
-      return <EmailVerification onVerified={() => setAuthMode('onboarding')} />;
+      authContent = <EmailVerification onVerified={() => setAuthMode('onboarding')} />;
     } else if (authMode === 'onboarding') {
-      return <OnboardingWizard onComplete={() => setToken(localStorage.getItem('merchant_token'))} />;
+      authContent = <OnboardingWizard token={token || localStorage.getItem('merchant_token')} onComplete={() => setToken(localStorage.getItem('merchant_token'))} />;
     } else if (authMode === 'public_tracking') {
-      return <PublicTracking />;
+      authContent = <PublicTracking />;
     }
+
+    return (
+      <ConfigProvider
+        theme={{
+          token: {
+            fontFamily: "'Inter', system-ui, sans-serif",
+            colorPrimary: '#18181b',
+            colorInfo: '#18181b',
+            colorSuccess: '#10b981',
+            colorWarning: '#f59e0b',
+            colorError: '#ef4444',
+            borderRadius: 12,
+            fontWeightStrong: 500,
+          }
+        }}
+      >
+        <AntApp>
+          {authContent}
+        </AntApp>
+      </ConfigProvider>
+    );
   }
 
   return (
@@ -137,61 +160,64 @@ function App() {
         },
       }}
     >
-      {portalType === 'direct' ? (
-        <DirectLayout
-          activeTab={directActiveTab}
-          setActiveTab={setDirectActiveTab}
-          onLogout={() => setPortalType(null)}
-        >
-          {directActiveTab === 'overview' && <DirectOverview />}
-          {directActiveTab === 'deliveries' && <DirectDeliveries />}
-          {directActiveTab === 'create-delivery' && <DirectCreateDelivery />}
-          {directActiveTab === 'tracking' && <DirectTracking />}
-          {directActiveTab === 'billing' && <DirectBilling />}
-          {directActiveTab === 'developer' && <DirectDeveloper />}
-          {directActiveTab !== 'overview' && directActiveTab !== 'deliveries' &&
-            directActiveTab !== 'create-delivery' && directActiveTab !== 'tracking' &&
-            directActiveTab !== 'billing' && (
-              <div className="flex items-center justify-center h-full text-gray-400">
-                Content for {directActiveTab} is coming soon...
-              </div>
-            )}
-        </DirectLayout>
-      ) : (
-        <MartLayout
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          onLogout={handleLogout}
-          merchant={merchant}
-        >
-          {activeTab === 'dashboard' && <Dashboard token={token} merchant={merchant} />}
-          {activeTab === 'orders' && <Orders token={token} merchant={merchant} />}
-          {activeTab === 'inventory' && <Inventory token={token} merchant={merchant} onAddProduct={() => setActiveTab('addProduct')} />}
-          {activeTab === 'performance' && <Performance token={token} merchant={merchant} />}
-          {activeTab === 'addProduct' && <AddProduct token={token} merchant={merchant} onBack={() => setActiveTab('inventory')} />}
-          {activeTab === 'financials' && <Financials token={token} merchant={merchant} />}
-          {activeTab === 'customers' && <Customers />}
-          {activeTab === 'stores' && <Stores onNavigate={setActiveTab} />}
-          {activeTab === 'store-hours' && <StoreHours />}
-          {activeTab === 'holiday-hours' && <HolidayHours />}
-          {activeTab === 'marketing-overview' && <MarketingOverview />}
-          {activeTab === 'offers' && <Offers />}
-          {activeTab === 'campaigns' && <Campaigns />}
-          {activeTab === 'featured-products' && <FeaturedProducts />}
-          {activeTab === 'promotions' && <Promotions />}
-          {activeTab === 'settings' && <Settings />}
-          {activeTab === 'help' && <Help />}
-          {activeTab !== 'dashboard' && activeTab !== 'orders' && activeTab !== 'inventory' &&
-            activeTab !== 'performance' && activeTab !== 'addProduct' && activeTab !== 'financials' &&
-            activeTab !== 'stores' && activeTab !== 'store-hours' && activeTab !== 'holiday-hours' &&
-            activeTab !== 'marketing-overview' && activeTab !== 'offers' &&
-            activeTab !== 'campaigns' && activeTab !== 'featured-products' && activeTab !== 'promotions' && (
-              <div className="flex items-center justify-center h-full text-gray-400">
-                Content for {activeTab} is coming soon...
-              </div>
-            )}
-        </MartLayout>
-      )}
+      <AntApp>
+        {portalType === 'direct' ? (
+          <DirectLayout
+            activeTab={directActiveTab}
+            setActiveTab={setDirectActiveTab}
+            onLogout={() => setPortalType(null)}
+            merchant={merchant}
+          >
+            {directActiveTab === 'overview' && <DirectOverview />}
+            {directActiveTab === 'deliveries' && <DirectDeliveries />}
+            {directActiveTab === 'create-delivery' && <DirectCreateDelivery />}
+            {directActiveTab === 'tracking' && <DirectTracking />}
+            {directActiveTab === 'billing' && <DirectBilling />}
+            {directActiveTab === 'developer' && <DirectDeveloper />}
+            {directActiveTab !== 'overview' && directActiveTab !== 'deliveries' &&
+              directActiveTab !== 'create-delivery' && directActiveTab !== 'tracking' &&
+              directActiveTab !== 'billing' && (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  Content for {directActiveTab} is coming soon...
+                </div>
+              )}
+          </DirectLayout>
+        ) : (
+          <MartLayout
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onLogout={handleLogout}
+            merchant={merchant}
+          >
+            {activeTab === 'dashboard' && <Dashboard token={token} merchant={merchant} />}
+            {activeTab === 'orders' && <Orders token={token} merchant={merchant} />}
+            {activeTab === 'inventory' && <Inventory token={token} merchant={merchant} onAddProduct={() => setActiveTab('addProduct')} />}
+            {activeTab === 'performance' && <Performance token={token} merchant={merchant} />}
+            {activeTab === 'addProduct' && <AddProduct token={token} merchant={merchant} onBack={() => setActiveTab('inventory')} />}
+            {activeTab === 'financials' && <Financials token={token} merchant={merchant} />}
+            {activeTab === 'customers' && <Customers />}
+            {activeTab === 'stores' && <Stores onNavigate={setActiveTab} />}
+            {activeTab === 'store-hours' && <StoreHours />}
+            {activeTab === 'holiday-hours' && <HolidayHours />}
+            {activeTab === 'marketing-overview' && <MarketingOverview />}
+            {activeTab === 'offers' && <Offers />}
+            {activeTab === 'campaigns' && <Campaigns />}
+            {activeTab === 'featured-products' && <FeaturedProducts />}
+            {activeTab === 'promotions' && <Promotions />}
+            {activeTab === 'settings' && <Settings />}
+            {activeTab === 'help' && <Help />}
+            {activeTab !== 'dashboard' && activeTab !== 'orders' && activeTab !== 'inventory' &&
+              activeTab !== 'performance' && activeTab !== 'addProduct' && activeTab !== 'financials' &&
+              activeTab !== 'stores' && activeTab !== 'store-hours' && activeTab !== 'holiday-hours' &&
+              activeTab !== 'marketing-overview' && activeTab !== 'offers' &&
+              activeTab !== 'campaigns' && activeTab !== 'featured-products' && activeTab !== 'promotions' && (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  Content for {activeTab} is coming soon...
+                </div>
+              )}
+          </MartLayout>
+        )}
+      </AntApp>
     </ConfigProvider>
   )
 }

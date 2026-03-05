@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRealTime } from '../hooks/useRealTime';
+import { usePermissions } from '../hooks/usePermissions';
 import { Layout, Menu } from 'antd';
 
 const { Sider } = Layout;
@@ -27,9 +28,11 @@ interface SidebarProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     onLogout?: () => void;
+    merchant?: any;
 }
 
-export function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, onLogout, merchant }: SidebarProps) {
+    const { canManageOrders, canManageInventory, canViewFinancials, canManageSettings, canManageMarketing, canViewReports } = usePermissions(merchant);
     const { lastUpdated } = useRealTime('orders', null);
     const [showOrderDot, setShowOrderDot] = useState(false);
 
@@ -47,7 +50,7 @@ export function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
 
     const items = [
         { key: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-        {
+        canManageSettings && {
             key: 'stores-group',
             icon: <Store size={18} />,
             label: 'Stores',
@@ -57,7 +60,7 @@ export function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
                 { key: 'holiday-hours', icon: <CalendarDays size={16} />, label: 'Holiday Hours' },
             ]
         },
-        {
+        canManageMarketing && {
             key: 'marketing-group',
             icon: <Megaphone size={18} />,
             label: 'Marketing',
@@ -69,7 +72,7 @@ export function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
                 { key: 'promotions', icon: <Megaphone size={16} />, label: 'Push Promotions' },
             ]
         },
-        {
+        canManageOrders && {
             key: 'orders',
             icon: <ShoppingBag size={18} />,
             label: (
@@ -79,20 +82,20 @@ export function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
                 </div>
             )
         },
-        { key: 'inventory', icon: <Package size={18} />, label: 'Inventory' },
-        { key: 'customers', icon: <Users size={18} />, label: 'Customers' },
-        { key: 'performance', icon: <BarChart3 size={18} />, label: 'Performance' },
-        { key: 'financials', icon: <Wallet size={18} />, label: 'Financials' },
+        canManageInventory && { key: 'inventory', icon: <Package size={18} />, label: 'Inventory' },
+        canManageOrders && { key: 'customers', icon: <Users size={18} />, label: 'Customers' },
+        canViewReports && { key: 'performance', icon: <BarChart3 size={18} />, label: 'Performance' },
+        canViewFinancials && { key: 'financials', icon: <Wallet size={18} />, label: 'Financials' },
         { type: 'divider' },
-        { key: 'settings', icon: <Settings size={18} />, label: 'Settings' },
+        canManageSettings && { key: 'settings', icon: <Settings size={18} />, label: 'Settings' },
         { key: 'help', icon: <HelpCircle size={18} />, label: 'Help/Support' },
         { key: 'logout', icon: <LogOut size={18} />, label: 'Logout' },
-    ];
+    ].filter(Boolean);
 
     // Determine default open keys based on activeTab
-    const defaultOpenKeys = items
-        .filter(item => item.children?.some(child => child.key === activeTab))
-        .map(item => item.key as string);
+    const defaultOpenKeys = (items as any[])
+        .filter((item: any) => item.children?.some((child: any) => child.key === activeTab))
+        .map((item: any) => item.key as string);
 
     return (
         <Sider

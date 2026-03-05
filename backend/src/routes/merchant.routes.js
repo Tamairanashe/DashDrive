@@ -9,6 +9,7 @@ const { authenticate } = require('../middleware/authMiddleware');
  * Merchant Store Management
  */
 router.post('/store/setup', authenticate, storeController.setupOrganization); // Org Setup
+router.post('/store/onboard', authenticate, storeController.onboardStore); // Onboarding Wizard Submit
 router.post('/store/add', authenticate, storeController.addStore); // Add Physical Store
 router.get('/store/org/:organization_id', authenticate, storeController.getOrgStores); // List Stores
 router.patch('/store/:store_id/settings', authenticate, storeController.updateStoreSettings); // Toggle Status/SLA

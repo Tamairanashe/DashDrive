@@ -61,6 +61,7 @@ import { UsersList } from './components/UsersList';
 import { Settings } from './components/Settings';
 import Orders from './components/Orders';
 import { api } from './api';
+import { usePermissions } from './hooks/usePermissions';
 
 // --- Types ---
 type Tab = 'dashboard' | 'store' | 'menu' | 'orders' | 'performance' | 'customers' | 'marketing' | 'payments' | 'reports' | 'users' | 'settings';
@@ -183,10 +184,17 @@ const BackendStatusAlert = () => {
 
 // --- Pages ---
 
-const Dashboard = ({ stats }: { stats: any }) => (
+const Dashboard = ({ stats, merchant }: { stats: any, merchant: any }) => (
   <div className="space-y-6">
     {/* Alerts */}
     <div className="grid grid-cols-1">
+      {merchant?.status === 'PENDING' && (
+        <AlertCard
+          type="warning"
+          message="Your account is currently under review. Your store will go live once documents are verified."
+          action="Check Status"
+        />
+      )}
       <BackendStatusAlert />
       <AlertCard
         type="error"
@@ -354,6 +362,7 @@ export default function App() {
   const [merchant, setMerchant] = useState<any>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('merchant_token'));
   const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const { canManageOrders, canViewReports, canManageSettings, canManageMarketing, canManageInventory, canManageStaff, canViewFinancials } = usePermissions(merchant);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -404,7 +413,7 @@ export default function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <Dashboard stats={dashboardStats} />;
+      case 'dashboard': return <Dashboard stats={dashboardStats} merchant={merchant} />;
       case 'orders': return <Orders token={token} merchant={merchant} />;
       case 'menu': return <MenuMaker token={token} merchant={merchant} />;
       case 'performance': return <Performance token={token} merchant={merchant} />;
@@ -455,18 +464,18 @@ export default function App() {
           {/* Nav Items */}
           <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
             <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} isCollapsed={!isSidebarOpen} />
-            <SidebarItem icon={Store} label="Store Management" active={activeTab === 'store'} onClick={() => setActiveTab('store')} isCollapsed={!isSidebarOpen} />
-            <SidebarItem icon={MenuIcon} label="Menu Maker" active={activeTab === 'menu'} onClick={() => setActiveTab('menu')} isCollapsed={!isSidebarOpen} />
-            <SidebarItem icon={ShoppingBag} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} isCollapsed={!isSidebarOpen} />
+            {canManageSettings && <SidebarItem icon={Store} label="Store Management" active={activeTab === 'store'} onClick={() => setActiveTab('store')} isCollapsed={!isSidebarOpen} />}
+            {canManageInventory && <SidebarItem icon={MenuIcon} label="Menu Maker" active={activeTab === 'menu'} onClick={() => setActiveTab('menu')} isCollapsed={!isSidebarOpen} />}
+            {canManageOrders && <SidebarItem icon={ShoppingBag} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} isCollapsed={!isSidebarOpen} />}
             <div className="my-4 border-t border-zinc-100" />
-            <SidebarItem icon={BarChart3} label="Performance" active={activeTab === 'performance'} onClick={() => setActiveTab('performance')} isCollapsed={!isSidebarOpen} />
-            <SidebarItem icon={Users} label="Customers" active={activeTab === 'customers'} onClick={() => setActiveTab('customers')} isCollapsed={!isSidebarOpen} />
-            <SidebarItem icon={Megaphone} label="Marketing" active={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} isCollapsed={!isSidebarOpen} />
+            {canViewReports && <SidebarItem icon={BarChart3} label="Performance" active={activeTab === 'performance'} onClick={() => setActiveTab('performance')} isCollapsed={!isSidebarOpen} />}
+            {canManageOrders && <SidebarItem icon={Users} label="Customers" active={activeTab === 'customers'} onClick={() => setActiveTab('customers')} isCollapsed={!isSidebarOpen} />}
+            {canManageMarketing && <SidebarItem icon={Megaphone} label="Marketing" active={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} isCollapsed={!isSidebarOpen} />}
             <div className="my-4 border-t border-zinc-100" />
-            <SidebarItem icon={CreditCard} label="Payments" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} isCollapsed={!isSidebarOpen} />
-            <SidebarItem icon={FileText} label="Reports" active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} isCollapsed={!isSidebarOpen} />
-            <SidebarItem icon={UserCircle} label="Users" active={activeTab === 'users'} onClick={() => setActiveTab('users')} isCollapsed={!isSidebarOpen} />
-            <SidebarItem icon={SettingsIcon} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} isCollapsed={!isSidebarOpen} />
+            {canViewFinancials && <SidebarItem icon={CreditCard} label="Payments" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} isCollapsed={!isSidebarOpen} />}
+            {canViewReports && <SidebarItem icon={FileText} label="Reports" active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} isCollapsed={!isSidebarOpen} />}
+            {canManageStaff && <SidebarItem icon={UserCircle} label="Users" active={activeTab === 'users'} onClick={() => setActiveTab('users')} isCollapsed={!isSidebarOpen} />}
+            {canManageSettings && <SidebarItem icon={SettingsIcon} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} isCollapsed={!isSidebarOpen} />}
             <div className="my-2" />
             <SidebarItem
               icon={LogOut}

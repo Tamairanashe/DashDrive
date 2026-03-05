@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { Typography, Input, Button, Form, ConfigProvider, Select, TimePicker } from 'antd';
-import { Leaf, Check, ArrowRight, ArrowLeft, Upload, MapPin } from 'lucide-react';
+import { Typography, Input, Button, Form, ConfigProvider, Select, TimePicker, App } from 'antd';
+import { Leaf, Check, ArrowRight, ArrowLeft, Upload, MapPin, AlertCircle } from 'lucide-react';
+import { api } from '../api';
 
 const { Title, Text } = Typography;
 const { RangePicker } = TimePicker;
 
 interface OnboardingWizardProps {
+    token: string | null;
+    merchant: any;
     onComplete: () => void;
 }
 
-export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
+export function OnboardingWizard({ token, onComplete }: Omit<OnboardingWizardProps, 'merchant'>) {
+    const { message } = App.useApp();
     const [currentStep, setCurrentStep] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -18,19 +22,31 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         { title: 'Location', id: 2 },
         { title: 'Details', id: 3 },
         { title: 'Products', id: 4 },
-        { title: 'Payments', id: 5 },
-        { title: 'Go Live', id: 6 },
+        { title: 'Documents', id: 5 },
+        { title: 'Payments', id: 6 },
+        { title: 'Go Live', id: 7 },
     ];
 
-    const handleNext = () => {
+    const [formData] = useState<any>({});
+
+    const handleNext = async () => {
         if (currentStep < steps.length - 1) {
             setCurrentStep(currentStep + 1);
         } else {
             setIsLoading(true);
-            setTimeout(() => {
-                setIsLoading(false);
+            try {
+                // Submit onboarding data to backend for admin approval
+                if (token) {
+                    await api.onboarding.submit(token, formData);
+                    console.log('Onboarding submitted for review');
+                }
                 onComplete();
-            }, 1500);
+            } catch (error: any) {
+                console.error('Onboarding failed:', error);
+                message.error('Failed to submit onboarding. Please try again.');
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -231,6 +247,52 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                         {currentStep === 4 && (
                             <div className="animate-in slide-in-from-right-8 duration-300">
                                 <Title level={2} style={{ margin: 0, fontWeight: 700, fontSize: '32px', letterSpacing: '-0.02em', color: '#000000', marginBottom: 8 }}>
+                                    Verification Documents
+                                </Title>
+                                <Text style={{ fontSize: '16px', color: '#545454', display: 'block', marginBottom: 32 }}>
+                                    Required for legal and compliance checks.
+                                </Text>
+
+                                <div className="space-y-6">
+                                    <div className="p-6 border-2 border-dashed border-gray-200 rounded-2xl hover:border-black transition-colors cursor-pointer group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="size-12 bg-gray-100 rounded-xl flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
+                                                <Upload size={24} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900">Business License / Permit</h4>
+                                                <p className="text-sm text-gray-500">Official registration document or trade license.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 border-2 border-dashed border-gray-200 rounded-2xl hover:border-black transition-colors cursor-pointer group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="size-12 bg-gray-100 rounded-xl flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
+                                                <Upload size={24} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900">National ID / Passport</h4>
+                                                <p className="text-sm text-gray-500">Copy of owner's identification document.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 border border-amber-100 bg-amber-50/50 rounded-2xl">
+                                        <div className="flex gap-3">
+                                            <AlertCircle size={20} className="text-amber-600 shrink-0" />
+                                            <Text style={{ fontSize: '13px', color: '#92400e' }}>
+                                                Documents are securely stored and used only for business verification purposes according to our privacy policy.
+                                            </Text>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {currentStep === 5 && (
+                            <div className="animate-in slide-in-from-right-8 duration-300">
+                                <Title level={2} style={{ margin: 0, fontWeight: 700, fontSize: '32px', letterSpacing: '-0.02em', color: '#000000', marginBottom: 8 }}>
                                     Set up payouts
                                 </Title>
                                 <Text style={{ fontSize: '16px', color: '#545454', display: 'block', marginBottom: 32 }}>
@@ -253,25 +315,25 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                             </div>
                         )}
 
-                        {currentStep === 5 && (
+                        {currentStep === 6 && (
                             <div className="animate-in slide-in-from-right-8 duration-300 flex flex-col items-center text-center py-8">
                                 <div className="size-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
                                     <Check size={40} className="text-[#06C167]" strokeWidth={3} />
                                 </div>
                                 <Title level={2} style={{ margin: 0, fontWeight: 700, fontSize: '36px', letterSpacing: '-0.02em', color: '#000000', marginBottom: 12 }}>
-                                    You're ready to start selling 🎉
+                                    Wait for verification 🎉
                                 </Title>
                                 <Text style={{ fontSize: '18px', color: '#545454', display: 'block', marginBottom: 8 }}>
-                                    Your store is now successfully configured.
+                                    Your store is now successfully submitted.
                                 </Text>
                                 <Text style={{ fontSize: '16px', color: '#545454', display: 'block' }}>
-                                    Customers can now place orders on DashDrive Mart.
+                                    Our team will verify your documents within 24-48 hours.
                                 </Text>
                             </div>
                         )}
 
                         {/* Navigation Buttons */}
-                        {currentStep !== 5 && (
+                        {currentStep !== 6 && (
                             <div className="flex items-center justify-between mt-12 pt-8 border-t border-gray-100">
                                 <Button
                                     type="text"
@@ -297,7 +359,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                                     onClick={handleNext}
                                     loading={isLoading}
                                     icon={currentStep === steps.length - 1 ? <Check size={18} /> : <ArrowRight size={18} />}
-                                    iconPosition="end"
+                                    iconPlacement="end"
                                     style={{
                                         backgroundColor: currentStep === steps.length - 1 ? '#06C167' : '#000000',
                                         height: '52px',
@@ -308,12 +370,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                                     }}
                                     className="hover:opacity-90 transition-opacity border-none shadow-md"
                                 >
-                                    {currentStep === steps.length - 1 ? 'Save Payment Details' : 'Next'}
+                                    {currentStep === steps.length - 1 ? 'Finish Registration' : 'Next'}
                                 </Button>
                             </div>
                         )}
 
-                        {currentStep === 5 && (
+                        {currentStep === 6 && (
                             <div className="flex items-center justify-center mt-12">
                                 <Button
                                     type="primary"

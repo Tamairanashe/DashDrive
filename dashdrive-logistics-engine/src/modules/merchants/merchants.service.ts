@@ -67,4 +67,28 @@ export class MerchantsService {
             },
         });
     }
+
+    async onboardStore(merchantId: string, data: any) {
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { id: merchantId },
+            include: { stores: true },
+        });
+
+        if (!merchant || merchant.stores.length === 0) {
+            throw new BadRequestException('Merchant or store not found');
+        }
+
+        const store = merchant.stores[0];
+
+        return this.prisma.store.update({
+            where: { id: store.id },
+            data: {
+                name: data.storeName || store.name,
+                address: data.address || store.address,
+                city: data.city || store.city,
+                logoUrl: data.logoUrl || store.logoUrl,
+                // Keep isActive false until admin approves
+            },
+        });
+    }
 }

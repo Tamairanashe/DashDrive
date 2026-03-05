@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Typography, Input, Button, Form, ConfigProvider, Checkbox } from 'antd';
+import { Typography, Input, Button, Form, ConfigProvider, Checkbox, App } from 'antd';
 import { Leaf } from 'lucide-react';
 import { api } from '../api';
 
@@ -12,6 +12,7 @@ interface LoginProps {
 }
 
 export function Login({ onLogin, onSwitchToSignup, onForgotPassword }: LoginProps) {
+    const { message } = App.useApp();
     const [isLoading, setIsLoading] = useState(false);
     const [form] = Form.useForm();
 
@@ -24,10 +25,12 @@ export function Login({ onLogin, onSwitchToSignup, onForgotPassword }: LoginProp
             });
             if (result.access_token) {
                 localStorage.setItem('merchant_token', result.access_token);
+                message.success('Login successful!');
                 onLogin();
             }
         } catch (error: any) {
             console.error('Login failed:', error);
+            message.error(error.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }

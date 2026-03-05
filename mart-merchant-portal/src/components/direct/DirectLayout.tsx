@@ -9,9 +9,10 @@ interface DirectLayoutProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     onLogout?: () => void;
+    merchant: any;
 }
 
-export function DirectLayout({ children, activeTab, setActiveTab, onLogout }: DirectLayoutProps) {
+export function DirectLayout({ children, activeTab, setActiveTab, onLogout, merchant }: DirectLayoutProps) {
     const titles: Record<string, { title: string; subtitle: string }> = {
         overview: { title: 'Dispatch Overview', subtitle: "Real-time look at your active fleet and historical deliveries" },
         deliveries: { title: 'All Deliveries', subtitle: 'View constraints and history of your requested dispatches' },
@@ -27,7 +28,7 @@ export function DirectLayout({ children, activeTab, setActiveTab, onLogout }: Di
         <AntdLayout style={{ minHeight: '100vh' }}>
             <DirectSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
             <AntdLayout>
-                <Header title={title} subtitle={subtitle} />
+                <Header title={title} subtitle={subtitle} merchant={merchant} />
                 <Content className="bg-white" style={{ padding: '32px', paddingBottom: '48px', overflowY: 'auto' }}>
                     {children ? children : (
                         <div className="flex items-center justify-center h-full">

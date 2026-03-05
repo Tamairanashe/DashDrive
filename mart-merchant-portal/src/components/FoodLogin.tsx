@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Typography, Input, Button, Form, ConfigProvider, Checkbox } from 'antd';
+import { Typography, Input, Button, Form, ConfigProvider, Checkbox, message } from 'antd';
 import { Utensils } from 'lucide-react';
 import { api } from '../api';
 
@@ -28,6 +28,7 @@ export function FoodLogin({ onLogin, onSwitchToSignup, onForgotPassword }: FoodL
             }
         } catch (error: any) {
             console.error('Food login failed:', error);
+            message.error(error.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Typography, Input, Button, Form, ConfigProvider } from 'antd';
-import { Leaf, ArrowLeft } from 'lucide-react';
+import { Typography, Input, Button, Form, ConfigProvider, notification } from 'antd';
+import { Leaf, ArrowLeft, AlertCircle } from 'lucide-react';
+import { api } from '../api';
 
 const { Title, Text } = Typography;
 
@@ -11,14 +12,29 @@ interface ForgotPasswordProps {
 export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const handleReset = () => {
+    const handleReset = async (values: any) => {
         setIsLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setIsLoading(false);
+        setErrorMessage(null);
+        try {
+            await api.auth.forgotPassword(values.email);
             setIsSent(true);
-        }, 1500);
+        } catch (error: any) {
+            console.error('Forgot password error:', error);
+            // If the error contains our specific role restriction message, show it explicitly
+            if (error.message?.includes('contact your Store Owner')) {
+                setErrorMessage(error.message);
+            } else {
+                notification.error({
+                    message: 'Reset Failed',
+                    description: error.message || 'Something went wrong. Please try again later.',
+                    placement: 'top'
+                });
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -84,10 +100,21 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
 
                         {!isSent ? (
                             <Form layout="vertical" onFinish={handleReset} requiredMark={false} className="uber-styled-form">
+                                {errorMessage && (
+                                    <div className="mb-6 bg-red-50 border border-red-100 p-4 rounded-xl flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                        <div className="text-sm font-medium text-red-800">
+                                            {errorMessage}
+                                        </div>
+                                    </div>
+                                )}
                                 <Form.Item
                                     name="email"
                                     label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Email address</Text>}
-                                    rules={[{ required: true, message: '' }]}
+                                    rules={[
+                                        { required: true, message: 'Please enter your email' },
+                                        { type: 'email', message: 'Please enter a valid email' }
+                                    ]}
                                 >
                                     <Input
                                         size="large"

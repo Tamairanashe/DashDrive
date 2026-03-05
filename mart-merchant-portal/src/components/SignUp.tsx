@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Typography, Input, Button, Form, ConfigProvider, Select } from 'antd';
+import { Typography, Input, Button, Form, ConfigProvider, Select, App } from 'antd';
 import { Leaf } from 'lucide-react';
 import { api } from '../api';
 
@@ -11,22 +11,28 @@ interface SignUpProps {
 }
 
 export function SignUp({ onSignup, onSwitchToLogin }: SignUpProps) {
+    const { message } = App.useApp();
     const [isLoading, setIsLoading] = useState(false);
     const [form] = Form.useForm();
 
     const handleSignup = async (values: any) => {
         setIsLoading(true);
         try {
-            await api.auth.register({
+            const response = await api.auth.register({
                 storeName: values.storeName,
                 email: values.email,
                 password: values.password,
                 countryCode: values.countryCode || 'ZW',
                 type: values.businessType || 'MART'
             });
+            console.log('Signup success:', response);
+            if (response.access_token) {
+                localStorage.setItem('merchant_token', response.access_token);
+            }
             onSignup();
         } catch (error: any) {
             console.error('Signup failed:', error);
+            message.error(error.message || 'Registration failed. Please try again.');
         } finally {
             setIsLoading(false);
         }

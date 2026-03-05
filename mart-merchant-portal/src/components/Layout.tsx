@@ -35,7 +35,7 @@ export function Layout({ children, activeTab, setActiveTab, onLogout, merchant }
 
     return (
         <AntdLayout style={{ minHeight: '100vh' }}>
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} merchant={merchant} />
             <AntdLayout>
                 <Header title={title} subtitle={subtitle} merchant={merchant} />
                 <Content style={{ padding: '32px', paddingBottom: '48px', overflowY: 'auto' }}>

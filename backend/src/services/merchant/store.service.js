@@ -112,3 +112,31 @@ exports.getStoreDetails = async (storeId) => {
     if (error) throw error;
     return data;
 };
+
+exports.onboardStore = async (data) => {
+    // In a real Uber replica, this would create:
+    // 1. Organization (if not exists)
+    // 2. Store
+    // 3. Initial Menu Categories
+    // 4. Document entries
+
+    // For this implementation, we'll focus on creating the store with PENDING status
+    const { storeName, address, businessType, documents } = data;
+
+    const { data: store, error } = await supabase
+        .from('stores')
+        .insert([{
+            name: storeName,
+            address: address,
+            status: 'PENDING', // This is what the admin panel will filter on
+            type: businessType,
+            onboarding_data: data, // Store everything for admin review
+            is_active: false,
+            created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return store;
+};

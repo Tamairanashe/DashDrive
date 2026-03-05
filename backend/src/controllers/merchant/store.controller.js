@@ -17,6 +17,18 @@ exports.setupOrganization = async (req, res) => {
     }
 };
 
+exports.onboardStore = async (req, res) => {
+    try {
+        const onboardingData = req.body;
+        // In a real app, we'd validate the data here
+        const result = await storeService.onboardStore(onboardingData);
+        return res.json({ success: true, data: result, message: "Onboarding submitted successfully" });
+    } catch (error) {
+        console.error("Onboard Store Error:", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 exports.addStore = async (req, res) => {
     try {
         const { organizationId, regionId, name, address, timezone } = req.body;

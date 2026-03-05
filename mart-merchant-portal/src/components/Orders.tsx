@@ -24,11 +24,7 @@ const tabs = [
     { id: 'Delivered', label: 'Delivered', count: 45 },
 ];
 
-const ordersData = [
-    { id: '#GR-284730', urgency: 'Expedited', shipBy: 'EOD', product: 'Coconut Clarity', items: 4, customer: 'Darrell Steward', customerType: 'New Customer', date: 'Feb 21, 2026', amount: '$153.50', method: 'Paid by Mastercard', status: 'Incoming', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Darrell', productImg: 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=100&h=100&fit=crop' },
-    { id: '#GR-284640', urgency: 'Normal', shipBy: 'Tomorrow', product: 'Fresh Butter', items: 3, customer: 'Esther Howard', customerType: 'Pro Customer', date: 'Feb 21, 2026', amount: '$42.00', method: 'Cash on Delivery', status: 'Processing', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Esther', productImg: 'https://images.unsplash.com/photo-1549392848-d42edee1af20?w=100&h=100&fit=crop' },
-    { id: '#GR-284530', urgency: 'Overdue', shipBy: 'Yesterday', product: 'Fresh Rice', items: 3, customer: 'Dianne Russell', customerType: 'Pro Customer', date: 'Feb 20, 2026', amount: '$135.00', method: 'Paid by Mastercard', status: 'Incoming', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dianne', productImg: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=100&h=100&fit=crop' },
-];
+
 
 import { Card, Table, Tabs, Input, Button, Dropdown, Space, Typography, Tag } from 'antd';
 import type { MenuProps } from 'antd';

@@ -31,7 +31,8 @@ const { validateApiKey } = require('./middleware/apiKeyMiddleware');
 const orderRoutes = require('./routes/orderRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
-const merchantRoutes = require('./routes/merchantRoutes');
+const merchantRoutes = require('./routes/merchant.routes');
+const legacyMerchantRoutes = require('./routes/merchantRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require("./routes/admin.routes");
 const platformRoutes = require("./routes/platform.routes");
@@ -44,6 +45,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes); // Merchant-specific Admin Layer
 app.use('/api/platform', platformRoutes); // Global Platform SuperAdmin Layer
 app.use('/api/mobile', mobileRoutes); // Unified Rider & Pilot Mobile Layer
+app.use('/api/v1/merchant', merchantRoutes); // Main Merchant Engine
+app.use('/api/merchant', legacyMerchantRoutes); // Legacy Dashboard Endpoints
 app.use('/webhooks', webhookRoutes);
 
 // Health Check

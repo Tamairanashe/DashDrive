@@ -61,14 +61,28 @@ const seed = async () => {
         }
         console.log("✅ Store Ready:", store.name);
 
-        // 4. Roles
-        const { data: adminRole } = await supabase.from('roles').select('*').eq('name', 'super_admin').maybeSingle();
-        let roleId = adminRole?.id;
-        if (!adminRole) {
-            console.log("  Creating SuperAdmin Role...");
-            const { data: newRole } = await supabase.from('roles').insert({ name: 'super_admin', permissions: { all: true } }).select().single();
-            roleId = newRole.id;
+        // 4. Roles (Platform + Merchant)
+        const roleDefs = [
+            { name: 'super_admin', permissions: { all: true } },
+            { name: 'Owner', permissions: { dashboard: true, orders: true, inventory: true, financials: true, settings: true, staff: true, marketing: true, reports: true } },
+            { name: 'Admin', permissions: { dashboard: true, orders: true, inventory: true, settings: true, marketing: true, reports: true } },
+            { name: 'Manager', permissions: { dashboard: true, orders: true, inventory: true, reports: true } },
+            { name: 'Staff', permissions: { dashboard: true, orders: true } },
+            { name: 'Analyst', permissions: { dashboard: true, reports: true } },
+        ];
+
+        let roleId;
+        for (const roleDef of roleDefs) {
+            const { data: existing } = await supabase.from('roles').select('*').eq('name', roleDef.name).maybeSingle();
+            if (!existing) {
+                console.log(`  Creating Role: ${roleDef.name}...`);
+                const { data: newRole } = await supabase.from('roles').insert(roleDef).select().single();
+                if (roleDef.name === 'super_admin') roleId = newRole.id;
+            } else {
+                if (roleDef.name === 'super_admin') roleId = existing.id;
+            }
         }
+        console.log("✅ All Roles Seeded.");
 
         // 5. Global SuperAdmin User
         const adminEmail = 'platform@dashdrive.com';

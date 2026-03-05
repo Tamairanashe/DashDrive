@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Store,
     User,
@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { MapPreview } from './MapPreview';
 import { cn } from '../utils';
+
+import { adminApi } from '../api/adminApi';
 
 interface Restaurant {
     id: string;
@@ -53,59 +55,77 @@ const mockRestaurants: Restaurant[] = [
         commission: 15,
         logo: 'https://logo.clearbit.com/burgerking.com',
         coordinates: [23.7516, 90.3804]
-    },
-    {
-        id: 'RES-102',
-        name: "Sultan's Dine",
-        owner: 'Jane Cooper',
-        location: '45 Airport Rd',
-        zone: 'Airport',
-        status: 'Active',
-        approvalStatus: 'Approved',
-        rating: 4.9,
-        totalOrders: 1840,
-        earnings: '$18,200',
-        commission: 12,
-        logo: 'https://logo.clearbit.com/sultansdine.com',
-        coordinates: [23.7925, 90.4178]
-    },
-    {
-        id: 'RES-103',
-        name: 'Pizza Hut',
-        owner: 'Guy Hawkins',
-        location: '88 Suburb Ave',
-        zone: 'Suburbs',
-        status: 'Inactive',
-        approvalStatus: 'Pending',
-        rating: 4.5,
-        totalOrders: 420,
-        earnings: '$4,500',
-        commission: 15,
-        logo: 'https://logo.clearbit.com/pizzahut.com',
-        coordinates: [23.8759, 90.3895]
-    },
-    {
-        id: 'RES-104',
-        name: 'KFC',
-        owner: 'Eleanor Pena',
-        location: 'Business Cluster 4',
-        zone: 'Business Dist',
-        status: 'Suspended',
-        approvalStatus: 'Approved',
-        rating: 4.2,
-        totalOrders: 890,
-        earnings: '$8,900',
-        commission: 10,
-        logo: 'https://logo.clearbit.com/kfc.com',
-        coordinates: [23.7231, 90.3925]
     }
 ];
+
+const KPICard: React.FC<{ title: string; value: string; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
+    <div className="bg-white p-6 rounded-[32px] shadow-soft border border-slate-100/50 group hover:border-primary/20 transition-all duration-300">
+        <div className="flex items-start justify-between">
+            <div>
+                <p className="text-[10px] font-bold text-slate-400 font-small-caps tracking-[0.2em] mb-2 uppercase">{title}</p>
+                <p className="text-2xl font-display font-black text-slate-800 tracking-tight">{value}</p>
+            </div>
+            <div className={cn(
+                "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110",
+                color === 'primary' ? "bg-primary/10 text-primary shadow-primary/5" :
+                    color === 'amber' ? "bg-amber-50 text-amber-500 shadow-amber-500/5" :
+                        color === 'emerald' ? "bg-emerald-50 text-emerald-500 shadow-emerald-500/5" :
+                            "bg-rose-50 text-rose-500 shadow-rose-500/5"
+            )}>
+                {React.cloneElement(icon as React.ReactElement, { className: "w-5 h-5" })}
+            </div>
+        </div>
+    </div>
+);
 
 export const RestaurantManagement: React.FC = () => {
     const [activeTab, setActiveTab] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
+    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const tabs = ['All', 'Pending Approval', 'Active', 'Suspended', 'Requests'];
+
+    useEffect(() => {
+        fetchRestaurants();
+    }, [activeTab]);
+
+    const fetchRestaurants = async () => {
+        setIsLoading(true);
+        try {
+            const statusMap: any = {
+                'Pending Approval': 'PENDING',
+                'Active': 'Active',
+                'Suspended': 'Suspended'
+            };
+            const status = statusMap[activeTab];
+            const response = await adminApi.stores.list({ status, type: 'FOOD' });
+
+            const apiRes = response.data.data || [];
+            const mappedRes = apiRes.map((r: any) => ({
+                id: r.id,
+                name: r.name,
+                owner: r.owner_name || 'New Merchant',
+                location: r.address || 'Location Pending',
+                zone: r.regions?.name || 'Unassigned',
+                status: r.is_active ? 'Active' : 'Inactive',
+                approvalStatus: r.status === 'PENDING' ? 'Pending' : (r.is_active ? 'Approved' : 'Rejected'),
+                rating: 0,
+                totalOrders: 0,
+                earnings: '$0',
+                commission: 15,
+                logo: r.logo_url || 'https://via.placeholder.com/150',
+                coordinates: [23.7516, 90.3804]
+            }));
+
+            setRestaurants(mappedRes.length > 0 ? mappedRes : mockRestaurants);
+        } catch (error) {
+            console.error('Failed to fetch restaurants:', error);
+            setRestaurants(mockRestaurants);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -176,7 +196,11 @@ export const RestaurantManagement: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {mockRestaurants.map((res) => (
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={6} className="px-8 py-12 text-center text-slate-400 font-medium">Loading restaurants...</td>
+                                </tr>
+                            ) : restaurants.map((res) => (
                                 <tr key={res.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
@@ -258,23 +282,3 @@ export const RestaurantManagement: React.FC = () => {
         </div>
     );
 };
-
-const KPICard: React.FC<{ title: string; value: string; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
-    <div className="bg-white p-6 rounded-[32px] shadow-soft border border-slate-100/50 group hover:border-primary/20 transition-all duration-300">
-        <div className="flex items-start justify-between">
-            <div>
-                <p className="text-[10px] font-bold text-slate-400 font-small-caps tracking-[0.2em] mb-2">{title}</p>
-                <p className="text-2xl font-display font-black text-slate-800 tracking-tight">{value}</p>
-            </div>
-            <div className={cn(
-                "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover:scale-110",
-                color === 'primary' ? "bg-primary/10 text-primary shadow-primary/5" :
-                    color === 'amber' ? "bg-amber-50 text-amber-500 shadow-amber-500/5" :
-                        color === 'emerald' ? "bg-emerald-50 text-emerald-500 shadow-emerald-500/5" :
-                            "bg-rose-50 text-rose-500 shadow-rose-500/5"
-            )}>
-                {React.cloneElement(icon as React.ReactElement, { className: "w-5 h-5" })}
-            </div>
-        </div>
-    </div>
-);

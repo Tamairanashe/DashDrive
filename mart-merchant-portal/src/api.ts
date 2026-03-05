@@ -26,6 +26,35 @@ export const api = {
             }
             return response.json();
         },
+        forgotPassword: async (email: string) => {
+            const response = await fetch(`${API_URL}/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || error.message || 'Failed to send reset email');
+            }
+            return response.json();
+        },
+    },
+    onboarding: {
+        submit: async (token: string, data: any) => {
+            const response = await fetch(`${API_URL}/merchants/store/onboard`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Onboarding submission failed');
+            }
+            return response.json();
+        },
     },
     merchants: {
         getProfile: async (token: string) => {

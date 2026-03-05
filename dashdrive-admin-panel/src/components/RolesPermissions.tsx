@@ -16,11 +16,13 @@ import {
     LayoutGrid,
     FileText,
     Smartphone,
-    Info,
-    RotateCcw,
-    Eye
-} from 'lucide-react';
+import {
+        Eye,
+        Edit,
+        Trash
+    } from 'lucide-react';
 import { cn } from '../utils';
+import { adminApi } from '../api/adminApi';
 
 interface RolesPermissionsProps {
     activeTab?: string;
@@ -43,6 +45,28 @@ export const RolesPermissions: React.FC<RolesPermissionsProps> = ({ activeTab: e
         { module: 'Marketing Ops', read: true, write: true, delete: false },
         { module: 'System Config', read: true, write: false, delete: false },
     ];
+
+    const [roles, setRoles] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const response = await adminApi.users.roles();
+                if (response.data?.success) {
+                    setRoles(response.data.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch roles:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (activeTab === 'Roles') {
+            fetchRoles();
+        }
+    }, [activeTab]);
 
     const renderRoles = () => (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 text-black">
@@ -75,15 +99,12 @@ export const RolesPermissions: React.FC<RolesPermissionsProps> = ({ activeTab: e
                     </div>
 
                     <div className="space-y-4">
-                        {[
-                            { name: 'Super Administrator', members: 3, permissions: 124, lastUpdate: '2h ago', color: 'bg-slate-900' },
-                            { name: 'Operations Lead', members: 12, permissions: 45, lastUpdate: '1d ago', color: 'bg-[#0089D1]' },
-                            { name: 'Regional Manager', members: 24, permissions: 32, lastUpdate: '3d ago', color: 'bg-indigo-500' },
-                            { name: 'Finance Auditor', members: 5, permissions: 18, lastUpdate: '5d ago', color: 'bg-emerald-500' }
-                        ].map((role, i) => (
+                        {loading ? (
+                            <div className="flex justify-center p-8 text-slate-400">Loading roles...</div>
+                        ) : roles.map((role, i) => (
                             <div key={i} className="flex items-center justify-between p-6 bg-slate-50 rounded-[32px] border border-slate-100 group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
                                 <div className="flex items-center gap-6">
-                                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white", role.color)}>
+                                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white", role.color || 'bg-slate-900')}>
                                         <Shield className="w-6 h-6" />
                                     </div>
                                     <div>
@@ -91,12 +112,12 @@ export const RolesPermissions: React.FC<RolesPermissionsProps> = ({ activeTab: e
                                         <div className="flex items-center gap-3 mt-1">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{role.members} Members</span>
                                             <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                            <span className="text-[10px] font-black text-[#0089D1] uppercase tracking-widest">{role.permissions} Rules</span>
+                                            <span className="text-[10px] font-black text-[#0089D1] uppercase tracking-widest">{role.permissions || 0} Rules</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-6">
-                                    <span className="text-[10px] font-bold text-slate-300 italic">{role.lastUpdate}</span>
+                                    <span className="text-[10px] font-bold text-slate-300 italic">Updated Just Now</span>
                                     <button className="p-2 text-slate-300 hover:text-slate-900 transition-colors"><MoreVertical className="w-4 h-4" /></button>
                                 </div>
                             </div>

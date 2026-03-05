@@ -9,66 +9,8 @@ import { DashboardSkeleton } from './common/SkeletonLoader';
 import { PageHeader } from './common/PageHeader';
 import { useRealTime } from '../hooks/useRealTime';
 
-const statCards = [
-    {
-        id: 'revenue',
-        title: 'Total Revenue',
-        value: '$24,582',
-        trend: '+18.2%',
-        isPositive: true,
-        icon: DollarSign,
-        color: 'bg-zinc-900',
-        chartData: [
-            { v: 400 }, { v: 700 }, { v: 500 }, { v: 900 }, { v: 600 }, { v: 800 }, { v: 950 }
-        ]
-    },
-    {
-        id: 'orders',
-        title: 'Total Orders',
-        value: '3,842',
-        trend: '+12.5%',
-        isPositive: true,
-        icon: ShoppingCart,
-        color: 'bg-zinc-900',
-        chartData: [
-            { v: 300 }, { v: 400 }, { v: 350 }, { v: 500 }, { v: 450 }, { v: 600 }, { v: 550 }
-        ]
-    },
-    {
-        id: 'products',
-        title: 'Total Product',
-        value: '1,247',
-        trend: '-2.3%',
-        isPositive: false,
-        icon: Package,
-        color: 'bg-zinc-900',
-        chartData: [
-            { v: 800 }, { v: 750 }, { v: 780 }, { v: 700 }, { v: 720 }, { v: 680 }, { v: 650 }
-        ]
-    },
-    {
-        id: 'customers',
-        title: 'Active Customers',
-        value: '8,234',
-        trend: '+24.6%',
-        isPositive: true,
-        icon: Users,
-        color: 'bg-zinc-900',
-        chartData: [
-            { v: 200 }, { v: 300 }, { v: 450 }, { v: 400 }, { v: 600 }, { v: 750 }, { v: 900 }
-        ]
-    },
-];
 
-const lineData = [
-    { name: 'Mon', value: 4400 },
-    { name: 'Tue', value: 4500 },
-    { name: 'Wed', value: 4450 },
-    { name: 'Thu', value: 4650 },
-    { name: 'Fri', value: 4500 },
-    { name: 'Sat', value: 4420 },
-    { name: 'Sun', value: 4480 },
-];
+
 
 
 
@@ -242,6 +184,22 @@ export function Dashboard({ token, merchant }: DashboardProps) {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            {merchant?.status === 'PENDING' && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex items-start gap-4 mb-8 animate-in slide-in-from-top-4 duration-500">
+                    <div className="p-2 bg-amber-100 rounded-xl">
+                        <AlertCircle size={24} className="text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                        <Title level={5} style={{ margin: 0, color: '#92400e' }}>Account Under Review</Title>
+                        <Text style={{ color: '#b45309' }}>Your store is currently being verified by our team. You can continue setting up your inventory, but your store will not be visible to customers until verification is complete.</Text>
+                        <div className="flex gap-4 mt-4">
+                            <Button type="primary" size="small" style={{ backgroundColor: '#b45309', border: 'none' }}>Upload Documents</Button>
+                            <Button type="text" size="small" style={{ color: '#b45309' }}>View Status</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <PageHeader
                 title="Business Overview"
                 description="Real-time performance metrics and store analytics."
