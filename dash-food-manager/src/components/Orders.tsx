@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { api } from '../api';
 import {
     Search,
     Filter,
@@ -500,7 +501,7 @@ const OrderDetailModal = ({ order, isOpen, onClose, onAction }: any) => {
     );
 };
 
-export const Orders = () => {
+export const Orders = ({ token, merchant }: { token: string | null, merchant: any }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [syncProgress, setSyncProgress] = useState(0);
     const [activeFilter, setActiveFilter] = useState('live');
@@ -509,47 +510,49 @@ export const Orders = () => {
     const [showToast, setShowToast] = useState<string | null>(null);
 
     // Live state for orders
-    const [liveOrders, setLiveOrders] = useState(LIVE_ORDERS);
-    const [completedHistory, setCompletedHistory] = useState(COMPLETED_ORDERS);
+    const [liveOrders, setLiveOrders] = useState<any[]>([]);
+    const [completedHistory, setCompletedHistory] = useState<any[]>([]);
+
+    const storeId = merchant?.stores?.[0]?.id;
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setSyncProgress(prev => {
-                if (prev >= 100) {
-                    clearInterval(timer);
-                    setTimeout(() => setIsLoading(false), 500);
-                    return 100;
-                }
-                return prev + 5;
-            });
-        }, 100);
-        return () => clearInterval(timer);
-    }, []);
-
-    const handleStatusUpdate = (orderId: string, newStatus: string) => {
-        if (newStatus === 'completed') {
-            const orderToMove = liveOrders.find(o => o.id === orderId);
-            if (orderToMove) {
-                setLiveOrders(prev => prev.filter(o => o.id !== orderId));
-                setCompletedHistory(prev => [{
-                    ...orderToMove,
-                    status: 'Delivered',
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                }, ...prev]);
-                setShowToast(`Order #${orderId} handed over and archived.`);
-            }
-        } else if (newStatus === 'preparing') {
-            setLiveOrders(prev => prev.map(order =>
-                order.id === orderId ? { ...order, status: 'preparing' } : order
-            ));
-            setShowToast(`Order #${orderId} accepted. Ticket printed to kitchen.`);
+        if (token && storeId) {
+            fetchOrders();
         } else {
-            setLiveOrders(prev => prev.map(order =>
-                order.id === orderId ? { ...order, status: newStatus } : order
-            ));
-            setShowToast(`Order #${orderId} updated to ${newStatus}.`);
+            setIsLoading(false);
         }
+    }, [token, storeId, activeFilter]);
 
+    const fetchOrders = async () => {
+        try {
+            const params: any = {};
+            if (activeFilter === 'completed') params.status = 'DELIVERED';
+            else if (activeFilter === 'live') params.status = 'CONFIRMED,PREPARING,READY';
+
+            const data = await api.orders.list(params);
+            setLiveOrders(data.filter((o: any) => o.status !== 'DELIVERED'));
+            setCompletedHistory(data.filter((o: any) => o.status === 'DELIVERED'));
+        } catch (err) {
+            console.error('Failed to fetch orders:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+        try {
+            let apiStatus = newStatus;
+            if (newStatus === 'preparing') apiStatus = 'PREPARING';
+            if (newStatus === 'ready') apiStatus = 'READY';
+            if (newStatus === 'completed') apiStatus = 'DELIVERED';
+
+            await api.orders.updateStatus(orderId, apiStatus);
+            setShowToast(`Order #${orderId} updated to ${newStatus}.`);
+            fetchOrders();
+        } catch (err) {
+            console.error('Failed to update status:', err);
+            setShowToast(`Error: Failed to update order #${orderId}`);
+        }
         setTimeout(() => setShowToast(null), 3000);
     };
 

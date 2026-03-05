@@ -8,6 +8,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 import { cn } from '../utils/cn';
+import { useState } from 'react';
 
 const revenueData = [
     { name: 'Mon', gross: 2400, net: 2040 },
@@ -32,7 +33,23 @@ const payoutHistory = [
     { id: '#PY-1000', date: 'Jan 15, 2026', amount: 1890.75, method: 'Bank Transfer (**** 4291)', status: 'Success' },
 ];
 
-export function Financials() {
+interface FinancialsProps {
+    token: string | null;
+    merchant: any;
+}
+
+export function Financials({ token, merchant }: FinancialsProps) {
+    const [isLoading] = useState(false);
+
+    // In a future update, we will fetch transaction and payout history here
+    // using the token and storeId from the merchant profile
+    const storeId = merchant?.stores?.[0]?.id;
+    console.log('Loading financials for store:', storeId, 'with token:', !!token);
+
+    if (isLoading) {
+        return <div className="p-8 text-center text-gray-500 font-bold">Loading financials...</div>;
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Top Banner: Next Payout */}

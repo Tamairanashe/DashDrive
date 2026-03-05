@@ -7,9 +7,13 @@ const { Title, Text } = Typography;
 interface HeaderProps {
     title: string;
     subtitle: string;
+    merchant: any;
 }
 
-export function Header({ title, subtitle }: HeaderProps) {
+export function Header({ title, subtitle, merchant }: HeaderProps) {
+    const storeName = merchant?.stores?.[0]?.name || 'Mart Merchant';
+    const email = merchant?.email || 'merchant@dashdrive.com';
+    const avatar = merchant?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${merchant?.id || 'Felix'}`;
     return (
         <AntdHeader
             className="bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-10"
@@ -37,11 +41,11 @@ export function Header({ title, subtitle }: HeaderProps) {
 
                     <Space size="middle" className="cursor-pointer" align="center">
                         <div className="text-right hidden sm:flex flex-col justify-center mt-1">
-                            <Text strong style={{ display: 'block', lineHeight: 1.2 }}>Admin User</Text>
-                            <Text type="secondary" style={{ fontSize: '10px', lineHeight: 1.5 }}>admin@company.com</Text>
+                            <Text strong style={{ display: 'block', lineHeight: 1.2 }}>{storeName}</Text>
+                            <Text type="secondary" style={{ fontSize: '10px', lineHeight: 1.5 }}>{email}</Text>
                         </div>
                         <Badge dot color="#10b981" offset={[-6, 35]}>
-                            <Avatar src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" size={40} shape="square" style={{ borderRadius: 12, backgroundColor: '#f5f5f5' }} />
+                            <Avatar src={avatar} size={40} shape="square" style={{ borderRadius: 12, backgroundColor: '#f5f5f5' }} />
                         </Badge>
                     </Space>
                 </div>

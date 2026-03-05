@@ -183,7 +183,7 @@ const BackendStatusAlert = () => {
 
 // --- Pages ---
 
-const Dashboard = () => (
+const Dashboard = ({ stats }: { stats: any }) => (
   <div className="space-y-6">
     {/* Alerts */}
     <div className="grid grid-cols-1">
@@ -202,10 +202,10 @@ const Dashboard = () => (
 
     {/* Stats */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatCard title="Live Sales" value="$1,245.00" trend="up" trendValue="+12%" icon={TrendingUp} />
-      <StatCard title="Order Volume" value="42" trend="up" trendValue="+8%" icon={ShoppingBag} />
-      <StatCard title="Avg. Ticket" value="$29.64" trend="down" trendValue="-2%" icon={CreditCard} />
-      <StatCard title="Customer Rating" value="4.8" trend="up" trendValue="+0.2" icon={Star} />
+      <StatCard title="Live Sales" value={`$${stats?.revenue || '0.00'}`} trend="up" trendValue="+12%" icon={TrendingUp} />
+      <StatCard title="Order Volume" value={stats?.count || '0'} trend="up" trendValue="+8%" icon={ShoppingBag} />
+      <StatCard title="Avg. Ticket" value={`$${stats?.avgOrderValue || '0.00'}`} trend="down" trendValue="-2%" icon={CreditCard} />
+      <StatCard title="Customer Rating" value={stats?.rating || '4.8'} trend="up" trendValue="+0.2" icon={Star} />
     </div>
 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -351,39 +351,70 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [merchant, setMerchant] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('merchant_token'));
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
+    const urlToken = params.get('token');
 
-    if (token) {
-      localStorage.setItem('dashfood_auth', token);
+    if (urlToken) {
+      localStorage.setItem('merchant_token', urlToken);
       window.history.replaceState({}, document.title, window.location.pathname);
+      setToken(urlToken);
       setIsAuthenticated(true);
     } else {
-      const savedToken = localStorage.getItem('dashfood_auth');
+      const savedToken = localStorage.getItem('merchant_token');
       if (savedToken) {
+        setToken(savedToken);
         setIsAuthenticated(true);
       } else {
         // Not authenticated, redirect to merchant portal login
-        window.location.href = 'http://localhost:3001';
+        window.location.href = (import.meta.env.VITE_MART_PORTAL_URL || 'http://localhost:3001');
       }
     }
   }, []);
 
+  useEffect(() => {
+    if (token) {
+      fetchData();
+    }
+  }, [token]);
+
+  const fetchData = async () => {
+    try {
+      const profile = await api.merchants?.getProfile?.(token!) || {};
+      setMerchant(profile);
+
+      const stats = await api.dashboard.getKPIs();
+      setDashboardStats(stats);
+    } catch (err) {
+      console.error('Failed to fetch app data:', err);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('merchant_token');
+    setToken(null);
+    setMerchant(null);
+    setIsAuthenticated(false);
+    window.location.href = (import.meta.env.VITE_MART_PORTAL_URL || 'http://localhost:3001');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <Dashboard />;
-      case 'orders': return <Orders />;
-      case 'menu': return <MenuMaker />;
-      case 'performance': return <Performance />;
-      case 'customers': return <Customers />;
-      case 'store': return <StoreManagement />;
-      case 'marketing': return <Marketing />;
-      case 'payments': return <Payments />;
-      case 'reports': return <Reports />;
-      case 'users': return <UsersList />;
-      case 'settings': return <Settings />;
+      case 'dashboard': return <Dashboard stats={dashboardStats} />;
+      case 'orders': return <Orders token={token} merchant={merchant} />;
+      case 'menu': return <MenuMaker token={token} merchant={merchant} />;
+      case 'performance': return <Performance token={token} merchant={merchant} />;
+      case 'customers': return <Customers token={token} merchant={merchant} />;
+      case 'store': return <StoreManagement token={token} merchant={merchant} />;
+      case 'marketing': return <Marketing token={token} merchant={merchant} />;
+      case 'payments': return <Payments token={token} merchant={merchant} />;
+      case 'reports': return <Reports token={token} merchant={merchant} />;
+      case 'users': return <UsersList token={token} merchant={merchant} />;
+      case 'settings': return <Settings token={token} merchant={merchant} />;
       default: return (
         <div className="flex flex-col items-center justify-center h-[60vh] text-zinc-400">
           <div className="w-20 h-20 rounded-full bg-zinc-100 flex items-center justify-center mb-6">
@@ -441,7 +472,7 @@ export default function App() {
               icon={LogOut}
               label="Log Out"
               active={false}
-              onClick={() => { localStorage.removeItem('dashfood_auth'); window.location.href = 'http://localhost:3001'; }}
+              onClick={handleLogout}
               isCollapsed={!isSidebarOpen}
             />
           </nav>
@@ -454,8 +485,8 @@ export default function App() {
               </div>
               {isSidebarOpen && (
                 <div className="text-left">
-                  <p className="text-xs font-bold text-zinc-900">The Burger Joint</p>
-                  <p className="text-[10px] text-zinc-500">Admin Account</p>
+                  <p className="text-xs font-bold text-zinc-900">{merchant?.stores?.[0]?.name || 'DashFood Merchant'}</p>
+                  <p className="text-[10px] text-zinc-500">{merchant?.email || 'Admin Account'}</p>
                 </div>
               )}
             </button>
@@ -479,7 +510,7 @@ export default function App() {
             </button>
             <div className="h-6 w-px bg-zinc-200 mx-2" />
             <div className="flex items-center gap-2 cursor-pointer hover:bg-zinc-50 px-3 py-1.5 rounded-lg transition-colors group">
-              <span className="text-sm font-bold text-zinc-900">The Burger Joint - Downtown</span>
+              <span className="text-sm font-bold text-zinc-900">{merchant?.stores?.[0]?.name || 'DashFood Merchant'}</span>
               <ChevronDown size={14} className="text-zinc-400 group-hover:text-zinc-900 transition-colors" />
             </div>
           </div>

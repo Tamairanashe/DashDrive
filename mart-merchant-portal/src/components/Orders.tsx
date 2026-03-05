@@ -35,18 +35,66 @@ import type { MenuProps } from 'antd';
 
 const { Title, Text } = Typography;
 
-export function Orders() {
+import { api } from '../api';
+
+interface OrdersProps {
+    token: string | null;
+    merchant: any;
+}
+
+export function Orders({ token, merchant }: OrdersProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('All');
     const [view, setView] = useState<'list' | 'details'>('list');
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [selectedOrders, setSelectedOrders] = useState<React.Key[]>([]);
+    const [orders, setOrders] = useState<any[]>([]);
+
+    const storeId = merchant?.stores?.[0]?.id;
 
     useEffect(() => {
-        // Simulate initial loading
-        const timer = setTimeout(() => setIsLoading(false), 1500);
-        return () => clearTimeout(timer);
-    }, []);
+        if (token && storeId) {
+            fetchOrders();
+        } else if (!token) {
+            setIsLoading(false);
+        }
+    }, [token, storeId]);
+
+    const fetchOrders = async () => {
+        setIsLoading(true);
+        try {
+            const data = await api.orders.getStoreOrders(token!, storeId);
+            const mappedOrders = data.map((o: any) => ({
+                id: o.id,
+                urgency: o.priority || 'Normal',
+                shipBy: o.expectedDelivery ? new Date(o.expectedDelivery).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'EOD',
+                product: o.items?.[0]?.product?.name || 'Multiple Items',
+                productImg: o.items?.[0]?.product?.image || 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=100&h=100&fit=crop',
+                items: o.items?.length || 0,
+                customer: o.user?.name || 'Guest Customer',
+                customerType: o.user?.isPro ? 'Pro Customer' : 'New Customer',
+                date: new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                amount: `$${o.totalAmount}`,
+                method: o.paymentMethod || 'Paid online',
+                status: o.status,
+                avatar: o.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${o.user?.id || o.id}`
+            }));
+            setOrders(mappedOrders);
+        } catch (err) {
+            console.error('Failed to fetch orders:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleUpdateStatus = async (orderId: string, status: string) => {
+        try {
+            await api.orders.updateStatus(token!, orderId, status);
+            fetchOrders(); // Refresh
+        } catch (err) {
+            console.error('Failed to update status:', err);
+        }
+    };
 
     const handleOrderClick = (id: string) => {
         setSelectedOrderId(id);
@@ -131,13 +179,19 @@ export function Orders() {
                     { key: '1', icon: <Printer size={16} />, label: 'Print Slip' },
                     { key: '2', icon: <FileText size={16} />, label: 'View Details', onClick: () => handleOrderClick(record.id) },
                     { type: 'divider' },
-                    { key: '3', icon: <XCircle size={16} />, label: 'Cancel Order', danger: true },
+                    { key: '3', icon: <XCircle size={16} />, label: 'Cancel Order', danger: true, onClick: () => handleUpdateStatus(record.id, 'CANCELLED') },
                 ];
 
                 return (
                     <Space>
-                        {record.status === 'Incoming' && (
-                            <Button type="text" shape="circle" icon={<Check size={18} className="text-emerald-600" />} className="bg-emerald-50 hover:bg-emerald-600 transition-colors" />
+                        {record.status === 'PENDING' && (
+                            <Button
+                                type="text"
+                                shape="circle"
+                                icon={<Check size={18} className="text-emerald-600" />}
+                                className="bg-emerald-50 hover:bg-emerald-600 transition-colors"
+                                onClick={() => handleUpdateStatus(record.id, 'CONFIRMED')}
+                            />
                         )}
                         <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
                             <Button type="text" shape="circle" icon={<MoreHorizontal size={20} />} />
@@ -257,7 +311,7 @@ export function Orders() {
                 <Table
                     rowSelection={rowSelection}
                     columns={columns}
-                    dataSource={ordersData}
+                    dataSource={orders.filter(o => activeTab === 'All' || o.status === activeTab.toUpperCase())}
                     loading={isLoading}
                     pagination={{
                         pageSize: 10,

@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000') + '/api/v1';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000') + '/api/v1';
 
 /**
  * Enterprise API Utility for DashDrive Merchant Portal.
@@ -126,5 +126,10 @@ export const api = {
             const qs = new URLSearchParams(params).toString();
             return fetchFromAdmin(`/payments/invoices${qs ? `?${qs}` : ''}`);
         }
+    },
+    merchants: {
+        getProfile: (token: string) => fetchFromAdmin('/merchants/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
     }
 };

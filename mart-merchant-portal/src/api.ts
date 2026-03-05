@@ -30,9 +30,7 @@ export const api = {
     merchants: {
         getProfile: async (token: string) => {
             const response = await fetch(`${API_URL}/merchants/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
+                headers: { 'Authorization': `Bearer ${token}` },
             });
             if (!response.ok) {
                 const error = await response.json();
@@ -40,5 +38,90 @@ export const api = {
             }
             return response.json();
         },
+    },
+    orders: {
+        getStoreOrders: async (token: string, storeId: string) => {
+            const response = await fetch(`${API_URL}/orders/store/${storeId}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch orders');
+            return response.json();
+        },
+        updateStatus: async (token: string, orderId: string, status: string, note?: string) => {
+            const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status, note }),
+            });
+            if (!response.ok) throw new Error('Failed to update status');
+            return response.json();
+        }
+    },
+    products: {
+        getProducts: async (token: string, storeId?: string) => {
+            const query = storeId ? `?storeId=${storeId}` : '';
+            const response = await fetch(`${API_URL}/products${query}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch products');
+            return response.json();
+        },
+        create: async (token: string, data: any) => {
+            const response = await fetch(`${API_URL}/products`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) throw new Error('Failed to create product');
+            return response.json();
+        },
+        update: async (token: string, id: string, data: any) => {
+            const response = await fetch(`${API_URL}/products/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) throw new Error('Failed to update product');
+            return response.json();
+        },
+        remove: async (token: string, id: string) => {
+            const response = await fetch(`${API_URL}/products/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to remove product');
+            return response.json();
+        }
+    },
+    analytics: {
+        getDashboard: async (token: string, storeId: string, startDate?: string, endDate?: string) => {
+            const params = new URLSearchParams({ storeId });
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            const response = await fetch(`${API_URL}/analytics/dashboard?${params.toString()}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch dashboard analytics');
+            return response.json();
+        },
+        getSales: async (token: string, storeId: string, startDate?: string, endDate?: string) => {
+            const params = new URLSearchParams({ storeId });
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            const response = await fetch(`${API_URL}/analytics/sales?${params.toString()}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch sales analytics');
+            return response.json();
+        }
     }
 };

@@ -1,48 +1,61 @@
-import { Search, Download, Plus, Filter, MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
-import { Card, Table, Typography, Button, Input, Space, Tag } from 'antd';
+import { Search, Download, Plus, Filter, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Card, Table, Typography, Button, Input, Space, Tag, Popconfirm } from 'antd';
+import { api } from '../api';
+import { useEffect, useState } from 'react';
 
 const { Title, Text } = Typography;
 
-const products = [
-    {
-        id: 1,
-        name: 'ASUS ROG Gaming Laptop',
-        category: 'Laptop',
-        brand: 'ASUS',
-        price: '$2,199',
-        stock: 'Out of Stock',
-        createdAt: '01 Dec, 2027',
-        image: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=50&h=50&fit=crop'
-    },
-    {
-        id: 2,
-        name: 'Airpods Pro 2nd Gen',
-        category: 'Accessories',
-        brand: 'Apple',
-        price: '$839',
-        stock: 'In Stock',
-        createdAt: '29 Jun, 2027',
-        image: 'https://images.unsplash.com/photo-1588423770503-d1d6a97da552?w=50&h=50&fit=crop'
-    },
-    {
-        id: 3,
-        name: 'Apple Watch Ultra',
-        category: 'Watch',
-        brand: 'Apple',
-        price: '$1,579',
-        stock: 'Out of Stock',
-        createdAt: '13 Mar, 2027',
-        image: 'https://images.unsplash.com/photo-1434493907317-a46b59bc043a?w=50&h=50&fit=crop'
-    }
-];
-
 interface InventoryProps {
+    token: string | null;
+    merchant: any;
     onAddProduct: () => void;
 }
 
-export function Inventory({ onAddProduct }: InventoryProps) {
+export function Inventory({ token, merchant, onAddProduct }: InventoryProps) {
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [productsList, setProductsList] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const storeId = merchant?.stores?.[0]?.id;
+
+    useEffect(() => {
+        if (token && storeId) {
+            fetchProducts();
+        } else if (!token) {
+            setIsLoading(false);
+        }
+    }, [token, storeId]);
+
+    const fetchProducts = async () => {
+        setIsLoading(true);
+        try {
+            const data = await api.products.getProducts(token!, storeId);
+            const mapped = data.map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                category: p.category || 'N/A',
+                brand: p.brand || 'Generic',
+                price: `$${p.price.toLocaleString()}`,
+                stock: p.stock > 0 ? 'In Stock' : 'Out of Stock',
+                createdAt: new Date(p.createdAt).toLocaleDateString(),
+                image: p.image || 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=50&h=50&fit=crop'
+            }));
+            setProductsList(mapped);
+        } catch (err) {
+            console.error('Failed to fetch products:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleRemoveProduct = async (id: string) => {
+        try {
+            await api.products.remove(token!, id);
+            fetchProducts();
+        } catch (err) {
+            console.error('Failed to remove product:', err);
+        }
+    };
 
     const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
         setSelectedRowKeys(newSelectedRowKeys);
@@ -102,8 +115,20 @@ export function Inventory({ onAddProduct }: InventoryProps) {
             title: 'Action',
             key: 'action',
             align: 'right' as const,
-            render: () => (
-                <Button type="text" shape="circle" icon={<MoreHorizontal size={20} />} className="text-gray-400 hover:text-gray-800" />
+            render: (_: any, record: any) => (
+                <Space>
+                    <Popconfirm
+                        title="Delete product"
+                        description="Are you sure you want to delete this product?"
+                        onConfirm={() => handleRemoveProduct(record.id)}
+                        okText="Yes"
+                        cancelText="No"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button type="text" shape="circle" icon={<Trash2 size={18} className="text-red-500" />} />
+                    </Popconfirm>
+                    <Button type="text" shape="circle" icon={<MoreHorizontal size={20} />} className="text-gray-400 hover:text-gray-800" />
+                </Space>
             )
         }
     ];
@@ -150,8 +175,9 @@ export function Inventory({ onAddProduct }: InventoryProps) {
                 <Table
                     rowSelection={rowSelection}
                     columns={columns}
-                    dataSource={products}
-                    pagination={false}
+                    dataSource={productsList}
+                    loading={isLoading}
+                    pagination={{ pageSize: 10 }}
                     rowKey="id"
                     className="custom-table"
                 />

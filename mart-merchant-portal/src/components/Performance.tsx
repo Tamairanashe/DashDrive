@@ -7,6 +7,8 @@ import {
     ChevronDown, Calendar, Filter, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { api } from '../api';
+import { useState, useEffect } from 'react';
 
 const metrics = [
     { label: 'Total Sales', value: '$124,592.00', trend: '+12.5%', isPositive: true, icon: DollarSign, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -32,7 +34,44 @@ const categoryData = [
     { name: 'Others', value: 5, color: '#94a3b8' },
 ];
 
-export function Performance() {
+interface PerformanceProps {
+    token: string | null;
+    merchant: any;
+}
+
+export function Performance({ token, merchant }: PerformanceProps) {
+    const [isLoading, setIsLoading] = useState(true);
+    const [salesTrend, setSalesTrend] = useState<any[]>(salesData);
+
+    const storeId = merchant?.stores?.[0]?.id;
+
+    useEffect(() => {
+        if (token && storeId) {
+            fetchPerformanceData();
+        } else {
+            setIsLoading(false);
+        }
+    }, [token, storeId]);
+
+    const fetchPerformanceData = async () => {
+        try {
+            const trendData = await api.analytics.getSales(token!, storeId);
+            setSalesTrend(trendData.map((item: any) => ({
+                name: new Date(item.date).toLocaleDateString('en-US', { month: 'short' }),
+                revenue: parseFloat(item.revenue) || 0,
+                orders: parseInt(item.count) || 0
+            })));
+        } catch (err) {
+            console.error('Failed to fetch performance data:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (isLoading) {
+        return <div className="p-8 text-center text-gray-500 font-bold">Loading analysis...</div>;
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header / Filter Bar */}
@@ -96,7 +135,7 @@ export function Performance() {
                     </div>
                     <div className="h-[350px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={salesData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <AreaChart data={salesTrend.length > 0 ? salesTrend : salesData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
@@ -205,7 +244,7 @@ export function Performance() {
                 </div>
                 <div className="h-[250px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={salesData}>
+                        <BarChart data={salesTrend.length > 0 ? salesTrend : salesData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis
                                 dataKey="name"

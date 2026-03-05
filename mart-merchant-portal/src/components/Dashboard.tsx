@@ -137,14 +137,104 @@ const columns = [
     }
 ];
 
-export function Dashboard() {
+import { api } from '../api';
+
+interface DashboardProps {
+    token: string | null;
+    merchant: any;
+}
+
+export function Dashboard({ token, merchant }: DashboardProps) {
     const [isLoading, setIsLoading] = useState(true);
-    const { lastUpdated } = useRealTime('dashboard', { statCards, recentOrdersData });
+    const [stats, setStats] = useState<any>(null);
+    const [salesTrend, setSalesTrend] = useState<any[]>([]);
+    const [recentOrders, setRecentOrders] = useState<any[]>([]);
+    const [topProducts, setTopProducts] = useState<any[]>([]);
+
+    const storeId = merchant?.stores?.[0]?.id;
 
     useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 2000);
-        return () => clearTimeout(timer);
-    }, []);
+        if (token && storeId) {
+            fetchDashboardData();
+        } else if (!token) {
+            setIsLoading(false);
+        }
+    }, [token, storeId]);
+
+    const fetchDashboardData = async () => {
+        setIsLoading(true);
+        try {
+            const [dashboardStats, trendData, ordersData] = await Promise.all([
+                api.analytics.getDashboard(token!, storeId),
+                api.analytics.getSales(token!, storeId),
+                api.orders.getStoreOrders(token!, storeId)
+            ]);
+            setStats(dashboardStats);
+            setSalesTrend(trendData.map((item: any) => ({
+                name: new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' }),
+                value: parseFloat(item.revenue) || 0
+            })));
+            setRecentOrders(ordersData.slice(0, 5).map((o: any) => ({
+                id: o.id,
+                product: o.items?.[0]?.product?.name || 'Order',
+                date: new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                status: o.status,
+                price: `$${o.totalAmount}`,
+                customer: o.user?.name || 'Guest',
+                image: o.items?.[0]?.product?.image || 'https://images.unsplash.com/photo-1550583724-125581cc255b?w=50&h=50&fit=crop'
+            })));
+            setTopProducts(dashboardStats.topProducts || []);
+        } catch (err) {
+            console.error('Failed to fetch dashboard data:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const liveStatCards = [
+        {
+            id: 'revenue',
+            title: 'Total Revenue',
+            value: stats?.totalRevenue ? `$${stats.totalRevenue.toLocaleString()}` : '$0',
+            trend: stats?.revenueTrend || '0%',
+            isPositive: !stats?.revenueTrend?.startsWith('-'),
+            icon: DollarSign,
+            color: 'bg-zinc-900',
+            chartData: salesTrend.length > 0 ? salesTrend.slice(-7).map(d => ({ v: d.value })) : [{ v: 0 }]
+        },
+        {
+            id: 'orders',
+            title: 'Total Orders',
+            value: stats?.totalOrders?.toLocaleString() || '0',
+            trend: stats?.ordersTrend || '0%',
+            isPositive: !stats?.ordersTrend?.startsWith('-'),
+            icon: ShoppingCart,
+            color: 'bg-zinc-900',
+            chartData: [{ v: 300 }, { v: 400 }, { v: 350 }, { v: 500 }, { v: 450 }, { v: 600 }, { v: 550 }]
+        },
+        {
+            id: 'products',
+            title: 'Low Stock Items',
+            value: stats?.lowStockCount?.toLocaleString() || '0',
+            trend: 'Alert',
+            isPositive: false,
+            icon: Package,
+            color: 'bg-zinc-900',
+            chartData: [{ v: 800 }, { v: 750 }, { v: 780 }, { v: 700 }, { v: 720 }, { v: 680 }, { v: 650 }]
+        },
+        {
+            id: 'customers',
+            title: 'New Customers',
+            value: stats?.newCustomers?.toLocaleString() || '0',
+            trend: stats?.customerTrend || '0%',
+            isPositive: true,
+            icon: Users,
+            color: 'bg-zinc-900',
+            chartData: [{ v: 200 }, { v: 300 }, { v: 450 }, { v: 400 }, { v: 600 }, { v: 750 }, { v: 900 }]
+        },
+    ];
+
+    const { lastUpdated } = useRealTime('dashboard', { statCards: liveStatCards, recentOrdersData });
 
     if (isLoading) {
         return <DashboardSkeleton />;
@@ -174,7 +264,7 @@ export function Dashboard() {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statCards.map((card, idx) => (
+                {liveStatCards.map((card, idx) => (
                     <Card key={idx} hoverable bordered={false} bodyStyle={{ padding: 24, paddingBottom: 0 }} className="relative overflow-hidden shadow-sm hover:shadow-md transition-all">
                         {/* Mini Background Chart */}
                         <div className="absolute bottom-0 left-0 right-0 h-16 opacity-10 pointer-events-none">
@@ -236,7 +326,7 @@ export function Dashboard() {
                     </div>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={lineData}>
+                            <AreaChart data={salesTrend}>
                                 <defs>
                                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#18181b" stopOpacity={0.1} />
@@ -311,13 +401,13 @@ export function Dashboard() {
                 <Card title={<Space><Title level={5} style={{ margin: 0 }}>Top Products</Title></Space>} extra={<div className="p-2 bg-gray-50 rounded-lg"><Package size={16} className="text-gray-400" /></div>} bordered={false} className="shadow-sm">
                     <List
                         itemLayout="horizontal"
-                        dataSource={productsData}
+                        dataSource={topProducts.length > 0 ? topProducts : productsData}
                         renderItem={item => (
                             <List.Item className="group hover:bg-gray-50/50 transition-colors cursor-pointer px-4 rounded-xl border-b-0">
                                 <List.Item.Meta
                                     avatar={<img src={item.image} className="size-12 rounded-lg object-cover" />}
                                     title={<Text strong style={{ fontSize: '14px' }}>{item.name}</Text>}
-                                    description={<Text type="secondary" style={{ fontSize: '12px' }}>{item.sold}</Text>}
+                                    description={<Text type="secondary" style={{ fontSize: '12px' }}>{item.sold || '0 sold'}</Text>}
                                 />
                                 <div className="text-right">
                                     <Text strong style={{ display: 'block' }}>{item.price}</Text>
@@ -344,7 +434,7 @@ export function Dashboard() {
                 >
                     <Table
                         columns={columns}
-                        dataSource={recentOrdersData}
+                        dataSource={recentOrders.length > 0 ? recentOrders : recentOrdersData}
                         pagination={false}
                         rowKey="id"
                         className="custom-table"

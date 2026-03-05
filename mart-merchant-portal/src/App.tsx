@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { ConfigProvider } from 'antd'
+import { useState, useEffect } from 'react'
+import { ConfigProvider, message } from 'antd'
+import { api } from './api'
 
 import { Layout as MartLayout } from './components/Layout'
 import { DirectLayout } from './components/direct/DirectLayout'
@@ -38,19 +39,48 @@ import { OnboardingWizard } from './components/OnboardingWizard';
 import { LandingPage } from './components/LandingPage';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard'); // Used by Mart
-  const [directActiveTab, setDirectActiveTab] = useState('overview'); // Used by Direct
-
-  // Track which portal the user is logged into (null = not logged in)
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [directActiveTab, setDirectActiveTab] = useState('overview');
   const [portalType, setPortalType] = useState<'mart' | 'direct' | null>(null);
   const [authMode, setAuthMode] = useState<'landing' | 'login' | 'direct_login' | 'food_login' | 'signup' | 'forgot_password' | 'email_verification' | 'onboarding' | 'public_tracking'>('landing');
 
+  const [merchant, setMerchant] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('merchant_token'));
+
+  useEffect(() => {
+    if (token) {
+      fetchProfile();
+    }
+  }, [token]);
+
+  const fetchProfile = async () => {
+    try {
+      const storedToken = localStorage.getItem('merchant_token');
+      if (!storedToken) return;
+      const profile = await api.merchants.getProfile(storedToken);
+      setMerchant(profile);
+      setPortalType('mart');
+    } catch (err) {
+      console.error('Failed to fetch profile:', err);
+      // localStorage.removeItem('merchant_token'); // Don't remove yet, might be transient
+      // setToken(null);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('merchant_token');
+    setToken(null);
+    setMerchant(null);
+    setPortalType(null);
+    setAuthMode('landing');
+  };
+
   // Simple routing for public tracking links
-  useState(() => {
+  useEffect(() => {
     if (window.location.pathname.startsWith('/track/')) {
       setAuthMode('public_tracking');
     }
-  });
+  }, []);
 
   if (!portalType) {
     if (authMode === 'landing') {
@@ -63,11 +93,11 @@ function App() {
         />
       );
     } else if (authMode === 'login') {
-      return <Login onLogin={() => setPortalType('mart')} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
+      return <Login onLogin={() => setToken(localStorage.getItem('merchant_token'))} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
     } else if (authMode === 'direct_login') {
-      return <DirectLogin onLogin={() => setPortalType('direct')} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
+      return <DirectLogin onLogin={() => { setToken(localStorage.getItem('merchant_token')); setPortalType('direct'); }} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
     } else if (authMode === 'food_login') {
-      return <FoodLogin onLogin={() => setPortalType('mart')} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />; // Food routes to mart for now
+      return <FoodLogin onLogin={() => setToken(localStorage.getItem('merchant_token'))} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
     } else if (authMode === 'signup') {
       return <SignUp onSignup={() => setAuthMode('email_verification')} onSwitchToLogin={() => setAuthMode('login')} />;
     } else if (authMode === 'forgot_password') {
@@ -75,7 +105,7 @@ function App() {
     } else if (authMode === 'email_verification') {
       return <EmailVerification onVerified={() => setAuthMode('onboarding')} />;
     } else if (authMode === 'onboarding') {
-      return <OnboardingWizard onComplete={() => setPortalType('mart')} />;
+      return <OnboardingWizard onComplete={() => setToken(localStorage.getItem('merchant_token'))} />;
     } else if (authMode === 'public_tracking') {
       return <PublicTracking />;
     }
@@ -131,14 +161,15 @@ function App() {
         <MartLayout
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          onLogout={() => setPortalType(null)}
+          onLogout={handleLogout}
+          merchant={merchant}
         >
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'orders' && <Orders />}
-          {activeTab === 'inventory' && <Inventory onAddProduct={() => setActiveTab('addProduct')} />}
-          {activeTab === 'performance' && <Performance />}
-          {activeTab === 'addProduct' && <AddProduct />}
-          {activeTab === 'financials' && <Financials />}
+          {activeTab === 'dashboard' && <Dashboard token={token} merchant={merchant} />}
+          {activeTab === 'orders' && <Orders token={token} merchant={merchant} />}
+          {activeTab === 'inventory' && <Inventory token={token} merchant={merchant} onAddProduct={() => setActiveTab('addProduct')} />}
+          {activeTab === 'performance' && <Performance token={token} merchant={merchant} />}
+          {activeTab === 'addProduct' && <AddProduct token={token} merchant={merchant} onBack={() => setActiveTab('inventory')} />}
+          {activeTab === 'financials' && <Financials token={token} merchant={merchant} />}
           {activeTab === 'customers' && <Customers />}
           {activeTab === 'stores' && <Stores onNavigate={setActiveTab} />}
           {activeTab === 'store-hours' && <StoreHours />}

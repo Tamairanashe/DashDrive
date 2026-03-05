@@ -9,9 +9,10 @@ interface LayoutProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     onLogout?: () => void;
+    merchant?: any;
 }
 
-export function Layout({ children, activeTab, setActiveTab, onLogout }: LayoutProps) {
+export function Layout({ children, activeTab, setActiveTab, onLogout, merchant }: LayoutProps) {
     const titles: Record<string, { title: string; subtitle: string }> = {
         dashboard: { title: 'Dashboard Overview', subtitle: "Welcome back! Your grocery store's performance view" },
         orders: { title: 'Order Management', subtitle: 'Track and manage all grocery orders in real time.' },
@@ -36,7 +37,7 @@ export function Layout({ children, activeTab, setActiveTab, onLogout }: LayoutPr
         <AntdLayout style={{ minHeight: '100vh' }}>
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
             <AntdLayout>
-                <Header title={title} subtitle={subtitle} />
+                <Header title={title} subtitle={subtitle} merchant={merchant} />
                 <Content style={{ padding: '32px', paddingBottom: '48px', overflowY: 'auto' }}>
                     {children}
                 </Content>
