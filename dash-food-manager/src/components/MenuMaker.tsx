@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '../api';
 import { Card, Button, Badge } from './ui';
 import { cn } from '../lib/utils';
-import { 
-  Plus, 
-  Search, 
-  MoreVertical, 
-  Image as ImageIcon, 
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  Image as ImageIcon,
   ChevronRight,
   GripVertical,
   Eye,
@@ -63,13 +64,36 @@ const CHANGE_HISTORY = [
   { id: 3, date: 'Yesterday 4:15 PM', user: 'Jamie (Mgr)', action: 'New Item Added', details: 'Added "Garlic Knots" - $5.99' },
 ];
 
-export const MenuMaker = () => {
+export const MenuMaker = ({ token, merchant }: { token: string | null, merchant: any }) => {
   const [activeTab, setActiveTab] = useState<'menus' | 'categories' | 'items' | 'bulk' | 'history'>('menus');
   const [selectedItem, setSelectedItem] = useState<any>(MENU_ITEMS[0]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
   const [searchQuery, setSearchQuery] = useState('');
+  const [liveCategories, setLiveCategories] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const storeId = merchant?.stores?.[0]?.id;
+
+  useEffect(() => {
+    if (token && storeId) {
+      fetchCategories();
+    } else {
+      setIsLoading(false);
+    }
+  }, [token, storeId]);
+
+  const fetchCategories = async () => {
+    try {
+      const data = await api.menu.getCategories(storeId);
+      setLiveCategories(data);
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleGenerateDescription = () => {
     setIsGenerating(true);
@@ -162,9 +186,9 @@ export const MenuMaker = () => {
       <div className="flex items-center justify-between">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-          <input 
-            type="text" 
-            placeholder="Search categories..." 
+          <input
+            type="text"
+            placeholder="Search categories..."
             className="w-full pl-10 pr-4 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900/10 bg-white"
           />
         </div>
@@ -185,7 +209,7 @@ export const MenuMaker = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
-            {CATEGORIES.map((cat) => (
+            {liveCategories.map((cat) => (
               <tr key={cat.id} className="hover:bg-zinc-50/50 transition-colors group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
@@ -194,17 +218,15 @@ export const MenuMaker = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="text-sm text-zinc-600">{cat.count} items</span>
+                  <span className="text-sm text-zinc-600">{cat.products?.length || 0} items</span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1">
-                    {cat.menus.map(m => (
-                      <span key={m} className="text-[10px] px-1.5 py-0.5 bg-zinc-100 text-zinc-500 rounded font-medium">{m}</span>
-                    ))}
+                    <span className="text-[10px] px-1.5 py-0.5 bg-zinc-100 text-zinc-500 rounded font-medium">Main Menu</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <Badge variant="success">{cat.status}</Badge>
+                  <Badge variant={cat.is_active ? "success" : "neutral"}>{cat.is_active ? "Live" : "Inactive"}</Badge>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
@@ -226,9 +248,9 @@ export const MenuMaker = () => {
         <div className="sticky top-0 z-10 bg-zinc-50 pb-4 flex items-center justify-between gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search items..." 
+            <input
+              type="text"
+              placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900/10 bg-white"
@@ -254,8 +276,8 @@ export const MenuMaker = () => {
 
         <div className="space-y-3">
           {MENU_ITEMS.map((item) => (
-            <Card 
-              key={item.id} 
+            <Card
+              key={item.id}
               className={cn(
                 "p-3 hover:border-zinc-300 transition-all cursor-pointer group",
                 selectedItem?.id === item.id ? "border-zinc-900 ring-1 ring-zinc-900 shadow-md" : ""
@@ -449,9 +471,9 @@ export const MenuMaker = () => {
               <div key={i} className="aspect-square rounded-xl bg-zinc-100 border-2 border-dashed border-zinc-200 relative group overflow-hidden">
                 {i === 1 ? (
                   <>
-                    <img 
-                      src={`https://picsum.photos/seed/${selectedItem.photo}/300/300`} 
-                      alt="Item" 
+                    <img
+                      src={`https://picsum.photos/seed/${selectedItem.photo}/300/300`}
+                      alt="Item"
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
@@ -475,8 +497,8 @@ export const MenuMaker = () => {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Item Name</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               defaultValue={selectedItem.name}
               className="w-full p-2.5 text-sm border border-zinc-200 rounded-xl outline-none focus:ring-2 focus:ring-zinc-900/5"
             />
@@ -485,7 +507,7 @@ export const MenuMaker = () => {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Description</label>
-              <button 
+              <button
                 onClick={handleGenerateDescription}
                 disabled={isGenerating}
                 className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
@@ -494,7 +516,7 @@ export const MenuMaker = () => {
                 {isGenerating ? "Generating..." : "Suggest with AI"}
               </button>
             </div>
-            <textarea 
+            <textarea
               placeholder="Describe your item..."
               defaultValue="A juicy, hand-pressed wagyu beef patty topped with black truffle aioli, caramelized onions, and melted gruyère on a toasted brioche bun."
               className="w-full p-3 text-sm border border-zinc-200 rounded-xl outline-none focus:ring-2 focus:ring-zinc-900/5 min-h-[100px] resize-none"
@@ -510,8 +532,8 @@ export const MenuMaker = () => {
               <label className="text-[10px] font-bold text-zinc-400">Delivery Price</label>
               <div className="relative">
                 <DollarSign size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   defaultValue={selectedItem.price}
                   className="w-full pl-7 pr-3 py-2 text-sm border border-zinc-200 rounded-xl outline-none focus:ring-2 focus:ring-zinc-900/5"
                 />
@@ -521,8 +543,8 @@ export const MenuMaker = () => {
               <label className="text-[10px] font-bold text-zinc-400">Pickup Price</label>
               <div className="relative">
                 <DollarSign size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   defaultValue={(selectedItem.price * 0.9).toFixed(2)}
                   className="w-full pl-7 pr-3 py-2 text-sm border border-zinc-200 rounded-xl outline-none focus:ring-2 focus:ring-zinc-900/5"
                 />
@@ -583,7 +605,7 @@ export const MenuMaker = () => {
     <div className="flex flex-col h-[calc(100vh-140px)]">
       {/* Tab Navigation */}
       <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl w-fit mb-6">
-        <button 
+        <button
           onClick={() => setActiveTab('menus')}
           className={cn(
             "px-4 py-2 text-xs font-bold rounded-lg transition-all",
@@ -592,7 +614,7 @@ export const MenuMaker = () => {
         >
           Menus
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('categories')}
           className={cn(
             "px-4 py-2 text-xs font-bold rounded-lg transition-all",
@@ -601,7 +623,7 @@ export const MenuMaker = () => {
         >
           Categories
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('items')}
           className={cn(
             "px-4 py-2 text-xs font-bold rounded-lg transition-all",
@@ -610,7 +632,7 @@ export const MenuMaker = () => {
         >
           Menu Items
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('bulk')}
           className={cn(
             "px-4 py-2 text-xs font-bold rounded-lg transition-all",
@@ -619,7 +641,7 @@ export const MenuMaker = () => {
         >
           Bulk Actions
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('history')}
           className={cn(
             "px-4 py-2 text-xs font-bold rounded-lg transition-all",
@@ -654,7 +676,7 @@ export const MenuMaker = () => {
       <AnimatePresence>
         {isPreviewOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -666,19 +688,19 @@ export const MenuMaker = () => {
                   <p className="text-xs text-zinc-500">How your menu appears to customers</p>
                 </div>
                 <div className="flex items-center gap-2 bg-zinc-100 p-1 rounded-xl">
-                  <button 
+                  <button
                     onClick={() => setPreviewDevice('mobile')}
                     className={cn("p-2 rounded-lg transition-all", previewDevice === 'mobile' ? "bg-white shadow-sm text-zinc-900" : "text-zinc-400")}
                   >
                     <Smartphone size={18} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => setPreviewDevice('tablet')}
                     className={cn("p-2 rounded-lg transition-all", previewDevice === 'tablet' ? "bg-white shadow-sm text-zinc-900" : "text-zinc-400")}
                   >
                     <Tablet size={18} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => setPreviewDevice('desktop')}
                     className={cn("p-2 rounded-lg transition-all", previewDevice === 'desktop' ? "bg-white shadow-sm text-zinc-900" : "text-zinc-400")}
                   >
@@ -691,9 +713,9 @@ export const MenuMaker = () => {
               <div className="flex-1 bg-zinc-100 p-8 flex items-center justify-center overflow-hidden">
                 <div className={cn(
                   "bg-white shadow-2xl transition-all duration-500 overflow-hidden flex flex-col",
-                  previewDevice === 'mobile' ? "w-[375px] h-[667px] rounded-[3rem] border-[8px] border-zinc-900" : 
-                  previewDevice === 'tablet' ? "w-[768px] h-[1024px] rounded-3xl border-[12px] border-zinc-900 scale-[0.6]" : 
-                  "w-full h-full rounded-xl border border-zinc-200"
+                  previewDevice === 'mobile' ? "w-[375px] h-[667px] rounded-[3rem] border-[8px] border-zinc-900" :
+                    previewDevice === 'tablet' ? "w-[768px] h-[1024px] rounded-3xl border-[12px] border-zinc-900 scale-[0.6]" :
+                      "w-full h-full rounded-xl border border-zinc-200"
                 )}>
                   {/* Mock App UI */}
                   <div className="bg-white h-full overflow-y-auto scrollbar-hide">
