@@ -243,13 +243,11 @@ const OrderCard = ({ order, onClick, onStatusUpdate }: any) => (
             </div>
             <Badge
                 variant={
-                    order.status === 'received' ? 'warning' :
-                        order.status === 'accepted' ? 'info' :
-                            order.status === 'preparing' ? 'neutral' :
-                                order.status === 'late' ? 'error' :
-                                    order.status === 'ready' ? 'success' :
-                                        order.status === 'scheduled' ? 'info' :
-                                            order.status === 'unfulfilled' ? 'warning' : 'neutral'
+                    order.status === 'CONFIRMED' || order.status === 'received' ? 'warning' :
+                        order.status === 'PREPARING' || order.status === 'preparing' ? 'info' :
+                            order.status === 'READY' || order.status === 'ready' ? 'success' :
+                                order.status === 'DELIVERED' || order.status === 'completed' ? 'neutral' :
+                                    order.status === 'CANCELLED' ? 'error' : 'neutral'
                 }
             >
                 {order.status.toUpperCase()}
@@ -291,7 +289,7 @@ const OrderCard = ({ order, onClick, onStatusUpdate }: any) => (
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="h-7 px-2 text-[10px] font-semibold">VIEW</Button>
-                    {order.status === 'received' ? (
+                    {order.status === 'CONFIRMED' || order.status === 'received' ? (
                         <Button
                             variant="primary"
                             size="sm"
@@ -300,7 +298,7 @@ const OrderCard = ({ order, onClick, onStatusUpdate }: any) => (
                         >
                             ACCEPT
                         </Button>
-                    ) : order.status === 'ready' ? (
+                    ) : order.status === 'READY' || order.status === 'ready' ? (
                         <Button
                             variant="primary"
                             size="sm"
