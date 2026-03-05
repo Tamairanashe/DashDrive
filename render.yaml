@@ -27,12 +27,12 @@ services:
       - key: FRONTEND_URL
         sync: false
 
-  # 2. Mart Merchant Backend (NestJS + Prisma)
+  # 2. Logistics Engine (NestJS + Prisma)
   - type: web
-    name: dashdrive-mart-backend
+    name: dashdrive-logistics-engine
     runtime: node
-    plan: free
-    rootDir: dashdrive-mart-backend
+    plan: starter
+    rootDir: dashdrive-logistics-engine
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:

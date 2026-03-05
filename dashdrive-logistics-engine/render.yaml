@@ -13,4 +13,4 @@ services:
         sync: false # Set securely in Render dashboard
       - key: PORT
         value: 10000
-    healthCheckPath: /api/v1/do
+    healthCheckPath: /api/v1/docs
