@@ -66,13 +66,11 @@ services:
         sync: false
 
   # 4. Mart Merchant Portal (React/Vite Frontend)
-  - type: web
+  - type: static_site
     name: mart-merchant-portal
-    runtime: static
-    plan: free
     rootDir: mart-merchant-portal
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    publishPath: dist
     envVars:
       - key: VITE_API_URL
         sync: false
@@ -84,13 +82,11 @@ services:
         destination: /index.html
 
   # 5. Dash Food Manager (React/Vite Frontend)
-  - type: web
+  - type: static_site
     name: dash-food-manager
-    runtime: static
-    plan: free
     rootDir: dash-food-manager
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    publishPath: dist
     envVars:
       - key: VITE_API_URL
         sync: false
