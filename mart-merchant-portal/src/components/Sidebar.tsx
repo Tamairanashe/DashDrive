@@ -26,9 +26,10 @@ const { Sider } = Layout;
 interface SidebarProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
+    onLogout?: () => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
     const { lastUpdated } = useRealTime('orders', null);
     const [showOrderDot, setShowOrderDot] = useState(false);
 
@@ -119,8 +120,12 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                     defaultOpenKeys={defaultOpenKeys.length > 0 ? defaultOpenKeys : ['stores-group', 'marketing-group']}
                     onClick={(e) => {
                         if (e.key === 'logout') {
-                            alert('Successfully logged out!');
-                            setActiveTab('dashboard'); // Redirect to dashboard after 'logout'
+                            if (onLogout) {
+                                onLogout();
+                            } else {
+                                alert('Successfully logged out!');
+                                setActiveTab('dashboard'); // Redirect to dashboard after 'logout'
+                            }
                         } else {
                             setActiveTab(e.key);
                         }

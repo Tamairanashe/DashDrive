@@ -8,9 +8,10 @@ interface LayoutProps {
     children: React.ReactNode;
     activeTab: string;
     setActiveTab: (tab: string) => void;
+    onLogout?: () => void;
 }
 
-export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
+export function Layout({ children, activeTab, setActiveTab, onLogout }: LayoutProps) {
     const titles: Record<string, { title: string; subtitle: string }> = {
         dashboard: { title: 'Dashboard Overview', subtitle: "Welcome back! Your grocery store's performance view" },
         orders: { title: 'Order Management', subtitle: 'Track and manage all grocery orders in real time.' },
@@ -33,7 +34,7 @@ export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
 
     return (
         <AntdLayout style={{ minHeight: '100vh' }}>
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
             <AntdLayout>
                 <Header title={title} subtitle={subtitle} />
                 <Content style={{ padding: '32px', paddingBottom: '48px', overflowY: 'auto' }}>

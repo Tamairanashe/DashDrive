@@ -18,9 +18,37 @@ import { Promotions } from './components/marketing/Promotions';
 import { Customers } from './components/Customers';
 import { Settings } from './components/Settings';
 import { Help } from './components/Help';
+import { Login } from './components/Login';
+import { SignUp } from './components/SignUp';
+
+import { ForgotPassword } from './components/ForgotPassword';
+import { EmailVerification } from './components/EmailVerification';
+import { OnboardingWizard } from './components/OnboardingWizard';
+import { LandingPage } from './components/LandingPage';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authMode, setAuthMode] = useState<'landing' | 'login' | 'signup' | 'forgot_password' | 'email_verification' | 'onboarding'>('landing');
+
+  // Note: Sidebar logout currently redirects to dashboard in pure UI mode.
+  // In a real app we'd pass an `onLogout` prop or use context.
+
+  if (!isAuthenticated) {
+    if (authMode === 'landing') {
+      return <LandingPage onSignIn={() => setAuthMode('login')} onSignUp={() => setAuthMode('signup')} />;
+    } else if (authMode === 'login') {
+      return <Login onLogin={() => setIsAuthenticated(true)} onSwitchToSignup={() => setAuthMode('signup')} onForgotPassword={() => setAuthMode('forgot_password')} />;
+    } else if (authMode === 'signup') {
+      return <SignUp onSignup={() => setAuthMode('email_verification')} onSwitchToLogin={() => setAuthMode('login')} />;
+    } else if (authMode === 'forgot_password') {
+      return <ForgotPassword onBackToLogin={() => setAuthMode('login')} />;
+    } else if (authMode === 'email_verification') {
+      return <EmailVerification onVerified={() => setAuthMode('onboarding')} />;
+    } else if (authMode === 'onboarding') {
+      return <OnboardingWizard onComplete={() => setIsAuthenticated(true)} />;
+    }
+  }
 
   return (
     <ConfigProvider
@@ -48,7 +76,11 @@ function App() {
         },
       }}
     >
-      <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+      <Layout
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onLogout={() => setIsAuthenticated(false)}
+      >
         {activeTab === 'dashboard' && <Dashboard />}
         {activeTab === 'orders' && <Orders />}
         {activeTab === 'inventory' && <Inventory onAddProduct={() => setActiveTab('addProduct')} />}
