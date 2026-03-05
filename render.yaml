@@ -68,7 +68,7 @@ services:
   # 4. Mart Merchant Portal (React/Vite Frontend)
   - type: web
     name: mart-merchant-portal
-    env: static
+    runtime: static
     plan: free
     rootDir: mart-merchant-portal
     buildCommand: npm install && npm run build
@@ -86,7 +86,7 @@ services:
   # 5. Dash Food Manager (React/Vite Frontend)
   - type: web
     name: dash-food-manager
-    env: static
+    runtime: static
     plan: free
     rootDir: dash-food-manager
     buildCommand: npm install && npm run build
