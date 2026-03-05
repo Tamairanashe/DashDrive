@@ -1,24 +1,17 @@
-import { supabase } from "../lib/supabase";
-import axios from "axios";
+import api from "../lib/api";
 import { auditLogService } from "./auditLogService";
 import { offlineQueue } from "./offlineQueue";
-// Integration note: User should install @react-native-community/netinfo
-// import NetInfo from "@react-native-community/netinfo";
-
-// This should be your external naming backend URL
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://your-node-backend.com";
 
 export const orderService = {
     /**
-   * Update order status in Supabase and sync with external backend
+   * Update order status in Logistics Engine
    */
     async updateOrderStatus(orderId: string, status: string, externalOrderId?: string, userId?: string, reason?: string) {
         try {
-            // Check connectivity (Simplified for now, expecting NetInfo integration)
-            const isOnline = true; // TODO: Wire this to NetInfo.fetch().isConnected
+            // Check connectivity
+            const isOnline = true; // TODO: Wire this to NetInfo
 
             if (!isOnline) {
-                // Offline Fallback: Queue the update with a local timestamp
                 const timestamp = new Date().toISOString();
                 offlineQueue.add({
                     orderId,
@@ -28,34 +21,13 @@ export const orderService = {
                     reason,
                     timestamp
                 });
-
-                // Optional: Optimistic local update via Supabase if direct access is allowed
-                // This will be overwritten by the authoritative backend sync later
                 return { success: true, offline: true };
             }
 
-            // ==========================================
-            // 🚀 AUTHORITATIVE BACKEND PATH (ENTERPRISE)
-            // ==========================================
-            // Canonical API call - Server sets timestamps and broadcasts via Socket.io
-            const response = await axios.patch(`${BACKEND_URL}/api/orders/status`, {
-                orderId,
+            const response = await api.patch(`/orders/${orderId}/status`, {
                 status,
-                reason,
-                userId // For backend-side audit logging
+                note: reason
             });
-
-            if (response.status !== 200) {
-                throw new Error("Backend status update failed");
-            }
-
-            // Sync with Node backend (Historical sync logic if still needed separately)
-            if (externalOrderId && !BACKEND_URL.includes("/api/orders/status")) {
-                await axios.patch(`${BACKEND_URL}/api/orders/${externalOrderId}/status`, {
-                    status,
-                    reason,
-                });
-            }
 
             return { success: true, data: response.data };
         } catch (error) {
@@ -65,38 +37,44 @@ export const orderService = {
     },
 
     async fetchOrders(storeId: string) {
-        const { data, error } = await supabase
-            .from("orders")
-            .select("*")
-            .eq("store_id", storeId)
-            .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        return data;
+        try {
+            const response = await api.get(`/orders/store/${storeId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+            throw error;
+        }
     },
 
     /**
      * Fetch store metrics for the dashboard
      */
     async fetchStoreMetrics(storeId: string) {
-        const { data, error } = await supabase.rpc('get_store_metrics', {
-            p_store_id: storeId
-        });
-
-        if (error) throw error;
-        return data;
+        try {
+            // Fallback for now if stats endpoint isn't fully ready
+            const response = await api.get(`/orders/store/${storeId}/stats`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching store metrics:", error);
+            // Return dummy data to keep UI alive during transition if needed
+            return {
+                total_orders: 0,
+                total_revenue: 0,
+                pending_orders: 0
+            };
+        }
     },
 
     /**
      * Fetch items for a specific order
      */
     async fetchOrderItems(orderId: string) {
-        const { data, error } = await supabase
-            .from('order_items')
-            .select('*')
-            .eq('order_id', orderId);
-
-        if (error) throw error;
-        return data;
+        try {
+            const response = await api.get(`/orders/${orderId}`);
+            return response.data.items;
+        } catch (error) {
+            console.error("Error fetching order items:", error);
+            throw error;
+        }
     }
 };

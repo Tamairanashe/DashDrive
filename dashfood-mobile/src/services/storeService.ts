@@ -1,28 +1,23 @@
-import { supabase } from "../lib/supabase";
+import api from "../lib/api";
 import { useStoreSettings } from "../store/useStoreSettings";
 import { useSLASettings } from "../store/useSLASettings";
 
 export const storeService = {
     /**
-     * Fetch store configuration from Supabase
+     * Fetch store configuration from Logistics Engine
      */
     async fetchStoreSettings(storeId: string) {
         try {
-            const { data, error } = await supabase
-                .from("stores")
-                .select("acceptance_mode, sla_warning_minutes, sla_breach_minutes, escalation_roles, escalation_enabled")
-                .eq("id", storeId)
-                .single();
-
-            if (error) throw error;
+            const response = await api.get(`/stores/${storeId}`);
+            const data = response.data;
 
             if (data) {
                 useStoreSettings.getState().setAcceptanceMode(
-                    data.acceptance_mode as 'manual' | 'auto'
+                    data.acceptanceMode.toLowerCase() as 'manual' | 'auto'
                 );
                 useSLASettings.getState().setSLA(
-                    data.sla_warning_minutes || 10,
-                    data.sla_breach_minutes || 20
+                    data.slaWarningMinutes || 10,
+                    data.slaBreachMinutes || 20
                 );
             }
             return data;
@@ -35,20 +30,17 @@ export const storeService = {
     /**
      * Update store configuration
      */
-    async updateStoreSettings(storeId: string, updates: {
-        acceptance_mode?: 'manual' | 'auto',
-        sla_warning_minutes?: number,
-        sla_breach_minutes?: number,
-        escalation_roles?: string[],
-        escalation_enabled?: boolean
-    }) {
+    async updateStoreSettings(storeId: string, updates: any) {
         try {
-            const { error } = await supabase
-                .from("stores")
-                .update(updates)
-                .eq("id", storeId);
+            // Map settings to match backend schema if necessary
+            const mappedUpdates: any = {};
+            if (updates.acceptance_mode) mappedUpdates.acceptanceMode = updates.acceptance_mode.toUpperCase();
+            if (updates.sla_warning_minutes) mappedUpdates.slaWarningMinutes = updates.sla_warning_minutes;
+            if (updates.sla_breach_minutes) mappedUpdates.slaBreachMinutes = updates.sla_breach_minutes;
+            if (updates.escalation_roles) mappedUpdates.escalationRoles = updates.escalation_roles;
+            if (updates.escalation_enabled !== undefined) mappedUpdates.escalationEnabled = updates.escalation_enabled;
 
-            if (error) throw error;
+            await api.patch(`/stores/${storeId}`, mappedUpdates);
 
             // Update local state
             if (updates.acceptance_mode) {

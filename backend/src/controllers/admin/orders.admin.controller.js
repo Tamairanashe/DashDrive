@@ -115,6 +115,33 @@ exports.updateStatus = async (req, res) => {
 
         await notificationHub.notifyOrderStatusChange(updatedOrder, reason);
 
+        // ==========================================
+        // 🚀 LOGISTICS ENGINE INTEGRATION
+        // ==========================================
+        if (status === 'ready') {
+            try {
+                const logisticsEngineService = require('../../services/common/logisticsEngineService');
+
+                // Fetch full order with store details for the logistics payload
+                const { data: fullOrder } = await supabase
+                    .from('orders')
+                    .select('*, stores(*)')
+                    .eq('id', id)
+                    .single();
+
+                await logisticsEngineService.requestDelivery(fullOrder);
+
+                // Log to history for audit
+                await supabase.from('order_status_history').insert({
+                    order_id: id,
+                    status: 'assigned',
+                    note: 'Logistics Engine notified of READY order'
+                });
+            } catch (dispatchErr) {
+                console.error("[Logistics Dispatch Error]", dispatchErr.message);
+            }
+        }
+
         return res.json({
             success: true,
             data: updatedOrder

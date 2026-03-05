@@ -70,17 +70,30 @@ exports.markOrderReady = async (orderId) => {
 
     await logStatusHistory(orderId, 'ready', 'Order is ready for pickup');
 
-    // Automatically trigger dispatch
+    // Automatically trigger dispatch via the central DashDrive Logistics Engine
     try {
-        const bestPilot = await dispatchService.findBestPilotForOrder(orderId);
-        if (bestPilot) {
-            await dispatchService.assignPilot(orderId, bestPilot.id);
-            await logStatusHistory(orderId, 'assigned', `Pilot ${bestPilot.name} assigned for delivery`);
-        } else {
-            await logStatusHistory(orderId, 'pending_dispatch', 'No pilots available in the area right now');
-        }
+        const logisticsEngineService = require('../common/logisticsEngineService');
+
+        // Fetch full order with store details for the logistics payload
+        const { data: fullOrder, error: fetchErr } = await supabase
+            .from('orders')
+            .select('*, stores(*)')
+            .eq('id', orderId)
+            .single();
+
+        if (fetchErr) throw fetchErr;
+
+        const deliveryResult = await logisticsEngineService.requestDelivery(fullOrder);
+
+        await logStatusHistory(
+            orderId,
+            'assigned',
+            `Logistics Engine assigned rider. External ID: ${deliveryResult.delivery_id}`
+        );
+
     } catch (dispatchErr) {
-        console.error("[Dispatch Error]", dispatchErr.message);
+        console.error("[Logistics Dispatch Error]", dispatchErr.message);
+        await logStatusHistory(orderId, 'dispatch_error', `Failed to request rider: ${dispatchErr.message}`);
     }
 
     return data;

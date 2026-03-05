@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://dashfood-backend.onrender.com";
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
 class SocketService {
     private socket: Socket | null = null;

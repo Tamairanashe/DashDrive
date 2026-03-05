@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Typography, Input, Button, Form, ConfigProvider, Row, Col, Select } from 'antd';
+import { Typography, Input, Button, Form, ConfigProvider, Select } from 'antd';
 import { Leaf } from 'lucide-react';
+import { api } from '../api';
 
 const { Title, Text } = Typography;
 
@@ -11,13 +12,24 @@ interface SignUpProps {
 
 export function SignUp({ onSignup, onSwitchToLogin }: SignUpProps) {
     const [isLoading, setIsLoading] = useState(false);
+    const [form] = Form.useForm();
 
-    const handleSignup = () => {
+    const handleSignup = async (values: any) => {
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            await api.auth.register({
+                storeName: values.storeName,
+                email: values.email,
+                password: values.password,
+                countryCode: values.countryCode || 'ZW',
+                type: values.businessType || 'MART'
+            });
             onSignup();
-        }, 1500);
+        } catch (error: any) {
+            console.error('Signup failed:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -88,23 +100,29 @@ export function SignUp({ onSignup, onSwitchToLogin }: SignUpProps) {
                                 </div>
                             </div>
 
-                            <Form layout="vertical" onFinish={handleSignup} requiredMark={false} className="uber-styled-form">
-                                <Form.Item name="storeName" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Store name</Text>} rules={[{ required: true, message: '' }]}>
+                            <Form form={form} layout="vertical" onFinish={handleSignup} requiredMark={false} className="uber-styled-form">
+                                <Form.Item name="businessType" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Business Type</Text>} initialValue="MART">
+                                    <Select size="large" className="custom-filled-select" options={[{ value: 'MART', label: 'Retail / Mart' }, { value: 'FOOD', label: 'Restaurant / Food' }]} />
+                                </Form.Item>
+
+                                <Form.Item name="storeName" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Store name</Text>} rules={[{ required: true, message: 'Store name is required' }]}>
                                     <Input size="large" className="custom-filled-input" />
                                 </Form.Item>
 
-                                <Form.Item name="email" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Email</Text>} rules={[{ required: true, message: '' }]}>
+                                <Form.Item name="email" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Email</Text>} rules={[{ required: true, message: 'Email is required' }, { type: 'email', message: 'Invalid email' }]}>
                                     <Input size="large" className="custom-filled-input" />
                                 </Form.Item>
 
-                                <Form.Item name="phone" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Mobile phone number</Text>} rules={[{ required: true, message: '' }]}>
+                                <Form.Item name="phone" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Mobile phone number</Text>} rules={[{ required: true, message: 'Phone is required' }]}>
                                     <div className="flex gap-2">
-                                        <Select defaultValue="ZA" size="large" style={{ width: 100 }} className="custom-filled-select" options={[{ value: 'ZA', label: 'ZA' }, { value: 'US', label: 'US' }]} />
-                                        <Input size="large" placeholder="+27" className="custom-filled-input flex-1" />
+                                        <Form.Item name="countryCode" noStyle initialValue="ZW">
+                                            <Select size="large" style={{ width: 100 }} className="custom-filled-select" options={[{ value: 'ZW', label: 'ZW' }, { value: 'KE', label: 'KE' }, { value: 'NG', label: 'NG' }]} />
+                                        </Form.Item>
+                                        <Input size="large" placeholder="+263" className="custom-filled-input flex-1" />
                                     </div>
                                 </Form.Item>
 
-                                <Form.Item name="password" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Password</Text>} rules={[{ required: true, message: '' }]}>
+                                <Form.Item name="password" label={<Text style={{ fontWeight: 600, fontSize: '14px' }}>Password</Text>} rules={[{ required: true, message: 'Password is required' }, { min: 8, message: 'Minimum 8 characters' }]}>
                                     <Input.Password size="large" className="custom-filled-input" />
                                 </Form.Item>
 

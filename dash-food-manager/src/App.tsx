@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Store,
@@ -32,7 +32,8 @@ import {
   AlertCircle,
   Info,
   Smartphone,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -349,6 +350,26 @@ const Dashboard = () => (
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    if (token) {
+      localStorage.setItem('dashfood_auth', token);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setIsAuthenticated(true);
+    } else {
+      const savedToken = localStorage.getItem('dashfood_auth');
+      if (savedToken) {
+        setIsAuthenticated(true);
+      } else {
+        // Not authenticated, redirect to merchant portal login
+        window.location.href = 'http://localhost:3001';
+      }
+    }
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -375,6 +396,14 @@ export default function App() {
       );
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="animate-pulse text-zinc-400 font-medium">Authenticating...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 flex font-sans text-zinc-900">
@@ -407,6 +436,14 @@ export default function App() {
             <SidebarItem icon={FileText} label="Reports" active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} isCollapsed={!isSidebarOpen} />
             <SidebarItem icon={UserCircle} label="Users" active={activeTab === 'users'} onClick={() => setActiveTab('users')} isCollapsed={!isSidebarOpen} />
             <SidebarItem icon={SettingsIcon} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} isCollapsed={!isSidebarOpen} />
+            <div className="my-2" />
+            <SidebarItem
+              icon={LogOut}
+              label="Log Out"
+              active={false}
+              onClick={() => { localStorage.removeItem('dashfood_auth'); window.location.href = 'http://localhost:3001'; }}
+              isCollapsed={!isSidebarOpen}
+            />
           </nav>
 
           {/* User Profile */}

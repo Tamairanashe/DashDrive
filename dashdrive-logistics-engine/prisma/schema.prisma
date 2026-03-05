@@ -1,0 +1,648 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Country {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique // ZW, KE, NG
+  currency  String // USD, ZWL, KES, NGN
+  timezone  String // Africa/Harare, Africa/Nairobi
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  merchants Merchant[]
+}
+
+enum BusinessType {
+  FOOD
+  MART
+}
+
+enum AcceptanceMode {
+  MANUAL
+  AUTO
+}
+
+model Merchant {
+  id           String   @id @default(uuid())
+  countryId    String
+  email        String   @unique
+  passwordHash String
+  storeName    String
+  type         BusinessType @default(MART)
+  phone        String?
+  isVerified   Boolean      @default(false)
+  pushToken    String? // Still useful for primary device or legacy
+  createdAt    DateTime     @default(now())
+
+  country       Country                @relation(fields: [countryId], references: [id])
+  stores        Store[]
+  notifications MerchantNotification[]
+  devices       MerchantDevice[]
+  apiKeys       ApiKey[]
+  webhookConfigs WebhookConfig[]
+}
+
+model Store {
+  id         String   @id @default(uuid())
+  merchantId String
+  name       String
+  address    String
+  city       String
+  currency   String
+  timezone   String
+  logoUrl        String?
+  taxRate        Float    @default(0)
+  commissionRate Float    @default(0.10)
+  deliveryEnabled   Boolean  @default(true)
+  autoAcceptOrders  Boolean  @default(false)
+  isActive          Boolean  @default(true)
+
+  // DashFood Specific Settings
+  acceptanceMode     AcceptanceMode @default(MANUAL)
+  slaWarningMinutes  Int            @default(10)
+  slaBreachMinutes   Int            @default(20)
+  escalationRoles    String[]       @default([])
+  escalationEnabled  Boolean        @default(false)
+
+  createdAt      DateTime @default(now())
+
+  merchant      Merchant       @relation(fields: [merchantId], references: [id])
+  products      Product[]
+  orders        Order[]
+  categories    Category[]
+  promotions    Promotion[]
+  coupons       Coupon[]
+  featuredItems FeaturedItem[]
+  businessHours BusinessHours[]
+  dailyStats    MerchantDailyStats[]
+}
+
+model Category {
+  id         String   @id @default(uuid())
+  storeId    String
+  merchantId String
+  name       String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  store    Store     @relation(fields: [storeId], references: [id])
+  products Product[]
+}
+
+model Product {
+  id                String   @id @default(uuid())
+  storeId           String
+  merchantId        String // Denormalized for efficient multi-tenant queries
+  categoryId        String?
+  name              String
+  description       String?
+  basePrice         Float
+  sku               String?  @unique
+  stock             Int      @default(0)
+  lowStockThreshold Int      @default(5)
+  images            String[]
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  store          Store            @relation(fields: [storeId], references: [id])
+  category       Category?        @relation(fields: [categoryId], references: [id])
+  variants       ProductVariant[]
+  modifierGroups ModifierGroup[]
+  featuredItems  FeaturedItem[]
+  inventoryAlerts InventoryAlert[]
+}
+
+model ProductVariant {
+  id        String   @id @default(uuid())
+  productId String
+  name      String // e.g., Large, Small, Red, Blue
+  sku       String?  @unique
+  price     Float? // Override base price if set
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model ModifierGroup {
+  id        String   @id @default(uuid())
+  productId String
+  name      String // e.g., Choose your crust, Extra toppings
+  minSelect Int      @default(0)
+  maxSelect Int      @default(1)
+  createdAt DateTime @default(now())
+
+  product   Product    @relation(fields: [productId], references: [id])
+  modifiers Modifier[]
+}
+
+model Modifier {
+  id              String   @id @default(uuid())
+  modifierGroupId String
+  name            String // e.g., Pepperoni, Thin Crust
+  price           Float    @default(0)
+  stock           Int? // Optional stock for modifiers
+  createdAt       DateTime @default(now())
+
+  group ModifierGroup @relation(fields: [modifierGroupId], references: [id])
+}
+
+model InventoryLog {
+  id         String   @id @default(uuid())
+  productId  String
+  variantId  String?
+  change     Int
+  reason     String // e.g., RESTOCK, SALE, ADJUSTMENT
+  merchantId String
+  createdAt  DateTime @default(now())
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  storeId         String
+  merchantId      String // Denormalized for efficient multi-tenant queries
+  orderNumber     String      @unique
+  status          OrderStatus @default(PENDING)
+  currency        String // IMPORTANT for multi-country
+  subtotal        Float
+  taxAmount       Float       @default(0)
+  deliveryFee     Float       @default(0)
+  totalAmount     Float
+  customerName    String?
+  customerPhone   String?
+  deliveryAddress String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  store         Store                @relation(fields: [storeId], references: [id])
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+  transactions  Transaction[]
+  delivery      Delivery?
+  deliveryOffer DeliveryOffer? @relation("OrderToDeliveryOffer")
+
+  @@index([storeId])
+  @@index([merchantId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Promotion {
+  id          String   @id @default(uuid())
+  storeId     String
+  merchantId  String
+  name        String
+  description String?
+  bannerImage String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+}
+
+model Coupon {
+  id                String       @id @default(uuid())
+  storeId           String
+  merchantId        String
+  code              String       @unique
+  discountType      DiscountType @default(PERCENTAGE)
+  discountValue     Float
+  minOrderAmount    Float        @default(0)
+  maxDiscountAmount Float?
+  usageLimit        Int?
+  usedCount         Int          @default(0)
+  startDate         DateTime
+  endDate           DateTime
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model FeaturedItem {
+  id         String   @id @default(uuid())
+  storeId    String
+  merchantId String
+  productId  String
+  boostLevel Float    @default(1.5)
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  store   Store   @relation(fields: [storeId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model OrderItem {
+  id         String @id @default(uuid())
+  orderId    String
+  productId  String
+  name       String
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model Transaction {
+  id                   String        @id @default(uuid())
+  orderId              String
+  storeId              String
+  merchantId           String
+  gateway              String // stripe, paystack, paynow
+  gatewayTransactionId String?
+  currency             String
+  amount               Float
+  status               PaymentStatus @default(PENDING)
+  paymentMethod        String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  ASSIGNED_TO_RIDER
+  PICKED_UP
+  DELIVERED
+  CANCELLED
+}
+
+model Rider {
+  id           String  @id @default(uuid())
+  name         String
+  phone        String  @unique
+  email        String?
+  vehicleType  String // bike, car, scooter
+  licensePlate String?
+  isOnline     Boolean @default(false)
+  isActive     Boolean @default(true)
+  countryCode  String
+
+  // AI Dispatch Fields
+  latitude        Float?
+  longitude       Float?
+  rating          Float  @default(5.0)
+  totalDeliveries Int    @default(0)
+  currentLoad     Int    @default(0) // active orders
+
+  createdAt DateTime @default(now())
+
+  deliveries Delivery[]
+  bids       RiderBid[]
+  dispatchAttempts DispatchAttempt[]
+}
+
+model Delivery {
+  id          String         @id @default(uuid())
+  orderId     String         @unique
+  riderId     String?
+  status      DeliveryStatus @default(PENDING)
+  pickupTime  DateTime?
+  deliveredAt DateTime?
+  distanceKm  Float?
+  deliveryFee Float?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  order Order  @relation(fields: [orderId], references: [id])
+  rider Rider? @relation(fields: [riderId], references: [id])
+  dispatchAttempts DispatchAttempt[]
+}
+
+model DispatchAttempt {
+  id          String   @id @default(uuid())
+  deliveryId  String
+  riderId     String
+  attemptTime DateTime @default(now())
+  status      DispatchAttemptStatus @default(PENDING) // PENDING, ACCEPTED, REJECTED, MISSED
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id])
+  rider    Rider    @relation(fields: [riderId], references: [id])
+
+  @@index([deliveryId])
+  @@index([riderId])
+}
+
+enum DispatchAttemptStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  MISSED
+}
+
+model DeliveryOffer {
+  id          String      @id @default(uuid())
+  orderId     String      @unique
+  proposedFee Float
+  currency    String
+  expiresAt   DateTime
+  status      OfferStatus @default(OPEN)
+  createdAt   DateTime    @default(now())
+
+  order Order @relation("OrderToDeliveryOffer", fields: [orderId], references: [id])
+  bids  RiderBid[]
+}
+
+model RiderBid {
+  id        String   @id @default(uuid())
+  offerId   String
+  riderId   String
+  bidAmount Float
+  createdAt DateTime @default(now())
+
+  offer DeliveryOffer @relation(fields: [offerId], references: [id])
+  rider Rider         @relation(fields: [riderId], references: [id])
+}
+
+enum OfferStatus {
+  OPEN
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model Zone {
+  id              String   @id @default(uuid())
+  name            String
+  countryCode     String
+  minLat          Float
+  maxLat          Float
+  minLng          Float
+  maxLng          Float
+  surgeMultiplier Float    @default(1.0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+enum DeliveryStatus {
+  PENDING
+  ASSIGNED
+  ACCEPTED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+model Wallet {
+  id        String          @id @default(uuid())
+  ownerType WalletOwnerType
+  ownerId   String
+  currency  String
+  balance   Float           @default(0)
+  isFrozen  Boolean         @default(false)
+  createdAt DateTime        @default(now())
+
+  ledgerEntries      LedgerEntry[]
+  withdrawalRequests WithdrawalRequest[]
+
+  @@unique([ownerType, ownerId, currency])
+}
+
+enum WalletOwnerType {
+  MERCHANT
+  RIDER
+  PLATFORM
+}
+
+model LedgerEntry {
+  id          String     @id @default(uuid())
+  walletId    String
+  amount      Float
+  type        LedgerType
+  referenceId String?
+  description String?
+  createdAt   DateTime   @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+enum LedgerType {
+  CREDIT
+  DEBIT
+}
+
+model WithdrawalRequest {
+  id        String           @id @default(uuid())
+  walletId  String
+  amount    Float
+  status    WithdrawalStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model RiskEvent {
+  id          String        @id @default(uuid())
+  eventType   RiskEventType
+  referenceId String
+  actorId     String
+  actorType   RiskActorType
+  riskScore   Float
+  decision    RiskDecision
+  reasons     Json?
+  createdAt   DateTime      @default(now())
+}
+
+enum RiskEventType {
+  ORDER
+  PAYMENT
+  WITHDRAWAL
+  DELIVERY
+  WALLET
+}
+
+enum RiskActorType {
+  CUSTOMER
+  MERCHANT
+  RIDER
+}
+
+enum RiskDecision {
+  APPROVED
+  REVIEW
+  BLOCKED
+}
+
+model MerchantNotification {
+  id         String   @id @default(uuid())
+  merchantId String
+  title      String
+  body       String
+  data       Json? // Extra meta data
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@index([createdAt])
+}
+
+model BusinessHours {
+  id        String   @id @default(uuid())
+  storeId   String
+  dayOfWeek Int // 0-6 (Sunday-Saturday)
+  openTime  String // HH:mm
+  closeTime String // HH:mm
+  isOpen    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, dayOfWeek])
+}
+
+model MerchantDevice {
+  id          String   @id @default(uuid())
+  merchantId  String
+  deviceId    String
+  deviceName  String?
+  pushToken   String?
+  lastLogin   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@unique([merchantId, deviceId])
+}
+
+model InventoryAlert {
+  id         String   @id @default(uuid())
+  merchantId String
+  storeId    String
+  productId  String
+  stockLevel Int
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([merchantId])
+  @@index([storeId])
+}
+
+model MerchantDailyStats {
+  id            String   @id @default(uuid())
+  merchantId    String
+  storeId       String
+  date          DateTime
+  ordersCount   Int      @default(0)
+  revenue       Float    @default(0)
+  created_at    DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, date])
+  @@index([merchantId])
+}
+
+// ==========================================
+// PRICING ENGINE MODELS
+// ==========================================
+
+model PricingRule {
+  id            String   @id @default(uuid())
+  countryCode   String   @unique
+  baseFee       Float    @default(2.00)
+  distanceFeeKm Float    @default(0.80)
+  timeFeeMin    Float    @default(0.10)
+  serviceFee    Float    @default(1.00)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model SurgeZone {
+  id         String   @id @default(uuid())
+  name       String
+  centerLat  Float
+  centerLng  Float
+  radiusKm   Float
+  multiplier Float    @default(1.0)
+  active     Boolean  @default(true)
+}
+
+model PackagePricing {
+  id         String   @id @default(uuid())
+  name       String   @unique // SMALL, MEDIUM, LARGE
+  multiplier Float    @default(1.0) // 1.0, 1.2, 1.4
+}
+
+model ApiKey {
+  id         String   @id @default(uuid())
+  merchantId String
+  key        String   @unique
+  name       String   // e.g., "Production Key", "Staging"
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime?
+  isActive   Boolean  @default(true)
+
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@index([key])
+}
+
+model WebhookConfig {
+  id         String   @id @default(uuid())
+  merchantId String
+  url        String
+  secret     String   // Used to sign the payload (HMAC-SHA256)
+  isActive   Boolean  @default(true)
+  events     String[] // e.g., ["delivery.created", "delivery.delivered"]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+}

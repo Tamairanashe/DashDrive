@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Typography, Input, Button, Form, ConfigProvider, Checkbox } from 'antd';
 import { Leaf } from 'lucide-react';
+import { api } from '../api';
 
 const { Title, Text } = Typography;
 
@@ -14,13 +15,22 @@ export function Login({ onLogin, onSwitchToSignup, onForgotPassword }: LoginProp
     const [isLoading, setIsLoading] = useState(false);
     const [form] = Form.useForm();
 
-    const handleLogin = () => {
+    const handleLogin = async (values: any) => {
         setIsLoading(true);
-        // Simulate an API call
-        setTimeout(() => {
+        try {
+            const result = await api.auth.login({
+                email: values.email,
+                password: values.password
+            });
+            if (result.access_token) {
+                localStorage.setItem('merchant_token', result.access_token);
+                onLogin();
+            }
+        } catch (error: any) {
+            console.error('Login failed:', error);
+        } finally {
             setIsLoading(false);
-            onLogin();
-        }, 1500);
+        }
     };
 
     return (

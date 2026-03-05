@@ -1,0 +1,17 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+Error: Prisma schema validation - (validate wasm)
+Error code: P1012
+[1;91merror[0m: [1mError validating field `rider` in model `DispatchAttempt`: The relation field `rider` on model `DispatchAttempt` is missing an opposite relation field on the model `Rider`. Either run `prisma format` or add it manually.[0m
+  [1;94m-->[0m  [4mprisma\schema.prisma:340[0m
+[1;94m   | [0m
+[1;94m339 | [0m  delivery Delivery @relation(fields: [deliveryId], references: [id])
+[1;94m340 | [0m  [1;91mrider    Rider    @relation(fields: [riderId], references: [id])[0m
+[1;94m341 | [0m
+[1;94m   | [0m
+
+Validation Error Count: 1
+[Context: validate]
+
+Prisma CLI Version : 6.4.1
