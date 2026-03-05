@@ -78,6 +78,12 @@ import { ServiceGroups } from './components/ServiceGroups';
 import { BlogSetup } from './components/BlogSetup';
 import { AppDownloadSetup } from './components/AppDownloadSetup';
 import { PrioritySetup } from './components/PrioritySetup';
+import { CustomerLevelSetup } from './components/CustomerLevelSetup';
+import { Employees } from './components/Employees';
+import { UserWallet } from './components/UserWallet';
+import { DispatchManagement } from './components/DispatchManagement';
+import { SolvedAlertList } from './components/SolvedAlertList';
+import { SystemLogs } from './components/SystemLogs';
 import { cn } from './utils';
 import {
   Clock,
@@ -301,13 +307,17 @@ export default function App() {
       case 'Settings':
         return <SupportTickets initialTab={currentView as any} />;
       case 'Customer Level Setup':
+        return <CustomerLevelSetup />;
       case 'Employees':
+        return <Employees />;
       case 'User Wallet':
+        return <UserWallet />;
       case 'Dispatch Management':
+        return <DispatchManagement />;
       case 'Solved Alert List':
+        return <SolvedAlertList />;
       case 'System Logs':
-        // These will fall through to default "Under Construction" view
-        break;
+        return <SystemLogs />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-slate-400">

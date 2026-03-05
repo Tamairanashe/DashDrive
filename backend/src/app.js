@@ -39,7 +39,7 @@ const platformRoutes = require("./routes/platform.routes");
 const mobileRoutes = require("./routes/mobile.routes");
 
 // Mount Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes); // Merchant-specific Admin Layer

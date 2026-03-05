@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Lock,
     Shield,
@@ -16,11 +16,9 @@ import {
     LayoutGrid,
     FileText,
     Smartphone,
-import {
-        Eye,
-        Edit,
-        Trash
-    } from 'lucide-react';
+    RotateCcw,
+    Eye
+} from 'lucide-react';
 import { cn } from '../utils';
 import { adminApi } from '../api/adminApi';
 
