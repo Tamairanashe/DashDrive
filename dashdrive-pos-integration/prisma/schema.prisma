@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Provider {
+  SQUARE
+  SHOPIFY
+  LIGHTSPEED
+  TOAST
+  GENERIC_API
+}
+
+enum SyncType {
+  MENU
+  ORDER
+  INVENTORY
+}
+
+enum SyncStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
+model PosConnection {
+  id              String       @id @default(uuid())
+  merchantId      String       // References DashDrive merchant.id
+  provider        Provider
+  accessToken     String?
+  refreshToken    String?
+  webhookSecret   String?
+  isActive        Boolean      @default(true)
+  settings        Json?        // Flexible settings for mapping & config
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  syncLogs        PosSyncLog[]
+
+  @@unique([merchantId, provider])
+}
+
+model PosSyncLog {
+  id              String         @id @default(uuid())
+  connectionId    String
+  connection      PosConnection  @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  syncType        SyncType
+  status          SyncStatus
+  externalId      String?        // ID from the POS (e.g., Square Order ID)
+  internalId      String?        // ID from DashDrive (e.g., DashDrive Order ID)
+  errorMessage    String?
+  payload         Json?          // Snapshot of the synced data
+  createdAt       DateTime       @default(now())
+}
