@@ -158,7 +158,7 @@ const BackendStatusAlert = () => {
   React.useEffect(() => {
     const checkStatus = async () => {
       try {
-        const response = await fetch(`${(import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000')}/health`);
+        const response = await fetch(`${(import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000')}/health`);
         if (response.ok) {
           setStatus('online');
         } else {

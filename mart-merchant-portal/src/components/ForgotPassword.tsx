@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Typography, Input, Button, Form, ConfigProvider, notification } from 'antd';
+import { Typography, Input, Button, Form, ConfigProvider, App } from 'antd';
 import { Leaf, ArrowLeft, AlertCircle } from 'lucide-react';
 import { api } from '../api';
 
@@ -13,6 +13,7 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const { notification } = App.useApp();
 
     const handleReset = async (values: any) => {
         setIsLoading(true);

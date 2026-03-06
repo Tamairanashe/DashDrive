@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -7,6 +7,8 @@ import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     constructor(
         private prisma: PrismaService,
         private jwtService: JwtService,
@@ -54,5 +56,24 @@ export class AuthService {
         return this.prisma.merchant.findUnique({
             where: { id: payload.sub },
         });
+    }
+
+    async forgotPassword(email: string) {
+        const merchant = await this.prisma.merchant.findUnique({
+            where: { email },
+        });
+
+        if (!merchant) {
+            // According to the frontend logic, if it says "contact your Store Owner", it's a restricted role.
+            // But here we're only dealing with standard merchants without roles implemented yet, so we just mock the success 
+            // to prevent email enumeration, but log the "mock" email send.
+            this.logger.warn(`Password reset requested for unknown email: ${email}`);
+
+            // Standard security practice: return success even if not found to prevent timing/enum attacks.
+            return { message: 'If that email is in our database, we will send a password reset link shortly.' };
+        }
+
+        this.logger.log(`Mocking password reset email send for legitimate user: ${email}`);
+        return { message: 'If that email is in our database, we will send a password reset link shortly.' };
     }
 }

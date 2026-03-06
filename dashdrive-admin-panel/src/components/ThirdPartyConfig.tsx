@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Tabs } from 'antd';
 import {
     CreditCard,
     MessageSquare,
@@ -37,9 +38,9 @@ export const ThirdPartyConfig: React.FC = () => {
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Configuration</span>
+                            <span className="text-[10px] font-black text-slate-400 tracking-[0.2em]">Configuration</span>
                             <div className="w-1 h-1 rounded-full bg-slate-200" />
-                            <span className="text-[10px] font-black text-[#0089D1] uppercase tracking-[0.2em]">3rd Party Services</span>
+                            <span className="text-[10px] font-black text-[#0089D1] tracking-[0.2em]">3rd Party Services</span>
                         </div>
                         <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-none mt-1">Integration Hub</h1>
                     </div>
@@ -50,43 +51,45 @@ export const ThirdPartyConfig: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="flex items-center gap-3 px-8 py-4 bg-white border border-slate-200 text-slate-400 rounded-[24px] text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 transition-all">
+                <button className="flex items-center gap-3 px-8 py-4 bg-white border border-slate-200 text-slate-400 rounded-[24px] text-xs font-black hover:bg-slate-50 hover:text-slate-600 transition-all">
                     <RotateCcw className="w-5 h-5" /> Reset
                 </button>
-                <button className="flex items-center gap-3 px-10 py-4 bg-[#0089D1] text-white rounded-[24px] text-xs font-black uppercase tracking-widest hover:bg-[#007AB8] transition-all shadow-xl shadow-[#0089D1]/20 font-display">
+                <button className="flex items-center gap-3 px-10 py-4 bg-[#0089D1] text-white rounded-[24px] text-xs font-black hover:bg-[#007AB8] transition-all shadow-xl shadow-[#0089D1]/20 font-display">
                     <Save className="w-5 h-5" /> Persist Changes
                 </button>
             </div>
         </div>
     );
 
-    const renderTabs = () => (
-        <div className="flex items-center gap-8 border-b border-slate-100 px-4">
-            {[
-                { id: 'Payment', label: 'Payment Methods', icon: CreditCard },
-                { id: 'SMS', label: 'SMS Gateways', icon: MessageSquare },
-                { id: 'Firebase', label: 'Firebase OTP', icon: Smartphone },
-                { id: 'Email', label: 'Email Config', icon: Mail },
-                { id: 'Maps', label: 'Google Map API', icon: MapIcon },
-                { id: 'ReCaptcha', label: 'ReCaptcha', icon: Shield },
-            ].map(tab => (
-                <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as ThirdPartyTab)}
-                    className={cn(
-                        "pb-6 text-sm font-black uppercase tracking-[0.2em] transition-all relative flex items-center gap-2",
-                        activeTab === tab.id ? "text-slate-900" : "text-slate-300 hover:text-slate-500"
-                    )}
-                >
-                    <tab.icon className={cn("w-4 h-4", activeTab === tab.id ? "text-[#0089D1]" : "text-slate-300")} />
+    const renderTabs = () => {
+        const items = [
+            { id: 'Payment', label: 'Payment Methods', icon: <CreditCard className="w-4 h-4" /> },
+            { id: 'SMS', label: 'SMS Gateways', icon: <MessageSquare className="w-4 h-4" /> },
+            { id: 'Firebase', label: 'Firebase OTP', icon: <Smartphone className="w-4 h-4" /> },
+            { id: 'Email', label: 'Email Config', icon: <Mail className="w-4 h-4" /> },
+            { id: 'Maps', label: 'Google Map API', icon: <MapIcon className="w-4 h-4" /> },
+            { id: 'ReCaptcha', label: 'ReCaptcha', icon: <Shield className="w-4 h-4" /> },
+        ].map(tab => ({
+            key: tab.id,
+            label: (
+                <span className="flex items-center gap-2">
+                    {tab.icon}
                     {tab.label}
-                    {activeTab === tab.id && (
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#0089D1] rounded-t-full" />
-                    )}
-                </button>
-            ))}
-        </div>
-    );
+                </span>
+            )
+        }));
+
+        return (
+            <div className="px-4">
+                <Tabs
+                    activeKey={activeTab}
+                    onChange={(key) => setActiveTab(key as ThirdPartyTab)}
+                    items={items}
+                    className="mb-6 font-bold"
+                />
+            </div>
+        );
+    };
 
     const renderPaymentMethods = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -115,20 +118,20 @@ export const ThirdPartyConfig: React.FC = () => {
                                 <h3 className="text-lg font-black text-slate-900 tracking-tight">{gw.name}</h3>
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm animate-pulse" />
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active</span>
+                                    <span className="text-[10px] font-black text-slate-400 ">Active</span>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-full">
-                            <button className="px-3 py-1 bg-white text-[10px] font-black uppercase tracking-widest text-slate-900 rounded-full shadow-sm">Test</button>
-                            <button className="px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-400">Live</button>
+                            <button className="px-3 py-1 bg-white text-[10px] font-black text-slate-900 rounded-full shadow-sm">Test</button>
+                            <button className="px-3 py-1 text-[10px] font-black text-slate-400">Live</button>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         {gw.fields.map((f, j) => (
                             <div key={j} className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{f} *</label>
+                                <label className="text-[10px] font-black text-slate-400 ml-1">{f} *</label>
                                 <input
                                     type="text"
                                     placeholder={`Enter ${f}`}
@@ -143,14 +146,14 @@ export const ThirdPartyConfig: React.FC = () => {
                             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:border-blue-200 transition-colors">
                                 <ImageIcon className="w-5 h-5 text-slate-300" />
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logo (PNG, Max 1MB)</span>
+                            <span className="text-[10px] font-black text-slate-400 ">Logo (PNG, Max 1MB)</span>
                         </div>
                         <button className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition-all">
                             <Upload className="w-4 h-4" />
                         </button>
                     </div>
 
-                    <button className="w-full py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300">
+                    <button className="w-full py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl text-[10px] font-black tracking-[0.2em] shadow-sm hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300">
                         Update {gw.name}
                     </button>
                 </div>
@@ -175,11 +178,11 @@ export const ThirdPartyConfig: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="text-xl font-black text-slate-900 tracking-tight">{gw.name}</h3>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">SMS Provider</p>
+                                <p className="text-[10px] font-black text-slate-400 mt-1">SMS Provider</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active</span>
+                            <span className="text-[10px] font-black text-slate-400 ">Active</span>
                             <button className="w-12 h-6 rounded-full p-1 bg-blue-500 flex justify-end items-center">
                                 <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
                             </button>
@@ -189,7 +192,7 @@ export const ThirdPartyConfig: React.FC = () => {
                     <div className="space-y-6">
                         {gw.fields.map((f, j) => (
                             <div key={j} className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{f} *</label>
+                                <label className="text-[10px] font-black text-slate-400 ml-2">{f} *</label>
                                 <input
                                     type="text"
                                     placeholder={`Enter ${f}`}
@@ -199,7 +202,7 @@ export const ThirdPartyConfig: React.FC = () => {
                         ))}
                     </div>
 
-                    <button className="w-full py-5 bg-blue-500 text-white rounded-[28px] text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all">
+                    <button className="w-full py-5 bg-blue-500 text-white rounded-[28px] text-xs font-black tracking-[0.2em] shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all">
                         Update {gw.name}
                     </button>
                 </div>
@@ -216,15 +219,15 @@ export const ThirdPartyConfig: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-3xl font-black text-slate-900 tracking-tight">Firebase OTP</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Phone Authentication Hub</p>
+                        <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] mt-1">Phone Authentication Hub</p>
                     </div>
                 </div>
 
                 <div className="space-y-8">
                     <div className="p-8 bg-slate-50 rounded-[40px] border border-slate-100 flex items-center justify-between">
                         <div>
-                            <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Verification Status</span>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 italic">Control Firebase Auth activation</p>
+                            <span className="text-xs font-black text-slate-900 ">Verification Status</span>
+                            <p className="text-[10px] font-black text-slate-400 mt-1 italic">Control Firebase Auth activation</p>
                         </div>
                         <button className="w-16 h-8 rounded-full p-1.5 bg-orange-500 flex justify-end items-center transition-all">
                             <div className="w-5 h-5 bg-white rounded-full shadow-lg" />
@@ -233,8 +236,8 @@ export const ThirdPartyConfig: React.FC = () => {
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between px-4">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Web API Key *</label>
-                            <span className="text-[10px] font-black text-[#0089D1] uppercase tracking-widest cursor-pointer hover:underline flex items-center gap-1">
+                            <label className="text-[10px] font-black text-slate-400 ">Web API Key *</label>
+                            <span className="text-[10px] font-black text-[#0089D1] cursor-pointer hover:underline flex items-center gap-1">
                                 <Info className="w-3 h-3" /> Get Key from Console
                             </span>
                         </div>
@@ -247,8 +250,8 @@ export const ThirdPartyConfig: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <button className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-[32px] text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all">Reset</button>
-                    <button className="flex-2 py-5 bg-orange-500 text-white rounded-[32px] text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition-all px-12">Save Information</button>
+                    <button className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-[32px] text-xs font-black hover:bg-slate-100 transition-all">Reset</button>
+                    <button className="flex-2 py-5 bg-orange-500 text-white rounded-[32px] text-xs font-black shadow-xl shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition-all px-12">Save Information</button>
                 </div>
             </div>
         </div>
@@ -263,7 +266,7 @@ export const ThirdPartyConfig: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-3xl font-black text-slate-900 tracking-tight">Email Server</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">SMTP Transmission Hub</p>
+                        <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] mt-1">SMTP Transmission Hub</p>
                     </div>
                 </div>
 
@@ -279,7 +282,7 @@ export const ThirdPartyConfig: React.FC = () => {
                         { label: 'Password', placeholder: '••••••••', type: 'password' }
                     ].map((f, i) => (
                         <div key={i} className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">{f.label} *</label>
+                            <label className="text-[10px] font-black text-slate-400 tracking-[0.2em] ml-4">{f.label} *</label>
                             <input
                                 type={f.type || 'text'}
                                 placeholder={f.placeholder}
@@ -289,7 +292,7 @@ export const ThirdPartyConfig: React.FC = () => {
                     ))}
                 </div>
 
-                <button className="w-full py-6 bg-indigo-600 text-white rounded-[40px] text-sm font-black uppercase tracking-[0.3em] shadow-2xl shadow-indigo-600/20 hover:scale-[1.01] active:scale-95 transition-all">Submit Configuration</button>
+                <button className="w-full py-6 bg-indigo-600 text-white rounded-[40px] text-sm font-black tracking-[0.3em] shadow-2xl shadow-indigo-600/20 hover:scale-[1.01] active:scale-95 transition-all">Submit Configuration</button>
             </div>
         </div>
     );
@@ -301,7 +304,7 @@ export const ThirdPartyConfig: React.FC = () => {
                     <Info className="w-5 h-5" />
                 </div>
                 <div className="space-y-2">
-                    <h4 className="text-sm font-black text-emerald-900 uppercase tracking-widest">Google Map API Instructions</h4>
+                    <h4 className="text-sm font-black text-emerald-900 ">Google Map API Instructions</h4>
                     <p className="text-xs font-medium text-emerald-700 leading-relaxed">
                         Client key must enable Maps JavaScript API. Server key must enable Places API.
                         Same API key can be used for both fields if restrictions are managed accordingly.
@@ -316,15 +319,15 @@ export const ThirdPartyConfig: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-3xl font-black text-slate-900 tracking-tight">Map Services</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Geocoding & Location Hub</p>
+                        <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] mt-1">Geocoding & Location Hub</p>
                     </div>
                 </div>
 
                 <div className="space-y-10">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between px-4">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Map API Key (Client) *</label>
-                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1 cursor-pointer">
+                            <label className="text-[10px] font-black text-slate-400 ">Map API Key (Client) *</label>
+                            <span className="text-[10px] font-black text-emerald-600 flex items-center gap-1 cursor-pointer">
                                 <RotateCcw className="w-3 h-3" /> Refresh
                             </span>
                         </div>
@@ -336,7 +339,7 @@ export const ThirdPartyConfig: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Map API Key (Server) *</label>
+                        <label className="text-[10px] font-black text-slate-400 ml-4">Map API Key (Server) *</label>
                         <input
                             type="text"
                             className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[40px] text-xs font-mono text-slate-600 outline-none"
@@ -345,7 +348,7 @@ export const ThirdPartyConfig: React.FC = () => {
                     </div>
                 </div>
 
-                <button className="w-full py-6 bg-emerald-500 text-white rounded-[40px] text-sm font-black uppercase tracking-[0.3em] shadow-2xl shadow-emerald-500/20">Save API Keys</button>
+                <button className="w-full py-6 bg-emerald-500 text-white rounded-[40px] text-sm font-black tracking-[0.3em] shadow-2xl shadow-emerald-500/20">Save API Keys</button>
             </div>
         </div>
     );
@@ -368,16 +371,16 @@ export const ThirdPartyConfig: React.FC = () => {
 
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Site Key *</label>
+                            <label className="text-[10px] font-black text-slate-400 ml-1">Site Key *</label>
                             <input type="text" className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-[28px] text-xs font-mono text-slate-500 outline-none" placeholder="6L..." />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Secret Key *</label>
+                            <label className="text-[10px] font-black text-slate-400 ml-1">Secret Key *</label>
                             <input type="password" className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-[28px] text-xs font-mono text-slate-500 outline-none" placeholder="••••••••" />
                         </div>
                     </div>
 
-                    <button className="w-full py-5 bg-slate-900 text-white rounded-[28px] text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20">Save Credentials</button>
+                    <button className="w-full py-5 bg-slate-900 text-white rounded-[28px] text-xs font-black tracking-[0.2em] shadow-xl shadow-slate-900/20">Save Credentials</button>
                 </div>
 
                 <div className="bg-slate-900 p-10 rounded-[60px] text-white shadow-2xl relative overflow-hidden flex flex-col justify-between">
@@ -405,7 +408,7 @@ export const ThirdPartyConfig: React.FC = () => {
                         </div>
                     </div>
 
-                    <button className="w-full py-5 bg-white text-slate-900 rounded-[28px] text-[10px] font-black uppercase tracking-widest relative z-10 hover:scale-[1.02] transition-all">
+                    <button className="w-full py-5 bg-white text-slate-900 rounded-[28px] text-[10px] font-black relative z-10 hover:scale-[1.02] transition-all">
                         Google Credential Page
                     </button>
                 </div>
