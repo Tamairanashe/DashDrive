@@ -5,5 +5,6 @@ const performanceController = require("../controllers/admin/performance.controll
 router.get("/summary", performanceController.getPerformanceSummary);
 router.get("/prep-time-trends", performanceController.getPrepTimeTrends);
 router.get("/store-comparison", performanceController.getStoreComparisons);
+router.get("/demand", performanceController.getVerticalDemand);
 
 module.exports = router;

@@ -149,5 +149,7 @@ CREATE TABLE IF NOT EXISTS order_issues (
 
 -- 9. Indices
 CREATE INDEX IF NOT EXISTS idx_stores_org ON stores(organization_id);
+CREATE INDEX IF NOT EXISTS idx_stores_type ON stores(type);
 CREATE INDEX IF NOT EXISTS idx_orders_store ON orders(store_id);
+CREATE INDEX IF NOT EXISTS idx_orders_type ON orders(type);
 CREATE INDEX IF NOT EXISTS idx_users_org ON users(tenant_id);

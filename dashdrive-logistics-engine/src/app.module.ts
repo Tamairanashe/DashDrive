@@ -13,6 +13,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { RidersModule } from './modules/riders/riders.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -28,6 +29,12 @@ import { EventBusModule } from './modules/event-bus/event-bus.module';
 import { DeliveriesModule } from './modules/deliveries/deliveries.module';
 import { DeveloperModule } from './modules/developer/developer.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
+import { DirectModule } from './modules/direct/direct.module';
+import { SupportModule } from './modules/support/support.module';
+import { FinanceModule } from './modules/finance/finance.module';
+import { EnterpriseModule } from './modules/enterprise/enterprise.module';
+import { CmsModule } from './modules/cms/cms.module';
+import { NegotiationModule } from './modules/negotiation/negotiation.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from '@nestjs/bullmq';
@@ -89,6 +96,7 @@ const appModules = [
   AnalyticsModule,
   PaymentsModule,
   RidersModule,
+  ReviewsModule,
   DeliveryModule,
   MarketingModule,
   NotificationsModule,
@@ -104,6 +112,12 @@ const appModules = [
   DeliveriesModule,
   DeveloperModule,
   WebhooksModule,
+  DirectModule,
+  SupportModule,
+  FinanceModule,
+  EnterpriseModule,
+  CmsModule,
+  NegotiationModule,
 ];
 
 if (useMockRedis) {

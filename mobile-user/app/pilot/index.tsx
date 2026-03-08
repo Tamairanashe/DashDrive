@@ -29,19 +29,21 @@ import { SideMenu } from "../../src/components/SideMenu";
 import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "../../src/lib/MapView";
 import { useSavedPlacesStore } from "../../src/lib/store";
 import { darkMapStyle, mapStyle } from "../../src/styles/mapStyles";
+import { useSocketStore } from "../../src/lib/socketStore";
 
 const { width, height } = Dimensions.get("window");
 
-// Mock incoming ride request
-const MOCK_REQUEST = {
+// Default Request for fallback
+const DEFAULT_REQUEST = {
     id: "1",
-    rider: { name: "Emma W.", rating: 4.89 },
-    pickup: { title: "44 Warton Road", subtitle: "Stratford, London" },
-    dropoff: { title: "Terminal 2", subtitle: "Heathrow Airport" },
-    distance: "18.5 km",
-    duration: "32 min",
-    fare: "£28.50",
-    bonus: "£3.00",
+    rider: { name: "Requesting...", rating: 5.0 },
+    pickup: { title: "Pickup Location", subtitle: "Tap to view" },
+    dropoff: { title: "Dropoff Location", subtitle: "Tap to view" },
+    distance: "0 km",
+    duration: "0 min",
+    fare: "£0.00",
+    vertical: "FOOD",
+    instructions: "Standard pickup"
 };
 
 /*
@@ -181,6 +183,10 @@ export default function PilotHomeScreen() {
     const [showRequest, setShowRequest] = useState(false);
     const [todayEarnings, setTodayEarnings] = useState(127.50);
     const [todayTrips, setTodayTrips] = useState(8);
+    
+    // Real-time Socket Support
+    const { socket, connect, disconnect } = useSocketStore();
+    const [activeRequest, setActiveRequest] = useState<any>(null);
 
     const bottomSheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ["25%", "45%"], []);
@@ -202,17 +208,38 @@ export default function PilotHomeScreen() {
                 false
             );
 
-            // Simulate incoming request after 3 seconds
-            const timer = setTimeout(() => {
-                setShowRequest(true);
-            }, 3000);
-            return () => clearTimeout(timer);
+            // Real Socket Connection
+            connect("pilot_001"); // In production, this would be the logged-in user's ID
+            
+            if (socket) {
+                socket.on('delivery_request', (data) => {
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    setActiveRequest({
+                        id: data.attemptId,
+                        rider: { name: data.vertical === 'DIRECT' ? 'Enterprise B2B' : 'Community Order', rating: 4.9 },
+                        pickup: { title: data.pickup, subtitle: 'Tap to navigate' },
+                        dropoff: { title: data.dropoff, subtitle: 'Destination' },
+                        distance: data.distance,
+                        duration: 'Calculating...', 
+                        fare: `£${data.estimatedEarnings}`,
+                        vertical: data.vertical,
+                        instructions: data.instructions
+                    });
+                    setShowRequest(true);
+                });
+            }
+
+            return () => {
+                if (socket) socket.off('delivery_request');
+            };
         } else {
             radarScale.value = 1;
             radarOpacity.value = 0;
             setShowRequest(false);
+            setActiveRequest(null);
+            disconnect();
         }
-    }, [isOnline]);
+    }, [isOnline, socket]);
 
     const radarStyle = useAnimatedStyle(() => ({
         transform: [{ scale: radarScale.value }],
@@ -227,7 +254,10 @@ export default function PilotHomeScreen() {
     });
 
     const handleViewRequest = () => {
-        router.push("/pilot/request-detail" as any);
+        router.push({
+            pathname: "/pilot/request-detail",
+            params: { data: JSON.stringify(activeRequest) }
+        } as any);
     };
 
     const handleToggleOnline = (value: boolean) => {
@@ -313,18 +343,27 @@ export default function PilotHomeScreen() {
                                     <Ionicons name="person" size={20} color="#00ff90" />
                                 </View>
                                 <View>
-                                    <Text style={[styles.riderName, { color: isDark ? '#fff' : '#18181b' }]}>{MOCK_REQUEST.rider.name}</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Text style={[styles.riderName, { color: isDark ? '#fff' : '#18181b' }]}>
+                                            {(activeRequest || DEFAULT_REQUEST).rider.name}
+                                        </Text>
+                                        <View style={[styles.verticalBadge, { 
+                                            backgroundColor: (activeRequest || DEFAULT_REQUEST).vertical === 'DIRECT' ? '#3b82f6' : '#00ff90' 
+                                        }]}>
+                                            <Text style={styles.verticalBadgeText}>
+                                                {(activeRequest || DEFAULT_REQUEST).vertical}
+                                            </Text>
+                                        </View>
+                                    </View>
                                     <View style={styles.ratingRow}>
                                         <Ionicons name="star" size={12} color="#FFD700" />
-                                        <Text style={styles.ratingValue}>{MOCK_REQUEST.rider.rating}</Text>
+                                        <Text style={styles.ratingValue}>{(activeRequest || DEFAULT_REQUEST).rider.rating}</Text>
                                     </View>
                                 </View>
                             </View>
                             <View style={styles.fareInfo}>
-                                <Text style={styles.fareValue}>{MOCK_REQUEST.fare}</Text>
-                                {MOCK_REQUEST.bonus && (
-                                    <Text style={styles.bonusLabel}>+{MOCK_REQUEST.bonus} bonus</Text>
-                                )}
+                                <Text style={styles.fareValue}>{(activeRequest || DEFAULT_REQUEST).fare}</Text>
+                                <Text style={styles.bonusLabel}>Instructions: {(activeRequest || DEFAULT_REQUEST).instructions}</Text>
                             </View>
                         </View>
 
@@ -336,7 +375,7 @@ export default function PilotHomeScreen() {
                                 </View>
                                 <View style={styles.routeContent}>
                                     <Text style={styles.routeType}>Pickup</Text>
-                                    <Text style={[styles.routeAddress, { color: isDark ? '#fff' : '#18181b' }]}>{MOCK_REQUEST.pickup.title}</Text>
+                                    <Text style={[styles.routeAddress, { color: isDark ? '#fff' : '#18181b' }]}>{(activeRequest || DEFAULT_REQUEST).pickup.title}</Text>
                                 </View>
                             </View>
                             <View style={styles.routeItem}>
@@ -345,7 +384,7 @@ export default function PilotHomeScreen() {
                                 </View>
                                 <View style={styles.routeContent}>
                                     <Text style={styles.routeType}>Dropoff</Text>
-                                    <Text style={[styles.routeAddress, { color: isDark ? '#fff' : '#18181b' }]}>{MOCK_REQUEST.dropoff.title}</Text>
+                                    <Text style={[styles.routeAddress, { color: isDark ? '#fff' : '#18181b' }]}>{(activeRequest || DEFAULT_REQUEST).dropoff.title}</Text>
                                 </View>
                             </View>
                         </View>
@@ -354,12 +393,12 @@ export default function PilotHomeScreen() {
                             <View style={styles.statItem}>
                                 <Ionicons name="navigate-outline" size={16} color="#adadad" />
                                 <Text style={styles.statLabel}>Distance</Text>
-                                <Text style={[styles.statValue, { color: isDark ? '#fff' : '#18181b' }]}>{MOCK_REQUEST.distance}</Text>
+                                <Text style={[styles.statValue, { color: isDark ? '#fff' : '#18181b' }]}>{(activeRequest || DEFAULT_REQUEST).distance}</Text>
                             </View>
                             <View style={styles.statItem}>
                                 <Ionicons name="time-outline" size={16} color="#adadad" />
                                 <Text style={styles.statLabel}>Duration</Text>
-                                <Text style={[styles.statValue, { color: isDark ? '#fff' : '#18181b' }]}>{MOCK_REQUEST.duration}</Text>
+                                <Text style={[styles.statValue, { color: isDark ? '#fff' : '#18181b' }]}>Calculating...</Text>
                             </View>
                         </View>
 
@@ -712,5 +751,16 @@ const styles = StyleSheet.create({
     statusBannerText: {
         marginLeft: 12,
         fontWeight: '500',
+    },
+    verticalBadge: {
+        marginLeft: 8,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    verticalBadgeText: {
+        fontSize: 10,
+        fontFamily: 'UberMoveBold',
+        color: '#18181b',
     },
 });

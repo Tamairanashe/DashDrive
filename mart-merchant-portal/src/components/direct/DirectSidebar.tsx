@@ -1,5 +1,5 @@
 import { Layout, Menu, Typography } from 'antd';
-import { Truck, LayoutDashboard, Send, MapPin, Receipt, Settings, LogOut, Package, Code } from 'lucide-react';
+import { Truck, LayoutDashboard, Send, MapPin, Receipt, Settings, LogOut, Package, Code, Activity } from 'lucide-react';
 import type { MenuProps } from 'antd';
 
 const { Sider } = Layout;
@@ -37,6 +37,11 @@ export function DirectSidebar({ activeTab, setActiveTab, onLogout }: DirectSideb
             key: 'billing',
             icon: <Receipt size={18} />,
             label: <span className="font-medium">Billing</span>,
+        },
+        {
+            key: 'performance',
+            icon: <Activity size={18} />,
+            label: <span className="font-medium">Analytics</span>,
         },
         {
             key: 'developer',

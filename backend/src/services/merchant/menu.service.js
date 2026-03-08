@@ -82,6 +82,10 @@ exports.getItemsByCategory = async (categoryId) => {
     return data;
 };
 
+const logisticsInventory = require('../common/logisticsInventoryService');
+
+// ... (existing exports)
+
 exports.updateMenuItem = async (itemId, updateData) => {
     const { data, error } = await supabase
         .from('menu_items')
@@ -91,6 +95,12 @@ exports.updateMenuItem = async (itemId, updateData) => {
         .single();
 
     if (error) throw error;
+
+    // Trigger Sync if availability changed
+    if (updateData.is_available !== undefined) {
+        logisticsInventory.syncInventory(itemId, updateData.is_available);
+    }
+
     return data;
 };
 

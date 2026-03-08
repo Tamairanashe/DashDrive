@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum BusinessType {
+  FOOD
+  MART
+  SHOPPING
+}
+
 model Category {
   id         String    @id
   storeId    String
@@ -44,7 +50,26 @@ model Coupon {
   endDate           DateTime
   isActive          Boolean      @default(true)
   createdAt         DateTime     @default(now())
+  Campaign          Campaign?    @relation(fields: [campaignId], references: [id])
+  campaignId        String?
   Store             Store        @relation(fields: [storeId], references: [id])
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  merchantId  String
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  promotions Promotion[]
+  coupons    Coupon[]
+  merchant   Merchant    @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
 }
 
 model Delivery {
@@ -110,16 +135,18 @@ model LedgerEntry {
 }
 
 model Merchant {
-  id           String   @id
+  id           String       @id
   countryId    String
-  email        String   @unique
+  email        String       @unique
   passwordHash String
   storeName    String
+  type         BusinessType @default(MART)
   phone        String?
-  isVerified   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  Country      Country  @relation(fields: [countryId], references: [id])
+  isVerified   Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  Country      Country      @relation(fields: [countryId], references: [id])
   Store        Store[]
+  Campaign     Campaign[]
 }
 
 model Modifier {
@@ -144,19 +171,24 @@ model ModifierGroup {
 }
 
 model Order {
-  id                 String               @id
-  storeId            String
-  merchantId         String
-  orderNumber        String               @unique
-  status             OrderStatus          @default(PENDING)
-  currency           String
-  subtotal           Float
-  taxAmount          Float                @default(0)
-  deliveryFee        Float                @default(0)
-  totalAmount        Float
-  customerName       String?
-  customerPhone      String?
-  deliveryAddress    String?
+  id              String      @id
+  storeId         String
+  merchantId      String
+  orderNumber     String      @unique
+  status          OrderStatus @default(PENDING)
+  currency        String
+  subtotal        Float
+  taxAmount       Float       @default(0)
+  deliveryFee     Float       @default(0)
+  totalAmount     Float
+  customerName    String?
+  customerPhone   String?
+  deliveryAddress String?
+
+  // Marketing & Discounts
+  couponId       String?
+  discountAmount Float   @default(0)
+
   createdAt          DateTime             @default(now())
   updatedAt          DateTime
   Delivery           Delivery?
@@ -196,25 +228,34 @@ model OrderStatusHistory {
 }
 
 model Product {
-  id                String           @id
+  id                String   @id
   storeId           String
   merchantId        String
   categoryId        String?
   name              String
   description       String?
   basePrice         Float
-  sku               String?          @unique
-  stock             Int              @default(0)
-  lowStockThreshold Int              @default(5)
+  sku               String?  @unique
+  stock             Int      @default(0)
+  lowStockThreshold Int      @default(5)
   images            String[]
-  isActive          Boolean          @default(true)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime
-  FeaturedItem      FeaturedItem[]
-  ModifierGroup     ModifierGroup[]
-  Category          Category?        @relation(fields: [categoryId], references: [id])
-  Store             Store            @relation(fields: [storeId], references: [id])
-  ProductVariant    ProductVariant[]
+  isActive          Boolean  @default(true)
+
+  // Vertical-specific attributes
+  barcode      String? @unique
+  weightUnit   String?
+  isHalal      Boolean @default(false)
+  isVegan      Boolean @default(false)
+  isVegetarian Boolean @default(false)
+  attributes   Json?
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  FeaturedItem   FeaturedItem[]
+  ModifierGroup  ModifierGroup[]
+  Category       Category?        @relation(fields: [categoryId], references: [id])
+  Store          Store            @relation(fields: [storeId], references: [id])
+  ProductVariant ProductVariant[]
 }
 
 model ProductVariant {
@@ -229,7 +270,7 @@ model ProductVariant {
 }
 
 model Promotion {
-  id          String   @id
+  id          String    @id
   storeId     String
   merchantId  String
   name        String
@@ -237,9 +278,11 @@ model Promotion {
   bannerImage String?
   startDate   DateTime
   endDate     DateTime
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  Store       Store    @relation(fields: [storeId], references: [id])
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  Campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  campaignId  String?
+  Store       Store     @relation(fields: [storeId], references: [id])
 }
 
 model Rider {
@@ -285,24 +328,43 @@ model RiskEvent {
 }
 
 model Store {
-  id             String         @id
+  id             String  @id
   merchantId     String
   name           String
   address        String
   city           String
   currency       String
   timezone       String
-  taxRate        Float          @default(0)
-  commissionRate Float          @default(0.10)
-  isActive       Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  Category       Category[]
-  Coupon         Coupon[]
-  FeaturedItem   FeaturedItem[]
-  Order          Order[]
-  Product        Product[]
-  Promotion      Promotion[]
-  Merchant       Merchant       @relation(fields: [merchantId], references: [id])
+  taxRate        Float   @default(0)
+  commissionRate Float   @default(0.10)
+  isActive       Boolean @default(true)
+
+  // Vertical-specific attributes
+  rating            Float    @default(0)
+  reviewCount       Int      @default(0)
+  estimatedPrepTime Int      @default(20)
+  cuisineTypes      String[] @default([])
+  isPromoted        Boolean  @default(false)
+
+  createdAt    DateTime       @default(now())
+  Category     Category[]
+  Coupon       Coupon[]
+  FeaturedItem FeaturedItem[]
+  Order        Order[]
+  Product      Product[]
+  Promotion    Promotion[]
+  Merchant     Merchant       @relation(fields: [merchantId], references: [id])
+  Review       Review[]
+}
+
+model Review {
+  id         String   @id
+  storeId    String
+  customerId String?
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  Store      Store    @relation(fields: [storeId], references: [id])
 }
 
 model Transaction {
@@ -424,6 +486,7 @@ enum RiskEventType {
 }
 
 enum WalletOwnerType {
+  CUSTOMER
   MERCHANT
   RIDER
   PLATFORM
@@ -443,8 +506,8 @@ enum AdminRole {
 }
 
 model AdminUser {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   password  String
   name      String
   role      AdminRole @default(SUPPORT_AGENT)
@@ -483,4 +546,3 @@ model AdminSystemLog {
   metadata  Json?
   createdAt DateTime @default(now())
 }
-

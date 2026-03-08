@@ -111,7 +111,6 @@ export class DeliveriesService {
                 status: order.delivery.status,
                 rider: order.delivery.rider ? {
                     name: order.delivery.rider.name,
-                    vehicle: order.delivery.rider.vehicleType,
                     lat: order.delivery.rider.latitude,
                     lng: order.delivery.rider.longitude,
                 } : null,

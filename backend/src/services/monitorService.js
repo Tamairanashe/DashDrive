@@ -41,7 +41,9 @@ const startSlaMonitor = () => {
                             .single();
 
                         if (newIssue) {
-                            io.to(`store_${order.store_id}`).emit('newIssue', newIssue);
+                            const alertData = { ...newIssue, order_type: order.type, store_name: order.stores?.name };
+                            io.to(`store_${order.store_id}`).emit('newIssue', alertData);
+                            io.to('admin').emit('newIssue', alertData);
                         }
                     }
                 }
@@ -71,7 +73,9 @@ const startSlaMonitor = () => {
                                 .single();
 
                             if (newIssue) {
-                                io.to(`store_${order.store_id}`).emit('newIssue', newIssue);
+                                const alertData = { ...newIssue, order_type: order.type, store_name: order.stores?.name };
+                                io.to(`store_${order.store_id}`).emit('newIssue', alertData);
+                                io.to('admin').emit('newIssue', alertData);
                             }
                         }
                     }

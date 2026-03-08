@@ -62,4 +62,22 @@ export class MarketingController {
     getCoupons(@Req() req: any, @Query('storeId') storeId?: string) {
         return this.marketingService.getCoupons(req.user.sub, storeId);
     }
+
+    @Post('campaigns')
+    @ApiOperation({ summary: 'Create a new marketing campaign' })
+    createCampaign(@Req() req: any, @Body() data: any) {
+        return this.marketingService.createCampaign(req.user.sub, data);
+    }
+
+    @Get('campaigns')
+    @ApiOperation({ summary: 'List all marketing campaigns' })
+    getCampaigns(@Req() req: any) {
+        return this.marketingService.getCampaigns(req.user.sub);
+    }
+
+    @Post('coupons/validate')
+    @ApiOperation({ summary: 'Validate a coupon code' })
+    validateCoupon(@Body() data: { code: string; storeId: string; orderAmount: number }) {
+        return this.marketingService.validateCoupon(data.code, data.storeId, data.orderAmount);
+    }
 }

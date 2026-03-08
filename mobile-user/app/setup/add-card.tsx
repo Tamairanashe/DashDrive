@@ -102,7 +102,7 @@ export default function AddCardScreen() {
                         className="bg-[#05A357] border-[#05A357]"
                         textClassName="text-white font-uber-bold"
                         disabled={cardNumber.length < 19 || expiry.length < 5 || cvv.length < 3}
-                        onPress={() => router.push({ pathname: "/home", params: { setupSuccess: "true" } } as any)}
+                        onPress={() => router.push({ pathname: "/(tabs)", params: { setupSuccess: "true" } } as any)}
                     />
                 </View>
             </View>

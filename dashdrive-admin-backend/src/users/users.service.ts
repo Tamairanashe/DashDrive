@@ -42,4 +42,10 @@ export class UsersService {
             data: { lastLogin: new Date() },
         });
     }
+
+    async findAll(): Promise<AdminUser[]> {
+        return this.prisma.adminUser.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
+    }
 }

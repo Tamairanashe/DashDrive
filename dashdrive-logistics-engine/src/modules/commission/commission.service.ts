@@ -36,15 +36,31 @@ export class CommissionService {
         const deliveryFee = order.deliveryFee;
 
         // 1. Calculate Splits (Business Logic)
-        // Platform Fee: Use store-specific commissionRate (defaults to 0.10 in schema)
-        const commissionRate = order.store.commissionRate || 0.10;
-        const platformCommission = subtotal * commissionRate;
+        let platformCommission = 0;
+        let merchantEarned = 0;
+        let riderEarned = 0;
 
-        // Merchant Payout: Subtotal - Platform Fee
-        const merchantEarned = subtotal - platformCommission;
+        if (order.store.merchant.type === 'DIRECT') {
+            // Direct orders: Fixed platform booking fee, rest goes to rider
+            const bookingFee = 2.0; // Fixed fee
+            platformCommission = bookingFee;
+            riderEarned = Math.max(0, deliveryFee - bookingFee);
+            merchantEarned = subtotal; // Subtotal usually 0 for direct, but if not, merchant keeps it
+        } else {
+            // Food & Mart
+            // Platform Fee: Use store-specific commissionRate (defaults to 0.10 in schema)
+            const commissionRate = order.store.commissionRate || 0.10;
+            platformCommission = subtotal * commissionRate;
 
-        // Rider Earned: 100% of delivery fee (Example rule)
-        const riderEarned = deliveryFee;
+            // Merchant Payout: Subtotal - Platform Fee
+            merchantEarned = subtotal - platformCommission;
+
+            // Rider Earned: Based on vertical
+            let riderPayoutRate = 0.80; // Default for Food
+            if (order.store.merchant.type === 'MART') riderPayoutRate = 0.70;
+            
+            riderEarned = deliveryFee * riderPayoutRate;
+        }
 
         this.logger.log(`Settling Order #${order.orderNumber}: Platform(${platformCommission}), Merchant(${merchantEarned}), Rider(${riderEarned})`);
 

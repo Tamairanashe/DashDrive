@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import {
+    Alert,
     Image,
     ScrollView,
     Text,
@@ -54,9 +55,14 @@ const RESTAURANTS = [
     }
 ];
 
+import { useCartStore } from "../../src/lib/cartStore";
+
 export default function FoodLandingScreen() {
     const router = useRouter();
     const { colorScheme } = useColorScheme();
+    const { items, addItem } = useCartStore();
+
+    const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
     return (
         <StyledSafeAreaView className="flex-1 bg-white dark:bg-black">
@@ -75,8 +81,16 @@ export default function FoodLandingScreen() {
                         <StyledIonicons name="chevron-down" size={14} color="#00ff90" />
                     </View>
                 </View>
-                <TouchableOpacity className="h-10 w-10 items-center justify-center rounded-full bg-accent-light/50 dark:bg-zinc-800">
+                <TouchableOpacity 
+                    onPress={() => router.push("/food/checkout" as any)}
+                    className="h-10 w-10 items-center justify-center rounded-full bg-accent-light/50 dark:bg-zinc-800"
+                >
                     <StyledIonicons name="cart-outline" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
+                    {cartCount > 0 && (
+                        <View className="absolute -top-1 -right-1 bg-primary h-5 w-5 rounded-full items-center justify-center border-2 border-white dark:border-black">
+                            <Text className="text-[10px] font-uber-bold text-secondary">{cartCount}</Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -137,7 +151,20 @@ export default function FoodLandingScreen() {
                     </View>
 
                     {RESTAURANTS.map((res) => (
-                        <TouchableOpacity key={res.id} className="mb-6">
+                        <TouchableOpacity 
+                            key={res.id} 
+                            className="mb-6"
+                            onPress={() => {
+                                addItem({
+                                    id: res.id,
+                                    name: res.name,
+                                    price: parseFloat(res.fee.replace('$', '')),
+                                    priceString: res.fee,
+                                    quantity: 1,
+                                });
+                                Alert.alert("Added to Cart", `${res.name} delivery added to basket.`);
+                            }}
+                        >
                             <Image
                                 source={{ uri: res.image }}
                                 className="w-full h-48 rounded-[32px] mb-3"

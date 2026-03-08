@@ -68,4 +68,18 @@ export class InventoryService {
             take: 50,
         });
     }
+
+    async syncFromExternal(data: { item_id: string; is_available: boolean }) {
+        try {
+            return await this.prisma.product.update({
+                where: { id: data.item_id },
+                data: {
+                    isActive: data.is_available,
+                    stock: data.is_available ? 100 : 0
+                }
+            });
+        } catch (e) {
+            return { status: 'ignored', message: 'Item not found in logistics engine' };
+        }
+    }
 }

@@ -37,8 +37,9 @@ export class DeliveryController {
     updateStatus(
         @Param('orderId') orderId: string,
         @Body('status') status: DeliveryStatus,
+        @Body('pin') pin?: string,
     ) {
-        return this.deliveryService.updateStatus(orderId, status);
+        return this.deliveryService.updateStatus(orderId, status, pin);
     }
 
     @Get(':orderId')

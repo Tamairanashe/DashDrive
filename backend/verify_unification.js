@@ -5,8 +5,8 @@ const axios = require('axios');
  * Tests: Order Acceptance -> Status History -> Automated Dispatch -> Trip Creation
  */
 
-const API_BASE_URL = 'http://localhost:3001';
-const API_KEY = 'dash-secret-key-2025'; // Ensure this matches your .env
+const API_BASE_URL = 'http://localhost:8000';
+const API_KEY = 'dashdrive_secret_key_2026'; // Ensure this matches your .env
 
 const testUnification = async () => {
     console.log("🚀 Starting Unified Backend Verification...");
@@ -29,18 +29,18 @@ const testUnification = async () => {
 
         // 2. Merchant Accepts Order (preparing)
         console.log("\n2. Merchant Accepting Order...");
-        await axios.post(`${API_BASE_URL}/api/orders/${orderId}/status`, {
-            status: 'preparing',
-            reason: 'Kitchen starting'
-        });
+        await axios.patch(`${API_BASE_URL}/api/orders/${orderId}/status`, 
+            { status: 'preparing' },
+            { headers: { 'x-api-key': API_KEY } }
+        );
         console.log("✅ Order Status -> preparing");
 
         // 3. Merchant Marks Ready (triggers dispatch)
         console.log("\n3. Merchant Marking Ready (Triggering Dispatch)...");
-        const readyResponse = await axios.post(`${API_BASE_URL}/api/orders/${orderId}/status`, {
-            status: 'ready',
-            reason: 'Bag is sealed'
-        });
+        await axios.patch(`${API_BASE_URL}/api/orders/${orderId}/status`, 
+            { status: 'ready' },
+            { headers: { 'x-api-key': API_KEY } }
+        );
         console.log("✅ Order Status -> ready");
 
         // 4. Verify History and Trip (via Supabase logic or API)

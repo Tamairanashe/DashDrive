@@ -11,25 +11,59 @@ import { Card, Typography, Button } from 'antd';
 
 const { Title, Text } = Typography;
 
-const promoData = [
-    { name: 'Jan', redemptions: 400, sales: 2400 },
-    { name: 'Feb', redemptions: 300, sales: 1398 },
-    { name: 'Mar', redemptions: 200, sales: 9800 },
-    { name: 'Apr', redemptions: 278, sales: 3908 },
-    { name: 'May', redemptions: 189, sales: 4800 },
-    { name: 'Jun', redemptions: 239, sales: 3800 },
-];
+import { useState, useEffect } from 'react';
+import { api } from '../../api';
 
-export function MarketingOverview() {
+export function MarketingOverview({ token }: { token: string }) {
+    const [stats, setStats] = useState<any>(null);
+    const [chartData, setChartData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const [statsData, impactData] = await Promise.all([
+                api.marketing.getStats(token),
+                // This would ideally be a real API call
+                api.marketing.getCampaignImpact ? await api.marketing.getCampaignImpact(token) : [
+                    { name: 'Jan', redemptions: 400, sales: 2400 },
+                    { name: 'Feb', redemptions: 300, sales: 1398 },
+                    { name: 'Mar', redemptions: 200, sales: 9800 },
+                    { name: 'Apr', redemptions: 278, sales: 3908 },
+                    { name: 'May', redemptions: 189, sales: 4800 },
+                    { name: 'Jun', redemptions: 239, sales: 3800 },
+                ]
+            ]);
+            setStats(statsData);
+            setChartData(impactData);
+        } catch (err: any) {
+            console.error('Failed to load marketing data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadData();
+    }, [token]);
+
+    if (loading && !stats) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Zap className="animate-spin text-blue-500" size={48} />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Top Level Marketing Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
-                    { label: 'Total Redemptions', value: '1,284', change: '+12.5%', icon: Megaphone, color: 'blue' },
-                    { label: 'Promo Sales', value: '$8,432.00', change: '+18.2%', icon: TrendingUp, color: 'emerald' },
-                    { label: 'New Customers', value: '342', change: '+5.4%', icon: Users, color: 'indigo' },
-                    { label: 'Click Rate', value: '4.2%', change: '+0.8%', icon: MousePointer2, color: 'amber' },
+                    { label: 'Total Redemptions', value: stats?.totalRedemptions || '0', change: '+12.5%', icon: Megaphone, color: 'blue' },
+                    { label: 'Promo Sales', value: stats?.promoSales ? `$${stats.promoSales.toFixed(2)}` : '$0.00', change: '+18.2%', icon: TrendingUp, color: 'emerald' },
+                    { label: 'New Customers', value: stats?.newCustomers || '0', change: '+5.4%', icon: Users, color: 'indigo' },
+                    { label: 'Click Rate', value: stats?.clickRate ? `${stats.clickRate}%` : '0%', change: '+0.8%', icon: MousePointer2, color: 'amber' },
                 ].map((stat, i) => (
                     <Card key={i} bordered={false} hoverable className="shadow-sm rounded-[32px]">
                         <div className="flex items-center justify-between mb-4">
@@ -55,7 +89,7 @@ export function MarketingOverview() {
                     </div>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={promoData}>
+                            <BarChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                 <XAxis
                                     dataKey="name"

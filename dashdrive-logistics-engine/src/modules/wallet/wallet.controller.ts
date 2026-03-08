@@ -10,11 +10,17 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 export class WalletController {
     constructor(private readonly walletService: WalletService) { }
 
+    private getOwnerType(role: string): 'CUSTOMER' | 'RIDER' | 'MERCHANT' | 'PLATFORM' {
+        if (role === 'customer') return 'CUSTOMER';
+        if (role === 'rider') return 'RIDER';
+        if (role === 'admin') return 'PLATFORM';
+        return 'MERCHANT';
+    }
+
     @Get('balance')
     @ApiOperation({ summary: 'Get current wallet balance' })
     async getBalance(@Request() req: any, @Query('currency') currency: string) {
-        // Determine ownerType based on user role (Mock logic for now)
-        const ownerType = req.user.role === 'rider' ? 'RIDER' : 'MERCHANT';
+        const ownerType = this.getOwnerType(req.user?.role);
         const wallet = await this.walletService.getWallet(ownerType as any, req.user.id, currency || 'USD');
         return { balance: wallet.balance, currency: wallet.currency, isFrozen: wallet.isFrozen };
     }
@@ -22,7 +28,7 @@ export class WalletController {
     @Get('history')
     @ApiOperation({ summary: 'Get transaction history (ledger)' })
     async getHistory(@Request() req: any, @Query('currency') currency: string) {
-        const ownerType = req.user.role === 'rider' ? 'RIDER' : 'MERCHANT';
+        const ownerType = this.getOwnerType(req.user?.role);
         const wallet = await this.walletService.getWallet(ownerType as any, req.user.id, currency || 'USD');
         return this.walletService.getTransactionHistory(wallet.id);
     }
@@ -30,14 +36,14 @@ export class WalletController {
     @Get('summary')
     @ApiOperation({ summary: 'Get wallet summary (balance + recent transactions)' })
     async getSummary(@Request() req: any, @Query('currency') currency: string) {
-        const ownerType = req.user.role === 'rider' ? 'RIDER' : 'MERCHANT';
+        const ownerType = this.getOwnerType(req.user?.role);
         return this.walletService.getWalletSummary(ownerType as any, req.user.id, currency || 'USD');
     }
 
     @Post('withdraw')
     @ApiOperation({ summary: 'Request a withdrawal' })
     async withdraw(@Request() req: any, @Body() data: { amount: number; currency: string }) {
-        const ownerType = req.user.role === 'rider' ? 'RIDER' : 'MERCHANT';
+        const ownerType = this.getOwnerType(req.user?.role);
         const wallet = await this.walletService.getWallet(ownerType as any, req.user.id, data.currency || 'USD');
         return this.walletService.requestWithdrawal(wallet.id, data.amount);
     }

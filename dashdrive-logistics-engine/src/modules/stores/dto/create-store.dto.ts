@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsArray, IsBoolean } from 'class-validator';
 
 export class CreateStoreDto {
     @ApiProperty({ example: 'Johns Store Harare' })
@@ -31,4 +31,20 @@ export class CreateStoreDto {
     @IsOptional()
     @IsNumber()
     taxRate?: number;
+
+    @ApiProperty({ example: 20, required: false })
+    @IsOptional()
+    @IsNumber()
+    estimatedPrepTime?: number;
+
+    @ApiProperty({ example: ['Zambian', 'Italian'], required: false })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    cuisineTypes?: string[];
+
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isPromoted?: boolean;
 }

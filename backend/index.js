@@ -143,7 +143,7 @@ io.on('connection', (socket) => {
 // ==========================
 
 // Dashboard Status Sync Endpoint - AUTHORITATIVE
-app.patch('/api/orders/:id/status', async (req, res) => {
+app.patch('/api/orders/:id/status', validateApiKey, async (req, res) => {
     const { id } = req.params;
     const { status, reason, userId } = req.body;
 
@@ -233,25 +233,7 @@ app.post("/api/notifications/register", async (req, res) => {
 });
 
 // 1. Render -> Supabase (Incoming External Order)
-app.post("/webhooks/new-order", validateApiKey, async (req, res) => {
-    const orderData = req.body;
-    console.log("[Webhook] New external order received:", orderData);
-
-    try {
-        const { data, error } = await supabase
-            .from('orders')
-            .insert({
-                customer_name: orderData.customer,
-                total_amount: orderData.amount,
-                status: 'new',
-                store_id: orderData.store_id || '476e91d7-3b2a-4e83-680a-7f61ff95bf3c',
-                organization_id: orderData.organization_id || 'cfd01e92-8b1d-4afd-8d27-0a18aa8564ed',
-                items: orderData.items || []
-            })
-            .select()
-            .single();
-
-        if (error) throw error;
+app.post("/webhooks/new-order", validateApiKey, handleNewOrder);
 
         // Broadcast to Dashboard & Mobile App (Scoped to store room)
         io.to(`store_${data.store_id}`).emit('newIncomingOrder', data);

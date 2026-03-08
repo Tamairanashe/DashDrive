@@ -70,7 +70,7 @@ export default function TrackingScreen() {
             <SafeAreaView className="absolute top-0 left-0 right-0 p-5">
                 <View className="flex-row items-center justify-between">
                     <TouchableOpacity
-                        onPress={() => router.replace("/home" as any)}
+                        onPress={() => router.replace("/(tabs)" as any)}
                         className="h-12 w-12 bg-white dark:bg-zinc-800 rounded-full items-center justify-center shadow-lg"
                     >
                         <StyledIonicons name="close" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />

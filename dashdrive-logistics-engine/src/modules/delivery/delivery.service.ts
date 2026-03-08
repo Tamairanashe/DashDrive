@@ -93,8 +93,21 @@ export class DeliveryService {
         return this.assignRider(orderId, bestRider.id);
     }
 
-    async updateStatus(orderId: string, status: DeliveryStatus) {
-        const delivery = await this.prisma.delivery.update({
+    async updateStatus(orderId: string, status: DeliveryStatus, pin?: string) {
+        const delivery = await this.prisma.delivery.findUnique({
+            where: { orderId },
+        });
+
+        if (!delivery) throw new NotFoundException('Delivery not found');
+
+        // Step 14: PIN Verification
+        if (status === DeliveryStatus.DELIVERED && (delivery as any).verificationPin) {
+            if (pin !== (delivery as any).verificationPin) {
+                throw new Error('Invalid verification PIN. Passenger must confirm delivery.');
+            }
+        }
+
+        const updatedDelivery = await this.prisma.delivery.update({
             where: { orderId },
             data: {
                 status,
@@ -116,30 +129,72 @@ export class DeliveryService {
             });
         }
 
-        // Decrement rider load if delivered or cancelled
+        // Handle Credit Integrity and Fraud (Step 14)
         if (status === DeliveryStatus.DELIVERED) {
-            if (delivery.riderId) {
-                // Fraud check for delivery collusion
-                const risk = await this.fraudService.evaluate(
-                    RiskEventType.DELIVERY,
-                    delivery.riderId,
-                    RiskActorType.RIDER,
-                    delivery.orderId,
-                );
+            if (updatedDelivery.riderId) {
+                // 1. Threshold Checks (Anti-Cheating)
+                const pickupTime = updatedDelivery.pickupTime ? new Date(updatedDelivery.pickupTime).getTime() : 0;
+                const deliveredTime = new Date().getTime();
+                const durationMinutes = (deliveredTime - pickupTime) / 60000;
+                const distanceKm = updatedDelivery.distanceKm || 0;
 
-                if (risk.decision === RiskDecision.BLOCKED) {
-                    // In a real scenario, we might still mark it delivered but hold the funds
-                    // For now, we'll flag it
-                    this.prisma.riskEvent.update({
-                        where: { id: risk.id },
-                        data: { reasons: { ...(risk.reasons as any), note: 'Critical risk on delivery' } }
+                let fraudAlert = false;
+                if (distanceKm < 0.5 || durationMinutes < 3) {
+                    fraudAlert = true;
+                    await (this.prisma.rider as any).update({
+                        where: { id: updatedDelivery.riderId },
+                        data: { fraudScore: { increment: 1.5 } }
                     });
                 }
-                await this.ridersService.decrementLoad(delivery.riderId);
+
+                // 2. Fraud check for delivery collusion
+                const risk = await this.fraudService.evaluate(
+                    RiskEventType.DELIVERY,
+                    updatedDelivery.riderId,
+                    RiskActorType.RIDER,
+                    updatedDelivery.orderId,
+                );
+
+                if (risk.decision === RiskDecision.BLOCKED || fraudAlert) {
+                    await this.prisma.riskEvent.update({
+                        where: { id: (risk as any).id || 'temporary-id' },
+                        data: { reasons: { ...(risk.reasons as any), note: fraudAlert ? 'Anti-Cheating threshold violated (Short trip)' : 'Critical risk on delivery' } }
+                    }).catch(() => {}); // Handle if risk event doesn't exist
+                }
+
+                await this.ridersService.decrementLoad(updatedDelivery.riderId);
+
+                // 3. Finalize Credit Consumption (Decrement Reserved)
+                await (this.prisma.rider as any).update({
+                    where: { id: updatedDelivery.riderId },
+                    data: {
+                        reservedCredits: { decrement: 1 }
+                    }
+                });
+
+                // Record transaction
+                await (this.prisma as any).creditTransaction.create({
+                    data: {
+                        riderId: updatedDelivery.riderId,
+                        amount: 0,
+                        credits: 1,
+                        type: 'CONSUMPTION'
+                    }
+                });
             }
         } else if (status === DeliveryStatus.CANCELLED) {
-            if (delivery.riderId) {
-                await this.ridersService.decrementLoad(delivery.riderId);
+            if (updatedDelivery.riderId) {
+                await this.ridersService.decrementLoad(updatedDelivery.riderId);
+
+                // Step 14: Refund Reserved Credit on Cancellation
+                await (this.prisma.rider as any).update({
+                    where: { id: updatedDelivery.riderId },
+                    data: {
+                        reservedCredits: { decrement: 1 },
+                        rideCredits: { increment: 1 },
+                        cancellationRate: { increment: 0.05 } // Track cancellation abuse
+                    }
+                });
             }
         }
 

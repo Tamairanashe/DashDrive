@@ -5,9 +5,18 @@ import { Card, Typography, Button, Input, Select } from 'antd';
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-export function Promotions() {
+import { useEffect } from 'react';
+
+export function Promotions({ token }: { token: string }) {
     const [title, setTitle] = useState('Weekend Discount');
     const [message, setMessage] = useState('Get 20% off burgers today!');
+
+    useEffect(() => {
+        // Simulated loading of active promotions
+        if (token) {
+            console.log('Promotions component initialized with token');
+        }
+    }, [token]);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-700">

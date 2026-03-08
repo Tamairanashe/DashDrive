@@ -117,4 +117,67 @@ export class MarketingService {
             },
         });
     }
+
+    async createCampaign(merchantId: string, data: any) {
+        return this.prisma.campaign.create({
+            data: {
+                ...data,
+                merchantId,
+            },
+        });
+    }
+
+    async getCampaigns(merchantId: string) {
+        return this.prisma.campaign.findMany({
+            where: { merchantId },
+            include: {
+                promotions: true,
+                coupons: true,
+            },
+        });
+    }
+
+    async validateCoupon(code: string, storeId: string, orderAmount: number) {
+        const coupon = await this.prisma.coupon.findUnique({
+            where: { code },
+        });
+
+        if (!coupon || !coupon.isActive) {
+            throw new NotFoundException('Invalid or inactive coupon');
+        }
+
+        if (coupon.storeId !== storeId) {
+            throw new ForbiddenException('Coupon not valid for this store');
+        }
+
+        const now = new Date();
+        if (now < coupon.startDate || now > coupon.endDate) {
+            throw new ForbiddenException('Coupon has expired or is not yet active');
+        }
+
+        if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+            throw new ForbiddenException('Coupon usage limit reached');
+        }
+
+        if (orderAmount < coupon.minOrderAmount) {
+            throw new ForbiddenException(`Minimum order amount of ${coupon.minOrderAmount} required`);
+        }
+
+        let discount = 0;
+        if (coupon.discountType === DiscountType.PERCENTAGE) {
+            discount = (orderAmount * coupon.discountValue) / 100;
+            if (coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount) {
+                discount = coupon.maxDiscountAmount;
+            }
+        } else {
+            discount = coupon.discountValue;
+        }
+
+        return {
+            couponId: coupon.id,
+            discountAmount: discount,
+            code: coupon.code,
+        };
+    }
 }
+

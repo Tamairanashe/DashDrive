@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Table, Typography, Button, Tag, Space, Modal, Input, message, Tooltip, Alert } from 'antd';
 import { Copy, Trash2, Plus, Eye, EyeOff, ShieldCheck, Globe, Code } from 'lucide-react';
+import { api } from '../../api';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text, Paragraph } = Typography;
@@ -14,58 +15,49 @@ interface ApiKeyRecord {
     isActive: boolean;
 }
 
-export function DirectDeveloper() {
+export function DirectDeveloper({ token }: { token: string }) {
     const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
+    const [loading, setLoading] = useState(false);
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
     const [newKeyName, setNewKeyName] = useState('');
     const [showKeyId, setShowKeyId] = useState<string | null>(null);
 
-    // Mock initial data - in real app, this would be a fetch call to /developer/api-keys
+    const loadKeys = async () => {
+        setLoading(true);
+        try {
+            const data = await api.developer.listKeys(token);
+            setKeys(data);
+        } catch (err: any) {
+            message.error(err.message || 'Failed to load keys');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        setKeys([
-            {
-                id: '1',
-                key: 'sk_live_5f3e...9a2b',
-                name: 'Production Server',
-                createdAt: '2026-03-05T08:00:00Z',
-                lastUsedAt: '2026-03-05T10:15:00Z',
-                isActive: true
-            },
-            {
-                id: '2',
-                key: 'sk_live_7c1d...4f8e',
-                name: 'Staging Environment',
-                createdAt: '2026-03-01T12:00:00Z',
-                lastUsedAt: null,
-                isActive: true
-            }
-        ]);
-    }, []);
+        loadKeys();
+    }, [token]);
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         message.success('API Key copied to clipboard');
     };
 
-    const handleCreateKey = () => {
+    const handleCreateKey = async () => {
         if (!newKeyName) {
             message.error('Please enter a name for the key');
             return;
         }
 
-        const newKey: ApiKeyRecord = {
-            id: Math.random().toString(36).substr(2, 9),
-            key: `sk_live_${Math.random().toString(36).substr(2, 24)}`,
-            name: newKeyName,
-            createdAt: new Date().toISOString(),
-            lastUsedAt: null,
-            isActive: true
-        };
-
-        setKeys([newKey, ...keys]);
-        setIsCreateModalVisible(false);
-        setNewKeyName('');
-        message.success('New API Key generated successfully');
+        try {
+            const newKey = await api.developer.generateKey(token, newKeyName);
+            setKeys([newKey, ...keys]);
+            setIsCreateModalVisible(false);
+            setNewKeyName('');
+            message.success('New API Key generated successfully');
+        } catch (err: any) {
+            message.error(err.message || 'Failed to generate key');
+        }
     };
 
     const handleRevokeKey = (id: string) => {
@@ -75,9 +67,14 @@ export function DirectDeveloper() {
             okText: 'Revoke Key',
             okType: 'danger',
             cancelText: 'Cancel',
-            onOk: () => {
-                setKeys(keys.filter(k => k.id !== id));
-                message.success('API Key revoked');
+            onOk: async () => {
+                try {
+                    await api.developer.revokeKey(token, id);
+                    setKeys(keys.map(k => k.id === id ? { ...k, isActive: false } : k));
+                    message.success('API Key revoked');
+                } catch (err: any) {
+                    message.error(err.message || 'Failed to revoke key');
+                }
             }
         });
     };
@@ -189,6 +186,7 @@ export function DirectDeveloper() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="lg:col-span-2 shadow-sm border-gray-100 rounded-2xl overflow-hidden">
                     <Table
+                        loading={loading}
                         columns={columns}
                         dataSource={keys}
                         rowKey="id"

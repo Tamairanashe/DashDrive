@@ -22,6 +22,18 @@ model Country {
 enum BusinessType {
   FOOD
   MART
+  DIRECT
+}
+
+model Enterprise {
+  id          String     @id @default(uuid())
+  name        String
+  adminEmail  String     @unique
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  merchants   Merchant[]
 }
 
 enum AcceptanceMode {
@@ -39,14 +51,17 @@ model Merchant {
   phone        String?
   isVerified   Boolean      @default(false)
   pushToken    String? // Still useful for primary device or legacy
+  enterpriseId String?
   createdAt    DateTime     @default(now())
 
   country       Country                @relation(fields: [countryId], references: [id])
+  enterprise    Enterprise?            @relation(fields: [enterpriseId], references: [id])
   stores        Store[]
   notifications MerchantNotification[]
   devices       MerchantDevice[]
   apiKeys       ApiKey[]
   webhookConfigs WebhookConfig[]
+  campaigns     Campaign[]
 }
 
 model Store {
@@ -58,11 +73,20 @@ model Store {
   currency   String
   timezone   String
   logoUrl        String?
+  latitude       Float?
+  longitude      Float?
   taxRate        Float    @default(0)
   commissionRate Float    @default(0.10)
   deliveryEnabled   Boolean  @default(true)
   autoAcceptOrders  Boolean  @default(false)
   isActive          Boolean  @default(true)
+
+  // Vertical-specific attributes
+  rating             Float          @default(0)
+  reviewCount        Int            @default(0)
+  estimatedPrepTime  Int            @default(20) // Default 20 mins
+  cuisineTypes       String[]       @default([])
+  isPromoted         Boolean        @default(false)
 
   // DashFood Specific Settings
   acceptanceMode     AcceptanceMode @default(MANUAL)
@@ -82,6 +106,18 @@ model Store {
   featuredItems FeaturedItem[]
   businessHours BusinessHours[]
   dailyStats    MerchantDailyStats[]
+  reviews       Review[]
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  storeId    String
+  customerId String?
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id])
 }
 
 model Category {
@@ -109,6 +145,15 @@ model Product {
   lowStockThreshold Int      @default(5)
   images            String[]
   isActive          Boolean  @default(true)
+
+  // Vertical-specific attributes
+  barcode       String? @unique
+  weightUnit    String? // kg, g, lb
+  isHalal       Boolean @default(false)
+  isVegan       Boolean @default(false)
+  isVegetarian  Boolean @default(false)
+  attributes    Json?   // For shopping size/color
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -179,6 +224,11 @@ model Order {
   customerName    String?
   customerPhone   String?
   deliveryAddress String?
+  
+  // Marketing & Discounts
+  couponId        String?
+  discountAmount  Float       @default(0)
+  
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -188,6 +238,7 @@ model Order {
   transactions  Transaction[]
   delivery      Delivery?
   deliveryOffer DeliveryOffer? @relation("OrderToDeliveryOffer")
+  supportTickets SupportTicket[]
 
   @@index([storeId])
   @@index([merchantId])
@@ -206,8 +257,27 @@ model Promotion {
   endDate     DateTime
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
+  campaignId  String?
 
-  store Store @relation(fields: [storeId], references: [id])
+  store    Store     @relation(fields: [storeId], references: [id])
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  merchantId  String
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  promotions Promotion[]
+  coupons    Coupon[]
+  merchant   Merchant    @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
 }
 
 model Coupon {
@@ -225,8 +295,10 @@ model Coupon {
   endDate           DateTime
   isActive          Boolean      @default(true)
   createdAt         DateTime     @default(now())
+  campaignId        String?
 
-  store Store @relation(fields: [storeId], references: [id])
+  store    Store     @relation(fields: [storeId], references: [id])
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
 }
 
 enum DiscountType {
@@ -314,11 +386,13 @@ model Rider {
   name         String
   phone        String  @unique
   email        String?
-  vehicleType  String // bike, car, scooter
-  licensePlate String?
   isOnline     Boolean @default(false)
   isActive     Boolean @default(true)
   countryCode  String
+
+  // Relationships
+  vehicles    Vehicle[]
+  activeVehicleId String?
 
   // AI Dispatch Fields
   latitude        Float?
@@ -326,12 +400,67 @@ model Rider {
   rating          Float  @default(5.0)
   totalDeliveries Int    @default(0)
   currentLoad     Int    @default(0) // active orders
+  rideCredits     Int    @default(0) // Step 12: Prepaid credits
+  reservedCredits Int    @default(0) // Step 14: Safety lock
+  fraudScore      Float  @default(0) // Step 14: Integrity tracking
+  cancellationRate Float @default(0) // Step 14: Abuse tracking
+  lastActiveAt    DateTime @default(now())
 
   createdAt DateTime @default(now())
 
+  verificationStatus VerificationStatus @default(PENDING)
+  idImageUrl         String?
+  licenseImageUrl    String?
+  insuranceImageUrl  String?
+  isFoundingDriver   Boolean @default(false)
+
   deliveries Delivery[]
+  deliveryBatches DeliveryBatch[]
   bids       RiderBid[]
   dispatchAttempts DispatchAttempt[]
+  locationHistory RiderLocationHistory[]
+  creditTransactions CreditTransaction[]
+}
+
+model Vehicle {
+  id           String   @id @default(uuid())
+  riderId      String
+  type         VehicleType
+  brand        String?
+  model        String?
+  year         Int?
+  color        String?
+  licensePlate String   @unique
+  status       VehicleStatus @default(ACTIVE)
+  createdAt    DateTime @default(now())
+
+  rider Rider @relation(fields: [riderId], references: [id])
+}
+
+enum VehicleType {
+  BIKE
+  CAR
+  SCOOTER
+  VAN
+  TRUCK
+}
+
+enum VehicleStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+model RiderLocationHistory {
+  id        String   @id @default(uuid())
+  riderId   String
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+
+  rider Rider @relation(fields: [riderId], references: [id])
+
+  @@index([riderId, timestamp])
 }
 
 model Delivery {
@@ -341,13 +470,17 @@ model Delivery {
   status      DeliveryStatus @default(PENDING)
   pickupTime  DateTime?
   deliveredAt DateTime?
+  verificationPin String?       // Step 14: Passenger confirmation
   distanceKm  Float?
   deliveryFee Float?
+  sequence    Int?            // For optimal TSP ordering
+  batchId     String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
   order Order  @relation(fields: [orderId], references: [id])
   rider Rider? @relation(fields: [riderId], references: [id])
+  batch DeliveryBatch? @relation(fields: [batchId], references: [id])
   dispatchAttempts DispatchAttempt[]
 }
 
@@ -363,6 +496,19 @@ model DispatchAttempt {
 
   @@index([deliveryId])
   @@index([riderId])
+}
+
+model DeliveryBatch {
+  id              String         @id @default(uuid())
+  riderId         String
+  status          DeliveryStatus @default(PENDING) // Represents overall batch status
+  totalDistanceKm Float?
+  totalFee        Float?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  rider Rider @relation(fields: [riderId], references: [id])
+  deliveries Delivery[]
 }
 
 enum DispatchAttemptStatus {
@@ -390,10 +536,16 @@ model RiderBid {
   offerId   String
   riderId   String
   bidAmount Float
+  bidType   BidType  @default(COUNTER)
   createdAt DateTime @default(now())
 
   offer DeliveryOffer @relation(fields: [offerId], references: [id])
   rider Rider         @relation(fields: [riderId], references: [id])
+}
+
+enum BidType {
+  ACCEPT
+  COUNTER
 }
 
 enum OfferStatus {
@@ -413,7 +565,16 @@ model Zone {
   maxLng          Float
   surgeMultiplier Float    @default(1.0)
   isActive        Boolean  @default(true)
+  isLaunchMode    Boolean  @default(false)
+  launchPhase     LaunchPhase @default(MATURE)
   createdAt       DateTime @default(now())
+}
+
+enum LaunchPhase {
+  PRE_LAUNCH
+  SOFT_LAUNCH
+  GROWTH
+  MATURE
 }
 
 enum DeliveryStatus {
@@ -443,6 +604,7 @@ model Wallet {
 }
 
 enum WalletOwnerType {
+  CUSTOMER
   MERCHANT
   RIDER
   PLATFORM
@@ -512,6 +674,35 @@ enum RiskDecision {
   APPROVED
   REVIEW
   BLOCKED
+}
+
+model SupportTicket {
+  id          String       @id @default(uuid())
+  customerId  String?
+  riderId     String?
+  merchantId  String?
+  orderId     String?
+  subject     String
+  description String
+  status      TicketStatus @default(OPEN)
+  priority    String       @default("NORMAL")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  order       Order?       @relation(fields: [orderId], references: [id])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model MerchantNotification {
@@ -645,4 +836,61 @@ model WebhookConfig {
   merchant   Merchant @relation(fields: [merchantId], references: [id])
 
   @@index([merchantId])
+}
+
+// ==========================================
+// CONTENT MANAGEMENT SYSTEM (CMS)
+// ==========================================
+
+model AppBanner {
+  id           String   @id @default(uuid())
+  title        String
+  imageUrl     String
+  targetUrl    String?  // Can be deep link like dashdrive://store/123
+  vertical     String   // FOOD, MART, EXPLORE
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ContentBlock {
+  id           String   @id @default(uuid())
+  title        String   // e.g., "Trending Near You", "Featured Restaurants"
+  type         String   // CAROUSEL, GRID, LIST
+  vertical     String   // FOOD, MART
+  items        Json     // Array of references, e.g., [{ type: 'store', id: '123' }]
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model CreditPackage {
+  id        String   @id @default(uuid())
+  name      String   @unique // STARTER, BASIC, etc.
+  price     Float
+  credits       Int
+  expiresInDays Int      @default(30) // Step 13: Expiry strategy
+  isActive      Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model CreditTransaction {
+  id        String                @id @default(uuid())
+  riderId   String
+  amount    Float
+  credits   Int
+  type      CreditTransactionType
+  expiresAt DateTime?             // Step 13: For tracking credit life
+  createdAt DateTime              @default(now())
+
+  rider Rider @relation(fields: [riderId], references: [id])
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  CONSUMPTION
+  BONUS
+  REFUND
 }

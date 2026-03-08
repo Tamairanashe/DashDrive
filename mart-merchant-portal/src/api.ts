@@ -152,5 +152,92 @@ export const api = {
             if (!response.ok) throw new Error('Failed to fetch sales analytics');
             return response.json();
         }
+    },
+    developer: {
+        listKeys: async (token: string) => {
+            const response = await fetch(`${API_URL}/developer/api-keys`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch API keys');
+            return response.json();
+        },
+        generateKey: async (token: string, name: string) => {
+            const response = await fetch(`${API_URL}/developer/api-keys`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name }),
+            });
+            if (!response.ok) throw new Error('Failed to generate API key');
+            return response.json();
+        },
+        revokeKey: async (token: string, id: string) => {
+            const response = await fetch(`${API_URL}/developer/api-keys/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to revoke API key');
+            return response.json();
+        }
+    },
+    marketing: {
+        getStats: async (token: string, storeId?: string) => {
+            const query = storeId ? `?storeId=${storeId}` : '';
+            const response = await fetch(`${API_URL}/marketing/stats${query}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch marketing stats');
+            return response.json();
+        },
+        getCampaignImpact: async (token: string, storeId?: string) => {
+            const query = storeId ? `?storeId=${storeId}` : '';
+            const response = await fetch(`${API_URL}/marketing/campaign-impact${query}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch campaign impact');
+            return response.json();
+        },
+        getCampaigns: async (token: string) => {
+            const response = await fetch(`${API_URL}/marketing/campaigns`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch campaigns');
+            return response.json();
+        },
+        createCampaign: async (token: string, data: any) => {
+            const response = await fetch(`${API_URL}/marketing/campaigns`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) throw new Error('Failed to create campaign');
+            return response.json();
+        },
+        getCoupons: async (token: string, storeId?: string) => {
+            const query = storeId ? `?storeId=${storeId}` : '';
+            const response = await fetch(`${API_URL}/marketing/coupons${query}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch coupons');
+            return response.json();
+        },
+        createCoupon: async (token: string, data: any) => {
+            const response = await fetch(`${API_URL}/marketing/coupons`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) throw new Error('Failed to create coupon');
+            return response.json();
+        }
     }
 };
+

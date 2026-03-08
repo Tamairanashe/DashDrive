@@ -8,40 +8,29 @@ import { Card, Typography, Button, Input, Space } from 'antd';
 
 const { Title, Text } = Typography;
 
-const offers = [
-    {
-        id: 'OFF-1024',
-        name: 'Weekend Sizzler: 20% Off All Produce',
-        type: 'Percentage Discount',
-        value: '20% Off',
-        status: 'Active',
-        range: 'Feb 20 - Feb 22',
-        redemptions: 142,
-        stores: '2 Stores'
-    },
-    {
-        id: 'OFF-1025',
-        name: 'New User Welcome: $10 Credit',
-        type: 'Fixed Amount',
-        value: '$10.00 Off',
-        status: 'Active',
-        range: 'Permanent',
-        redemptions: 89,
-        stores: 'All Stores'
-    },
-    {
-        id: 'OFF-1026',
-        name: 'Holiday BOGO: Beverages',
-        type: 'Buy One Get One',
-        value: 'BOGO',
-        status: 'Scheduled',
-        range: 'Mar 17',
-        redemptions: 0,
-        stores: 'All Stores'
-    }
-];
+import { useState, useEffect } from 'react';
+import { api } from '../../api';
 
-export function Offers() {
+export function Offers({ token }: { token: string }) {
+    const [couponList, setCouponList] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const loadCoupons = async () => {
+        setLoading(true);
+        try {
+            const data = await api.marketing.getCoupons(token);
+            setCouponList(data);
+        } catch (err: any) {
+            console.error('Failed to load coupons:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadCoupons();
+    }, [token]);
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Actions */}
@@ -74,7 +63,11 @@ export function Offers() {
 
             {/* Offers Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {offers.map((offer) => (
+                {loading ? (
+                    <div className="col-span-full flex justify-center py-20">
+                        <Plus className="animate-spin text-blue-500" size={48} />
+                    </div>
+                ) : couponList.map((offer) => (
                     <Card key={offer.id} bordered={false} hoverable className="shadow-sm rounded-[32px] group transition-all" bodyStyle={{ padding: 32 }}>
                         <div className="flex items-start justify-between mb-6">
                             <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">

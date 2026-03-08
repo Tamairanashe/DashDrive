@@ -16,7 +16,7 @@ export default function PaymentMethodScreen() {
             id: "cash",
             title: "Cash",
             icon: <StyledMaterialIcons name="payments" size={24} color="#adadad" />,
-            onPress: () => router.push({ pathname: "/home", params: { setupSuccess: "true" } } as any),
+            onPress: () => router.push({ pathname: "/(tabs)", params: { setupSuccess: "true" } } as any),
         },
         {
             id: "card",
@@ -28,7 +28,7 @@ export default function PaymentMethodScreen() {
             id: "ecocash",
             title: "EcoCash / Mobile Wallet",
             icon: <StyledMaterialIcons name="phone-iphone" size={24} color="#adadad" />,
-            onPress: () => router.push({ pathname: "/home", params: { setupSuccess: "true" } } as any),
+            onPress: () => router.push({ pathname: "/(tabs)", params: { setupSuccess: "true" } } as any),
         },
     ];
 
@@ -62,7 +62,7 @@ export default function PaymentMethodScreen() {
 
                 <View className="mt-auto mb-10">
                     <TouchableOpacity
-                        onPress={() => router.push("/home" as any)}
+                        onPress={() => router.push("/(tabs)" as any)}
                         className="w-full py-5 rounded-3xl bg-accent-light/20 dark:bg-white/5 items-center justify-center"
                     >
                         <Text className="text-secondary dark:text-white font-uber-bold text-lg">

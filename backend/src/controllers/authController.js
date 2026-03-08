@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/supabase');
+const resend = require('../config/resend');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dashdrive_enterprise_secret';
 
@@ -26,28 +27,46 @@ const login = async (req, res) => {
 
         const user = authData.user;
 
-        // 2. Fetch merchant profile with roles and stores
-        // Note: We check 'merchants' table first, fallback to 'users' if needed
-        const { data: merchant, error: merchantErr } = await supabase
+        // 2. Fetch merchant profile with roles
+        // We removed stores(*) from here because it requires a defined foreign key in Supabase
+        let { data: merchant, error: merchantErr } = await supabase
             .from('merchants')
-            .select('*, stores(*), roles(*)')
+            .select('*, roles(*)')
             .eq('id', user.id)
             .maybeSingle();
 
         if (merchantErr || !merchant) {
             // If not in merchants, check users table (from schema_dash_manager.sql)
-            const { data: userData } = await supabase
+            const { data: userData, error: userErr } = await supabase
                 .from('users')
                 .select('*, roles(*)')
                 .eq('id', user.id)
                 .maybeSingle();
             
             if (!userData) {
+                console.error('[Auth] Profile not found for ID:', user.id, 'Errors:', { merchantErr, userErr });
                 return res.status(404).json({ success: false, error: 'User profile not found' });
             }
             // Map userData to merchant format if necessary
             merchant = userData;
         }
+
+        // 3. Fetch stores separately (Safer than a join if relations aren't perfect)
+        let stores = [];
+        try {
+            // We use a simple query first. If you later add merchant_id to stores, 
+            // you can update this to: .or(`merchant_id.eq.${user.id},organization_id.eq.${merchant.organization_id}`)
+            const { data: storeData } = await supabase
+                .from('stores')
+                .select('*')
+                .eq('organization_id', merchant.organization_id || '00000000-0000-0000-0000-000000000000');
+            
+            stores = storeData || [];
+        } catch (err) {
+            console.error('[Auth] Store fetch failed:', err.message);
+        }
+        
+        merchant.stores = stores;
 
         const role = merchant.roles?.name || 'Staff';
         const permissions = merchant.roles?.permissions || {};
@@ -95,10 +114,12 @@ const register = async (req, res) => {
 
     try {
         console.log(`[Auth] Registering: ${email}`);
-        // 1. Sign up with Supabase Auth
-        const { data: authData, error: authErr } = await supabase.auth.signUp({
+        // 1. Create user with Admin API to auto-confirm (since we use service role key)
+        const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
             email,
             password,
+            email_confirm: true,
+            user_metadata: { storeName }
         });
 
         if (authErr) {
@@ -176,31 +197,29 @@ const forgotPassword = async (req, res) => {
     }
 
     try {
-        // 1. Check for restricted roles BEFORE sending reset email via Supabase
+        // 1. Fetch user role to decide on notification logic
         const { data: merchant } = await supabase
             .from('merchants')
-            .select('role_id, roles(name)')
+            .select('id, role_id, roles(name), store_name')
             .eq('email', email)
             .maybeSingle();
 
-        if (merchant && merchant.roles) {
-            const restrictedRoles = ['Manager', 'Staff', 'Analyst'];
-            if (restrictedRoles.includes(merchant.roles.name)) {
-                return res.status(403).json({
-                    success: false,
-                    error: 'Please contact your Store Owner to reset your password.'
-                });
-            }
-        }
-
-        // 2. Send Reset Email via Supabase Auth
+        // 2. Send Reset Email via Supabase Auth (Standard for everyone now)
         const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${process.env.FRONTEND_URL}/reset-password`,
         });
 
         if (resetErr) {
-            // Standard practice: don't reveal if user exists unless error is critical
             console.error('[Auth] Supabase reset error:', resetErr);
+        }
+
+        // 3. If restricted role, optionally notify Owner (if we had owner's email)
+        if (merchant && merchant.roles) {
+            const restrictedRoles = ['Manager', 'Staff', 'Analyst'];
+            if (restrictedRoles.includes(merchant.roles.name)) {
+                console.log(`[Auth] Password reset requested for staff member: ${email} (${merchant.roles.name})`);
+                // Here we could send a Resend email to the store owner or admin
+            }
         }
 
         return res.json({
@@ -214,4 +233,65 @@ const forgotPassword = async (req, res) => {
     }
 };
 
-module.exports = { login, register, forgotPassword };
+/**
+ * Super User Email Recovery — Helps owners find their registered email via phone
+ */
+const recoverEmail = async (req, res) => {
+    const { phone } = req.body;
+
+    if (!phone) {
+        return res.status(400).json({ success: false, error: 'Phone number is required' });
+    }
+
+    try {
+        // 1. Find merchant by phone
+        const { data: merchant, error: dbErr } = await supabase
+            .from('merchants')
+            .select('email, store_name, phone')
+            .eq('phone', phone)
+            .maybeSingle();
+
+        if (dbErr || !merchant) {
+            // Standard practice: Don't confirm if phone exists
+            return res.json({ 
+                success: true, 
+                message: 'If a matching account exists, we have sent instructions to the registered owner.' 
+            });
+        }
+
+        // 2. Send the "Found Your Email" message via Resend
+        // Since we only have the registered email, we send it THERE (in case they forgot which one they used)
+        await resend.emails.send({
+            from: 'DashDrive Auth <auth@updates.dashdrive.co.zw>',
+            to: merchant.email,
+            subject: 'DashDrive Account Recovery',
+            html: `
+                <div style="font-family: sans-serif; padding: 20px;">
+                    <h2>Account Recovery Details</h2>
+                    <p>Hello <strong>${merchant.store_name || 'Merchant'}</strong>,</p>
+                    <p>A request was made to recover the email associated with your DashDrive account.</p>
+                    <p>Your registered email is: <strong>${merchant.email}</strong></p>
+                    <p>If you did not request this, please secure your account immediately.</p>
+                    <br/>
+                    <p>Regards,<br/>DashDrive Security Team</p>
+                </div>
+            `
+        });
+
+        // 3. For UX, return a masked version of the email in the response
+        const [user, domain] = merchant.email.split('@');
+        const maskedEmail = `${user[0]}${'*'.repeat(user.length - 2)}${user[user.length - 1]}@${domain}`;
+
+        return res.json({
+            success: true,
+            message: 'Account found. We have sent the full details to your email.',
+            masked_email: maskedEmail
+        });
+
+    } catch (err) {
+        console.error('[Auth] Recover email error:', err);
+        return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+};
+
+module.exports = { login, register, forgotPassword, recoverEmail };

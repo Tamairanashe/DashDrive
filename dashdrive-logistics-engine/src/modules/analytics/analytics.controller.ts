@@ -1,5 +1,6 @@
 import { Controller, Get, Query, Param, UseGuards, Req } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import { PredictionService } from './prediction.service';
 import { DateRangeDto } from './dto/date-range.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -9,7 +10,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class AnalyticsController {
-    constructor(private readonly analyticsService: AnalyticsService) { }
+    constructor(
+        private readonly analyticsService: AnalyticsService,
+        private readonly predictionService: PredictionService
+    ) { }
 
     @Get('dashboard')
     @ApiOperation({ summary: 'Get overall merchant or store-specific KPIs' })
@@ -88,5 +92,35 @@ export class AnalyticsController {
         @Query('storeId') storeId?: string
     ) {
         return this.analyticsService.getMobileTodayStats(req.user.sub, storeId);
+    }
+
+    // --- Global Admin Endpoints ---
+
+    @Get('global/stats')
+    @ApiOperation({ summary: 'Get global platform-wide statistics (Admin Only)' })
+    @ApiResponse({ status: 200, description: 'Return global KPIs' })
+    getGlobalStats() {
+        return this.analyticsService.getGlobalPlatformStats();
+    }
+
+    @Get('global/financials')
+    @ApiOperation({ summary: 'Get global financial snapshots (Admin Only)' })
+    @ApiResponse({ status: 200, description: 'Return GMV and Revenue snapshots' })
+    getGlobalFinancials() {
+        return this.analyticsService.getGlobalFinancials();
+    }
+
+    @Get('global/demand')
+    @ApiOperation({ summary: 'Get real-time demand intensity heatmap data' })
+    @ApiResponse({ status: 200, description: 'Return density data by location' })
+    getDemandIntensity(@Query('timezone') timezone?: string) {
+        return this.analyticsService.getDemandIntensity(timezone);
+    }
+
+    @Get('prediction/demand')
+    @ApiOperation({ summary: 'Get AI-powered demand forecasting for a city' })
+    @ApiResponse({ status: 200, description: 'Return hourly demand forecast' })
+    getDemandForecast(@Query('city') city: string) {
+        return this.predictionService.getDemandForecast(city);
     }
 }

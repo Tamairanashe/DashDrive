@@ -36,7 +36,34 @@ export class FraudService {
             reasons.push('High activity velocity detected');
         }
 
-        // 2. Event-Specific Rules
+        // 2. Advanced Heuristics
+        if (eventType === RiskEventType.DELIVERY && metadata?.distance && metadata?.timeSeconds) {
+            // Speed = Distance / Time
+            const speedMps = metadata.distance / metadata.timeSeconds;
+            const speedKmph = speedMps * 3.6;
+            
+            // Impossible speeds for non-flight vehicles (e.g. > 150km/h for delivery)
+            if (speedKmph > 150) {
+                riskScore += 80;
+                reasons.push(`Impossible delivery speed detected: ${speedKmph.toFixed(1)} km/h (GPS Spoofing)`);
+            }
+        }
+
+        if (actorType === RiskActorType.MERCHANT) {
+            // Check for order padding (suspiciously high volume of small orders)
+            const recentOrders = await this.prisma.order.count({
+                where: {
+                    merchantId: actorId,
+                    createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
+                }
+            });
+            if (recentOrders > 50) {
+                riskScore += 50;
+                reasons.push('Merchant order-padding velocity detected');
+            }
+        }
+
+        // 3. Event-Specific Rules
         if (eventType === RiskEventType.WITHDRAWAL) {
             // Large withdrawal check
             const amount = metadata?.amount || 0;

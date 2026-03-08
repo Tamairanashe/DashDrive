@@ -1,12 +1,25 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
+import { UsersService } from './users.service';
 import { AdminRole } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private usersService: UsersService
+    ) { }
+
+    @Get()
+    async getAllUsers() {
+        const users = await this.usersService.findAll();
+        return {
+            success: true,
+            data: users,
+        };
+    }
 
     @Get('roles')
     async getRoles() {

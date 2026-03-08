@@ -17,4 +17,11 @@ export class PricingController {
     async getQuote(@Body() dto: PricingQuoteDto) {
         return this.pricingService.getDeliveryQuote(dto);
     }
+
+    @Post('negotiation-quote')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Request a negotiation-based price quote for rides/parcels' })
+    async getNegotiationQuote(@Body() dto: PricingQuoteDto) {
+        return this.pricingService.getNegotiationQuote(dto);
+    }
 }

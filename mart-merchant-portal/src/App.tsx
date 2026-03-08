@@ -83,6 +83,15 @@ function App() {
     }
   }, []);
 
+  const handleSwitchPortal = (type: 'mart' | 'direct') => {
+    setPortalType(type);
+    if (type === 'direct') {
+      setDirectActiveTab('overview');
+    } else {
+      setActiveTab('dashboard');
+    }
+  };
+
   if (!portalType) {
     let authContent;
     if (authMode === 'landing') {
@@ -166,6 +175,7 @@ function App() {
             activeTab={directActiveTab}
             setActiveTab={setDirectActiveTab}
             onLogout={() => setPortalType(null)}
+            onSwitchPortal={handleSwitchPortal}
             merchant={merchant}
           >
             {directActiveTab === 'overview' && <DirectOverview />}
@@ -173,7 +183,8 @@ function App() {
             {directActiveTab === 'create-delivery' && <DirectCreateDelivery />}
             {directActiveTab === 'tracking' && <DirectTracking />}
             {directActiveTab === 'billing' && <DirectBilling />}
-            {directActiveTab === 'developer' && <DirectDeveloper />}
+            {directActiveTab === 'performance' && <Performance token={token} merchant={merchant} portalType="direct" />}
+            {directActiveTab === 'developer' && <DirectDeveloper token={token || ''} />}
             {directActiveTab !== 'overview' && directActiveTab !== 'deliveries' &&
               directActiveTab !== 'create-delivery' && directActiveTab !== 'tracking' &&
               directActiveTab !== 'billing' && (
@@ -187,23 +198,24 @@ function App() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             onLogout={handleLogout}
+            onSwitchPortal={handleSwitchPortal}
             merchant={merchant}
           >
             {activeTab === 'dashboard' && <Dashboard token={token} merchant={merchant} />}
             {activeTab === 'orders' && <Orders token={token} merchant={merchant} />}
             {activeTab === 'inventory' && <Inventory token={token} merchant={merchant} onAddProduct={() => setActiveTab('addProduct')} />}
-            {activeTab === 'performance' && <Performance token={token} merchant={merchant} />}
+            {activeTab === 'performance' && <Performance token={token} merchant={merchant} portalType="mart" />}
             {activeTab === 'addProduct' && <AddProduct token={token} merchant={merchant} onBack={() => setActiveTab('inventory')} />}
             {activeTab === 'financials' && <Financials token={token} merchant={merchant} />}
             {activeTab === 'customers' && <Customers />}
             {activeTab === 'stores' && <Stores onNavigate={setActiveTab} />}
             {activeTab === 'store-hours' && <StoreHours />}
             {activeTab === 'holiday-hours' && <HolidayHours />}
-            {activeTab === 'marketing-overview' && <MarketingOverview />}
-            {activeTab === 'offers' && <Offers />}
-            {activeTab === 'campaigns' && <Campaigns />}
-            {activeTab === 'featured-products' && <FeaturedProducts />}
-            {activeTab === 'promotions' && <Promotions />}
+            {activeTab === 'marketing-overview' && <MarketingOverview token={token || ''} />}
+            {activeTab === 'offers' && <Offers token={token || ''} />}
+            {activeTab === 'campaigns' && <Campaigns token={token || ''} />}
+            {activeTab === 'featured-products' && <FeaturedProducts token={token || ''} />}
+            {activeTab === 'promotions' && <Promotions token={token || ''} />}
             {activeTab === 'settings' && <Settings />}
             {activeTab === 'help' && <Help />}
             {activeTab !== 'dashboard' && activeTab !== 'orders' && activeTab !== 'inventory' &&

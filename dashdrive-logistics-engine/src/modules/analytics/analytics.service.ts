@@ -222,4 +222,62 @@ export class AnalyticsService {
             recentOrders,
         };
     }
+
+    // --- Global Admin Analytics ---
+
+    async getGlobalPlatformStats() {
+        const [totalOrders, totalRiders, totalMerchants, totalStores] = await Promise.all([
+            this.prisma.order.count(),
+            this.prisma.rider.count({ where: { isActive: true } }),
+            this.prisma.merchant.count(),
+            this.prisma.store.count({ where: { isActive: true } }),
+        ]);
+
+        return {
+            totalOrders,
+            activeRiders: totalRiders,
+            totalMerchants,
+            activeStores: totalStores,
+            activeUsers: totalOrders * 0.8, // Approximation based on orders for now
+        };
+    }
+
+    async getGlobalFinancials() {
+        const [gmv, revenue, escrow] = await Promise.all([
+            this.prisma.order.aggregate({
+                where: { status: OrderStatus.DELIVERED },
+                _sum: { totalAmount: true },
+            }),
+            this.prisma.order.aggregate({
+                where: { status: OrderStatus.DELIVERED },
+                _sum: { deliveryFee: true }, // Simplified: using deliveryFee as platform rev proxy
+            }),
+            this.prisma.wallet.aggregate({
+                where: { ownerType: 'PLATFORM' },
+                _sum: { balance: true }
+            })
+        ]);
+
+        return {
+            totalGMV: gmv._sum.totalAmount || 0,
+            netRevenue: revenue._sum.deliveryFee || 0,
+            escrowHolding: escrow._sum.balance || 0,
+            lastMonthGrowth: 12.5, // Seeded value
+        };
+    }
+
+    async getDemandIntensity(timezone?: string) {
+        // Returns order counts grouped by zone/area
+        const intensity: any[] = await this.prisma.$queryRaw`
+            SELECT 
+                s.city,
+                COUNT(o.id)::int as "orderCount",
+                SUM(o."totalAmount")::float as "totalValue"
+            FROM "Order" o
+            JOIN "Store" s ON o."storeId" = s.id
+            WHERE o."status" IN ('PENDING', 'CONFIRMED', 'PREPARING', 'READY')
+            GROUP BY s.city
+        `;
+        return intensity;
+    }
 }

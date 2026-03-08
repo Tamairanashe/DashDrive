@@ -14,6 +14,7 @@ export class PricingQuoteDto {
     package_size: 'SMALL' | 'MEDIUM' | 'LARGE';
     delivery_type: 'STANDARD' | 'EXPRESS' | 'SCHEDULED';
     merchantPlan?: 'BASIC' | 'PRO' | 'ENTERPRISE';
+    vertical?: 'FOOD' | 'MART' | 'DIRECT' | 'RIDE' | 'PARCEL';
 }
 
 @Injectable()
@@ -68,8 +69,17 @@ export class PricingService {
         }
 
         // 8. Rider Payout Calculation
-        const distributableCost = Math.max(0, currentCost - rule.serviceFee);
-        const riderPayout = distributableCost * 0.65; // Rider gets 65% of the dynamic delivery fee
+        let payoutRate = 0.65; // Default fallback
+        const vertical = dto.vertical || 'FOOD';
+        
+        if (vertical === 'FOOD') payoutRate = 0.80;
+        else if (vertical === 'MART') payoutRate = 0.70;
+        else if (vertical === 'DIRECT') payoutRate = 1.0; // B2B typically passes full delivery fee to the contracted pilot
+        
+        // Base deliver cost (without service fee), applying surge multiplier for dynamic payouts
+        const distributableCost = Math.max(0, (baseFee + distanceFee + timeFee)) * surgeMultiplier;
+        
+        const riderPayout = distributableCost * payoutRate;
         const platformFee = currentCost - riderPayout;
 
         return {
@@ -88,6 +98,31 @@ export class PricingService {
                 rider_payout: Number(riderPayout.toFixed(2)),
                 platform_fee: Number(platformFee.toFixed(2)),
             }
+        };
+    }
+
+    async getNegotiationQuote(dto: PricingQuoteDto) {
+        const rule = await this.getPricingRule(dto.countryCode);
+        const { distanceKm, estimatedTimeMin } = await this.distanceCalculator.calculateRouteDistance(
+            { lat: dto.pickup_lat, lng: dto.pickup_lng },
+            { lat: dto.dropoff_lat, lng: dto.dropoff_lng }
+        );
+
+        const surgeMultiplier = await this.surgeEngine.calculateDemandMultiplier(dto.pickup_lat, dto.pickup_lng);
+
+        // SuggestedPrice = (Distance × Rate_d) + (Time × Rate_t) + DemandAdjustment
+        const suggestedPrice = (distanceKm * rule.distanceFeeKm) + (estimatedTimeMin * rule.timeFeeMin) + (rule.baseFee * surgeMultiplier);
+
+        // Minimum Fare logic: DriverCost + PlatformCost
+        // Assuming DriverCost is ~70% of base suggested, and PlatformCost is a minimum fee
+        const minimumFare = Math.max(5.00, suggestedPrice * 0.6);
+
+        return {
+            distance_km: Number(distanceKm.toFixed(2)),
+            estimated_time: estimatedTimeMin,
+            suggested_price: Number(suggestedPrice.toFixed(2)),
+            minimum_price: Number(minimumFare.toFixed(2)),
+            surge_multiplier: surgeMultiplier
         };
     }
 

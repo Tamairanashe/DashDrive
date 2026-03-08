@@ -24,7 +24,7 @@ export default function RootLayout() {
             <Stack.Screen name="auth/name" />
             <Stack.Screen name="setup/payment-method" />
             <Stack.Screen name="setup/add-card" />
-            <Stack.Screen name="home" />
+            <Stack.Screen name="(tabs)" />
             <Stack.Screen name="search" />
             <Stack.Screen name="negotiation/fare-input" />
             <Stack.Screen name="negotiation/broadcasting" />

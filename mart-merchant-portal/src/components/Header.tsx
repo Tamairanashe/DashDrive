@@ -1,5 +1,5 @@
-import { Search, Bell } from 'lucide-react';
-import { Layout, Input, Badge, Avatar, Typography, Space } from 'antd';
+import { Search, Bell, ShoppingBag, Truck } from 'lucide-react';
+import { Layout, Input, Badge, Avatar, Typography, Space, Select } from 'antd';
 
 const { Header: AntdHeader } = Layout;
 const { Title, Text } = Typography;
@@ -8,9 +8,11 @@ interface HeaderProps {
     title: string;
     subtitle: string;
     merchant: any;
+    currentPortal?: 'mart' | 'direct';
+    onSwitchPortal?: (type: 'mart' | 'direct') => void;
 }
 
-export function Header({ title, subtitle, merchant }: HeaderProps) {
+export function Header({ title, subtitle, merchant, currentPortal, onSwitchPortal }: HeaderProps) {
     const storeName = merchant?.stores?.[0]?.name || 'Mart Merchant';
     const email = merchant?.email || 'merchant@dashdrive.com';
     const avatar = merchant?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${merchant?.id || 'Felix'}`;
@@ -19,9 +21,41 @@ export function Header({ title, subtitle, merchant }: HeaderProps) {
             className="bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-10"
             style={{ height: '80px', lineHeight: 'normal', padding: '0 32px' }}
         >
-            <div className="flex flex-col justify-center">
-                <Title level={4} style={{ margin: 0, fontWeight: 600, lineHeight: 1.2 }}>{title}</Title>
-                <Text type="secondary" style={{ fontSize: '12px', marginTop: 4, lineHeight: 1.5 }}>{subtitle}</Text>
+            <div className="flex items-center gap-8">
+                <div className="flex flex-col justify-center">
+                    <Title level={4} style={{ margin: 0, fontWeight: 600, lineHeight: 1.2 }}>{title}</Title>
+                    <Text type="secondary" style={{ fontSize: '12px', marginTop: 4, lineHeight: 1.5 }}>{subtitle}</Text>
+                </div>
+
+                {onSwitchPortal && (
+                    <Select
+                        value={currentPortal}
+                        onChange={onSwitchPortal}
+                        style={{ width: 180 }}
+                        className="service-switcher"
+                        dropdownStyle={{ borderRadius: 12 }}
+                        options={[
+                            { 
+                                value: 'mart', 
+                                label: (
+                                    <div className="flex items-center gap-2">
+                                        <ShoppingBag size={14} className="text-emerald-500" />
+                                        <Text strong size="small">Dash Mart</Text>
+                                    </div>
+                                ) 
+                            },
+                            { 
+                                value: 'direct', 
+                                label: (
+                                    <div className="flex items-center gap-2">
+                                        <Truck size={14} className="text-blue-500" />
+                                        <Text strong size="small">Dash Direct</Text>
+                                    </div>
+                                ) 
+                            }
+                        ]}
+                    />
+                )}
             </div>
 
             <div className="flex items-center gap-6">

@@ -79,7 +79,7 @@ export default function NameScreen() {
                         <Button
                             label="Continue"
                             disabled={!isFormValid}
-                            onPress={() => router.replace("/home" as any)}
+                            onPress={() => router.replace("/(tabs)" as any)}
                         />
                     </View>
                 </View>

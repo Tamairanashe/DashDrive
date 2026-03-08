@@ -61,4 +61,12 @@ export class DispatchGateway implements OnGatewayConnection {
     emitDeliveryRequest(riderId: string, deliveryData: any) {
         this.server.to(`rider_${riderId}`).emit('delivery_request', deliveryData);
     }
+
+    emitBroadcast(event: string, data: any) {
+        this.server.emit(event, data);
+    }
+
+    emitDemandNudge(riderId: string, message: string) {
+        this.server.to(`rider_${riderId}`).emit('demand_nudge', { message });
+    }
 }

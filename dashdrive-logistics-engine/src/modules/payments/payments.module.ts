@@ -5,10 +5,11 @@ import { WebhooksController } from './webhooks.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { OrdersModule } from '../orders/orders.module';
 import { WalletModule } from '../wallet/wallet.module';
+import { MockPaymentProvider } from './payment-providers/mock.provider';
 
 @Module({
     imports: [PrismaModule, OrdersModule, WalletModule],
-    providers: [PaymentsService],
+    providers: [PaymentsService, MockPaymentProvider],
     controllers: [PaymentsController, WebhooksController],
     exports: [PaymentsService],
 })

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber, IsOptional, IsArray, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, IsArray, IsUUID, IsBoolean, IsObject } from 'class-validator';
 
 export class CreateProductDto {
     @ApiProperty({ example: 'store-uuid-here' })
@@ -36,4 +36,34 @@ export class CreateProductDto {
     @IsOptional()
     @IsUUID()
     categoryId?: string;
+
+    @ApiProperty({ example: '123456789', required: false })
+    @IsOptional()
+    @IsString()
+    barcode?: string;
+
+    @ApiProperty({ example: 'kg', required: false })
+    @IsOptional()
+    @IsString()
+    weightUnit?: string;
+
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isHalal?: boolean;
+
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isVegan?: boolean;
+
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isVegetarian?: boolean;
+
+    @ApiProperty({ example: { color: 'red', size: 'L' }, required: false })
+    @IsOptional()
+    @IsObject()
+    attributes?: any;
 }

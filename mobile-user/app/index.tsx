@@ -17,8 +17,8 @@ export default function SplashScreen() {
     }).start();
 
     const timer = setTimeout(() => {
-      // Navigate to Auth flow
-      router.replace("/auth/login" as any);
+      // Navigate to Home Tab
+      router.replace("/(tabs)" as any);
     }, 2500);
 
     return () => clearTimeout(timer);

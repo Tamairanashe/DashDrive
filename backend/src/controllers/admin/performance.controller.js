@@ -69,3 +69,21 @@ exports.getStoreComparisons = async (req, res) => {
         });
     }
 };
+
+exports.getVerticalDemand = async (req, res) => {
+    try {
+        const { vertical } = req.query;
+        const demand = await analyticsService.getVerticalDemand(vertical);
+
+        return res.json({
+            success: true,
+            data: demand
+        });
+    } catch (error) {
+        console.error("Vertical Demand Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch vertical demand density"
+        });
+    }
+};

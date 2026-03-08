@@ -26,6 +26,12 @@ export class ProductsService {
                 merchantId,
                 storeId: data.storeId,
                 categoryId: data.categoryId,
+                barcode: data.barcode,
+                weightUnit: data.weightUnit,
+                isHalal: data.isHalal || false,
+                isVegan: data.isVegan || false,
+                isVegetarian: data.isVegetarian || false,
+                attributes: data.attributes || {},
                 variants: {
                     create: data.variants || [],
                 },
@@ -100,6 +106,12 @@ export class ProductsService {
                 lowStockThreshold: data.lowStockThreshold,
                 images: data.images,
                 isActive: data.isActive,
+                barcode: data.barcode,
+                weightUnit: data.weightUnit,
+                isHalal: data.isHalal,
+                isVegan: data.isVegan,
+                isVegetarian: data.isVegetarian,
+                attributes: data.attributes,
             },
         });
     }

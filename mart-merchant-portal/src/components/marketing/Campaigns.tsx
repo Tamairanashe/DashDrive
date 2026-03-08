@@ -5,43 +5,29 @@ import { Card, Table, Typography, Button, Input, Tag } from 'antd';
 
 const { Title, Text } = Typography;
 
-const campaigns = [
-    {
-        id: 'CMP-001',
-        name: 'Weekend Flash Sale',
-        type: 'Flash Sale',
-        discount: '20%',
-        status: 'Active',
-        startDate: '2026-03-06',
-        endDate: '2026-03-08',
-        products: 12,
-        revenue: '$1,240.00'
-    },
-    {
-        id: 'CMP-002',
-        name: 'Summer Promo Bundle',
-        type: 'Bundle Discount',
-        discount: '15%',
-        status: 'Scheduled',
-        startDate: '2026-06-01',
-        endDate: '2026-08-31',
-        products: 45,
-        revenue: '$0.00'
-    },
-    {
-        id: 'CMP-003',
-        name: 'Black Friday Early Access',
-        type: 'Limited Time',
-        discount: '30%',
-        status: 'Expired',
-        startDate: '2025-11-20',
-        endDate: '2025-11-27',
-        products: 100,
-        revenue: '$12,450.00'
-    }
-];
+import { useState, useEffect } from 'react';
+import { api } from '../../api';
 
-export function Campaigns() {
+export function Campaigns({ token }: { token: string }) {
+    const [campaignList, setCampaignList] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const loadCampaigns = async () => {
+        setLoading(true);
+        try {
+            const data = await api.marketing.getCampaigns(token);
+            setCampaignList(data);
+        } catch (err: any) {
+            console.error('Failed to load campaigns:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadCampaigns();
+    }, [token]);
+
     const columns = [
         {
             title: 'Campaign Info',
@@ -165,7 +151,8 @@ export function Campaigns() {
                 </div>
                 <Table
                     columns={columns}
-                    dataSource={campaigns}
+                    dataSource={campaignList}
+                    loading={loading}
                     pagination={false}
                     rowKey="id"
                     className="custom-table"

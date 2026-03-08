@@ -14,5 +14,13 @@ export const adminApi = {
     },
     users: {
         roles: () => api.get('/users/roles'),
+        getDrivers: () => api.get('/riders'),
+        getPendingRiders: () => api.get('/riders/pending'),
+        verifyRider: (id: string, status: string, note?: string) => api.patch(`/riders/${id}/verify`, { status, note }),
+    },
+    // Support
+    support: {
+        getSupportTickets: (status?: string) => api.get('/support/tickets', { params: { status } }),
+        updateTicketStatus: (id: string, status: string) => api.patch(`/support/tickets/${id}/status`, { status }),
     }
 };

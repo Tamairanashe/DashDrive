@@ -37,7 +37,14 @@ const featuredItems = [
     }
 ];
 
-export function FeaturedProducts() {
+import { useEffect } from 'react';
+
+export function FeaturedProducts({ token }: { token: string }) {
+    useEffect(() => {
+        // Simulated data load using token
+        console.log('Loading featured products with token:', token.substring(0, 5) + '...');
+    }, [token]);
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}

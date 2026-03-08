@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { OrdersGateway } from '../orders/orders.gateway';
 import { PaymentStatus, OrderStatus } from '@prisma/client';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { PaymentsService } from './payments.service';
 
 @ApiTags('webhooks')
 @Controller('webhooks')
@@ -10,6 +11,7 @@ export class WebhooksController {
     constructor(
         private prisma: PrismaService,
         private ordersGateway: OrdersGateway,
+        private paymentsService: PaymentsService,
     ) { }
 
     @Post('payment')
@@ -33,15 +35,10 @@ export class WebhooksController {
             return { message: 'Transaction already processed', status: transaction.status };
         }
 
-        const updatedTransaction = await this.prisma.transaction.update({
-            where: { id: transactionId },
-            data: {
-                status: status === 'success' ? PaymentStatus.SUCCESS : PaymentStatus.FAILED,
-                gatewayTransactionId,
-            },
-        });
-
+        let updatedTransaction;
         if (status === 'success') {
+            updatedTransaction = await this.paymentsService.completePayment(transactionId, gatewayTransactionId);
+            
             const updatedOrder = await this.prisma.order.update({
                 where: { id: transaction.orderId },
                 data: { status: OrderStatus.CONFIRMED },
@@ -59,8 +56,27 @@ export class WebhooksController {
                     note: `Payment confirmed via ${transaction.gateway}`,
                 }
             });
+        } else {
+            updatedTransaction = await this.prisma.transaction.update({
+                where: { id: transactionId },
+                data: {
+                    status: PaymentStatus.FAILED,
+                    gatewayTransactionId,
+                },
+            });
         }
 
         return { received: true, status: updatedTransaction.status };
+    }
+
+    @Post('topup')
+    @ApiOperation({ summary: 'Standardized internal webhook for topup confirmations' })
+    async handleTopupWebhook(@Body() body: any) {
+        const { walletId, amount, gatewayTransactionId } = body;
+        if (!walletId || !amount || !gatewayTransactionId) {
+            throw new BadRequestException('Invalid topup webhook payload');
+        }
+        await this.paymentsService.completeTopUp(walletId, amount, gatewayTransactionId);
+        return { received: true, status: 'SUCCESS' };
     }
 }

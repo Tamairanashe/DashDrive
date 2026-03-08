@@ -41,8 +41,10 @@ class LogisticsEngineService {
                     name: order.customer_name,
                     phone: order.customer_phone || '+263770000000'
                 },
-                package_size: 'MEDIUM', // Food orders are typically medium
-                order_reference: order.id
+                package_size: 'MEDIUM',
+                order_reference: order.id,
+                vertical: order.type || 'FOOD', // Default to FOOD if not specified
+                instructions: order.metadata?.instructions || (order.type === 'DIRECT' ? 'B2B: Handle with care' : 'Standard Delivery')
             };
 
             // 2. Fire and Forget (or wait for confirmation)

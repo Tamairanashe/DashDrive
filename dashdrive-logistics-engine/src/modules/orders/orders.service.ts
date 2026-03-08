@@ -4,12 +4,14 @@ import { OrdersGateway } from './orders.gateway';
 import { generateOrderNumber } from '../../common/utils/order-number.util';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, WalletOwnerType } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CommissionService } from '../commission/commission.service';
 import { EventBusService } from '../event-bus/event-bus.service';
 import { PlatformEvent } from '../../common/events/platform-events';
 import { DispatchService } from '../dispatch/dispatch.service';
+import { WalletService } from '../wallet/wallet.service';
+import { EarningsService } from '../dispatch/earnings.service';
 
 @Injectable()
 export class OrdersService {
@@ -21,6 +23,8 @@ export class OrdersService {
         private eventBusService: EventBusService,
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
         private dispatchService: DispatchService,
+        private walletService: WalletService,
+        private earningsService: EarningsService,
     ) { }
 
     async createOrder(merchantId: string, storeId: string, data: any) {
@@ -117,6 +121,42 @@ export class OrdersService {
         if (status === OrderStatus.DELIVERED) {
             await this.cacheManager.del(`analytics:snapshot:${merchantId}:all`);
             await this.cacheManager.del(`analytics:snapshot:${merchantId}:${order.storeId}`);
+
+            // === FINTECH SETTLEMENT (ZERO-SUM DOUBLE ENTRY) ===
+            const commissionAmount = updatedOrder.subtotal * 0.10; // Fixed 10% commission
+            const merchantPayout = updatedOrder.subtotal + updatedOrder.taxAmount - commissionAmount;
+
+            try {
+                // 1. Merchant Payout
+                const merchantWallet = await this.walletService.getWallet(WalletOwnerType.MERCHANT, merchantId, updatedOrder.currency);
+                await this.walletService.credit(merchantWallet.id, merchantPayout, updatedOrder.id, `Payout for Order #${updatedOrder.orderNumber}`);
+
+                // 2. Rider Payout (if assigned)
+                const delivery = await this.prisma.delivery.findUnique({ where: { orderId: updatedOrder.id }});
+                const finalDeliveryFee = delivery?.deliveryFee || updatedOrder.deliveryFee;
+                if (delivery && delivery.riderId && finalDeliveryFee > 0) {
+                    const riderWallet = await this.walletService.getWallet(WalletOwnerType.RIDER, delivery.riderId, updatedOrder.currency);
+                    await this.walletService.credit(riderWallet.id, finalDeliveryFee, updatedOrder.id, `Earnings for Order #${updatedOrder.orderNumber}`);
+                    
+                    // Record in EarningsService for optimization
+                    await this.earningsService.recordEarnings(delivery.riderId, finalDeliveryFee);
+
+                    // Update Rider state: idle time and current load
+                    await this.prisma.rider.update({
+                        where: { id: delivery.riderId },
+                        data: { 
+                            lastActiveAt: new Date(),
+                            currentLoad: { decrement: 1 }
+                        } as any
+                    });
+                }
+
+                // 3. Platform Escrow Deduction (The escrow pays the Merchant + Rider)
+                const escrowWallet = await this.walletService.getWallet(WalletOwnerType.PLATFORM, 'PLATFORM_ESCROW', updatedOrder.currency);
+                await this.walletService.debit(escrowWallet.id, merchantPayout + finalDeliveryFee, updatedOrder.id, `Settlement for Order #${updatedOrder.orderNumber}`);
+            } catch (err) {
+                console.error(`[Fintech] Settlement failed for Order ${updatedOrder.id}:`, err);
+            }
 
             // Publish Order Delivered Event
             await this.eventBusService.publish(PlatformEvent.ORDER_DELIVERED, updatedOrder);

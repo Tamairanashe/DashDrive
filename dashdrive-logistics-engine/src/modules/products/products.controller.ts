@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req, Logger } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { InventoryService } from './inventory.service';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 
 @ApiTags('products')
@@ -10,6 +11,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class ProductsController {
+    private readonly logger = new Logger(ProductsController.name);
     constructor(
         private readonly productsService: ProductsService,
         private readonly inventoryService: InventoryService
@@ -60,6 +62,15 @@ export class ProductsController {
     @ApiResponse({ status: 200, description: 'Product successfully updated' })
     update(@Req() req: any, @Param('id') id: string, @Body() body: any) {
         return this.productsService.update(id, req.user.sub, body);
+    }
+
+    @Post('sync')
+    @UseGuards(ApiKeyGuard)
+    @ApiOperation({ summary: 'Sync inventory from external CMS (DashFood/Mart)' })
+    @ApiResponse({ status: 200, description: 'Inventory successfully synced' })
+    syncInventory(@Body() data: any) {
+        this.logger.log(`Received inventory sync for item ${data.item_id}`);
+        return this.inventoryService.syncFromExternal(data);
     }
 
     @Patch('inventory/adjust')

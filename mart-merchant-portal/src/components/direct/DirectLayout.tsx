@@ -9,16 +9,18 @@ interface DirectLayoutProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     onLogout?: () => void;
+    onSwitchPortal?: (type: 'mart' | 'direct') => void;
     merchant: any;
 }
 
-export function DirectLayout({ children, activeTab, setActiveTab, onLogout, merchant }: DirectLayoutProps) {
+export function DirectLayout({ children, activeTab, setActiveTab, onLogout, onSwitchPortal, merchant }: DirectLayoutProps) {
     const titles: Record<string, { title: string; subtitle: string }> = {
         overview: { title: 'Dispatch Overview', subtitle: "Real-time look at your active fleet and historical deliveries" },
         deliveries: { title: 'All Deliveries', subtitle: 'View constraints and history of your requested dispatches' },
         'create-delivery': { title: 'Create Delivery', subtitle: 'Manually request a DashDrive API dispatch' },
         tracking: { title: 'Live Tracking', subtitle: 'Real-time location and status of an active rider' },
         billing: { title: 'Billing & Invoices', subtitle: 'Review your total delivery costs and enterprise invoices' },
+        performance: { title: 'Fleet Analytics', subtitle: 'Performance metrics for your B2B dispatches' },
         settings: { title: 'API & Webhooks', subtitle: 'Manage your DashDrive Direct API keys and configurations' },
     };
 
@@ -28,7 +30,7 @@ export function DirectLayout({ children, activeTab, setActiveTab, onLogout, merc
         <AntdLayout style={{ minHeight: '100vh' }}>
             <DirectSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
             <AntdLayout>
-                <Header title={title} subtitle={subtitle} merchant={merchant} />
+                <Header title={title} subtitle={subtitle} merchant={merchant} onSwitchPortal={onSwitchPortal} currentPortal="direct" />
                 <Content className="bg-white" style={{ padding: '32px', paddingBottom: '48px', overflowY: 'auto' }}>
                     {children ? children : (
                         <div className="flex items-center justify-center h-full">

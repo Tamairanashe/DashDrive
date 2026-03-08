@@ -68,9 +68,15 @@ const FEATURED_ITEMS = [
     }
 ];
 
+import { Alert } from "react-native";
+import { useCartStore } from "../../src/lib/cartStore";
+
 export default function MartLandingScreen() {
     const router = useRouter();
     const { colorScheme } = useColorScheme();
+    const { items, addItem } = useCartStore();
+
+    const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
     return (
         <StyledSafeAreaView className="flex-1 bg-white dark:bg-black">
@@ -89,8 +95,16 @@ export default function MartLandingScreen() {
                         <StyledIonicons name="star" size={14} color="#FFD700" />
                     </View>
                 </View>
-                <TouchableOpacity className="h-10 w-10 items-center justify-center rounded-full bg-accent-light/50 dark:bg-zinc-800">
-                    <StyledIonicons name="notifications-outline" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
+                <TouchableOpacity 
+                    onPress={() => router.push("/food/checkout" as any)}
+                    className="h-10 w-10 items-center justify-center rounded-full bg-accent-light/50 dark:bg-zinc-800"
+                >
+                    <StyledIonicons name="cart-outline" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
+                    {cartCount > 0 && (
+                        <View className="absolute -top-1 -right-1 bg-primary h-5 w-5 rounded-full items-center justify-center border-2 border-white dark:border-black">
+                            <Text className="text-[10px] font-uber-bold text-secondary">{cartCount}</Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -173,7 +187,19 @@ export default function MartLandingScreen() {
                                         <Text className="text-base font-uber-bold text-[#0071dc] mr-2">{item.price}</Text>
                                         <Text className="text-xs font-uber text-accent-gray line-through">{item.originalPrice}</Text>
                                     </View>
-                                    <TouchableOpacity className="mt-3 bg-[#0071dc] h-10 rounded-full items-center justify-center flex-row">
+                                    <TouchableOpacity 
+                                        onPress={() => {
+                                            addItem({
+                                                id: item.id,
+                                                name: item.name,
+                                                price: parseFloat(item.price.replace('$', '')),
+                                                priceString: item.price,
+                                                quantity: 1,
+                                            });
+                                            Alert.alert("Added to Cart", `${item.name} added to basket.`);
+                                        }}
+                                        className="mt-3 bg-[#0071dc] h-10 rounded-full items-center justify-center flex-row"
+                                    >
                                         <StyledIonicons name="add" size={18} color="white" />
                                         <Text className="text-white font-uber-bold text-xs ml-1">Add</Text>
                                     </TouchableOpacity>
@@ -186,3 +212,4 @@ export default function MartLandingScreen() {
         </StyledSafeAreaView>
     );
 }
+

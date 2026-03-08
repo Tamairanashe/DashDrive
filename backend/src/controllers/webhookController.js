@@ -31,7 +31,7 @@ const handleNewOrder = async (req, res) => {
                 total_amount: orderData.amount,
                 status: 'new',
                 store_id: store?.id,
-                tenant_id: store?.organization_id,
+                organization_id: store?.organization_id,
                 items: orderData.items || []
             })
             .select()

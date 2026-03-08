@@ -9,10 +9,11 @@ interface LayoutProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     onLogout?: () => void;
+    onSwitchPortal?: (type: 'mart' | 'direct') => void;
     merchant?: any;
 }
 
-export function Layout({ children, activeTab, setActiveTab, onLogout, merchant }: LayoutProps) {
+export function Layout({ children, activeTab, setActiveTab, onLogout, onSwitchPortal, merchant }: LayoutProps) {
     const titles: Record<string, { title: string; subtitle: string }> = {
         dashboard: { title: 'Dashboard Overview', subtitle: "Welcome back! Your grocery store's performance view" },
         orders: { title: 'Order Management', subtitle: 'Track and manage all grocery orders in real time.' },
@@ -37,7 +38,7 @@ export function Layout({ children, activeTab, setActiveTab, onLogout, merchant }
         <AntdLayout style={{ minHeight: '100vh' }}>
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} merchant={merchant} />
             <AntdLayout>
-                <Header title={title} subtitle={subtitle} merchant={merchant} />
+                <Header title={title} subtitle={subtitle} merchant={merchant} onSwitchPortal={onSwitchPortal} currentPortal="mart" />
                 <Content style={{ padding: '32px', paddingBottom: '48px', overflowY: 'auto' }}>
                     {children}
                 </Content>

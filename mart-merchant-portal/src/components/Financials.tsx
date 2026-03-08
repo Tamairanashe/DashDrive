@@ -39,22 +39,44 @@ interface FinancialsProps {
 }
 
 export function Financials({ token, merchant }: FinancialsProps) {
-    const [isLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isRequesting, setIsRequesting] = useState(false);
+    const [balance, setBalance] = useState<number>(0);
+    const [showSuccessMsg, setShowSuccessMsg] = useState(false);
 
-    // In a future update, we will fetch transaction and payout history here
-    // using the token and storeId from the merchant profile
-    const storeId = merchant?.stores?.[0]?.id;
-    console.log('Loading financials for store:', storeId, 'with token:', !!token);
+    // Simulated fetch of live financial data
+    useState(() => {
+        setTimeout(() => {
+            setBalance(1452.80);
+            setIsLoading(false);
+        }, 1200);
+    });
+
+    const handlePayoutRequest = async () => {
+        if (balance <= 0) return;
+        setIsRequesting(true);
+        // Simulate API delay
+        setTimeout(() => {
+            setBalance(0);
+            setIsRequesting(false);
+            setShowSuccessMsg(true);
+            setTimeout(() => setShowSuccessMsg(false), 3000);
+        }, 1500);
+    };
 
     if (isLoading) {
-        return <div className="p-8 text-center text-gray-500 font-bold">Loading financials...</div>;
+        return (
+            <div className="flex items-center justify-center p-24">
+                <div className="size-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+        );
     }
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Top Banner: Next Payout */}
             <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[32px] p-8 text-white shadow-xl shadow-blue-100/50">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -mr-32 -mt-32" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -mr-32 -mt-32 pointer-events-none" />
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 opacity-80">
@@ -62,20 +84,40 @@ export function Financials({ token, merchant }: FinancialsProps) {
                             <span className="text-xs font-black uppercase tracking-widest">Next Scheduled Payout</span>
                         </div>
                         <h2 className="text-4xl font-black tracking-tighter italic">Feb 28, 2026</h2>
-                        <p className="text-sm font-medium opacity-70">Estimated amount: <span className="font-black text-white">$4,821.45</span></p>
+                        <p className="text-sm font-medium opacity-70">Estimated amount: <span className="font-black text-white">${(balance + 3368.65).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 flex items-center gap-4">
-                        <div className="p-3 bg-white text-blue-600 rounded-xl">
+                    
+                    <button 
+                        onClick={handlePayoutRequest}
+                        disabled={isRequesting || balance <= 0}
+                        className="bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 flex items-center gap-4 transition-all duration-300 active:scale-95 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <div className="absolute inset-0 bg-white/5 w-0 group-hover:w-full transition-all duration-500 ease-out" />
+                        <div className="p-3 bg-white text-blue-600 rounded-xl relative z-10">
                             <Banknote size={24} />
                         </div>
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Pending Balance</p>
-                            <p className="text-xl font-black tracking-tight">$1,452.80</p>
+                        <div className="text-left relative z-10">
+                            <p className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                                {isRequesting ? 'Processing...' : 'Available Balance'}
+                            </p>
+                            <p className="text-xl font-black tracking-tight">${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                         </div>
-                        <ArrowRight className="ml-4 opacity-40" />
-                    </div>
+                        <ArrowRight className="ml-4 opacity-40 group-hover:translate-x-1 group-hover:opacity-100 transition-all relative z-10" />
+                    </button>
                 </div>
             </div>
+            
+            {showSuccessMsg && (
+                <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-6 py-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                    <div className="size-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <ArrowUpRight size={16} className="text-emerald-600" />
+                    </div>
+                    <div>
+                        <p className="font-bold text-sm">Payout Requested Successfully!</p>
+                        <p className="text-xs opacity-80">Funds will arrive in your linked bank account within 1-3 business days.</p>
+                    </div>
+                </div>
+            )}
 
             {/* Primary Financial Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

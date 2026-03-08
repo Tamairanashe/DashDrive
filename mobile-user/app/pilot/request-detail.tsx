@@ -13,35 +13,40 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "../../src/lib/MapView";
 import { darkMapStyle, mapStyle } from "../../src/styles/mapStyles";
 
-// Mock request data
-const REQUEST = {
+// Mock fallback
+const MOCK_REQUEST = {
     id: "1",
     rider: { name: "Emma W.", rating: 4.89, trips: 127 },
-    pickup: {
-        title: "44 Warton Road",
-        subtitle: "Stratford, London E15 2JP",
-        lat: 51.5385,
-        lng: -0.0035,
-    },
-    dropoff: {
-        title: "Terminal 2, Heathrow Airport",
-        subtitle: "Hounslow TW6 1EW",
-        lat: 51.4700,
-        lng: -0.4543,
-    },
+    pickup: { title: "44 Warton Road", subtitle: "Stratford, London", lat: 51.5385, lng: -0.0035 },
+    dropoff: { title: "Terminal 2, Heathrow Airport", subtitle: "Hounslow", lat: 51.4700, lng: -0.4543 },
     distance: "18.5 km",
     duration: "32 min",
     fare: "£28.50",
     bonus: "£3.00",
-    expiresIn: 15, // seconds
+    vertical: "FOOD",
+    instructions: "Fragile items",
+    expiresIn: 15
 };
 
 export default function RequestDetailScreen() {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
-    const [timeLeft, setTimeLeft] = useState(REQUEST.expiresIn);
+
+    const requestData = useMemo(() => {
+        if (params.data) {
+            try {
+                return JSON.parse(params.data as string);
+            } catch (e) {
+                return MOCK_REQUEST;
+            }
+        }
+        return MOCK_REQUEST;
+    }, [params.data]);
+
+    const [timeLeft, setTimeLeft] = useState(requestData.expiresIn || 15);
 
     // Timer countdown
     useEffect(() => {
@@ -59,7 +64,7 @@ export default function RequestDetailScreen() {
     const progressWidth = useSharedValue(100);
     useEffect(() => {
         progressWidth.value = withTiming(0, {
-            duration: REQUEST.expiresIn * 1000,
+            duration: (requestData.expiresIn || 15) * 1000,
             easing: Easing.linear,
         });
     }, []);
@@ -78,12 +83,8 @@ export default function RequestDetailScreen() {
 
     // Route polyline coordinates
     const routeCoords = [
-        { latitude: REQUEST.pickup.lat, longitude: REQUEST.pickup.lng },
-        { latitude: 51.52, longitude: -0.08 },
-        { latitude: 51.50, longitude: -0.15 },
-        { latitude: 51.48, longitude: -0.25 },
-        { latitude: 51.47, longitude: -0.35 },
-        { latitude: REQUEST.dropoff.lat, longitude: REQUEST.dropoff.lng },
+        { latitude: requestData.pickup.lat || 51.5385, longitude: requestData.pickup.lng || -0.0035 },
+        { latitude: requestData.dropoff.lat || 51.47, longitude: requestData.dropoff.lng || -0.4543 },
     ];
 
     return (
@@ -158,13 +159,14 @@ export default function RequestDetailScreen() {
 
                     {/* Fare */}
                     <View style={styles.fareSection}>
-                        <Text style={[styles.fareAmount, { color: isDark ? '#fff' : '#18181b' }]}>{REQUEST.fare}</Text>
-                        {REQUEST.bonus && (
-                            <View style={styles.bonusBadge}>
-                                <Ionicons name="sparkles" size={14} color="#3b82f6" />
-                                <Text style={styles.bonusText}>+{REQUEST.bonus} surge bonus</Text>
-                            </View>
-                        )}
+                        <Text style={[styles.fareAmount, { color: isDark ? '#fff' : '#18181b' }]}>{requestData.fare}</Text>
+                        <View style={[styles.verticalBadge, { 
+                            backgroundColor: requestData.vertical === 'DIRECT' ? '#3b82f6' : '#00ff90' 
+                        }]}>
+                            <Text style={styles.verticalBadgeText}>
+                                {requestData.vertical || 'FOOD'} DELIVERY
+                            </Text>
+                        </View>
                     </View>
 
                     {/* Rider Info */}
@@ -174,11 +176,11 @@ export default function RequestDetailScreen() {
                                 <Ionicons name="person" size={24} color="#00ff90" />
                             </View>
                             <View>
-                                <Text style={[styles.riderName, { color: isDark ? '#fff' : '#18181b' }]}>{REQUEST.rider.name}</Text>
+                                <Text style={[styles.riderName, { color: isDark ? '#fff' : '#18181b' }]}>{requestData.rider.name}</Text>
                                 <View style={styles.ratingRow}>
                                     <Ionicons name="star" size={14} color="#FFD700" />
-                                    <Text style={styles.ratingValue}>{REQUEST.rider.rating}</Text>
-                                    <Text style={styles.tripCount}>• {REQUEST.rider.trips} trips</Text>
+                                    <Text style={styles.ratingValue}>{requestData.rider.rating}</Text>
+                                    <Text style={styles.tripCount}>• {requestData.rider.trips || 0} trips</Text>
                                 </View>
                             </View>
                         </View>
@@ -193,8 +195,8 @@ export default function RequestDetailScreen() {
                             </View>
                             <View style={styles.routeText}>
                                 <Text style={styles.routeType}>PICKUP</Text>
-                                <Text style={[styles.routeTitle, { color: isDark ? '#fff' : '#18181b' }]}>{REQUEST.pickup.title}</Text>
-                                <Text style={styles.routeSubtitle}>{REQUEST.pickup.subtitle}</Text>
+                                <Text style={[styles.routeTitle, { color: isDark ? '#fff' : '#18181b' }]}>{requestData.pickup.title}</Text>
+                                <Text style={styles.routeSubtitle}>{requestData.pickup.subtitle}</Text>
                             </View>
                         </View>
                         <View style={styles.routeRow}>
@@ -203,8 +205,8 @@ export default function RequestDetailScreen() {
                             </View>
                             <View style={styles.routeText}>
                                 <Text style={styles.routeType}>DROPOFF</Text>
-                                <Text style={[styles.routeTitle, { color: isDark ? '#fff' : '#18181b' }]}>{REQUEST.dropoff.title}</Text>
-                                <Text style={styles.routeSubtitle}>{REQUEST.dropoff.subtitle}</Text>
+                                <Text style={[styles.routeTitle, { color: isDark ? '#fff' : '#18181b' }]}>{requestData.dropoff.title}</Text>
+                                <Text style={styles.routeSubtitle}>{requestData.dropoff.subtitle}</Text>
                             </View>
                         </View>
                     </View>
@@ -214,13 +216,15 @@ export default function RequestDetailScreen() {
                         <View style={styles.statBox}>
                             <Ionicons name="navigate" size={20} color="#00ff90" />
                             <Text style={styles.statLabel}>Distance</Text>
-                            <Text style={[styles.statValue, { color: isDark ? '#fff' : '#18181b' }]}>{REQUEST.distance}</Text>
+                            <Text style={[styles.statValue, { color: isDark ? '#fff' : '#18181b' }]}>{requestData.distance}</Text>
                         </View>
                         <View style={[styles.divider, { backgroundColor: isDark ? '#3f3f46' : '#f4f4f5' }]} />
                         <View style={styles.statBox}>
-                            <Ionicons name="time" size={20} color="#00ff90" />
-                            <Text style={styles.statLabel}>Duration</Text>
-                            <Text style={[styles.statValue, { color: isDark ? '#fff' : '#18181b' }]}>{REQUEST.duration}</Text>
+                            <Ionicons name="information-circle" size={20} color="#3b82f6" />
+                            <Text style={styles.statLabel}>Notes</Text>
+                            <Text style={[styles.statValue, { color: isDark ? '#fff' : '#18181b', fontSize: 12 }]}>
+                                {requestData.instructions || 'None'}
+                            </Text>
                         </View>
                     </View>
 
@@ -479,6 +483,17 @@ const styles = StyleSheet.create({
     acceptText: {
         fontSize: 18,
         fontWeight: 'bold',
+        color: '#18181b',
+    },
+    verticalBadge: {
+        marginTop: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    verticalBadgeText: {
+        fontSize: 12,
+        fontFamily: 'UberMoveBold',
         color: '#18181b',
     },
 });

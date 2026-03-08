@@ -134,3 +134,23 @@ exports.getStoreComparisons = async (organizationId) => {
 
     return Object.values(comparison);
 };
+exports.getVerticalDemand = async (vertical = null) => {
+    let query = supabase.from("orders").select("id, status, type, store_id, stores(name)");
+
+    if (vertical) {
+        query = query.eq("type", vertical.toUpperCase());
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Group by store for simplicity in this demo, mapping to intensity
+    const demand = data.reduce((acc, order) => {
+        const storeName = order.stores?.name || "Unknown";
+        if (!acc[storeName]) acc[storeName] = { name: storeName, orderCount: 0 };
+        acc[storeName].orderCount += 1;
+        return acc;
+    }, {});
+
+    return Object.values(demand);
+};

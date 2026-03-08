@@ -79,7 +79,7 @@ export default function OTPScreen() {
             // Social auth users already have name from provider, go to home
             // Phone auth users go to register-options to create account
             if (source === "social") {
-                router.replace("/home" as any);
+                router.replace("/(tabs)" as any);
             } else {
                 router.replace("/auth/register-options" as any);
             }

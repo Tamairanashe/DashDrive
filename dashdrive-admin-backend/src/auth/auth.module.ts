@@ -6,6 +6,8 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import 'dotenv/config';
+import { SupabaseService } from './supabase.service';
+import { RolesGuard } from './roles.guard.js';
 
 @Module({
     imports: [
@@ -17,7 +19,7 @@ import 'dotenv/config';
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService, JwtStrategy],
-    exports: [AuthService],
+    providers: [AuthService, JwtStrategy, SupabaseService, RolesGuard],
+    exports: [AuthService, SupabaseService, RolesGuard],
 })
 export class AuthModule { }

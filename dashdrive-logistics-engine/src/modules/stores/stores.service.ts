@@ -12,6 +12,9 @@ export class StoresService {
         currency: string;
         timezone: string;
         taxRate?: number;
+        estimatedPrepTime?: number;
+        cuisineTypes?: string[];
+        isPromoted?: boolean;
     }) {
         return this.prisma.store.create({
             data: {

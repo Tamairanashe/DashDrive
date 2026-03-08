@@ -4,17 +4,25 @@ import {
 } from 'recharts';
 import {
     DollarSign, ShoppingCart, Users, Activity,
-    ChevronDown, Calendar, Filter, ArrowUpRight, ArrowDownRight
+    ChevronDown, Calendar, Filter, ArrowUpRight, ArrowDownRight,
+    Truck, Clock, Gauge, MapPin
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { api } from '../api';
 import { useState, useEffect } from 'react';
 
-const metrics = [
+const martMetrics = [
     { label: 'Total Sales', value: '$124,592.00', trend: '+12.5%', isPositive: true, icon: DollarSign, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Conversion Rate', value: '3.42%', trend: '-1.2%', isPositive: false, icon: Activity, color: 'text-purple-600', bg: 'bg-purple-50' },
     { label: 'Avg Order Value', value: '$42.10', trend: '+5.4%', isPositive: true, icon: ShoppingCart, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'Customer Growth', value: '1,240', trend: '+18.2%', isPositive: true, icon: Users, color: 'text-orange-600', bg: 'bg-orange-50' },
+];
+
+const directMetrics = [
+    { label: 'Avg Delivery Cost', value: '$8.45', trend: '-2.1%', isPositive: true, icon: DollarSign, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'On-Time Accuracy', value: '98.2%', trend: '+0.5%', isPositive: true, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Fleet Efficiency', value: '84%', trend: '+4.2%', isPositive: true, icon: Gauge, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Total Distance', value: '14.2k km', trend: '+12.8%', isPositive: true, icon: MapPin, color: 'text-orange-600', bg: 'bg-orange-50' },
 ];
 
 const salesData = [
@@ -37,9 +45,10 @@ const categoryData = [
 interface PerformanceProps {
     token: string | null;
     merchant: any;
+    portalType?: 'mart' | 'direct';
 }
 
-export function Performance({ token, merchant }: PerformanceProps) {
+export function Performance({ token, merchant, portalType = 'mart' }: PerformanceProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [salesTrend, setSalesTrend] = useState<any[]>(salesData);
 
@@ -93,7 +102,7 @@ export function Performance({ token, merchant }: PerformanceProps) {
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {metrics.map((metric, idx) => (
+                {(portalType === 'direct' ? directMetrics : martMetrics).map((metric, idx) => (
                     <div key={idx} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between mb-4">
                             <div className={cn("p-3 rounded-2xl", metric.bg)}>
@@ -119,17 +128,25 @@ export function Performance({ token, merchant }: PerformanceProps) {
                 <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h3 className="text-lg font-bold text-gray-800">Sales vs. Orders Trend</h3>
-                            <p className="text-xs text-gray-400">Comparing revenue and volume over time</p>
+                            <h3 className="text-lg font-bold text-gray-800">
+                                {portalType === 'direct' ? 'Dispatch vs. Efficiency Trend' : 'Sales vs. Orders Trend'}
+                            </h3>
+                            <p className="text-xs text-gray-400">
+                                {portalType === 'direct' ? 'Comparing total dispatches and fleet performance' : 'Comparing revenue and volume over time'}
+                            </p>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <div className="size-2 rounded-full bg-blue-500" />
-                                <span className="text-[10px] font-bold text-gray-500 uppercase">Revenue</span>
+                                <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                    {portalType === 'direct' ? 'Dispatches' : 'Revenue'}
+                                </span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="size-2 rounded-full bg-emerald-500" />
-                                <span className="text-[10px] font-bold text-gray-500 uppercase">Orders</span>
+                                <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                    {portalType === 'direct' ? 'Efficiency %' : 'Orders'}
+                                </span>
                             </div>
                         </div>
                     </div>

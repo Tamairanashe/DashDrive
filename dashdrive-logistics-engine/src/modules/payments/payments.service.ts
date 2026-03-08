@@ -3,14 +3,31 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PaymentStatus, RiskEventType, RiskActorType, RiskDecision, WalletOwnerType } from '@prisma/client';
 import { FraudService } from '../fraud/fraud.service';
 import { WalletService } from '../wallet/wallet.service';
+import { MockPaymentProvider } from './payment-providers/mock.provider';
 
 @Injectable()
 export class PaymentsService {
     constructor(
         private prisma: PrismaService,
         private fraudService: FraudService,
-        private walletService: WalletService, // Added WalletService
+        private walletService: WalletService,
+        private mockPaymentProvider: MockPaymentProvider,
     ) { }
+
+    async topUpWallet(ownerType: WalletOwnerType, ownerId: string, amount: number, currency: string) {
+        if (amount <= 0) throw new BadRequestException('Top-up amount must be positive');
+        const wallet = await this.walletService.getWallet(ownerType, ownerId, currency);
+
+        // Generate a mock external checkout session
+        const session = await this.mockPaymentProvider.generateTopUpSession(wallet.id, amount, currency);
+        
+        // Return session URL for the client to redirect to
+        return session;
+    }
+
+    async completeTopUp(walletId: string, amount: number, gatewayTransactionId: string) {
+        return this.mockPaymentProvider.simulateSuccessfulTopUp(walletId, amount, gatewayTransactionId);
+    }
 
     async initiatePayment(orderId: string, merchantId: string) {
         const order = await this.prisma.order.findFirst({
