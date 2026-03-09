@@ -94,6 +94,8 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [docTab, setDocTab] = useState('Personal');
   const [auditFilter, setAuditFilter] = useState('All');
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewVisible, setPreviewVisible] = useState(false);
   
   const [form] = Form.useForm();
   const [msgForm] = Form.useForm();
@@ -127,10 +129,20 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
       pending: 150.00
     },
     identity: [
-      { name: 'National ID', status: 'Verified', expiry: '2030-01-01', url: 'https://images.unsplash.com/photo-1579444741240-62400e9fe707?w=400', type: 'Personal' },
-      { name: 'Driver\'s License', status: 'Verified', expiry: '2028-10-15', url: 'https://images.unsplash.com/photo-1554224155-1696413565d3?w=400', type: 'Personal' },
-      { name: 'Selfie with ID', status: 'Verified', expiry: 'N/A', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400', type: 'Personal' },
+      { name: 'Identification (ID/Passport)', status: 'Verified', expiry: '2030-01-01', url: 'https://images.unsplash.com/photo-1579444741240-62400e9fe707?w=400', type: 'Personal' },
+      { name: 'Valid Driver\'s License', status: 'Verified', expiry: '2028-10-15', url: 'https://images.unsplash.com/photo-1554224155-1696413565d3?w=400', type: 'Personal' },
+      { name: 'Profile Photo Holding ID', status: 'Verified', expiry: 'N/A', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400', type: 'Personal' },
+      { name: 'Proof of Residency', status: 'Verified', expiry: '2025-06-01', url: 'https://images.unsplash.com/photo-1586281380117-5a60ae2050cc?w=400', type: 'Personal' },
     ],
+    bankInfo: {
+      bankName: 'Steward Bank',
+      accountName: 'John Makoni',
+      accountNumber: '1002233445',
+      accountType: 'Current',
+      bankCode: 'SB-044',
+      branchCode: '2101',
+      status: 'Verified'
+    },
     vehicle: {
       brand: 'Honda',
       model: 'R15',
@@ -141,7 +153,8 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
       color: 'Midnight Blue',
       year: '2022',
       documents: [
-        { name: 'Vehicle Registration', status: 'Verified', expiry: '2026-05-12', url: 'https://images.unsplash.com/photo-1579444741240-62400e9fe707?w=400', type: 'Vehicle' },
+        { name: 'Vehicle Picture', status: 'Verified', expiry: 'N/A', url: 'https://images.unsplash.com/photo-1579444741240-62400e9fe707?w=400', type: 'Vehicle' },
+        { name: 'Vehicle Registration Book', status: 'Verified', expiry: 'N/A', url: 'https://images.unsplash.com/photo-1586281380117-5a60ae2050cc?w=400', type: 'Vehicle' },
         { name: 'Motor Insurance', status: 'Expiring Soon', expiry: '2024-04-20', url: 'https://images.unsplash.com/photo-1554224155-1696413565d3?w=400', type: 'Vehicle' },
         { name: 'Roadworthiness Certificate', status: 'Verified', expiry: '2025-11-30', url: 'https://images.unsplash.com/photo-1586281380117-5a60ae2050cc?w=400', type: 'Vehicle' },
       ]
@@ -164,6 +177,21 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
     });
   };
 
+  const handleReward = () => {
+    notification.success({ message: 'Points Awarded', description: 'Driver has been credited with reward points.' });
+    // setShowRewardModal(false); // Assuming there's a reward modal
+  };
+
+  const handleDownload = (docName: string, url: string) => {
+    notification.info({ 
+      message: 'Preparing Download', 
+      description: `Your copy of "${docName}" is being prepared. It will open in a new tab shortly.` 
+    });
+    setTimeout(() => {
+      window.open(url, '_blank');
+    }, 500); // Simulate a slight delay for preparation
+  };
+
   const handleSendMessage = (values: any) => {
     message.loading({ content: 'Sending message...', key: 'msg' });
     setTimeout(() => {
@@ -182,6 +210,14 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
       tier: values.tier,
       city: values.city,
       appliedDate: values.appliedDate,
+      bankInfo: {
+        ...driverData.bankInfo,
+        bankName: values.bankName,
+        accountName: values.accountName,
+        accountNumber: values.accountNumber,
+        accountType: values.accountType,
+        bankCode: values.bankCode
+      },
       vehicle: {
         ...driverData.vehicle,
         brand: values.vBrand,
@@ -356,6 +392,22 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
           </Card>
 
           <Card bordered={false} className="shadow-sm" style={{ marginTop: 24 }}>
+            <Title level={5}><BankOutlined /> Payout Settings</Title>
+            <Descriptions column={1} size="small">
+              <Descriptions.Item label="Bank">{driverData.bankInfo.bankName}</Descriptions.Item>
+              <Descriptions.Item label="Account">{driverData.bankInfo.accountNumber}</Descriptions.Item>
+              <Descriptions.Item label="Type">{driverData.bankInfo.accountType}</Descriptions.Item>
+              <Descriptions.Item label="Code">{driverData.bankInfo.bankCode}</Descriptions.Item>
+              <Descriptions.Item label="Holder">{driverData.bankInfo.accountName}</Descriptions.Item>
+              <Descriptions.Item label="Status">
+                <Badge status="success" text={driverData.bankInfo.status} />
+              </Descriptions.Item>
+            </Descriptions>
+            <Divider dashed />
+            <Button block icon={<WalletOutlined />}>Payout History</Button>
+          </Card>
+
+          <Card bordered={false} className="shadow-sm" style={{ marginTop: 24 }}>
             <Title level={5}><CarOutlined /> Vehicle Info</Title>
             <Descriptions column={1} size="small">
               <Descriptions.Item label="Type">{driverData.vehicle.type}</Descriptions.Item>
@@ -511,6 +563,123 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
               </Card>
             </Col>
           </Row>
+
+          {/* Operation Logs */}
+          <Card 
+            bordered={false} 
+            className="shadow-sm" 
+            style={{ marginTop: 24 }}
+            title={
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Space>
+                  <HistoryOutlined style={{ color: '#1677ff' }} />
+                  <Text strong style={{ fontSize: 15 }}>Operation Logs</Text>
+                </Space>
+                <Button size="small" type="link" onClick={() => setShowAuditLogs(true)}>View All</Button>
+              </div>
+            }
+          >
+            <Timeline
+              items={[
+                {
+                  color: 'green',
+                  children: (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Text strong style={{ fontSize: 13 }}>Trip Completed — ORD-991</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Today, 02:15 PM</Text>
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Samora Machel Ave → Borrowdale Rd • $25.00 • 4.2 km</Text>
+                    </div>
+                  ),
+                },
+                {
+                  color: 'blue',
+                  children: (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Text strong style={{ fontSize: 13 }}>Payout Processed</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Today, 11:30 AM</Text>
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>$450.75 disbursed to Steward Bank ••3445</Text>
+                    </div>
+                  ),
+                },
+                {
+                  color: 'green',
+                  children: (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Text strong style={{ fontSize: 13 }}>Trip Completed — ORD-992</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Today, 10:48 AM</Text>
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Churchill Ave → Second St • $18.50 • 2.8 km</Text>
+                    </div>
+                  ),
+                },
+                {
+                  color: 'orange',
+                  children: (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Text strong style={{ fontSize: 13 }}>Document Expiry Warning</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Yesterday, 09:00 AM</Text>
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Motor Insurance expires on 2024-04-20 — renewal required</Text>
+                    </div>
+                  ),
+                },
+                {
+                  color: 'red',
+                  children: (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Text strong style={{ fontSize: 13 }}>Trip Cancelled — ORD-993</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Yesterday, 05:50 PM</Text>
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Cancelled by Customer • Leopold Takawira → King George Rd</Text>
+                    </div>
+                  ),
+                },
+                {
+                  color: 'purple',
+                  children: (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Text strong style={{ fontSize: 13 }}>Loyalty Points Credited</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Mar 07, 09:12 AM</Text>
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>+500 bonus points awarded by System</Text>
+                    </div>
+                  ),
+                },
+                {
+                  color: 'cyan',
+                  children: (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Text strong style={{ fontSize: 13 }}>Document Verified</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Mar 06, 04:30 PM</Text>
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Vehicle Registration Book approved by Mark Z.</Text>
+                    </div>
+                  ),
+                },
+                {
+                  color: 'green',
+                  children: (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Text strong style={{ fontSize: 13 }}>Account Activated</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Mar 01, 02:00 PM</Text>
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Account activated after verification by Sarah Connor</Text>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </Card>
         </Col>
       </Row>
 
@@ -737,6 +906,8 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                               alt={doc.name}
                               style={{ borderRadius: 8, height: 100, width: '100%', objectFit: 'cover' }}
                               preview={{
+                                visible: previewVisible && previewImage === doc.url,
+                                onVisibleChange: (visible) => setPreviewVisible(visible),
                                 mask: <Space><EyeOutlined /> Full View</Space>
                               }}
                             />
@@ -745,18 +916,40 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               <Text strong style={{ fontSize: 16 }}>{doc.name}</Text>
                               <Text type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
-                                {doc.name === 'Selfie with ID' ? 'Live verification photo for face-match' : 'Government issued document'}
+                                {doc.name === 'Profile Photo Holding ID' ? 'Live verification photo for face-match' : 
+                                 doc.name === 'Proof of Residency' ? 'Utility bill or lease agreement' : 'Government issued document'}
                               </Text>
-                              <Space>
-                                <Tag color="success">Verified</Tag>
+                              <Space wrap>
+                                <Tag color={doc.status === 'Verified' ? 'success' : doc.status === 'Rejected' ? 'error' : 'warning'}>
+                                  {doc.status}
+                                </Tag>
+                                {doc.status === 'Rejected' && <Tag color="error" style={{ fontSize: 10 }}>REASON: {doc.rejectionReason || 'Invalid image'}</Tag>}
                                 {doc.expiry !== 'N/A' && <Text type="secondary" style={{ fontSize: 12 }}>Expires: {doc.expiry}</Text>}
                               </Space>
                             </div>
                           </Col>
                           <Col span={8} style={{ textAlign: 'right' }}>
                             <Space direction="vertical" style={{ width: '100%' }}>
-                              <Button block size="small" icon={<CloudUploadOutlined />}>Revide / Update</Button>
-                              <Button block size="small" icon={<DownloadOutlined />}>Download</Button>
+                              <Button 
+                                block 
+                                size="small" 
+                                icon={<EyeOutlined />}
+                                onClick={() => {
+                                  setPreviewImage(doc.url);
+                                  setPreviewVisible(true);
+                                }}
+                              >
+                                View Full Image
+                              </Button>
+                              <Button block size="small" icon={<CloudUploadOutlined />}>Revise / Update</Button>
+                              <Button 
+                                block 
+                                size="small" 
+                                icon={<DownloadOutlined />}
+                                onClick={() => handleDownload(doc.name, doc.url)}
+                              >
+                                Download Original
+                              </Button>
                             </Space>
                           </Col>
                         </Row>
@@ -784,6 +977,8 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                                 alt={doc.name}
                                 style={{ borderRadius: 8, height: 100, width: '100%', objectFit: 'cover' }}
                                 preview={{
+                                  visible: previewVisible && previewImage === doc.url,
+                                  onVisibleChange: (visible) => setPreviewVisible(visible),
                                   mask: <Space><EyeOutlined /> View</Space>
                                 }}
                               />
@@ -792,12 +987,14 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                               <div style={{ display: 'flex', flexDirection: 'column' }}>
                                 <Text strong style={{ fontSize: 16 }}>{doc.name}</Text>
                                 <Text type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
-                                  {doc.name === 'Motor Insurance' ? 'Insures driver & vehicle' : 'Official registration records'}
+                                {doc.name === 'Vehicle Picture' ? 'Actual photo of the vehicle' : 
+                                 doc.name === 'Vehicle Registration Book' ? 'Full vehicle ownership history' : 'Official registration records'}
                                 </Text>
-                                <Space>
-                                  <Tag color={doc.status === 'Verified' ? 'success' : 'warning'}>
+                                <Space wrap>
+                                  <Tag color={doc.status === 'Verified' ? 'success' : doc.status === 'Rejected' ? 'error' : 'warning'}>
                                     {doc.status}
                                   </Tag>
+                                  {doc.status === 'Rejected' && <Tag color="error" style={{ fontSize: 10 }}>REASON: {doc.rejectionReason || 'Invalid image'}</Tag>}
                                   <Text type="secondary" style={{ fontSize: 12 }}>
                                     {doc.status === 'Expiring Soon' ? <Text type="danger">Expires: {doc.expiry}</Text> : `Expires: ${doc.expiry}`}
                                   </Text>
@@ -806,8 +1003,26 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                             </Col>
                             <Col span={8} style={{ textAlign: 'right' }}>
                               <Space direction="vertical" style={{ width: '100%' }}>
+                                <Button 
+                                  block 
+                                  size="small" 
+                                  icon={<EyeOutlined />}
+                                  onClick={() => {
+                                    setPreviewImage(doc.url);
+                                    setPreviewVisible(true);
+                                  }}
+                                >
+                                  View / Inspect
+                                </Button>
                                 <Button block size="small" icon={<CloudUploadOutlined />}>Update Document</Button>
-                                <Button block size="small" icon={<DownloadOutlined />}>Download PDF</Button>
+                                <Button 
+                                  block 
+                                  size="small" 
+                                  icon={<DownloadOutlined />}
+                                  onClick={() => handleDownload(doc.name, doc.url)}
+                                >
+                                  Download PDF
+                                </Button>
                               </Space>
                             </Col>
                           </Row>
@@ -904,7 +1119,12 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
             vModel: driverData.vehicle.model,
             vYear: driverData.vehicle.year,
             plate: driverData.vehicle.plate,
-            vColor: driverData.vehicle.color
+            vColor: driverData.vehicle.color,
+            bankName: driverData.bankInfo.bankName,
+            accountName: driverData.bankInfo.accountName,
+            accountNumber: driverData.bankInfo.accountNumber,
+            accountType: driverData.bankInfo.accountType,
+            bankCode: driverData.bankInfo.bankCode
           }}
         >
           <Row gutter={16}>
@@ -945,6 +1165,40 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
             <Col span={12}>
               <Form.Item label="Email Address" name="email" rules={[{ required: true, type: 'email' }]}>
                 <Input prefix={<MailOutlined />} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Divider dashed>Bank Account Details (Payouts)</Divider>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Bank Name" name="bankName">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Account Name" name="accountName">
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item label="Account Number" name="accountNumber">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Account Type" name="accountType">
+                <Select>
+                  <Option value="Current">Current</Option>
+                  <Option value="Savings">Savings</Option>
+                  <Option value="Business">Business</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Bank Code" name="bankCode">
+                <Input />
               </Form.Item>
             </Col>
           </Row>

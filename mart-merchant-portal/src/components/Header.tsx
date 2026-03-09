@@ -40,7 +40,7 @@ export function Header({ title, subtitle, merchant, currentPortal, onSwitchPorta
                                 label: (
                                     <div className="flex items-center gap-2">
                                         <ShoppingBag size={14} className="text-emerald-500" />
-                                        <Text strong size="small">Dash Mart</Text>
+                                        <Text strong>Dash Mart</Text>
                                     </div>
                                 ) 
                             },
@@ -49,7 +49,7 @@ export function Header({ title, subtitle, merchant, currentPortal, onSwitchPorta
                                 label: (
                                     <div className="flex items-center gap-2">
                                         <Truck size={14} className="text-blue-500" />
-                                        <Text strong size="small">Dash Direct</Text>
+                                        <Text strong>Dash Direct</Text>
                                     </div>
                                 ) 
                             }

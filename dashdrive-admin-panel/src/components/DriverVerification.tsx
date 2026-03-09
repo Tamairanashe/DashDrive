@@ -23,7 +23,9 @@ import {
   Alert,
   Tooltip,
   List,
-  Checkbox
+  Checkbox,
+  Radio,
+  notification
 } from 'antd';
 import { 
   CheckCircleOutlined, 
@@ -42,7 +44,9 @@ import {
   ExclamationCircleOutlined,
   DownloadOutlined,
   ZoomInOutlined,
-  SafetyOutlined
+  SafetyOutlined,
+  BankOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
@@ -59,14 +63,24 @@ interface Application {
   vehicleType: string;
   brand: string;
   model: string;
-  plate: string;
+  plate?: string;
   color: string;
   year: string;
-  status: 'Pending' | 'Under Review' | 'Approved' | 'Rejected' | 'Resubmission Requested' | 'Expired';
+  status: 'Pending' | 'Under Review' | 'Approved' | 'Rejected' | 'Resubmission Requested' | 'Expired' | 'Reviewing';
   docs: {
-    license: { url: string; expiry: string; status: string };
-    idCard: { url: string; expiry: string; status: string };
-    registration: { url: string; expiry: string; status: string };
+    [key: string]: {
+      url: string;
+      expiry: string;
+      status: string;
+      rejectionReason?: string;
+    }
+  };
+  bankInfo: {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    accountType: string;
+    bankCode: string;
   };
   fraudFlags?: string[];
 }
@@ -77,57 +91,150 @@ export const DriverVerification: React.FC = () => {
   const [isSuccessVisible, setIsSuccessVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [isResubmitVisible, setIsResubmitVisible] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<any>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [customComment, setCustomComment] = useState('');
 
-  const applications: Application[] = [
+  const [apps, setApps] = useState<Application[]>([
     {
-      id: 'DRV-1023',
+      id: 'DRV-1029',
       name: 'John Makoni',
-      avatar: 'https://i.pravatar.cc/150?u=john',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
       phone: '+263 771 222 333',
       email: 'john.m@dashdrive.com',
       city: 'Harare',
       appliedDate: '2026-03-09 09:22',
+      status: 'Pending',
       vehicleType: 'Economy Car',
       brand: 'Honda',
       model: 'Fit',
       plate: 'AB-123',
       color: 'Midnight Blue',
       year: '2022',
-      status: 'Pending',
       docs: {
         license: { url: 'https://picsum.photos/seed/license1/800/600', expiry: '2028-10-15', status: 'Verified' },
         idCard: { url: 'https://picsum.photos/seed/id1/800/600', expiry: '2030-01-01', status: 'Verified' },
-        registration: { url: 'https://picsum.photos/seed/reg1/800/600', expiry: '2026-05-12', status: 'Pending' }
+        registration: { url: 'https://picsum.photos/seed/reg1/800/600', expiry: '2026-05-12', status: 'Pending' },
+        regBook: { url: 'https://picsum.photos/seed/book1/800/600', expiry: 'N/A', status: 'Verified' },
+        residency: { url: 'https://picsum.photos/seed/res1/800/600', expiry: '2025-06-01', status: 'Verified' },
+      },
+      bankInfo: {
+        bankName: 'Steward Bank',
+        accountName: 'John Makoni',
+        accountNumber: '1002233445',
+        accountType: 'Current',
+        bankCode: 'SB-044'
       },
       fraudFlags: ['Multiple vehicles linked']
     },
     {
-      id: 'DRV-1024',
+      id: 'DRV-1030',
       name: 'Sarah Mulenga',
-      avatar: 'https://i.pravatar.cc/150?u=sarah',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
       phone: '+260 962 888 111',
-      email: 'sarah.m@dashdrive.com',
+      email: 's.mulenga@dashdrive.zm',
       city: 'Lusaka',
-      appliedDate: '2026-03-09 10:15',
-      vehicleType: 'Executive Sedan',
-      brand: 'Toyota',
-      model: 'Camry',
+      appliedDate: '2026-03-09 10:45',
+      status: 'Reviewing',
+      vehicleType: 'Executive',
+      brand: 'Mercedes',
+      model: 'C-Class',
       plate: 'LU-4455',
       color: 'Silver',
       year: '2021',
-      status: 'Under Review',
       docs: {
         license: { url: 'https://picsum.photos/seed/license2/800/600', expiry: '2024-04-20', status: 'Expiring Soon' },
         idCard: { url: 'https://picsum.photos/seed/id2/800/600', expiry: '2029-12-31', status: 'Verified' },
-        registration: { url: 'https://picsum.photos/seed/reg2/800/600', expiry: '2025-11-30', status: 'Verified' }
+        registration: { url: 'https://picsum.photos/seed/reg2/800/600', expiry: '2025-11-30', status: 'Verified' },
+        regBook: { url: 'https://picsum.photos/seed/book2/800/600', expiry: 'N/A', status: 'Verified' },
+        residency: { url: 'https://picsum.photos/seed/res2/800/600', expiry: '2025-12-01', status: 'Verified' },
+      },
+      bankInfo: {
+        bankName: 'EcoCash Save',
+        accountName: 'Sarah Mulenga',
+        accountNumber: '260962888111',
+        accountType: 'Mobile Money',
+        bankCode: 'EC-001'
       }
     }
-  ];
+  ]);
+
+  const handleApprove = () => {
+    notification.success({ message: 'Application Approved', description: 'Driver has been notified of their successful verification.' });
+    setIsModalVisible(false); // Changed from setIsReviewVisible to setIsModalVisible
+  };
+
+  const handleDownload = (docName: string, url: string) => {
+    notification.info({ 
+      message: 'Processing Download', 
+      description: `Downloading ${docName}. The file will be available shortly.` 
+    });
+    // Simulation: window.open(url, '_blank');
+  };
+
+  const reasonSuggestions: Record<string, string> = {
+    "Image is blurry or unreadable": "Please ensure the camera is focused and all four corners of the document are visible. Avoid using a flash if it causes glare.",
+    "Identification document has expired": "Please upload a current, valid version of this document. We cannot accept expired credentials.",
+    "Details do not match profile information": "The name or ID number on the document does not match your DashDrive profile. Please ensure you are uploading your own documents.",
+    "Incorrect document type uploaded": "You appear to have uploaded a different document. Please upload the specific file requested in this category.",
+    "Missing critical information (e.g. signature)": "Important sections of the document are cut off or missing. Please ensure the entire page is visible including signatures and stamps."
+  };
+
+  const handleReasonChange = (reason: string) => {
+    setRejectionReason(reason);
+    if (reasonSuggestions[reason]) {
+      setCustomComment(reasonSuggestions[reason]);
+    }
+  };
+
+  const handleInvalidate = () => {
+    if (!rejectionReason) {
+      message.error('Please select a rejection reason.');
+      return;
+    }
+    notification.warning({ 
+      message: 'Resubmission Requested', 
+      description: `Request for "${selectedDoc.title}" sent. Reason: ${rejectionReason}${customComment ? ` - Note: ${customComment}` : ''}` 
+    });
+
+    // Update state to reflect rejection
+    if (selectedApp) {
+      const updatedApps = apps.map(app => {
+        if (app.id === selectedApp.id) {
+          const updatedDocs = { ...app.docs };
+          // Find the key in docs that matches selectedDoc.info.url (as a simple mock match)
+          Object.keys(updatedDocs).forEach(key => {
+            const doc = updatedDocs[key];
+            if (doc.url === selectedDoc.info.url) {
+              updatedDocs[key] = {
+                ...doc,
+                status: 'Rejected',
+                rejectionReason: `${rejectionReason}${customComment ? ` (${customComment})` : ''}`
+              };
+            }
+          });
+          return { ...app, docs: updatedDocs, status: 'Resubmission Requested' as const };
+        }
+        return app;
+      }) as Application[];
+      setApps(updatedApps);
+      // Sync selected app
+      const syncApp = updatedApps.find(a => a.id === selectedApp.id);
+      if (syncApp) setSelectedApp(syncApp);
+    }
+
+    setIsResubmitVisible(false);
+    setRejectionReason('');
+    setCustomComment('');
+  };
 
   const handleAction = (status: string) => {
     if (status === 'Approved') {
       setIsSuccessVisible(true);
-      setIsModalVisible(false);
+      handleApprove();
     } else {
       message.info(`Application ${status.toLowerCase()}`);
       setIsModalVisible(false);
@@ -140,6 +247,7 @@ export const DriverVerification: React.FC = () => {
       case 'Rejected': return <Tag color="error" icon={<CloseCircleOutlined />}>Rejected</Tag>;
       case 'Pending': return <Tag color="warning" icon={<ClockCircleOutlined />}>Pending</Tag>;
       case 'Under Review': return <Tag color="processing" icon={<ReloadOutlined />}>Under Review</Tag>;
+      case 'Reviewing': return <Tag color="processing" icon={<ReloadOutlined />}>Reviewing</Tag>; // Added 'Reviewing'
       case 'Resubmission Requested': return <Tag color="orange" icon={<ExclamationCircleOutlined />}>Resubmit</Tag>;
       case 'Expired': return <Tag color="default" icon={<WarningOutlined />}>Expired</Tag>;
       default: return <Tag>{status}</Tag>;
@@ -187,8 +295,11 @@ export const DriverVerification: React.FC = () => {
       render: () => (
         <Space size={4}>
           <Tooltip title="License"><Badge status="success" /></Tooltip>
-          <Tooltip title="ID Card"><Badge status="success" /></Tooltip>
-          <Tooltip title="Registration"><Badge status="warning" /></Tooltip>
+          <Tooltip title="Passport/ID"><Badge status="success" /></Tooltip>
+          <Tooltip title="Residence"><Badge status="success" /></Tooltip>
+          <Tooltip title="Vehicle Pic"><Badge status="success" /></Tooltip>
+          <Tooltip title="Reg Book"><Badge status="warning" /></Tooltip>
+          <Tooltip title="Bank Info"><Badge status="success" /></Tooltip>
         </Space>
       )
     },
@@ -239,22 +350,42 @@ export const DriverVerification: React.FC = () => {
       <Row gutter={[16, 16]}>
         <Col span={6}>
           <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: '20px' }}>
-            <Statistic title="Pending Verification" value={32} valueStyle={{ color: '#faad14' }} prefix={<ClockCircleOutlined />} />
+            <Statistic 
+              title="Pending Verification" 
+              value={apps.filter(a => a.status === 'Pending' || a.status === 'Reviewing' || a.status === 'Under Review' || a.status === 'Resubmission Requested').length} 
+              valueStyle={{ color: '#faad14' }} 
+              prefix={<ClockCircleOutlined />} 
+            />
           </Card>
         </Col>
         <Col span={6}>
           <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: '20px' }}>
-            <Statistic title="Approved Drivers" value={1250} valueStyle={{ color: '#52c41a' }} prefix={<CheckCircleOutlined />} />
+            <Statistic 
+              title="Approved Drivers" 
+              value={1250 + apps.filter(a => a.status === 'Approved').length} 
+              valueStyle={{ color: '#52c41a' }} 
+              prefix={<CheckCircleOutlined />} 
+            />
           </Card>
         </Col>
         <Col span={6}>
           <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: '20px' }}>
-            <Statistic title="Rejected Drivers" value={12} valueStyle={{ color: '#ff4d4f' }} prefix={<CloseCircleOutlined />} />
+            <Statistic 
+              title="Rejected Drivers" 
+              value={12 + apps.filter(a => a.status === 'Rejected').length} 
+              valueStyle={{ color: '#ff4d4f' }} 
+              prefix={<CloseCircleOutlined />} 
+            />
           </Card>
         </Col>
         <Col span={6}>
           <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: '20px' }}>
-            <Statistic title="Expiring Soon" value={7} valueStyle={{ color: '#fa8c16' }} prefix={<WarningOutlined />} />
+            <Statistic 
+              title="Security Alerts" 
+              value={apps.some(a => a.fraudFlags && a.fraudFlags.length > 0) ? 1 : 0} 
+              valueStyle={{ color: '#cf1322' }} 
+              prefix={<WarningOutlined />} 
+            />
           </Card>
         </Col>
       </Row>
@@ -286,7 +417,11 @@ export const DriverVerification: React.FC = () => {
 
         <Table 
           columns={columns} 
-          dataSource={applications} 
+          dataSource={apps.filter(app => {
+            const matchesSearch = app.name.toLowerCase().includes(searchText.toLowerCase()) || app.id.includes(searchText);
+            const matchesStatus = statusFilter === 'All' || app.status === statusFilter;
+            return matchesSearch && matchesStatus;
+          })}
           rowKey="id"
           pagination={{ pageSize: 10 }}
           locale={{ emptyText: <Empty description="No applications found" /> }}
@@ -326,9 +461,17 @@ export const DriverVerification: React.FC = () => {
                 <Descriptions column={1} size="small">
                   <Descriptions.Item label="Type">{selectedApp.vehicleType}</Descriptions.Item>
                   <Descriptions.Item label="Model">{selectedApp.brand} {selectedApp.model}</Descriptions.Item>
-                  <Descriptions.Item label="Plate">{selectedApp.plate}</Descriptions.Item>
                   <Descriptions.Item label="Color">{selectedApp.color}</Descriptions.Item>
                   <Descriptions.Item label="Year">{selectedApp.year}</Descriptions.Item>
+                </Descriptions>
+                <Divider style={{ margin: '12px 0' }} />
+                <Title level={5}><BankOutlined /> Bank Details</Title>
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="Bank">{selectedApp.bankInfo.bankName}</Descriptions.Item>
+                  <Descriptions.Item label="Account">{selectedApp.bankInfo.accountNumber}</Descriptions.Item>
+                  <Descriptions.Item label="Type">{selectedApp.bankInfo.accountType}</Descriptions.Item>
+                  <Descriptions.Item label="Code">{selectedApp.bankInfo.bankCode}</Descriptions.Item>
+                  <Descriptions.Item label="Holder">{selectedApp.bankInfo.accountName}</Descriptions.Item>
                 </Descriptions>
               </Card>
 
@@ -350,9 +493,10 @@ export const DriverVerification: React.FC = () => {
               <Card size="small" title="Validation Checklist">
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Checkbox>License number matches document</Checkbox>
-                  <Checkbox>Full name matches National ID</Checkbox>
-                  <Checkbox>Vehicle ownership verified</Checkbox>
-                  <Checkbox>Expiry dates are valid</Checkbox>
+                  <Checkbox>Identification (ID/Passport) is valid</Checkbox>
+                  <Checkbox>Proof of Residency verified</Checkbox>
+                  <Checkbox>Vehicle Registration Book verified</Checkbox>
+                  <Checkbox>Bank Account details confirmed</Checkbox>
                   <Checkbox>Photo consistency check (Face-Match)</Checkbox>
                 </Space>
               </Card>
@@ -367,31 +511,81 @@ export const DriverVerification: React.FC = () => {
                 <List
                   itemLayout="horizontal"
                   dataSource={[
-                    { title: 'Driver License', info: selectedApp.docs.license },
-                    { title: 'National ID', info: selectedApp.docs.idCard },
-                    { title: 'Vehicle Registration', info: selectedApp.docs.registration }
+                    { title: 'Valid Driver\'s License', info: selectedApp.docs.license },
+                    { title: 'Identification (ID/Passport)', info: selectedApp.docs.idCard },
+                    { title: 'Profile Photo Holding ID', info: selectedApp.docs.idCard }, // Reusing URL for mock
+                    { title: 'Proof of Residency', info: selectedApp.docs.residency },
+                    { title: 'Vehicle Picture', info: selectedApp.docs.registration },
+                    { title: 'Vehicle Registration Book', info: selectedApp.docs.regBook }
                   ]}
                   renderItem={(item) => (
                     <List.Item
                       actions={[
-                        <Button key="zoom" size="small" icon={<ZoomInOutlined />} />,
-                        <Button key="dl" size="small" icon={<DownloadOutlined />} />,
-                        <Button key="inv" size="small" danger icon={<CloseCircleOutlined />}>Invalid</Button>
+                        <Button 
+                          key="zoom" 
+                          size="small" 
+                          icon={<ZoomInOutlined />} 
+                          onClick={() => {
+                            setPreviewImage(item.info.url);
+                            setPreviewVisible(true);
+                          }}
+                        />,
+                        <Button 
+                          key="dl" 
+                          size="small" 
+                          icon={<DownloadOutlined />} 
+                          onClick={() => handleDownload(item.title, item.info.url)}
+                        />,
+                        <Button 
+                          key="inv" 
+                          size="small" 
+                          danger 
+                          icon={<CloseCircleOutlined />}
+                          onClick={() => {
+                            setSelectedDoc(item);
+                            setIsResubmitVisible(true);
+                          }}
+                        >
+                          Resubmit
+                        </Button>
                       ]}
                     >
                       <List.Item.Meta
-                        avatar={<Avatar shape="square" size={64} src={item.info.url} />}
+                        avatar={
+                          <Image
+                            src={item.info.url}
+                            width={64}
+                            height={64}
+                            style={{ objectFit: 'cover', borderRadius: 4 }}
+                            preview={{
+                              visible: previewVisible && previewImage === item.info.url,
+                              onVisibleChange: (visible) => setPreviewVisible(visible),
+                              mask: <EyeOutlined />
+                            }}
+                          />
+                        }
                         title={
-                          <Space>
-                            <Text strong>{item.title}</Text>
-                            <Badge status={item.info.status === 'Verified' ? 'success' : 'warning'} />
-                          </Space>
+                          <div style={{ width: '100%' }}>
+                            <Space wrap align="center">
+                              <Text strong style={{ fontSize: 14 }}>{item.title}</Text>
+                              <Badge status={item.info.status === 'Verified' ? 'success' : item.info.status === 'Rejected' ? 'error' : 'warning'} />
+                            </Space>
+                            {item.info.status === 'Rejected' && (
+                              <div style={{ marginTop: 4 }}>
+                                <Tag color="error" style={{ fontSize: 10, margin: 0 }}>
+                                  <ExclamationCircleOutlined /> REJECTED: {item.info.rejectionReason}
+                                </Tag>
+                              </div>
+                            )}
+                          </div>
                         }
                         description={
-                          <Space direction="vertical" size={2}>
-                            <Text type="secondary" style={{ fontSize: 11 }}>Uploaded: 2 hours ago</Text>
-                            <Text type={item.info.status === 'Expiring Soon' ? 'danger' : 'secondary'} style={{ fontSize: 11 }}>
-                              Expiry: {item.info.expiry}
+                          <Space direction="vertical" size={2} style={{ marginTop: 4 }}>
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                              <ClockCircleOutlined /> Uploaded: 2 hours ago
+                            </Text>
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                              <IdcardOutlined /> Expiry: {item.info.expiry}
                             </Text>
                           </Space>
                         }
@@ -413,6 +607,58 @@ export const DriverVerification: React.FC = () => {
         )}
       </Modal>
 
+      {/* Resubmission Request Modal */}
+      <Modal
+        title={<Space><CloseCircleOutlined style={{ color: '#ef4444' }} /><span>Invalidate Document & Request Resubmission</span></Space>}
+        open={isResubmitVisible}
+        onCancel={() => setIsResubmitVisible(false)}
+        onOk={handleInvalidate}
+        okText="Confirm Invalidation"
+        okButtonProps={{ danger: true, disabled: !rejectionReason }}
+        cancelText="Keep Document"
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary">Document to invalidate:</Text><br />
+          <Text strong style={{ fontSize: 16 }}>{selectedDoc?.title}</Text>
+        </div>
+        
+        <Text strong>Select Rejection Reason:</Text>
+        <div style={{ marginTop: 12 }}>
+          <Radio.Group value={rejectionReason} onChange={(e) => handleReasonChange(e.target.value)} style={{ width: '100%' }}>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Radio value="Image is blurry or unreadable">Image is blurry or unreadable</Radio>
+              <Radio value="Identification document has expired">Identification document has expired</Radio>
+              <Radio value="Details do not match profile information">Details do not match profile information</Radio>
+              <Radio value="Incorrect document type uploaded">Incorrect document type uploaded</Radio>
+              <Radio value="Missing critical information (e.g. signature)">Missing critical information</Radio>
+            </Space>
+          </Radio.Group>
+          
+          <div style={{ marginTop: 20 }}>
+            <Row justify="space-between" style={{ width: '100%', marginBottom: 8 }}>
+              <Col><Text strong>Instructions for Driver:</Text></Col>
+              <Col>{rejectionReason && <Tag color="blue" style={{ fontSize: 10 }}>Auto-Suggested for {rejectionReason.split(' ')[0]}...</Tag>}</Col>
+            </Row>
+            <Input.TextArea 
+              rows={4} 
+              placeholder="Provide specific instructions to help the driver get it right..." 
+              style={{ marginTop: 8, borderRadius: 12, border: '1px solid #d9d9d9' }}
+              value={customComment}
+              onChange={(e) => setCustomComment(e.target.value)}
+            />
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <Alert 
+              type="info" 
+              showIcon 
+              message={<Text style={{ fontSize: 11 }}>An automated notification will be sent to the driver requesting a re-upload of this specific document with your reasons included.</Text>}
+            />
+          </div>
+        </div>
+      </Modal>
+
+      {/* Success Modal */}
       <Modal
         open={isSuccessVisible}
         onCancel={() => setIsSuccessVisible(false)}

@@ -5,7 +5,7 @@ import {
 import {
     DollarSign, ShoppingCart, Users, Activity,
     ChevronDown, Calendar, Filter, ArrowUpRight, ArrowDownRight,
-    Truck, Clock, Gauge, MapPin
+    Clock, Gauge, MapPin
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { api } from '../api';

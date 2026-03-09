@@ -38,7 +38,7 @@ interface FinancialsProps {
     merchant: any;
 }
 
-export function Financials({ token, merchant }: FinancialsProps) {
+export function Financials({}: FinancialsProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [isRequesting, setIsRequesting] = useState(false);
     const [balance, setBalance] = useState<number>(0);

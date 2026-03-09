@@ -14,6 +14,7 @@ import { Transactions } from '../components/Transactions';
 import { UserWallet } from '../components/UserWallet';
 import { RefundRequests } from '../components/RefundRequests';
 import { PaymentGateways } from '../components/PaymentGateways';
+import { FintechManagement } from '../components/FintechManagement';
 
 const { Title, Text } = Typography;
 
@@ -63,38 +64,8 @@ export const FintechPage: React.FC = () => {
           </Col>
       </Row>
 
-      <Card bordered={false} styles={{ body: { padding: '0 24px 24px' } }} className="shadow-sm">
-        <Tabs 
-          defaultActiveKey="dashboard" 
-          size="large"
-          items={[
-            {
-              key: 'dashboard',
-              label: <span><BarChartOutlined /> Overview</span>,
-              children: <div style={{ paddingTop: 24 }}><FintechDashboard /></div>,
-            },
-            {
-              key: 'transactions',
-              label: <span><CreditCardOutlined /> Transactions</span>,
-              children: <div style={{ paddingTop: 24 }}><Transactions /></div>,
-            },
-            {
-              key: 'wallets',
-              label: <span><WalletOutlined /> User Wallets</span>,
-              children: <div style={{ paddingTop: 24 }}><UserWallet /></div>,
-            },
-            {
-              key: 'refunds',
-              label: <span><HistoryOutlined /> Refund Claims</span>,
-              children: <div style={{ paddingTop: 24 }}><RefundRequests /></div>,
-            },
-            {
-              key: 'gateways',
-              label: <span><SafetyCertificateOutlined /> Gateway Config</span>,
-              children: <div style={{ paddingTop: 24 }}><PaymentGateways /></div>,
-            }
-          ]}
-        />
+      <Card bordered={false} styles={{ body: { padding: '24px' } }} className="shadow-sm">
+        <FintechManagement />
       </Card>
     </div>
   );

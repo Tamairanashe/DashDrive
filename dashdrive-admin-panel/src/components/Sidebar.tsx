@@ -59,6 +59,7 @@ import {
  Dna,
  Layers,
  FileSearch,
+ Trophy,
  Award,
  Settings2,
  Lock,
@@ -152,6 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
  items: [
  { icon: UserCheck, label: 'Driver List' },
  { icon: ShieldCheck, label: 'Driver Verification' },
+ { icon: Trophy, label: 'Driver Leaderboard' },
  {
  icon: Award,
  label: 'Driver Rewards',

@@ -22,6 +22,7 @@ import { FinanceAnalyticsPage } from './pages/FinanceAnalyticsPage';
 import { VehicleManagementPage } from './pages/VehicleManagementPage';
 import { ServiceConfigPage } from './pages/ServiceConfigPage';
 import { UserManagementPage } from './pages/UserManagementPage';
+import { CustomerLevelSetupPage } from './pages/CustomerLevelSetupPage';
 import { SystemLogsPage } from './pages/SystemLogsPage';
 import { DriverRewardsPage } from './pages/DriverRewardsPage';
 import { EnterpriseSettingsPage } from './pages/EnterpriseSettingsPage';
@@ -35,7 +36,9 @@ import { ShoppingPage } from './pages/ShoppingPage';
 import { RideHailingPage } from './pages/RideHailingPage';
 import { ParcelDeliveryPage } from './pages/ParcelDeliveryPage';
 import { FintechPage } from './pages/FintechPage';
-
+import { DriverLeaderboardPage } from './pages/DriverLeaderboardPage';
+import { DriverLevelSetupPage } from './pages/DriverLevelSetupPage';
+import { GrowthEnginePage } from './pages/GrowthEnginePage';
 
 export default function App() {
   const { isAuthenticated } = useAuth();
@@ -68,10 +71,12 @@ export default function App() {
           <Route path="drivers/list" element={<DriverListPage />} />
           <Route path="drivers/verification" element={<DriverVerificationPage />} />
           <Route path="drivers/rewards" element={<DriverRewardsPage />} />
+          <Route path="drivers/leaderboard" element={<DriverLeaderboardPage />} />
+          <Route path="drivers/tier-setup" element={<DriverLevelSetupPage />} />
 
           {/* User Management */}
           <Route path="users/customers" element={<CustomerListPage />} />
-          <Route path="users/tier-setup" element={<UserManagementPage />} />
+          <Route path="users/tier-setup" element={<CustomerLevelSetupPage />} />
           <Route path="users/employees" element={<UserManagementPage />} />
           <Route path="users/wallet" element={<UserManagementPage />} />
           
@@ -94,6 +99,7 @@ export default function App() {
           <Route path="marketing/discounts" element={<MarketingHubPage />} />
           <Route path="marketing/notifications" element={<MarketingHubPage />} />
           <Route path="marketing/newsletter" element={<MarketingHubPage />} />
+          <Route path="marketing/growth-engine" element={<GrowthEnginePage />} />
 
           {/* Finance */}
           <Route path="finance/transactions" element={<FinanceAnalyticsPage />} />

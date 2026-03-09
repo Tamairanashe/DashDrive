@@ -43,6 +43,8 @@ import {
   LockOutlined,
   UnorderedListOutlined,
   PlusCircleOutlined,
+  TrophyOutlined,
+  CrownOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { themeConfig } from '../theme/ThemeConfig';
@@ -94,6 +96,8 @@ export const AdminLayout: React.FC = () => {
         { key: '/drivers/list', icon: <CarFilled />, label: 'Driver List' },
         { key: '/drivers/verification', icon: <SafetyCertificateOutlined />, label: 'Driver Verification' },
         { key: '/drivers/rewards', icon: <StarOutlined />, label: 'Driver Rewards' },
+        { key: '/drivers/leaderboard', icon: <TrophyOutlined />, label: 'Driver Leaderboard' },
+        { key: '/drivers/tier-setup', icon: <CrownOutlined />, label: 'Driver Level Setup' },
       ],
     },
     {
@@ -140,6 +144,7 @@ export const AdminLayout: React.FC = () => {
         { key: '/marketing/discounts', icon: <DollarOutlined />, label: 'Discount Setup' },
         { key: '/marketing/notifications', icon: <NotificationOutlined />, label: 'Send Notifications' },
         { key: '/marketing/newsletter', icon: <MailOutlined />, label: 'Newsletter' },
+        { key: '/marketing/growth-engine', icon: <RiseOutlined />, label: 'Growth Engine' },
       ],
     },
     {

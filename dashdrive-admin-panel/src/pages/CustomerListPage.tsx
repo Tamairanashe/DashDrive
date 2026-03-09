@@ -13,13 +13,14 @@ import {
   Statistic,
   Avatar,
   Tooltip,
-  Progress
+  Badge,
+  Modal,
+  message
 } from 'antd';
 import { 
   SearchOutlined, 
   PlusOutlined, 
   EyeOutlined, 
-  EditOutlined, 
   MoreOutlined,
   UserOutlined,
   UserAddOutlined,
@@ -27,10 +28,10 @@ import {
   DownloadOutlined,
   ReloadOutlined,
   StarOutlined,
-  CarOutlined,
-  CoffeeOutlined,
-  ShopOutlined,
-  PushpinOutlined
+  StopOutlined,
+  WarningOutlined,
+  WalletOutlined,
+  MessageOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -39,16 +40,36 @@ export const CustomerListPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [searchText, setSearchText] = useState('');
 
+  // Modals state
+  const [isSuspendModalVisible, setIsSuspendModalVisible] = useState(false);
+  const [isComplaintModalVisible, setIsComplaintModalVisible] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+
   const stats = [
     { title: 'Total Customers', value: '124,502', icon: <UserOutlined />, color: '#10b981' },
     { title: 'Active (30d)', value: '42,120', icon: <UserOutlined />, color: '#3b82f6' },
     { title: 'New (This Month)', value: '1,240', icon: <UserAddOutlined />, color: '#6366f1' },
-    { title: 'Inactive', value: '8,405', icon: <UserDeleteOutlined />, color: '#ef4444' },
+    { title: 'Suspended', value: '845', icon: <StopOutlined />, color: '#ef4444' },
   ];
+
+  const handleSuspend = (customer: any) => {
+    setSelectedCustomer(customer);
+    setIsSuspendModalVisible(true);
+  };
+
+  const handleReviewComplaints = (customer: any) => {
+    setSelectedCustomer(customer);
+    setIsComplaintModalVisible(true);
+  };
+
+  const confirmSuspension = () => {
+    message.success(`Account for ${selectedCustomer?.name} has been suspended.`);
+    setIsSuspendModalVisible(false);
+  };
 
   const columns = [
     {
-      title: 'Customer Name',
+      title: 'Customer',
       key: 'name',
       render: (_: any, record: any) => (
         <Space size="middle">
@@ -66,87 +87,102 @@ export const CustomerListPage: React.FC = () => {
       ),
     },
     {
-      title: 'Profile Completion',
-      key: 'profile',
-      render: (_: any, record: any) => (
-        <div style={{ width: 100 }}>
-          <Progress 
-            percent={record.profileStatus} 
-            size="small" 
-            strokeColor={record.profileStatus >= 90 ? '#10b981' : record.profileStatus >= 50 ? '#10b981' : '#f59e0b'} 
-          />
-        </div>
-      ),
+      title: 'Phone',
+      dataIndex: 'phone',
+      key: 'phone',
+      render: (phone: string) => <Text style={{ fontWeight: 600 }}>{phone}</Text>,
     },
     {
-      title: 'Contact Info',
-      key: 'contact',
-      render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <Text style={{ fontSize: 12, fontWeight: 600 }}>{record.phone}</Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>{record.email}</Text>
+      title: 'Trips',
+      dataIndex: 'totalTrips',
+      key: 'trips',
+      sorter: (a: any, b: any) => a.totalTrips - b.totalTrips,
+      render: (trips: number) => <Text strong>{trips}</Text>,
+    },
+    {
+      title: 'Wallet',
+      dataIndex: 'walletBalance',
+      key: 'wallet',
+      sorter: (a: any, b: any) => a.walletBalance - b.walletBalance,
+      render: (val: number) => (
+        <Space>
+           <WalletOutlined style={{ color: '#10b981' }} />
+           <Text strong style={{ color: '#10b981' }}>${val.toFixed(2)}</Text>
         </Space>
       ),
     },
     {
-      title: 'Level & Loyalty',
-      key: 'level',
-      render: (_: any, record: any) => (
-        <Tag color={record.level === 'DashPlus' ? 'rose' : record.level === 'Loyal' ? 'blue' : 'default'} icon={<StarOutlined />}>
-          {record.level}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Activity',
-      key: 'activity',
-      render: (_: any, record: any) => (
-        <Space direction="vertical" size={4}>
-          <Text strong style={{ fontSize: 14 }}>{record.totalTrips} Orders</Text>
-          <Space size={4}>
-            {record.serviceUsage.map((s: string) => {
-              const icons: any = { 
-                Ride: <CarOutlined />, 
-                Food: <CoffeeOutlined />, 
-                Mart: <ShopOutlined />, 
-                Parcel: <PushpinOutlined /> 
-              };
-              return <Tooltip title={s} key={s}>{React.cloneElement(icons[s], { style: { color: '#94a3b8' } })}</Tooltip>;
-            })}
+      title: 'Status',
+      key: 'status',
+      render: (_: any, record: any) => {
+        let color = 'default';
+        if (record.status === 'Active') color = 'success';
+        if (record.status === 'Suspended') color = 'error';
+        if (record.status === 'Inactive') color = 'warning';
+
+        return (
+          <Space direction="vertical" size={2}>
+            <Tag color={color}>{record.status}</Tag>
+            <Tag color={record.level === 'VIP' ? 'purple' : record.level === 'Gold' ? 'gold' : record.level === 'Silver' ? 'default' : 'orange'} icon={<StarOutlined />}>
+              {record.level}
+            </Tag>
           </Space>
-        </Space>
-      ),
+        );
+      },
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: () => (
-        <Space>
-          <Tooltip title="View History">
-            <Button type="text" icon={<EyeOutlined />} />
+      align: 'right' as const,
+      render: (_: any, record: any) => (
+        <Space size="small">
+          <Tooltip title="View Customer">
+            <Button size="small" type="primary" ghost icon={<EyeOutlined />}>View</Button>
           </Tooltip>
-          <Button type="text" icon={<EditOutlined />} />
-          <Button type="text" icon={<MoreOutlined />} />
+          
+          <Tooltip title="Review Complaints">
+            <Badge count={record.complaints} color="#faad14" offset={[-4, 4]}>
+              <Button size="small" icon={<MessageOutlined />} onClick={() => handleReviewComplaints(record)} />
+            </Badge>
+          </Tooltip>
+
+          <Tooltip title="Suspend Account">
+            <Button size="small" danger icon={<StopOutlined />} onClick={() => handleSuspend(record)} />
+          </Tooltip>
         </Space>
       ),
     },
   ];
 
   const customers = [
-    { id: 'C-8001', name: 'Sarah Jenkins', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', profileStatus: 95, phone: '+1 555-1234', email: 'sarah@dashdrive.com', level: 'DashPlus', totalTrips: 154, status: 'Active', serviceUsage: ['Ride', 'Food', 'Mart', 'Parcel'] },
-    { id: 'C-8002', name: 'Michael Chen', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', profileStatus: 70, phone: '+1 555-5678', email: 'michael@dashdrive.com', level: 'Standard', totalTrips: 42, status: 'Active', serviceUsage: ['Ride', 'Food'] },
+    { 
+      id: 'C-8001', name: 'Sarah Jenkins', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', 
+      phone: '+1 555-1234', totalTrips: 154, walletBalance: 120.50, status: 'Active', level: 'VIP', complaints: 0 
+    },
+    { 
+      id: 'C-8002', name: 'Michael Chen', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 
+      phone: '+1 555-5678', totalTrips: 42, walletBalance: 15.00, status: 'Active', level: 'Silver', complaints: 2 
+    },
+    { 
+      id: 'C-8003', name: 'James Phiri', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', 
+      phone: '+263 772-111', totalTrips: 8, walletBalance: 0.00, status: 'Suspended', level: 'Bronze', complaints: 5 
+    },
+    { 
+      id: 'C-8004', name: 'Elena Zhou', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', 
+      phone: '+1 555-9999', totalTrips: 305, walletBalance: 450.25, status: 'Active', level: 'Gold', complaints: 0 
+    },
   ];
 
   return (
     <div style={{ padding: '0 0 24px 0' }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Col>
-          <Title level={4} style={{ margin: 0 }}>Customer Analytics</Title>
-          <Text type="secondary">Unified intelligence across all DashDrive ecosystem services.</Text>
+          <Title level={4} style={{ margin: 0 }}>Customer Management</Title>
+          <Text type="secondary">View customers, manage balances, and handle account suspensions.</Text>
         </Col>
         <Col>
           <Button type="primary" size="large" icon={<PlusOutlined />} style={{ borderRadius: 8 }}>
-            Register New Customer
+            Add Customer
           </Button>
         </Col>
       </Row>
@@ -177,9 +213,9 @@ export const CustomerListPage: React.FC = () => {
             onChange={setActiveTab}
             items={[
               { key: 'All', label: 'All Customers' },
-              { key: 'New', label: 'New Registered' },
-              { key: 'DashPlus', label: 'DashPlus Segment' },
-              { key: 'Inactive', label: 'Churn Risk' },
+              { key: 'Active', label: 'Active' },
+              { key: 'VIP', label: 'VIP / Gold' },
+              { key: 'Suspended', label: 'Suspended' },
             ]}
             style={{ marginBottom: -16 }}
           />
@@ -188,7 +224,7 @@ export const CustomerListPage: React.FC = () => {
             <Button icon={<DownloadOutlined />}>Export</Button>
             <Input
               prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
-              placeholder="Search by name, ID, phone..."
+              placeholder="Search by name, phone..."
               style={{ width: 280, borderRadius: 8 }}
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
@@ -202,6 +238,42 @@ export const CustomerListPage: React.FC = () => {
           pagination={{ pageSize: 15, position: ['bottomRight'] }}
         />
       </Card>
+
+      {/* Modals */}
+      <Modal
+        title={<span><StopOutlined style={{ color: '#ef4444' }} /> Suspend Customer Account</span>}
+        open={isSuspendModalVisible}
+        onCancel={() => setIsSuspendModalVisible(false)}
+        onOk={confirmSuspension}
+        okText="Suspend Account"
+        okButtonProps={{ danger: true }}
+      >
+        <p>Are you sure you want to suspend the account for <strong>{selectedCustomer?.name}</strong>?</p>
+        <p>They will not be able to request rides or use any DashDrive services until the suspension is lifted.</p>
+        <Input.TextArea placeholder="Reason for suspension (Optional)" rows={3} />
+      </Modal>
+
+      <Modal
+        title={<span><WarningOutlined style={{ color: '#faad14' }} /> Complaints Review</span>}
+        open={isComplaintModalVisible}
+        onCancel={() => setIsComplaintModalVisible(false)}
+        footer={[<Button key="close" onClick={() => setIsComplaintModalVisible(false)}>Close</Button>]}
+      >
+        <div style={{ padding: 16, background: '#fffbe6', borderRadius: 8, border: '1px solid #ffe58f' }}>
+            <Title level={5}>Customer: {selectedCustomer?.name}</Title>
+            <Text>Total Recorded Complaints: <strong>{selectedCustomer?.complaints}</strong></Text>
+        </div>
+        <div style={{ marginTop: 16 }}>
+             {selectedCustomer?.complaints > 0 ? (
+                 <ul style={{ paddingLeft: 20 }}>
+                     <li><Text>Reported rude behavior by Driver D-991 (2 days ago)</Text></li>
+                     {selectedCustomer?.complaints > 1 && <li><Text>Cancelled 3 rides consecutively (1 week ago)</Text></li>}
+                 </ul>
+             ) : (
+                 <Text type="secondary">No complaints recorded for this user. Excellent standing.</Text>
+             )}
+        </div>
+      </Modal>
     </div>
   );
 };
