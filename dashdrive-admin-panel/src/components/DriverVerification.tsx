@@ -1,576 +1,435 @@
 import React, { useState } from 'react';
-import {
- ShieldCheck,
- ShieldAlert,
- Clock,
- Search,
- Filter,
- Eye,
- CheckCircle2,
- XCircle,
- FileText,
- Download,
- MoreVertical,
- ChevronRight,
- User,
- Mail,
- Car,
- CreditCard,
- Image as ImageIcon,
- AlertCircle,
- ArrowRight,
- ExternalLink,
- Ban,
- Zap,
- Scale,
- Fingerprint,
- Info,
- MapPin,
- Truck,
- ShoppingBag,
- Utensils,
- Wallet,
- History,
- FileSearch,
- Lock,
- Unlock,
- Settings,
- UserCheck,
- Briefcase,
- BadgeCheck,
- Activity,
- Camera,
- ArrowLeft,
- RefreshCw,
- Star,
- Award,
- UserCircle,
- Smartphone as MobileIcon
-} from 'lucide-react';
-import { cn } from '../utils';
+import { 
+  Table, 
+  Card, 
+  Typography, 
+  Row, 
+  Col, 
+  Statistic, 
+  Button, 
+  Space, 
+  Tag, 
+  Badge, 
+  Avatar, 
+  Modal, 
+  Image, 
+  Descriptions,
+  message,
+  Empty,
+  Result,
+  Input,
+  Select,
+  Divider,
+  Alert,
+  Tooltip,
+  List,
+  Checkbox
+} from 'antd';
+import { 
+  CheckCircleOutlined, 
+  CloseCircleOutlined, 
+  FileSearchOutlined,
+  IdcardOutlined,
+  SolutionOutlined,
+  CarOutlined,
+  SafetyCertificateOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  InfoCircleOutlined,
+  WarningOutlined,
+  ClockCircleOutlined,
+  ExclamationCircleOutlined,
+  DownloadOutlined,
+  ZoomInOutlined,
+  SafetyOutlined
+} from '@ant-design/icons';
 
-type VerificationStatus = 'Pending Verification' | 'Approved Drivers' | 'Rejected Drivers' | 'Under Review';
+const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
 
-interface DriverProfile {
- id: string;
- name: string;
- avatar: string;
- phone: string;
- email: string;
- address: string;
- zone: string;
- source: string;
- serviceType: 'Ride' | 'Food' | 'Mart' | 'Parcel';
- vehicleType: 'Bike' | 'Car' | 'Van';
- kycStatus: 'Pending' | 'Verified' | 'Rejected' | 'Under Review';
- docStatus: 'Complete' | 'Missing';
- bgCheck: 'Passed' | 'Failed' | 'Pending';
- regDate: string;
- riskScore: number;
- confidence: number;
- plateNumber: string;
- vehicleModel: string;
- vehicleYear: string;
- fintechStatus: 'Active' | 'Blocked';
+interface Application {
+  id: string;
+  name: string;
+  avatar: string;
+  phone: string;
+  email: string;
+  city: string;
+  appliedDate: string;
+  vehicleType: string;
+  brand: string;
+  model: string;
+  plate: string;
+  color: string;
+  year: string;
+  status: 'Pending' | 'Under Review' | 'Approved' | 'Rejected' | 'Resubmission Requested' | 'Expired';
+  docs: {
+    license: { url: string; expiry: string; status: string };
+    idCard: { url: string; expiry: string; status: string };
+    registration: { url: string; expiry: string; status: string };
+  };
+  fraudFlags?: string[];
 }
 
 export const DriverVerification: React.FC = () => {
- const [mainTab, setMainTab] = useState<VerificationStatus>('Pending Verification');
- const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
- const [selectedId, setSelectedId] = useState<string | null>(null);
- const [activeAuditSection, setActiveAuditSection] = useState<'Overview' | 'Documents' | 'Vehicle' | 'Security' | 'Services' | 'Finance'>('Overview');
- const [activeEvidenceSource, setActiveEvidenceSource] = useState<'ID_FRONT' | 'ID_BACK' | 'SELFIE' | 'LICENSE' | 'VEHICLE_FRONT' | 'INSURANCE'>('ID_FRONT');
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isSuccessVisible, setIsSuccessVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
- const drivers: DriverProfile[] = [
- {
- id: 'DRV-001',
- name: 'John Doe',
- avatar: 'https://images.unsplash.com/photo-1540569014015-19a7ee504e3a?auto=format&fit=crop&q=80&w=150',
- phone: '+1 234 567 890',
- email: 'john.doe@example.com',
- address: 'Dhaka Central',
- zone: 'Dhaka Central',
- source: 'Mobile App',
- serviceType: 'Ride',
- vehicleType: 'Car',
- kycStatus: 'Pending',
- docStatus: 'Complete',
- bgCheck: 'Pending',
- regDate: '2026-01-12',
- riskScore: 62,
- confidence: 92,
- plateNumber: 'DHK-METRO-GA-12-3456',
- vehicleModel: 'Toyota Axio 2022',
- vehicleYear: '2022',
- fintechStatus: 'Active'
- },
- {
- id: 'DRV-002',
- name: 'Sarah Smith',
- avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
- phone: '+1 987 654 321',
- email: 'sarah.s@example.com',
- address: 'London North',
- zone: 'London North',
- source: 'Admin Portal',
- serviceType: 'Food',
- vehicleType: 'Bike',
- kycStatus: 'Under Review',
- docStatus: 'Complete',
- bgCheck: 'Passed',
- regDate: '2026-02-13',
- riskScore: 15,
- confidence: 98,
- plateNumber: 'BK-9901',
- vehicleModel: 'Honda CB350',
- vehicleYear: '2022',
- fintechStatus: 'Active'
- }
- ];
+  const applications: Application[] = [
+    {
+      id: 'DRV-1023',
+      name: 'John Makoni',
+      avatar: 'https://i.pravatar.cc/150?u=john',
+      phone: '+263 771 222 333',
+      email: 'john.m@dashdrive.com',
+      city: 'Harare',
+      appliedDate: '2026-03-09 09:22',
+      vehicleType: 'Economy Car',
+      brand: 'Honda',
+      model: 'Fit',
+      plate: 'AB-123',
+      color: 'Midnight Blue',
+      year: '2022',
+      status: 'Pending',
+      docs: {
+        license: { url: 'https://picsum.photos/seed/license1/800/600', expiry: '2028-10-15', status: 'Verified' },
+        idCard: { url: 'https://picsum.photos/seed/id1/800/600', expiry: '2030-01-01', status: 'Verified' },
+        registration: { url: 'https://picsum.photos/seed/reg1/800/600', expiry: '2026-05-12', status: 'Pending' }
+      },
+      fraudFlags: ['Multiple vehicles linked']
+    },
+    {
+      id: 'DRV-1024',
+      name: 'Sarah Mulenga',
+      avatar: 'https://i.pravatar.cc/150?u=sarah',
+      phone: '+260 962 888 111',
+      email: 'sarah.m@dashdrive.com',
+      city: 'Lusaka',
+      appliedDate: '2026-03-09 10:15',
+      vehicleType: 'Executive Sedan',
+      brand: 'Toyota',
+      model: 'Camry',
+      plate: 'LU-4455',
+      color: 'Silver',
+      year: '2021',
+      status: 'Under Review',
+      docs: {
+        license: { url: 'https://picsum.photos/seed/license2/800/600', expiry: '2024-04-20', status: 'Expiring Soon' },
+        idCard: { url: 'https://picsum.photos/seed/id2/800/600', expiry: '2029-12-31', status: 'Verified' },
+        registration: { url: 'https://picsum.photos/seed/reg2/800/600', expiry: '2025-11-30', status: 'Verified' }
+      }
+    }
+  ];
 
- const selectedDriver = drivers.find(d => d.id === selectedId);
- const mainTabs: VerificationStatus[] = ['Pending Verification', 'Approved Drivers', 'Rejected Drivers', 'Under Review'];
+  const handleAction = (status: string) => {
+    if (status === 'Approved') {
+      setIsSuccessVisible(true);
+      setIsModalVisible(false);
+    } else {
+      message.info(`Application ${status.toLowerCase()}`);
+      setIsModalVisible(false);
+    }
+  };
 
- const handleReview = (id: string) => {
- setSelectedId(id);
- setViewMode('detail');
- };
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Approved': return <Tag color="success" icon={<CheckCircleOutlined />}>Approved</Tag>;
+      case 'Rejected': return <Tag color="error" icon={<CloseCircleOutlined />}>Rejected</Tag>;
+      case 'Pending': return <Tag color="warning" icon={<ClockCircleOutlined />}>Pending</Tag>;
+      case 'Under Review': return <Tag color="processing" icon={<ReloadOutlined />}>Under Review</Tag>;
+      case 'Resubmission Requested': return <Tag color="orange" icon={<ExclamationCircleOutlined />}>Resubmit</Tag>;
+      case 'Expired': return <Tag color="default" icon={<WarningOutlined />}>Expired</Tag>;
+      default: return <Tag>{status}</Tag>;
+    }
+  };
 
- const renderListView = () => (
- <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
- {/* List Header Area */}
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
- <div>
- <div className="flex items-center gap-2 mb-2">
- <span className="text-[10px] font-medium text-slate-400">User Mgmt</span>
- <ChevronRight className="w-3 h-3 text-slate-300" />
- <span className="text-[10px] font-medium text-slate-400">Driver Setup</span>
- <ChevronRight className="w-3 h-3 text-slate-300" />
- <span className="text-[10px] font-medium text-slate-400">Verification</span>
- </div>
- <h1 className="text-2xl font-bold text-slate-900 leading-none">Driver Verification</h1>
- </div>
- <div className="flex items-center gap-3">
- <div className="relative group w-[320px]">
- <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
- <input
- type="text"
- placeholder="Search driver by name or phone."
- className="w-full pl-10 pr-4 py-2.5 bg-slate-100 rounded-full text-xs font-medium outline-none focus:bg-white focus:ring-1 focus:ring-slate-200 transition-all border-none"
- />
- </div>
- <button className="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-slate-600 transition-all">
- <Filter className="w-4 h-4" />
- </button>
- <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-600 text-[11px] font-bold hover:bg-slate-50 transition-all">
- <Download className="w-4 h-4" /> Export
- </button>
- <button className="px-6 py-2.5 bg-[#0089D1] text-white rounded-lg text-[11px] font-bold hover:bg-[#007AB8] transition-all shadow-md">
- Bulk Approve
- </button>
- </div>
- </div>
+  const columns = [
+    {
+      title: 'Driver ID',
+      dataIndex: 'id',
+      key: 'id',
+      render: (id: string) => <Text strong>{id}</Text>
+    },
+    {
+      title: 'Driver Name',
+      key: 'name',
+      render: (record: Application) => (
+        <Space>
+          <Avatar src={record.avatar} />
+          <div>
+            <Text strong style={{ display: 'block' }}>{record.name}</Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>{record.phone}</Text>
+          </div>
+        </Space>
+      )
+    },
+    {
+      title: 'City',
+      dataIndex: 'city',
+      key: 'city'
+    },
+    {
+      title: 'Vehicle',
+      key: 'vehicle',
+      render: (record: Application) => (
+        <Space direction="vertical" size={0}>
+          <Tag color="blue" icon={<CarOutlined />}>{record.vehicleType}</Tag>
+          <Text type="secondary" style={{ fontSize: 10 }}>{record.plate}</Text>
+        </Space>
+      )
+    },
+    {
+      title: 'Docs Status',
+      key: 'docs',
+      render: () => (
+        <Space size={4}>
+          <Tooltip title="License"><Badge status="success" /></Tooltip>
+          <Tooltip title="ID Card"><Badge status="success" /></Tooltip>
+          <Tooltip title="Registration"><Badge status="warning" /></Tooltip>
+        </Space>
+      )
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (s: string) => getStatusBadge(s)
+    },
+    {
+      title: 'Submission',
+      dataIndex: 'appliedDate',
+      key: 'date',
+      render: (d: string) => <Text type="secondary" style={{ fontSize: 12 }}>{d}</Text>
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'right' as const,
+      render: (record: Application) => (
+        <Button 
+          type="primary" 
+          ghost 
+          icon={<FileSearchOutlined />} 
+          onClick={() => { setSelectedApp(record); setIsModalVisible(true); }}
+        >
+          Review
+        </Button>
+      )
+    }
+  ];
 
- {/* List Table Container */}
- <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
- {/* Navigation Tabs */}
- <div className="px-8 pt-6 border-b border-slate-100 flex items-center justify-between">
- <div className="flex items-center gap-8">
- {(['All', 'Pending', 'Under Review', 'Approved', 'Rejected'] as const).map(tab => (
- <button
- key={tab}
- onClick={() => setMainTab(tab as any)}
- className={cn(
- "pb-4 text-[11px] font-bold transition-all relative",
- (tab === 'All' && mainTab === 'Pending Verification') || mainTab === tab
- ? "text-[#0089D1] after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#0089D1]"
- : "text-slate-400 hover:text-slate-600"
- )}
- >
- {tab}
- </button>
- ))}
- </div>
- </div>
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <Row justify="space-between" align="middle">
+        <Col>
+          <Title level={4} style={{ margin: 0 }}>Driver Verification Dashboard</Title>
+          <Text type="secondary">Process onboarding applications and maintain legal compliance.</Text>
+        </Col>
+        <Col>
+          <Space>
+            <Button icon={<ReloadOutlined />}>Refresh Data</Button>
+            <Button type="primary" icon={<DownloadOutlined />}>Export Report</Button>
+          </Space>
+        </Col>
+      </Row>
 
- {/* Table */}
- <div className="overflow-x-auto">
- <table className="w-full text-left">
- <thead>
- <tr className="bg-slate-50/50">
- <th className="px-10 py-5 text-[9px] font-bold text-slate-400 ">DRIVER INFO</th>
- <th className="px-10 py-5 text-[9px] font-bold text-slate-400 ">SERVICE TYPE</th>
- <th className="px-10 py-5 text-[9px] font-bold text-slate-400 ">KYC STATUS</th>
- <th className="px-10 py-5 text-[9px] font-bold text-slate-400 ">RISK SCORE</th>
- <th className="px-10 py-5 text-[9px] font-bold text-slate-400 text-right">ACTIONS</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-slate-50">
- {drivers.map((driver, idx) => (
- <tr key={driver.id} className="group hover:bg-slate-50/50 transition-all duration-300">
- <td className="px-10 py-5">
- <div className="flex items-center gap-4">
- <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
- <img src={driver.avatar} alt="" className="w-full h-full object-cover" />
- </div>
- <div>
- <p className="text-xs font-bold text-slate-900">{driver.name}</p>
- <p className="text-[10px] font-medium text-slate-400 mt-0.5">{driver.phone}</p>
- </div>
- </div>
- </td>
- <td className="px-10 py-5">
- <div className="flex items-center gap-2">
- <span className="text-[9px] font-bold text-slate-400 ">RIDE</span>
- <span className="text-[9px] font-bold text-slate-400 ">FOOD</span>
- <span className="text-[9px] font-bold text-slate-400 ">PARCEL</span>
- </div>
- </td>
- <td className="px-10 py-5">
- <span className={cn(
- "px-3 py-1 rounded-full text-[9px] font-bold whitespace-nowrap",
- driver.kycStatus === 'Pending' ? "bg-amber-100 text-amber-600" :
- driver.kycStatus === 'Under Review' ? "bg-blue-100 text-blue-600" :
- "bg-emerald-100 text-emerald-600"
- )}>
- {driver.kycStatus === 'Pending' ? 'Pending' : 'Under Review'}
- </span>
- </td>
- <td className="px-10 py-5">
- <div className="flex items-center gap-3">
- <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
- <div
- className={cn(
- "h-full rounded-full transition-all duration-1000",
- driver.riskScore > 50 ? "bg-rose-500" : "bg-emerald-500"
- )}
- style={{ width: `${driver.riskScore}%` }}
- />
- </div>
- <span className="text-[10px] font-bold text-slate-400">{driver.riskScore}</span>
- </div>
- </td>
- <td className="px-10 py-5">
- <div className="flex items-center justify-end gap-2">
- <button
- onClick={() => handleReview(driver.id)}
- className="p-1.5 text-slate-300 hover:text-[#0089D1] transition-colors"
- >
- <Eye className="w-4 h-4" />
- </button>
- <button className="p-1.5 text-slate-300 hover:text-emerald-500 transition-colors">
- <CheckCircle2 className="w-4 h-4" />
- </button>
- <button className="p-1.5 text-slate-300 hover:text-rose-500 transition-colors">
- <XCircle className="w-4 h-4" />
- </button>
- </div>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
+      <Row gutter={[16, 16]}>
+        <Col span={6}>
+          <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: '20px' }}>
+            <Statistic title="Pending Verification" value={32} valueStyle={{ color: '#faad14' }} prefix={<ClockCircleOutlined />} />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: '20px' }}>
+            <Statistic title="Approved Drivers" value={1250} valueStyle={{ color: '#52c41a' }} prefix={<CheckCircleOutlined />} />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: '20px' }}>
+            <Statistic title="Rejected Drivers" value={12} valueStyle={{ color: '#ff4d4f' }} prefix={<CloseCircleOutlined />} />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: '20px' }}>
+            <Statistic title="Expiring Soon" value={7} valueStyle={{ color: '#fa8c16' }} prefix={<WarningOutlined />} />
+          </Card>
+        </Col>
+      </Row>
 
- {/* Footer Strip */}
- <div className="p-8 border-t border-slate-50 flex items-center justify-between">
- <p className="text-[10px] font-black text-slate-400 italic">Snapshot: 1,402 Active Compliance Logs Today</p>
- <div className="flex items-center gap-2">
- {[1, 2, 3, '...', 12].map((p, i) => (
- <button key={i} className={cn("w-10 h-10 rounded-xl text-[10px] font-black transition-all", p === 1 ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:text-slate-900 hover:bg-slate-50")}>{p}</button>
- ))}
- </div>
- </div>
- </div>
- </div>
- );
+      <Card bordered={false} className="shadow-sm">
+        <div style={{ marginBottom: 20, display: 'flex', gap: 16 }}>
+          <Input 
+            placeholder="Search Name, ID, Phone or Plate..." 
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            style={{ width: 300 }}
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+          />
+          <Select defaultValue="All" style={{ width: 160 }} onChange={setStatusFilter}>
+            <Option value="All">All Statuses</Option>
+            <Option value="Pending">Pending Review</Option>
+            <Option value="Under Review">Under Review</Option>
+            <Option value="Approved">Approved</Option>
+            <Option value="Expiring">Expiring Soon</Option>
+          </Select>
+          <Select defaultValue="All" style={{ width: 160 }}>
+            <Option value="All">All Vehicle Types</Option>
+            <Option value="Economy">Economy Car</Option>
+            <Option value="Executive">Executive Sedan</Option>
+            <Option value="Motorcycle">Motorcycle</Option>
+          </Select>
+          <Button icon={<FilterOutlined />}>Detailed Filters</Button>
+        </div>
 
- const renderDetailView = () => {
- if (!selectedDriver) return null;
+        <Table 
+          columns={columns} 
+          dataSource={applications} 
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+          locale={{ emptyText: <Empty description="No applications found" /> }}
+          className="verification-table"
+        />
+      </Card>
 
- return (
- <div className="fixed inset-0 z-[9999] flex justify-end">
- {/* Backdrop */}
- <div
- className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-500"
- onClick={() => setViewMode('list')}
- />
+      <Modal
+        title={
+          <Space>
+            <SafetyCertificateOutlined style={{ color: '#1677ff' }} />
+            <span>Driver Verification Review: {selectedApp?.id}</span>
+          </Space>
+        }
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        width={1000}
+        footer={[
+          <Button key="resubmit" icon={<ReloadOutlined />} onClick={() => handleAction('Resubmission Requested')}>Request Resubmission</Button>,
+          <Button key="reject" danger icon={<CloseCircleOutlined />} onClick={() => handleAction('Rejected')}>Reject</Button>,
+          <Button key="approve" type="primary" icon={<CheckCircleOutlined />} onClick={() => handleAction('Approved')}>Approve & Activate</Button>,
+        ]}
+      >
+        {selectedApp && (
+          <Row gutter={[24, 24]}>
+            <Col span={10}>
+              <Card size="small" title="Driver Identity" style={{ marginBottom: 20 }}>
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="Full Name"><Text strong>{selectedApp.name}</Text></Descriptions.Item>
+                  <Descriptions.Item label="Phone Number">{selectedApp.phone}</Descriptions.Item>
+                  <Descriptions.Item label="Email">{selectedApp.email}</Descriptions.Item>
+                  <Descriptions.Item label="Registration City">{selectedApp.city}</Descriptions.Item>
+                  <Descriptions.Item label="Applied Date">{selectedApp.appliedDate}</Descriptions.Item>
+                </Descriptions>
+                <Divider style={{ margin: '12px 0' }} />
+                <Title level={5}><CarOutlined /> Vehicle Info</Title>
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="Type">{selectedApp.vehicleType}</Descriptions.Item>
+                  <Descriptions.Item label="Model">{selectedApp.brand} {selectedApp.model}</Descriptions.Item>
+                  <Descriptions.Item label="Plate">{selectedApp.plate}</Descriptions.Item>
+                  <Descriptions.Item label="Color">{selectedApp.color}</Descriptions.Item>
+                  <Descriptions.Item label="Year">{selectedApp.year}</Descriptions.Item>
+                </Descriptions>
+              </Card>
 
- {/* Side Drawer */}
- <div className="relative w-full max-w-[1200px] bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 flex flex-col overflow-hidden">
- {/* Header */}
- <div className="px-10 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
- <div className="flex items-center gap-6">
- <div>
- <h2 className="text-xl font-bold text-slate-900 leading-none">Driver Verification</h2>
- <div className="flex items-center gap-3 mt-2">
- <span className="text-xs font-medium text-slate-400">ID: {selectedDriver.id}</span>
- <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-600 text-[10px] font-bold">Pending</span>
- </div>
- </div>
- </div>
- <div className="flex items-center gap-3">
- <button className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition-all">
- Under Review
- </button>
- <button className="px-5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg text-xs font-bold transition-all">
- Reject
- </button>
- <button className="px-6 py-2.5 bg-[#00A65A] text-white rounded-lg text-xs font-bold hover:bg-[#008D4C] transition-all">
- Approve Driver
- </button>
- <button
- onClick={() => setViewMode('list')}
- className="ml-4 p-2 text-slate-400 hover:text-slate-600 transition-all"
- >
- <XCircle className="w-5 h-5" />
- </button>
- </div>
- </div>
+              {selectedApp.fraudFlags && selectedApp.fraudFlags.length > 0 && (
+                <Alert
+                  message="Compliance Alerts"
+                  description={
+                    <ul style={{ paddingLeft: 16, margin: 0 }}>
+                      {selectedApp.fraudFlags.map((flag, idx) => <li key={idx}><Text type="danger">{flag}</Text></li>)}
+                    </ul>
+                  }
+                  type="error"
+                  showIcon
+                  icon={<WarningOutlined />}
+                  style={{ marginBottom: 20 }}
+                />
+              )}
 
- {/* Main Content Area - Scrollable */}
- <div className="flex-1 overflow-y-auto bg-slate-50/30">
- <div className="p-10 grid grid-cols-12 gap-8">
+              <Card size="small" title="Validation Checklist">
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Checkbox>License number matches document</Checkbox>
+                  <Checkbox>Full name matches National ID</Checkbox>
+                  <Checkbox>Vehicle ownership verified</Checkbox>
+                  <Checkbox>Expiry dates are valid</Checkbox>
+                  <Checkbox>Photo consistency check (Face-Match)</Checkbox>
+                </Space>
+              </Card>
+            </Col>
+            
+            <Col span={14}>
+              <Card 
+                size="small" 
+                title={<Space><SolutionOutlined /> Document Evidence</Space>}
+                extra={<Button size="small" icon={<DownloadOutlined />}>Download All</Button>}
+              >
+                <List
+                  itemLayout="horizontal"
+                  dataSource={[
+                    { title: 'Driver License', info: selectedApp.docs.license },
+                    { title: 'National ID', info: selectedApp.docs.idCard },
+                    { title: 'Vehicle Registration', info: selectedApp.docs.registration }
+                  ]}
+                  renderItem={(item) => (
+                    <List.Item
+                      actions={[
+                        <Button key="zoom" size="small" icon={<ZoomInOutlined />} />,
+                        <Button key="dl" size="small" icon={<DownloadOutlined />} />,
+                        <Button key="inv" size="small" danger icon={<CloseCircleOutlined />}>Invalid</Button>
+                      ]}
+                    >
+                      <List.Item.Meta
+                        avatar={<Avatar shape="square" size={64} src={item.info.url} />}
+                        title={
+                          <Space>
+                            <Text strong>{item.title}</Text>
+                            <Badge status={item.info.status === 'Verified' ? 'success' : 'warning'} />
+                          </Space>
+                        }
+                        description={
+                          <Space direction="vertical" size={2}>
+                            <Text type="secondary" style={{ fontSize: 11 }}>Uploaded: 2 hours ago</Text>
+                            <Text type={item.info.status === 'Expiring Soon' ? 'danger' : 'secondary'} style={{ fontSize: 11 }}>
+                              Expiry: {item.info.expiry}
+                            </Text>
+                          </Space>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              </Card>
+              
+              <Card size="small" title="Audit Log" style={{ marginTop: 20 }}>
+                <div style={{ maxHeight: 100, overflowY: 'auto' }}>
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>[09:22] Application Received - System</Text>
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>[09:45] Auto-verification: 2/3 Docs Scanned - Bot</Text>
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>[10:15] Manual Review Started - Sarah K.</Text>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        )}
+      </Modal>
 
- {/* LEFT COLUMN: Profile & Stats */}
- <div className="col-span-12 lg:col-span-4 space-y-6">
- {/* Profile Card */}
- <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
- <div className="flex flex-col items-center text-center">
- <div className="relative mb-6">
- <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100">
- <img src={selectedDriver.avatar} alt="" className="w-full h-full object-cover" />
- </div>
- <div className="absolute -right-2 -bottom-2 w-8 h-8 bg-[#00A65A] rounded-full border-4 border-white flex items-center justify-center">
- <BadgeCheck className="w-4 h-4 text-white" />
- </div>
- </div>
- <h3 className="text-lg font-bold text-slate-900 leading-none mb-1">{selectedDriver.name}</h3>
- <p className="text-xs font-medium text-slate-400">{selectedDriver.email}</p>
- </div>
-
- <div className="mt-8 space-y-4 pt-6 border-t border-slate-50">
- <div className="flex justify-between items-center text-[11px]">
- <span className="text-slate-400 font-medium">Phone</span>
- <span className="text-slate-900 font-bold">{selectedDriver.phone}</span>
- </div>
- <div className="flex justify-between items-center text-[11px]">
- <span className="text-slate-400 font-medium">Zone</span>
- <span className="text-slate-900 font-bold">{selectedDriver.zone}</span>
- </div>
- <div className="flex justify-between items-center text-[11px]">
- <span className="text-slate-400 font-medium">Reg. Date</span>
- <span className="text-slate-900 font-bold">{selectedDriver.regDate}</span>
- </div>
- </div>
- </div>
-
- {/* Risk & Fraud Analytics */}
- <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-6">
- <h4 className="text-[10px] font-bold text-slate-400 ">RISK & FRAUD ANALYTICS</h4>
-
- <div className="space-y-4">
- <div className="flex items-center justify-between">
- <span className="text-[11px] font-bold text-slate-900">AI Risk Score</span>
- <span className="text-xs font-bold text-rose-500">{selectedDriver.riskScore} (Medium)</span>
- </div>
- <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
- <div
- className="h-full bg-rose-500 rounded-full"
- style={{ width: `${selectedDriver.riskScore}%` }}
- />
- </div>
- </div>
-
- <div className="grid grid-cols-2 gap-4">
- <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-center">
- <p className="text-[10px] font-bold text-slate-400 mb-1">FACE MATCH</p>
- <p className="text-xs font-bold text-emerald-500">{selectedDriver.confidence}%</p>
- </div>
- <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-center">
- <p className="text-[10px] font-bold text-slate-400 mb-1">DUPLICATES</p>
- <p className="text-xs font-bold text-slate-900">None</p>
- </div>
- </div>
- </div>
-
- {/* Service Eligibility */}
- <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-6">
- <h4 className="text-[10px] font-bold text-slate-400 ">SERVICE ELIGIBILITY</h4>
-
- <div className="space-y-5">
- {[
- { label: 'Ride', active: true },
- { label: 'Food', active: true },
- { label: 'Mart', active: true },
- { label: 'Parcel', active: true },
- { label: 'Shopping', active: false },
- { label: 'Fintech', active: true }
- ].map(service => (
- <div key={service.label} className="flex items-center justify-between">
- <span className="text-xs font-bold text-slate-600">{service.label}</span>
- <button className={cn(
- "w-10 h-5 rounded-full relative transition-all",
- service.active ? "bg-[#0089D1]" : "bg-slate-200"
- )}>
- <div className={cn(
- "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all",
- service.active ? "right-0.5" : "left-0.5"
- )} />
- </button>
- </div>
- ))}
- </div>
- </div>
- </div>
-
- {/* RIGHT COLUMN: Documents & Logs */}
- <div className="col-span-12 lg:col-span-8 space-y-8">
- <div className="flex items-center justify-between px-2">
- <h4 className="text-sm font-bold text-slate-900 flex items-center gap-3">
- <div className="p-1.5 bg-blue-50 rounded-lg text-blue-500">
- <FileSearch className="w-4 h-4" />
- </div>
- KYC & Documents Verification
- </h4>
- <span className="text-[11px] font-bold text-slate-400 ">3 Documents</span>
- </div>
-
- {/* Documents Grid */}
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
- {[
- { title: 'National ID', status: 'Pending', img: 'https://images.unsplash.com/photo-1590483736622-39da8af75bba?auto=format&fit=crop&q=80&w=600' },
- { title: 'Driving License', status: 'Approved', img: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600' },
- { title: 'Selfie Verification', status: 'Pending', img: 'https://images.unsplash.com/photo-1540569014015-19a7ee504e3a?auto=format&fit=crop&q=80&w=600' }
- ].map(doc => (
- <div key={doc.title} className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden group">
- <div className="relative aspect-video">
- <img src={doc.img} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" />
- <div className="absolute top-4 right-4">
- <span className={cn(
- "px-3 py-1 rounded-full text-[9px] font-black shadow-lg",
- doc.status === 'Approved' ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
- )}>
- {doc.status}
- </span>
- </div>
- </div>
- <div className="p-5">
- <div className="flex items-center justify-between mb-4">
- <h5 className="text-xs font-bold text-slate-900">{doc.title}</h5>
- <button className="text-slate-300 hover:text-slate-600 transition-colors">
- <MoreVertical className="w-4 h-4" />
- </button>
- </div>
- <div className="grid grid-cols-2 gap-3">
- <button className="py-2.5 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-xl border border-emerald-100/50 transition-all">
- Approve
- </button>
- <button className="py-2.5 bg-rose-50/50 hover:bg-rose-50 text-rose-500 text-[10px] font-bold rounded-xl border border-rose-100/50 transition-all">
- Reject
- </button>
- </div>
- </div>
- </div>
- ))}
-
- {/* Vehicle Info Card */}
- <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden p-6 space-y-6">
- <div className="flex items-center justify-between">
- <h5 className="text-xs font-bold text-slate-900 flex items-center gap-2">
- <Car className="w-4 h-4 text-blue-500" />
- Vehicle Information
- </h5>
- <span className="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black ">Pending</span>
- </div>
-
- <div className="grid grid-cols-2 gap-4">
- <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
- <p className="text-[9px] font-bold text-slate-400 mb-1">VEHICLE MODEL</p>
- <p className="text-xs font-bold text-slate-900">{selectedDriver.vehicleModel}</p>
- </div>
- <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
- <p className="text-[9px] font-bold text-slate-400 mb-1">PLATE NUMBER</p>
- <p className="text-xs font-bold text-slate-900">{selectedDriver.plateNumber}</p>
- </div>
- </div>
-
- <div className="relative aspect-video rounded-2xl overflow-hidden group">
- <img src="https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=600" alt="" className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" />
- <div className="absolute top-4 right-4">
- <span className="px-3 py-1 bg-amber-500 text-white rounded-full text-[9px] font-black shadow-lg">Pending</span>
- </div>
- </div>
- </div>
- </div>
-
- {/* Activity Log Table */}
- <div className="space-y-4">
- <h4 className="text-sm font-bold text-slate-900 flex items-center gap-3 px-2">
- <div className="p-1.5 bg-blue-50 rounded-lg text-blue-500">
- <Clock className="w-4 h-4" />
- </div>
- Verification Activity Log
- </h4>
-
- <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
- <table className="w-full text-left">
- <thead>
- <tr className="bg-slate-50/50">
- <th className="px-8 py-4 text-[9px] font-bold text-slate-400 ">DATE</th>
- <th className="px-8 py-4 text-[9px] font-bold text-slate-400 ">ADMIN</th>
- <th className="px-8 py-4 text-[9px] font-bold text-slate-400 ">ACTION</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-slate-50">
- {[
- { date: '2026-02-12', admin: 'System', action: 'Documents Uploaded' },
- { date: '2026-02-13', admin: 'Admin B', action: 'License Reviewed' }
- ].map((log, i) => (
- <tr key={i} className="text-xs">
- <td className="px-8 py-5 text-slate-400 font-medium">{log.date}</td>
- <td className="px-8 py-5 text-slate-900 font-bold">{log.admin}</td>
- <td className="px-8 py-5 text-slate-600 font-medium">{log.action}</td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- </div>
- </div>
- </div>
-
- {/* Footer Actions */}
- <div className="px-10 py-6 border-t border-slate-100 bg-white sticky bottom-0 z-10">
- <div className="mb-6">
- <h5 className="text-[10px] font-bold text-slate-400 mb-3 italic">INTERNAL ADMIN NOTES</h5>
- <textarea
- placeholder="Add notes about this verification..."
- className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[24px] text-xs font-medium outline-none focus:bg-white focus:ring-1 focus:ring-slate-200 transition-all resize-none h-24 shadow-inner"
- />
- </div>
- <div className="flex items-center justify-end gap-3">
- <button
- onClick={() => setViewMode('list')}
- className="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl text-[11px] font-bold transition-all"
- >
- Cancel
- </button>
- <button className="px-12 py-3.5 bg-[#0089D1] text-white rounded-2xl text-[11px] font-bold hover:bg-[#007AB8] transition-all shadow-lg flex items-center gap-3 group">
- Confirm Action
- <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
- </button>
- </div>
- </div>
- </div>
- </div>
- );
- };
-
- return (
- <div className="h-full flex flex-col gap-8">
- {viewMode === 'list' ? renderListView() : renderDetailView()}
- </div>
- );
+      <Modal
+        open={isSuccessVisible}
+        onCancel={() => setIsSuccessVisible(false)}
+        footer={[
+          <Button key="ok" type="primary" onClick={() => setIsSuccessVisible(false)}>Done</Button>
+        ]}
+      >
+        <Result
+          status="success"
+          title="Driver Account Activated"
+          subTitle={`${selectedApp?.name} is now verified and can accept orders on the DashDrive platform.`}
+          extra={[
+            <Button key="message">Notify Driver</Button>,
+            <Button key="profile">Go to Profile</Button>
+          ]}
+        />
+      </Modal>
+    </div>
+  );
 };

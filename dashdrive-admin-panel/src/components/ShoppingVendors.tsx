@@ -1,284 +1,543 @@
 import React, { useState } from 'react';
-import {
- Search,
- Filter,
- MoreVertical,
- Eye,
- CheckCircle2,
- XCircle,
- Store,
- DollarSign,
- TrendingUp,
- PieChart,
- ArrowUpRight,
- Plus,
- ChevronRight,
- RefreshCcw,
- Users,
- Wallet,
- Calendar,
- Clock,
- MapPin,
- Star,
- AlertCircle,
- UserPlus,
- Package
-} from 'lucide-react';
-import { cn } from '../utils';
-import { Tabs } from 'antd';
+import { Table, Card, Button, Input, Space, Tag, Typography, Row, Col, Dropdown, MenuProps, Empty, Drawer, Descriptions, Divider, Switch, Avatar, InputNumber, Select, message, Alert, Tabs, Statistic, Modal } from 'antd';
+import { PlusOutlined, SearchOutlined, EyeOutlined, WarningOutlined, WalletOutlined, UserAddOutlined, HistoryOutlined, DollarCircleOutlined, SolutionOutlined, ExceptionOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 interface ShoppingVendor {
- id: string;
- name: string;
- businessName: string;
- category: string;
- productsCount: number;
- ordersCount: string;
- earnings: string;
- commission: string;
- rating: number;
- status: 'Active' | 'Pending Approval' | 'Suspended';
- image: string;
+  id: string;
+  name: string;
+  businessName: string;
+  category: string;
+  productsCount: number;
+  ordersCount: string;
+  earnings: string;
+  commission: number;
+  rating: number;
+  status: 'Active' | 'Inactive' | 'Suspended';
+  approvalStatus: 'Approved' | 'Pending' | 'Rejected';
+  image: string;
+  email: string;
+  phone: string;
+  contactPerson: string;
 }
 
 const mockVendors: ShoppingVendor[] = [
- {
- id: 'VND-SHP-001',
- name: 'John Electro',
- businessName: 'ElectroHub Store',
- category: 'Electronics',
- productsCount: 420,
- ordersCount: '12.4k',
- earnings: '$142,500',
- commission: '12%',
- rating: 4.8,
- status: 'Active',
- image: 'https://logo.clearbit.com/apple.com'
- },
- {
- id: 'VND-SHP-002',
- name: 'Sarah Fashion',
- businessName: 'Urban Fashion',
- category: 'Fashion',
- productsCount: 1250,
- ordersCount: '38.2k',
- earnings: '$285,000',
- commission: '15%',
- rating: 4.7,
- status: 'Active',
- image: 'https://logo.clearbit.com/nike.com'
- },
- {
- id: 'VND-SHP-003',
- name: 'Dr. Beauty',
- businessName: 'Beauty Palace',
- category: 'Beauty',
- productsCount: 185,
- ordersCount: '4.2k',
- earnings: '$52,100',
- commission: '18%',
- rating: 4.6,
- status: 'Pending Approval',
- image: 'https://logo.clearbit.com/sephora.com'
- },
- {
- id: 'VND-SHP-004',
- name: 'IKEA Global',
- businessName: 'Home Essentials',
- category: 'Home & Kitchen',
- productsCount: 940,
- ordersCount: '8.9k',
- earnings: '$112,400',
- commission: '10%',
- rating: 4.9,
- status: 'Suspended',
- image: 'https://logo.clearbit.com/ikea.com'
- }
+  {
+    id: 'VND-SHP-001',
+    name: 'John Electro',
+    businessName: 'ElectroHub Store',
+    category: 'Electronics',
+    productsCount: 420,
+    ordersCount: '12.4k',
+    earnings: '$142,500',
+    commission: 12,
+    rating: 4.8,
+    status: 'Active',
+    approvalStatus: 'Approved',
+    image: 'https://logo.clearbit.com/apple.com',
+    email: 'b2b@electrohub.co.zw',
+    phone: '+263 77 999 0000',
+    contactPerson: 'John Electro'
+  },
+  {
+    id: 'VND-SHP-002',
+    name: 'Sarah Fashion',
+    businessName: 'Urban Fashion',
+    category: 'Fashion',
+    productsCount: 1250,
+    ordersCount: '38.2k',
+    earnings: '$285,000',
+    commission: 15,
+    rating: 4.7,
+    status: 'Active',
+    approvalStatus: 'Approved',
+    image: 'https://logo.clearbit.com/nike.com',
+    email: 'sarah@urbanfashion.co.zw',
+    phone: '+263 71 888 7777',
+    contactPerson: 'Sarah Fashion'
+  },
+  {
+    id: 'VND-SHP-003',
+    name: 'Dr. Beauty',
+    businessName: 'Beauty Palace',
+    category: 'Beauty',
+    productsCount: 185,
+    ordersCount: '4.2k',
+    earnings: '$52,100',
+    commission: 18,
+    rating: 4.6,
+    status: 'Inactive',
+    approvalStatus: 'Pending',
+    image: 'https://logo.clearbit.com/sephora.com',
+    email: 'drbeauty@palace.co.zw',
+    phone: '+263 78 666 5555',
+    contactPerson: 'Dr. Beauty'
+  },
+  {
+    id: 'VND-SHP-004',
+    name: 'IKEA Global',
+    businessName: 'Home Essentials',
+    category: 'Home & Kitchen',
+    productsCount: 940,
+    ordersCount: '8.9k',
+    earnings: '$112,400',
+    commission: 10,
+    rating: 4.9,
+    status: 'Suspended',
+    approvalStatus: 'Approved',
+    image: 'https://logo.clearbit.com/ikea.com',
+    email: 'global@ikea.co.zw',
+    phone: '+263 77 111 2222',
+    contactPerson: 'IKEA Admin'
+  }
+];
+
+const MOCK_ORDER_HISTORY = [
+  { id: 'ORD-S-9921', date: '2024-03-08 04:15 PM', amount: 890.00, status: 'Completed' },
+  { id: 'ORD-S-9810', date: '2024-03-08 11:30 AM', amount: 145.20, status: 'Completed' },
+  { id: 'ORD-S-9750', date: '2024-03-07 02:45 PM', amount: 2100.00, status: 'Completed' },
+  { id: 'ORD-S-9742', date: '2024-03-07 09:12 AM', amount: 65.00, status: 'Refunded' },
+];
+
+const MOCK_PAYOUT_HISTORY = [
+  { id: 'PAY-S-101', date: '2024-03-01', period: 'Feb 15 - Feb 29', amount: 18450.00, status: 'Success' },
+  { id: 'PAY-S-098', date: '2024-02-15', period: 'Feb 01 - Feb 14', amount: 15200.20, status: 'Success' },
+];
+
+const MOCK_DISPUTES = [
+  { id: 'DSP-S-001', orderId: 'ORD-S-9921', date: '2024-03-08', type: 'Return Dispute', reason: 'User returned item with missing tags. Merchant refuses refund.', amount: 890.00, status: 'Pending' },
+  { id: 'DSP-S-002', orderId: 'ORD-S-9742', date: '2024-03-07', type: 'Quality Issue', reason: 'Customer claims counterfeit brand. Requires brand authentication.', amount: 65.00, status: 'Under Review' },
+  { id: 'DSP-S-003', orderId: 'ORD-S-9000', date: '2024-03-05', type: 'Logistics Dispute', reason: 'Merchant claims items were delivered, user says package was empty.', amount: 120.00, status: 'Resolved' },
 ];
 
 export const ShoppingVendors: React.FC = () => {
- const [activeTab, setActiveTab] = useState('All Vendors');
- const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<ShoppingVendor | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editedCommission, setEditedCommission] = useState<number>(0);
+  const [editedStatus, setEditedStatus] = useState<'Active' | 'Inactive' | 'Suspended'>('Inactive');
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [selectedDispute, setSelectedDispute] = useState<any>(null);
+  const [disputeResponse, setDisputeResponse] = useState('');
 
- const tabs = ['All Vendors', 'Pending Approval', 'Active Vendors', 'Suspended Vendors', 'Vendor Requests'];
+  const openProfile = (vendor: ShoppingVendor) => {
+    setSelectedVendor(vendor);
+    setEditedCommission(vendor.commission);
+    setEditedStatus(vendor.status);
+    setIsProfileDrawerOpen(true);
+  };
 
- return (
- <div className="space-y-8 animate-in fade-in duration-700">
- {/* Header Section */}
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
- <div>
- <h2 className="text-3xl font-display font-black text-slate-900 tracking-tight">Merchant Ecosystem</h2>
- <p className="text-sm text-slate-400 font-medium mt-1">Manage multi-vendor seller profiles, marketplace onboarding, and global commission fees</p>
- </div>
- <div className="flex items-center gap-4">
- <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-slate-200 rounded-2xl text-[10px] font-bold font-small-caps text-slate-600 hover:bg-slate-50 transition-all shadow-sm group">
- <Wallet className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
- Payout Management
- </button>
- <button className="flex items-center gap-2.5 px-6 py-2.5 bg-primary text-white rounded-2xl text-[10px] font-bold font-small-caps shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
- <UserPlus className="w-4 h-4" />
- Invite Vendor
- </button>
- </div>
- </div>
+  const handleOpenDispute = (dispute: any) => {
+    setSelectedDispute(dispute);
+    setIsDisputeModalOpen(true);
+  };
 
- {/* KPI Stats Section */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
- <StatBox title="Total Partners" value="1,420" subValue="+12 this month" color="emerald" />
- <StatBox title="Pending Validation" value="28" subValue="Awaiting Review" color="amber" />
- <StatBox title="Active GMV Contribution" value="68.4%" subValue="+4.2% Growth" color="primary" />
- <StatBox title="Avg Vendor Rating" value="4.72" subValue="Based on 122k reviews" color="blue" />
- </div>
+  const handleResolveDispute = (action: string) => {
+    setIsSaving(true);
+    setTimeout(() => {
+        message.success(`Marketplace dispute ${selectedDispute.id} marked as ${action}`);
+        setIsSaving(false);
+        setIsDisputeModalOpen(false);
+        setSelectedDispute(null);
+        setDisputeResponse('');
+    }, 800);
+  };
 
- {/* Sub-Tabs / Search Bar */}
- <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-4 rounded-[32px] shadow-soft border border-slate-100/50">
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab.id || tab.name || tab, label: tab.name || tab.label || tab.title || tab.id || tab }))} className="mb-6 font-bold" />
- <div className="relative w-full md:w-96 group">
- <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
- <input
- type="text"
- placeholder="Search merchant name or ID..."
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full pl-11 pr-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-medium focus:bg-white focus:border-primary/30 outline-none transition-all"
- />
- </div>
- </div>
+  const handleWorkflowAction = (action: 'Approve' | 'Suspend' | 'Restore' | 'Reject') => {
+    if (!selectedVendor) return;
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      setIsDrawerVisible(false);
+      message.success(`Vendor ${action.toLowerCase()} successfully`);
+    }, 600);
+  };
 
- {/* Vendors Table */}
- <div className="bg-white rounded-[40px] shadow-soft border border-slate-100/50 overflow-hidden">
- <div className="overflow-x-auto">
- <table className="w-full text-left border-collapse">
- <thead>
- <tr className="border-b border-slate-50 bg-slate-50/20">
- <th className="px-8 py-5 text-[10px] font-bold text-slate-400 font-small-caps tracking-[0.2em]">Merchant Profile</th>
- <th className="px-8 py-5 text-[10px] font-bold text-slate-400 font-small-caps tracking-[0.2em]">Dept & Load</th>
- <th className="px-8 py-5 text-[10px] font-bold text-slate-400 font-small-caps tracking-[0.2em]">Market Performance</th>
- <th className="px-8 py-5 text-[10px] font-bold text-slate-400 font-small-caps tracking-[0.2em]">Admin Economics</th>
- <th className="px-8 py-5 text-[10px] font-bold text-slate-400 font-small-caps tracking-[0.2em]">Operations</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-slate-50">
- {mockVendors.map((vendor) => (
- <tr key={vendor.id} className="hover:bg-slate-50/50 transition-colors group">
- <td className="px-8 py-6">
- <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0 animate-pulse-slow">
- <img src={vendor.image} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" alt="" />
- </div>
- <div>
- <span className="text-sm font-black text-slate-900 block leading-tight tracking-tight">{vendor.businessName}</span>
- <div className="flex items-center gap-2 mt-1">
- <span className="text-[10px] font-bold text-slate-400 font-small-caps ">Owner: {vendor.name}</span>
- <span className="w-1 h-1 rounded-full bg-slate-200" />
- <span className="text-[10px] font-bold text-primary font-small-caps whitespace-nowrap">{vendor.id}</span>
- </div>
- </div>
- </div>
- </td>
- <td className="px-8 py-6">
- <div className="space-y-1.5">
- <div className="flex items-center gap-2">
- <PieChart className="w-3.5 h-3.5 text-primary" />
- <span className="text-xs font-bold text-slate-700">{vendor.category}</span>
- </div>
- <div className="flex items-center gap-2">
- <Package className="w-3.5 h-3.5 text-slate-400" />
- <span className="text-[11px] font-medium text-slate-500">{vendor.productsCount} SKUs Active</span>
- </div>
- </div>
- </td>
- <td className="px-8 py-6">
- <div className="space-y-1">
- <div className="flex items-baseline gap-2">
- <span className="text-lg font-display font-black text-slate-950 tracking-tight">{vendor.earnings}</span>
- <span className="text-[9px] font-bold text-emerald-500 ">+12%</span>
- </div>
- <div className="flex items-center gap-1.5 text-amber-500">
- <Star className="w-3 h-3 fill-amber-500" />
- <span className="text-[11px] font-black">{vendor.rating}</span>
- <span className="text-[10px] text-slate-400 font-bold ml-1">• {vendor.ordersCount} Total Orders</span>
- </div>
- </div>
- </td>
- <td className="px-8 py-6">
- <div className="flex items-center justify-between">
- <div className="space-y-1">
- <p className="text-[10px] font-bold text-slate-400 font-small-caps leading-none">Global Fee</p>
- <p className="text-base font-display font-black text-slate-900 tracking-tight">{vendor.commission}</p>
- </div>
- <VendorStatusBadge status={vendor.status} />
- </div>
- </td>
- <td className="px-8 py-6">
- <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
- <button className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:text-primary hover:bg-white border border-transparent hover:border-slate-100 shadow-sm transition-all" title="View Full Profile">
- <Eye className="w-4.5 h-4.5" />
- </button>
- <button className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:text-primary hover:bg-white border border-transparent hover:border-slate-100 shadow-sm transition-all" title="Administrative Access">
- <Plus className="w-4.5 h-4.5" />
- </button>
- <div className="w-px h-6 bg-slate-100 mx-1" />
- <button className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:text-red-500 hover:bg-white border border-transparent hover:border-slate-100 shadow-sm transition-all" title="Restrict Store">
- <XCircle className="w-4.5 h-4.5" />
- </button>
- </div>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
+  const handleSaveConfiguration = () => {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      setIsDrawerVisible(false);
+      message.success('Vendor configuration saved successfully');
+    }, 500);
+  };
 
- {/* Quick Policy Reminder */}
- <div className="bg-slate-900 rounded-[32px] p-8 flex flex-col md:flex-row items-center justify-between relative overflow-hidden group">
- <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-primary/20 blur-3xl group-hover:w-1/3 transition-all duration-700 pointer-events-none" />
- <div className="flex items-center gap-6 relative z-10">
- <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-primary">
- <AlertCircle className="w-7 h-7" />
- </div>
- <div className="max-w-xl">
- <h4 className="text-white text-lg font-display font-black tracking-tight leading-tight">Vendor Compliance Snapshot</h4>
- <p className="text-white/40 text-[11px] font-bold font-medium mt-1 leading-relaxed">
- Marketplace commissions are calculated per order. Changes to commission rates will trigger an
- <span className="text-primary mx-1">automatically scheduled notification</span> to the vendor 24 hours before activation.
- </p>
- </div>
- </div>
- <button className="mt-6 md:mt-0 px-8 py-3 bg-white text-slate-950 rounded-xl text-[10px] font-bold font-small-caps hover:bg-primary hover:text-white transition-all shadow-2xl relative z-10">
- Global Fee Engine
- </button>
- </div>
- </div>
- );
+  const columns = [
+    {
+      title: 'Merchant Profile',
+      key: 'profile',
+      render: (_, record: ShoppingVendor) => (
+        <Space>
+          <Avatar src={record.image} shape="square" size="large" />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <Text strong>{record.businessName}</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>Owner: {record.name} • {record.id}</Text>
+          </div>
+        </Space>
+      ),
+    },
+    {
+      title: 'Category',
+      dataIndex: 'category',
+      key: 'category',
+      render: (cat: string) => <Tag color="blue">{cat}</Tag>,
+    },
+    {
+      title: 'Performance',
+      key: 'performance',
+      render: (_, record: ShoppingVendor) => (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Text strong>{record.earnings}</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}>{record.ordersCount} Orders • {record.rating}★</Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Economics',
+      key: 'economics',
+      render: (_, record: ShoppingVendor) => (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Text strong>{record.commission}% Fee</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}>{record.productsCount} SKUs</Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      render: (_, record: ShoppingVendor) => {
+        let color = 'default';
+        if (record.approvalStatus === 'Pending') color = 'warning';
+        else if (record.status === 'Active') color = 'success';
+        else if (record.status === 'Suspended') color = 'error';
+        return <Tag color={color}>{record.approvalStatus === 'Pending' ? 'Pending Approval' : record.status}</Tag>;
+      },
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record: ShoppingVendor) => (
+        <Button onClick={() => openProfile(record)}>Manage</Button>
+      ),
+    },
+  ];
+
+  const filteredVendors = mockVendors.filter(v => {
+    const matchesSearch = v.businessName.toLowerCase().includes(searchQuery.toLowerCase()) || v.id.toLowerCase().includes(searchQuery.toLowerCase());
+    if (activeTab === 'All') return matchesSearch;
+    if (activeTab === 'Pending Approval') return matchesSearch && v.approvalStatus === 'Pending';
+    if (activeTab === 'Active') return matchesSearch && v.status === 'Active' && v.approvalStatus === 'Approved';
+    if (activeTab === 'Suspended') return matchesSearch && v.status === 'Suspended';
+    return matchesSearch;
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+            <Title level={4} style={{ margin: 0 }}>Merchant Ecosystem</Title>
+            <Text type="secondary">Manage multi-vendor seller profiles and global marketplace commissions.</Text>
+        </div>
+        <Space>
+            <Button icon={<WalletOutlined />}>Payouts</Button>
+            <Button type="primary" icon={<UserAddOutlined />}>Invite Vendor</Button>
+        </Space>
+      </div>
+
+      <Card bordered={false} styles={{ body: { padding: 0 } }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
+          <Space size="large" style={{ fontWeight: 500 }}>
+            {['All', 'Pending Approval', 'Active', 'Suspended'].map(tab => (
+              <div 
+                key={tab} 
+                onClick={() => setActiveTab(tab)}
+                style={{ 
+                  cursor: 'pointer', 
+                  color: activeTab === tab ? '#1677ff' : '#64748b',
+                  borderBottom: activeTab === tab ? '2px solid #1677ff' : '2px solid transparent',
+                  paddingBottom: 4
+                }}
+              >
+                {tab}
+              </div>
+            ))}
+          </Space>
+          <Input
+            placeholder="Search merchants..."
+            prefix={<SearchOutlined />}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ width: 250 }}
+          />
+        </div>
+
+        <Table
+          columns={columns}
+          dataSource={filteredVendors}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+          onRow={(record) => ({ onClick: () => openProfile(record), style: { cursor: 'pointer' } })}
+        />
+      </Card>
+
+      <Drawer
+        title="Vendor Configuration"
+        placement="right"
+        width={600}
+        onClose={() => setIsProfileDrawerOpen(false)}
+        open={isProfileDrawerOpen}
+      >
+        {selectedVendor && (
+            <Tabs defaultActiveKey="profile" items={[
+                {
+                    key: 'profile',
+                    label: <span><SolutionOutlined /> Profile & Config</span>,
+                    children: (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingTop: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <Avatar src={selectedVendor.image} size={80} shape="square" />
+                                <div>
+                                    <Title level={4} style={{ margin: 0 }}>{selectedVendor.businessName}</Title>
+                                    <Text type="secondary">{selectedVendor.id} • {selectedVendor.name}</Text>
+                                    <div style={{ marginTop: 8 }}>
+                                        <Select 
+                                            value={editedStatus} 
+                                            onChange={setEditedStatus}
+                                            style={{ width: 140 }}
+                                            size="small"
+                                            options={[
+                                                { value: 'Active', label: 'Active', className: 'text-emerald-500 font-bold' },
+                                                { value: 'Inactive', label: 'Inactive / Pending', className: 'text-slate-500' },
+                                                { value: 'Suspended', label: 'Suspended', className: 'text-rose-500' }
+                                            ]}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Descriptions title="Business Information" column={1} bordered size="small">
+                                <Descriptions.Item label="Owner Name">{selectedVendor.name}</Descriptions.Item>
+                                <Descriptions.Item label="Contact Person">{selectedVendor.contactPerson}</Descriptions.Item>
+                                <Descriptions.Item label="Contact Email">{selectedVendor.email}</Descriptions.Item>
+                                <Descriptions.Item label="Contact Phone">{selectedVendor.phone}</Descriptions.Item>
+                                <Descriptions.Item label="Department"><Tag color="blue">{selectedVendor.category}</Tag></Descriptions.Item>
+                                <Descriptions.Item label="Catalog Size">{selectedVendor.productsCount} SKUs</Descriptions.Item>
+                                <Descriptions.Item label="Avg Rating">{selectedVendor.rating} ★</Descriptions.Item>
+                            </Descriptions>
+
+                            <Descriptions title="Economics" column={1} bordered size="small">
+                                <Descriptions.Item label="Commission Fee (%)">
+                                    <InputNumber min={0} max={100} value={editedCommission} onChange={val => setEditedCommission(val || 0)} style={{ width: 100 }} />
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Merchant Earnings (Net)">{selectedVendor.earnings}</Descriptions.Item>
+                                <Descriptions.Item label="Platform Fee (Gross)">${(parseFloat(selectedVendor.earnings.replace(/[^0-9.]/g, '')) * (editedCommission/100)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Descriptions.Item>
+                            </Descriptions>
+
+                            <Divider />
+
+                            <Title level={5}>Operations</Title>
+                            <Row align="middle" justify="space-between" style={{ padding: '12px 0' }}>
+                                <Col>
+                                    <Text strong>Store Status (Active)</Text>
+                                    <Text type="secondary" style={{ display: 'block', fontSize: 13 }}>Enables visibility on the shopping mall app</Text>
+                                </Col>
+                                <Col><Switch checked={editedStatus === 'Active'} onChange={checked => setEditedStatus(checked ? 'Active' : 'Inactive')} /></Col>
+                            </Row>
+
+                            <Divider />
+
+                            {selectedVendor.approvalStatus === 'Pending' && (
+                                <div style={{ padding: 16, backgroundColor: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 8 }}>
+                                    <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <WarningOutlined style={{ color: '#faad14' }} />
+                                    <Text strong style={{ color: '#faad14' }}>Application Review Required</Text>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 12 }}>
+                                    <Button type="primary" onClick={() => handleWorkflowAction('Approve')} loading={isSaving} style={{ flex: 1, backgroundColor: '#52c41a' }}>Approve & Activate</Button>
+                                    <Button danger onClick={() => handleWorkflowAction('Reject')} loading={isSaving} style={{ flex: 1 }}>Reject</Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedVendor.approvalStatus === 'Approved' && (
+                                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                                    {selectedVendor.status === 'Active' ? (
+                                    <Button danger type="dashed" onClick={() => handleWorkflowAction('Suspend')} loading={isSaving}>Suspend Operations</Button>
+                                    ) : (
+                                    <Button type="primary" onClick={() => handleWorkflowAction('Restore')} loading={isSaving}>Restore Operations</Button>
+                                    )}
+                                    <Button type="primary" onClick={handleSaveConfiguration} loading={isSaving}>Save Changes</Button>
+                                </div>
+                            )}
+                        </div>
+                    )
+                },
+                {
+                    key: 'history',
+                    label: <span><HistoryOutlined /> Order History</span>,
+                    children: (
+                        <div style={{ paddingTop: 16 }}>
+                            <Table 
+                                size="small"
+                                dataSource={MOCK_ORDER_HISTORY}
+                                columns={[
+                                    { title: 'Order ID', dataIndex: 'id', key: 'id', render: (t) => <Text strong>{t}</Text> },
+                                    { title: 'Date', dataIndex: 'date', key: 'date' },
+                                    { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (a) => <Text strong>${a.toFixed(2)}</Text> },
+                                    { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => <Tag color={s === 'Completed' ? 'success' : 'error'}>{s}</Tag> }
+                                ]}
+                                pagination={{ pageSize: 8 }}
+                            />
+                        </div>
+                    )
+                },
+                {
+                    key: 'payouts',
+                    label: <span><DollarCircleOutlined /> Payouts</span>,
+                    children: (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingTop: 16 }}>
+                            <Card bordered className="bg-slate-50">
+                                <Row gutter={16}>
+                                    <Col span={8}>
+                                        <Statistic title="Merchant Balance" value={4850.25} precision={2} prefix="$" />
+                                    </Col>
+                                    <Col span={8}>
+                                        <Statistic title="Platform Cut" value={4850.25 * (editedCommission/100)} precision={2} prefix="$" valueStyle={{ color: '#1677ff' }} />
+                                    </Col>
+                                    <Col span={8}>
+                                        <Statistic title="Next Payout" value="Mar 15" valueStyle={{ fontSize: 18 }} />
+                                    </Col>
+                                </Row>
+                                <Button type="primary" ghost block style={{ marginTop: 16 }}>View Details</Button>
+                            </Card>
+
+                            <div>
+                                <Title level={5}>Payout History</Title>
+                                <Table 
+                                    size="small"
+                                    dataSource={MOCK_PAYOUT_HISTORY}
+                                    columns={[
+                                        { title: 'ID', dataIndex: 'id', key: 'id' },
+                                        { title: 'Period', dataIndex: 'period', key: 'period' },
+                                        { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (a) => <Text strong>${a.toLocaleString()}</Text> },
+                                        { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => <Tag color="success">{s}</Tag> }
+                                    ]}
+                                    pagination={false}
+                                />
+                            </div>
+                        </div>
+                    )
+                },
+                {
+                    key: 'disputes',
+                    label: <span><ExceptionOutlined /> Disputes & Refunds</span>,
+                    children: (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingTop: 16 }}>
+                            <Card bordered className="bg-indigo-50 border-indigo-100">
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Statistic title="Escrow Disputes" value={2} prefix={<WarningOutlined className="text-indigo-500" />} />
+                                    </Col>
+                                    <Col span={12}>
+                                        <Statistic title="Return Rate" value={2.4} precision={1} suffix="%" />
+                                    </Col>
+                                </Row>
+                            </Card>
+
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                    <Title level={5} style={{ margin: 0 }}>Marketplace Disputes</Title>
+                                    <Button size="small">Resolution Center</Button>
+                                </div>
+                                <Table 
+                                    size="small"
+                                    dataSource={MOCK_DISPUTES}
+                                    columns={[
+                                        { title: 'Nature', dataIndex: 'type', key: 'type', render: (t) => <Tag color={t.includes('Return') ? 'geekblue' : 'magenta'}>{t}</Tag> },
+                                        { title: 'Summary', dataIndex: 'reason', key: 'reason', ellipsis: true },
+                                        { title: 'Value', dataIndex: 'amount', key: 'amount', render: (a) => <Text strong>${a.toFixed(2)}</Text> },
+                                        { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => <Tag color={s === 'Resolved' ? 'success' : 'red'}>{s}</Tag> },
+                                        { title: 'Action', key: 'action', render: (_, record) => <Button type="link" size="small" onClick={() => handleOpenDispute(record)}>Review</Button> }
+                                    ]}
+                                    pagination={false}
+                                />
+                            </div>
+
+                            <Alert 
+                                type="info"
+                                showIcon
+                                message="Escrow & Payout Safety"
+                                description="Payouts for disputed orders are automatically frozen in escrow until the Resolution Center marks the case as 'Resolved'."
+                            />
+                        </div>
+                    )
+                }
+            ]} />
+        )}
+
+      </Drawer>
+
+      <Modal
+        title={`Marketplace Dispute Review: ${selectedDispute?.id}`}
+        open={isDisputeModalOpen}
+        onCancel={() => setIsDisputeModalOpen(false)}
+        width={800}
+        footer={[
+            <Button key="cancel" onClick={() => setIsDisputeModalOpen(false)}>Close</Button>,
+            <Button key="escrow" danger onClick={() => handleResolveDispute('Denied - Return to Merchant')}>Release to Merchant</Button>,
+            <Button key="refund" type="primary" onClick={() => handleResolveDispute('Approved - Refunded to Customer')}>Issue Full Refund</Button>
+        ]}
+      >
+        {selectedDispute && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ padding: '12px 16px', background: '#eef2ff', borderLeft: '4px solid #4f46e5', borderRadius: 4 }}>
+                    <Text strong>Dispute Scenario:</Text> {selectedDispute.type}
+                </div>
+
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Card size="small" title="Buyer's Statement" extra={<Tag color="blue">Customer</Tag>}>
+                            <Text type="secondary" italic>"{selectedDispute.reason}"</Text>
+                            <Divider style={{ margin: '8px 0' }} />
+                            <div style={{ padding: 12, background: '#f8fafc', borderRadius: 4, textAlign: 'center' }}>
+                                <Text type="secondary">Product Unboxing Video Attached</Text>
+                            </div>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card size="small" title="Seller's Rebuttal" extra={<Tag color="orange">Merchant</Tag>}>
+                            <Text type="secondary" italic>"The buyer has provided no clear evidence of counterfeiting. We have authenticated invoices."</Text>
+                            <Divider style={{ margin: '8px 0' }} />
+                            <div style={{ padding: 12, background: '#f8fafc', borderRadius: 4, textAlign: 'center' }}>
+                                <Text type="secondary">Brand Authorization Certificate</Text>
+                            </div>
+                        </Card>
+                    </Col>
+                </Row>
+
+                <Descriptions title="Transaction Snapshot" bordered size="small" column={2}>
+                    <Descriptions.Item label="Transaction ID">{selectedDispute.id}</Descriptions.Item>
+                    <Descriptions.Item label="Order Reference">{selectedDispute.orderId}</Descriptions.Item>
+                    <Descriptions.Item label="Escrow Value">${selectedDispute.amount.toFixed(2)}</Descriptions.Item>
+                    <Descriptions.Item label="Engagement Date">{selectedDispute.date}</Descriptions.Item>
+                </Descriptions>
+
+                <div>
+                    <Text strong>Decision Justification (Formal Notification)</Text>
+                    <Input.TextArea 
+                        rows={3} 
+                        placeholder="State the final ruling for both buyer and seller..." 
+                        value={disputeResponse}
+                        onChange={e => setDisputeResponse(e.target.value)}
+                        style={{ marginTop: 8 }}
+                    />
+                </div>
+            </div>
+        )}
+      </Modal>
+    </div>
+  );
 };
-
-const StatBox: React.FC<{ title: string, value: string, subValue: string, color: string }> = ({ title, value, subValue, color }) => (
- <div className="bg-white p-7 rounded-[40px] shadow-soft border border-slate-100/50 group hover:shadow-xl transition-all">
- <div className="flex flex-col gap-1">
- <span className="text-[10px] font-bold text-slate-400 font-small-caps mb-2">{title}</span>
- <span className="text-3xl font-display font-black text-slate-900 tracking-tight mb-2">{value}</span>
- <div className="flex items-center gap-2">
- <TrendingUp className={cn(
- "w-3.5 h-3.5",
- color === 'emerald' ? "text-emerald-500" :
- color === 'amber' ? "text-amber-500" :
- color === 'primary' ? "text-primary" : "text-blue-500"
- )} />
- <span className="text-[10px] font-bold text-slate-400 font-small-caps leading-none">{subValue}</span>
- </div>
- </div>
- </div>
-);
-
-const VendorStatusBadge: React.FC<{ status: ShoppingVendor['status'] }> = ({ status }) => (
- <span className={cn(
- "px-4 py-1.5 rounded-xl text-[9px] font-black border",
- status === 'Active' && "bg-emerald-50 text-emerald-600 border-emerald-100/50",
- status === 'Pending Approval' && "bg-amber-50 text-amber-600 border-amber-100/50",
- status === 'Suspended' && "bg-red-50 text-red-600 border-red-100/50"
- )}>
- {status}
- </span>
-);

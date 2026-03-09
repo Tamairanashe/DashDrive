@@ -147,6 +147,7 @@ export const AdminLayout: React.FC = () => {
       label: 'FINANCE & REPORTS',
       type: 'group',
       children: [
+        { key: '/services/payments', icon: <BankOutlined />, label: 'Fintech Hub' },
         { key: '/finance/transactions', icon: <DollarOutlined />, label: 'Transactions' },
         { key: '/finance/earnings', icon: <PieChartOutlined />, label: 'Earnings Reports' },
         { key: '/finance/commissions', icon: <FileTextOutlined />, label: 'Commission Reports' },

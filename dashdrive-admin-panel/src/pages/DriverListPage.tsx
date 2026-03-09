@@ -14,7 +14,8 @@ import {
   Avatar,
   Tooltip,
   Progress,
-  Rate
+  Rate,
+  Badge
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -26,14 +27,20 @@ import {
   SafetyCertificateOutlined,
   CarOutlined,
   DownloadOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  ClockCircleOutlined,
+  EnvironmentOutlined,
+  WarningOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons';
+import { DriverDetails } from '../components/DriverDetails';
 
 const { Title, Text } = Typography;
 
 export const DriverListPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [searchText, setSearchText] = useState('');
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
 
   const stats = [
     { title: 'Total Drivers', value: '12,405', icon: <UserOutlined />, color: '#10b981' },
@@ -42,116 +49,158 @@ export const DriverListPage: React.FC = () => {
     { title: 'Offline', value: '7,445', icon: <UserOutlined />, color: '#94a3b8' },
   ];
 
-  const columns = [
-    {
-      title: 'Driver Info',
-      key: 'info',
-      render: (_: any, record: any) => (
-        <Space size="middle">
-          <Avatar 
-            size={48} 
-            src={record.avatar} 
-            icon={<UserOutlined />} 
-            style={{ borderRadius: 12, border: '2px solid #f1f5f9' }}
-          />
-          <div>
-            <Text strong style={{ fontSize: 14, display: 'block' }}>{record.name}</Text>
-            <Space size={4}>
-              <Tag color="blue" style={{ fontSize: 9 }}>{record.vehicleType}</Tag>
-              <Text type="secondary" style={{ fontSize: 11 }}>ID: {record.id}</Text>
-            </Space>
-          </div>
-        </Space>
-      ),
-    },
-    {
-      title: 'Tier & Rating',
-      key: 'tier',
-      render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <Tag color={record.level === 'Platinum' ? 'purple' : record.level === 'Gold' ? 'gold' : 'default'}>
-            {record.level}
-          </Tag>
-          <Rate disabled defaultValue={record.rating} style={{ fontSize: 12 }} />
-        </Space>
-      ),
-    },
-    {
-      title: 'KPI Metrics',
-      key: 'kpi',
-      render: (_: any, record: any) => (
-        <div style={{ width: 120 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <Text type="secondary" style={{ fontSize: 10 }}>Acceptance</Text>
-            <Text strong style={{ fontSize: 10, color: '#10b981' }}>{record.acceptanceRate}%</Text>
-          </div>
-          <Progress percent={record.acceptanceRate} size="small" showInfo={false} strokeColor="#10b981" />
-        </div>
-      ),
-    },
-    {
-      title: 'Compliance',
-      key: 'compliance',
-      dataIndex: 'kycStatus',
-      render: (status: string) => (
-        <Tag color={status === 'Verified' ? 'green' : 'orange'} icon={<SafetyCertificateOutlined />}>
-          {status}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      dataIndex: 'status',
-      render: (status: string) => (
-        <Space size={4}>
-          <div style={{ 
-            width: 8, height: 8, borderRadius: '50%', 
-            background: status === 'On Trip' ? '#10b981' : status === 'Active' ? '#3b82f6' : '#94a3b8' 
-          }} />
-          <Text strong style={{ fontSize: 12 }}>{status}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: () => (
-        <Space>
-          <Tooltip title="View Profile">
-            <Button type="text" icon={<EyeOutlined />} />
-          </Tooltip>
-          <Button type="text" icon={<EditOutlined />} />
-          <Button type="text" icon={<MoreOutlined />} />
-        </Space>
-      ),
-    },
+  // Mock Data
+  const allDrivers = [
+    { id: 'D-4001', name: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', status: 'On Trip', rating: 4.9, vehicle: 'Toyota Prius', tripProgress: 65, eta: '12 mins', destination: 'Central Park' },
+    { id: 'D-4002', name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', status: 'Active', rating: 4.8, vehicle: 'Honda Civic', shiftTime: '4h 20m', zone: 'Downtown' },
+    { id: 'D-4003', name: 'Marco Rossi', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', status: 'Offline', rating: 4.7, vehicle: 'Motorcycle', lastSeen: '2h ago', preferredZone: 'North End' },
+    { id: 'D-4004', name: 'Elena Petrova', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', status: 'Compliance Alert', rating: 4.9, vehicle: 'Tesla Model 3', alertType: 'Insurance Expiring', expiry: 'In 3 days' },
   ];
 
-  const drivers = [
-    { id: 'D-4001', name: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', level: 'Platinum', status: 'On Trip', rating: 4.9, acceptanceRate: 98, kycStatus: 'Verified', vehicleType: 'Luxury' },
-    { id: 'D-4002', name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', level: 'Gold', status: 'Active', rating: 4.8, acceptanceRate: 95, kycStatus: 'Verified', vehicleType: 'Standard' },
-    { id: 'D-4003', name: 'Marco Rossi', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', level: 'Silver', status: 'Offline', rating: 4.7, acceptanceRate: 88, kycStatus: 'Pending', vehicleType: 'Bike' },
-  ];
+  // If a driver is selected, show the detailed profile view
+  if (selectedDriverId) {
+    return (
+      <div className="animate-in fade-in duration-500">
+        <DriverDetails 
+          driverId={selectedDriverId} 
+          onBack={() => setSelectedDriverId(null)} 
+        />
+      </div>
+    );
+  }
+
+  // Column Definitions for different tabs
+  const getColumns = () => {
+    const baseColumns = [
+      {
+        title: 'Driver Info',
+        key: 'info',
+        render: (_: any, record: any) => (
+          <Space>
+            <Avatar src={record.avatar} icon={<UserOutlined />} />
+            <div>
+              <Text strong style={{ fontSize: 13 }}>{record.name}</Text>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>ID: {record.id} • {record.vehicle}</div>
+            </div>
+          </Space>
+        ),
+      }
+    ];
+
+    if (activeTab === 'On Trip') {
+      return [
+        ...baseColumns,
+        {
+          title: 'Current Trip',
+          key: 'trip',
+          render: (record: any) => (
+            <div style={{ width: 150 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontSize: 11 }}><EnvironmentOutlined /> {record.destination}</Text>
+                <Text strong style={{ fontSize: 11, color: '#3b82f6' }}>{record.eta}</Text>
+              </div>
+              <Progress percent={record.tripProgress} size="small" strokeColor="#3b82f6" />
+            </div>
+          )
+        },
+        { title: 'Status', key: 'status', render: () => <Badge color="green" text="In Progress" /> },
+        { title: 'Actions', key: 'actions', render: (_: any, record: any) => <Button size="small" onClick={() => setSelectedDriverId(record.id)}>Track Live</Button> }
+      ];
+    }
+
+    if (activeTab === 'Active') {
+      return [
+        ...baseColumns,
+        { title: 'Shift Duration', dataIndex: 'shiftTime', key: 'shift', render: (t: string) => <Space><ClockCircleOutlined /> {t}</Space> },
+        { title: 'Current Zone', dataIndex: 'zone', key: 'zone', render: (z: string) => <Tag color="blue">{z}</Tag> },
+        { title: 'Load', key: 'load', render: () => <Badge status="processing" text="Available" /> },
+        { title: 'Actions', key: 'actions', render: (_: any, record: any) => <Button size="small" onClick={() => setSelectedDriverId(record.id)}>View Profile</Button> }
+      ];
+    }
+
+    if (activeTab === 'Offline') {
+      return [
+        ...baseColumns,
+        { title: 'Last Seen', dataIndex: 'lastSeen', key: 'seen' },
+        { title: 'Preferred Zone', dataIndex: 'preferredZone', key: 'prefZone' },
+        { title: 'Status', key: 'status', render: () => <Badge color="default" text="Offline" /> },
+        { title: 'Actions', key: 'actions', render: (_: any, record: any) => <Button size="small" onClick={() => setSelectedDriverId(record.id)}>Review Profile</Button> }
+      ];
+    }
+
+    if (activeTab === 'Compliance') {
+      return [
+        ...baseColumns,
+        { 
+          title: 'Issue Type', 
+          key: 'issue', 
+          render: (record: any) => (
+            <Space>
+              <WarningOutlined style={{ color: '#ff4d4f' }} />
+              <Text type="danger" strong style={{ fontSize: 12 }}>{record.alertType}</Text>
+            </Space>
+          )
+        },
+        { title: 'Deadline', dataIndex: 'expiry', key: 'expiry', render: (e: string) => <Tag color="error">{e}</Tag> },
+        { title: 'Actions', key: 'actions', render: (_: any, record: any) => <Button type="primary" danger size="small" onClick={() => setSelectedDriverId(record.id)}>Investigate</Button> }
+      ];
+    }
+
+    // Default All Columns
+    return [
+      ...baseColumns,
+      {
+        title: 'Rating',
+        dataIndex: 'rating',
+        key: 'rating',
+        render: (r: number) => <Rate disabled defaultValue={r} style={{ fontSize: 12 }} />
+      },
+      {
+        title: 'Status',
+        dataIndex: 'status',
+        key: 'status',
+        render: (s: string) => (
+          <Tag color={s === 'On Trip' ? 'green' : s === 'Active' ? 'blue' : s === 'Offline' ? 'default' : 'red'}>
+            {s}
+          </Tag>
+        )
+      },
+      {
+        title: 'Actions',
+        key: 'actions',
+        render: (_: any, record: any) => (
+          <Space>
+            <Tooltip title="View Detailed Profile">
+              <Button type="text" icon={<EyeOutlined />} onClick={() => setSelectedDriverId(record.id)} />
+            </Tooltip>
+            <Button type="text" icon={<EditOutlined />} />
+            <Button type="text" icon={<MoreOutlined />} />
+          </Space>
+        )
+      }
+    ];
+  };
 
   return (
     <div style={{ padding: '0 0 24px 0' }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Col>
           <Title level={4} style={{ margin: 0 }}>Fleet Command Center</Title>
-          <Text type="secondary">Advanced driver tracking, performance analytics, and compliance.</Text>
+          <Text type="secondary">Real-time operational overview of your network.</Text>
         </Col>
         <Col>
-          <Button type="primary" size="large" icon={<PlusOutlined />} style={{ borderRadius: 8 }}>
-            Add New Driver
-          </Button>
+          <Space>
+            <Button icon={<ReloadOutlined />} />
+            <Button icon={<DownloadOutlined />}>Report</Button>
+            <Button type="primary" icon={<PlusOutlined />}>Onboard Driver</Button>
+          </Space>
         </Col>
       </Row>
 
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         {stats.map(stat => (
           <Col xs={24} sm={12} lg={6} key={stat.title}>
-            <Card bordered={false} bodyStyle={{ padding: 20 }}>
+            <Card bordered={false} bodyStyle={{ padding: 20 }} className="shadow-sm">
               <Space size={16}>
                 <div style={{ 
                   width: 48, height: 48, background: `${stat.color}15`, 
@@ -167,37 +216,33 @@ export const DriverListPage: React.FC = () => {
         ))}
       </Row>
 
-      <Card bordered={false} bodyStyle={{ padding: 0 }}>
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+      <Card bordered={false} bodyStyle={{ padding: 0 }} className="shadow-sm">
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Tabs 
             activeKey={activeTab} 
             onChange={setActiveTab}
             items={[
               { key: 'All', label: 'All Fleet' },
-              { key: 'Active', label: 'Active' },
-              { key: 'On Trip', label: 'On Trip' },
-              { key: 'Offline', label: 'Offline' },
-              { key: 'Compliance', label: 'Compliance Alerts' },
+              { key: 'Active', label: 'Available Drivers' },
+              { key: 'On Trip', label: 'Live Trips' },
+              { key: 'Offline', label: 'Offline Fleet' },
+              { key: 'Compliance', label: <Badge size="small" count={2} offset={[10, 0]}>Compliance Alerts</Badge> },
             ]}
             style={{ marginBottom: -16 }}
           />
-          <Space size="middle">
-            <Button icon={<ReloadOutlined />} />
-            <Button icon={<DownloadOutlined />}>Export CSV</Button>
-            <Input
-              prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
-              placeholder="Search by name, ID, vehicle..."
-              style={{ width: 280, borderRadius: 8 }}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-            />
-          </Space>
+          <Input
+            prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+            placeholder="Quick search..."
+            style={{ width: 240, borderRadius: 8 }}
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+          />
         </div>
         <Table 
-          columns={columns} 
-          dataSource={drivers} 
+          columns={getColumns()} 
+          dataSource={activeTab === 'All' ? allDrivers : allDrivers.filter(d => (activeTab === 'Compliance' ? d.status === 'Compliance Alert' : d.status === activeTab))} 
           rowKey="id"
-          pagination={{ pageSize: 15, position: ['bottomRight'] }}
+          pagination={{ pageSize: 15 }}
         />
       </Card>
     </div>

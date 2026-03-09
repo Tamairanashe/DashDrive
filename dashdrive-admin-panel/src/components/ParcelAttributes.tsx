@@ -1,161 +1,227 @@
 import React, { useState } from 'react';
 import {
- Shield,
- Zap,
- Box,
- Scale,
- DollarSign,
- Info,
- CheckCircle2,
- AlertTriangle,
- Plus,
- PlusCircle,
- Server,
- Gem,
- Feather,
- Activity,
- Compass
-} from 'lucide-react';
-import { cn } from '../utils';
+    Table,
+    Tag,
+    Button,
+    Space,
+    Typography,
+    Card,
+    Tooltip,
+    Alert,
+    Avatar,
+    Row,
+    Col,
+    Divider
+} from 'antd';
+import {
+    PlusCircleOutlined,
+    SafetyOutlined,
+    ThunderboltOutlined,
+    DeploymentUnitOutlined,
+    SignatureOutlined,
+    SettingOutlined,
+    RightOutlined,
+    SkinOutlined,
+    InsuranceOutlined
+} from '@ant-design/icons';
+
+const { Text, Title } = Typography;
 
 interface ParcelAttribute {
- id: string;
- name: string;
- description: string;
- feeType: 'Fixed' | 'Percentage';
- feeValue: string;
- icon: any;
- assignedCategories: string[];
- priority: 'Standard' | 'High' | 'Critical';
+    id: string;
+    name: string;
+    description: string;
+    feeType: 'Fixed' | 'Percentage';
+    feeValue: string;
+    icon: any;
+    assignedCategories: string[];
+    priority: 'Standard' | 'High' | 'Critical';
 }
 
 const mockAttributes: ParcelAttribute[] = [
- {
- id: 'ATTR-01',
- name: 'Fragile Handling',
- description: 'Enhanced padding and top-load placement. Mandatory for glass/ceramics.',
- feeType: 'Percentage',
- feeValue: '15%',
- icon: Feather,
- assignedCategories: ['Home & Kitchen', 'Electronics'],
- priority: 'High'
- },
- {
- id: 'ATTR-02',
- name: 'Logistics Insurance',
- description: 'Comprehensive coverage up to $2,000 for loss or structural damage.',
- feeType: 'Percentage',
- feeValue: '2.5%',
- icon: Shield,
- assignedCategories: ['Electronics', 'Heavy Goods'],
- priority: 'Critical'
- },
- {
- id: 'ATTR-03',
- name: 'Temperature Control',
- description: 'Cold-chain maintenance for perishable or medical logistics.',
- feeType: 'Fixed',
- feeValue: '$25.00',
- icon: Server,
- assignedCategories: ['Food & Pharma'],
- priority: 'High'
- },
- {
- id: 'ATTR-04',
- name: 'Signature Required',
- description: 'Proof of delivery via digital signature at exact coordinates.',
- feeType: 'Fixed',
- feeValue: '$1.50',
- icon: Compass,
- assignedCategories: ['Documents', 'High Value'],
- priority: 'Standard'
- }
+    {
+        id: 'ATTR-01',
+        name: 'Fragile Handling',
+        description: 'Enhanced padding and top-load placement. Mandatory for glass/ceramics.',
+        feeType: 'Percentage',
+        feeValue: '15%',
+        icon: SkinOutlined,
+        assignedCategories: ['Home & Kitchen', 'Electronics'],
+        priority: 'High'
+    },
+    {
+        id: 'ATTR-02',
+        name: 'Logistics Insurance',
+        description: 'Comprehensive coverage up to $2,000 for loss or structural damage.',
+        feeType: 'Percentage',
+        feeValue: '2.5%',
+        icon: InsuranceOutlined,
+        assignedCategories: ['Electronics', 'Heavy Goods'],
+        priority: 'Critical'
+    },
+    {
+        id: 'ATTR-03',
+        name: 'Temperature Control',
+        description: 'Cold-chain maintenance for perishable or medical logistics.',
+        feeType: 'Fixed',
+        feeValue: '$25.00',
+        icon: ThunderboltOutlined,
+        assignedCategories: ['Food & Pharma'],
+        priority: 'High'
+    },
+    {
+        id: 'ATTR-04',
+        name: 'Signature Required',
+        description: 'Proof of delivery via digital signature at exact coordinates.',
+        feeType: 'Fixed',
+        feeValue: '$1.50',
+        icon: SignatureOutlined,
+        assignedCategories: ['Documents', 'High Value'],
+        priority: 'Standard'
+    }
 ];
 
 export const ParcelAttributes: React.FC = () => {
- return (
- <div className="space-y-8 animate-in fade-in duration-700">
- {/* Header Section */}
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
- <div>
- <h2 className="text-3xl font-display font-black text-slate-900 tracking-tight">Logistics Attributes</h2>
- <p className="text-sm text-slate-400 font-medium mt-1">Configure advanced handling rules, extra service fees, and category automation</p>
- </div>
- <button className="flex items-center gap-2.5 px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[11px] font-bold font-small-caps shadow-sm hover:bg-slate-50 transition-all">
- <PlusCircle className="w-5 h-5 text-primary" />
- New Attribute
- </button>
- </div>
+    const getPriorityTag = (priority: ParcelAttribute['priority']) => {
+        switch (priority) {
+            case 'Critical':
+                return <Tag color="red">Critical</Tag>;
+            case 'High':
+                return <Tag color="volcano">High</Tag>;
+            default:
+                return <Tag color="blue">Standard</Tag>;
+        }
+    };
 
- {/* Attributes Grid */}
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
- {mockAttributes.map((attr) => (
- <div key={attr.id} className="bg-white rounded-[48px] p-10 shadow-soft border border-slate-100/50 hover:shadow-2xl transition-all duration-500 group">
- <div className="flex items-start gap-8">
- <div className="w-24 h-24 rounded-[32px] bg-slate-900 flex items-center justify-center text-primary shadow-xl shrink-0 group-hover:scale-105 transition-transform">
- <attr.icon className="w-10 h-10" />
- </div>
+    const columns = [
+        {
+            title: 'Attribute',
+            key: 'attribute',
+            render: (_: any, record: ParcelAttribute) => (
+                <Space>
+                    <Avatar 
+                        icon={<record.icon />} 
+                        style={{ backgroundColor: '#f0f5ff', color: '#1890ff' }} 
+                        shape="square"
+                        size="large"
+                    />
+                    <Space direction="vertical" size={0}>
+                        <Text strong>{record.name}</Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>{record.id}</Text>
+                    </Space>
+                </Space>
+            ),
+        },
+        {
+            title: 'Description',
+            dataIndex: 'description',
+            key: 'description',
+            render: (text: string) => <Text type="secondary" style={{ fontSize: 12 }}>{text}</Text>,
+        },
+        {
+            title: 'Fee Structure',
+            key: 'fee',
+            render: (_: any, record: ParcelAttribute) => (
+                <Space direction="vertical" size={0}>
+                    <Text strong style={{ color: '#10b981' }}>{record.feeValue}</Text>
+                    <Text type="secondary" style={{ fontSize: 10 }}>{record.feeType}</Text>
+                </Space>
+            ),
+        },
+        {
+            title: 'Auto-Assigned',
+            dataIndex: 'assignedCategories',
+            key: 'categories',
+            render: (categories: string[]) => (
+                <Space wrap>
+                    {categories.map(cat => (
+                        <Tag key={cat} color="cyan" style={{ fontSize: 10 }}>{cat}</Tag>
+                    ))}
+                </Space>
+            ),
+        },
+        {
+            title: 'Priority',
+            dataIndex: 'priority',
+            key: 'priority',
+            render: (priority: ParcelAttribute['priority']) => getPriorityTag(priority),
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: () => (
+                <Button type="link" size="small">Edit Logic</Button>
+            ),
+        },
+    ];
 
- <div className="flex-1 space-y-4">
- <div className="flex items-center justify-between">
- <div className="space-y-1">
- <h3 className="text-2xl font-display font-black text-slate-900 tracking-tight">{attr.name}</h3>
- <div className="flex items-center gap-2">
- <span className="text-[10px] font-bold text-slate-300 ">{attr.id}</span>
- <span className={cn(
- "px-2 py-0.5 rounded-lg text-[8px] font-black ",
- attr.priority === 'Critical' ? "bg-rose-50 text-rose-500" :
- attr.priority === 'High' ? "bg-amber-50 text-amber-500" :
- "bg-blue-50 text-blue-500"
- )}>{attr.priority}</span>
- </div>
- </div>
- <div className="text-right">
- <p className="text-[10px] font-bold text-slate-400 mb-1">Fee</p>
- <p className="text-2xl font-display font-black text-primary tracking-tight">{attr.feeValue}</p>
- </div>
- </div>
+    return (
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            {/* Header Section */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Smart Surcharge Engine</Title>
+                <Text type="secondary" style={{ fontSize: 15 }}>Configure automated price adjustments based on package characteristics and handling complexity</Text>
+            </div>
+                <Button 
+                    type="primary" 
+                    icon={<PlusCircleOutlined />} 
+                    size="large"
+                    style={{ borderRadius: 12 }}
+                >
+                    New Attribute
+                </Button>
+            </div>
 
- <p className="text-sm text-slate-500 font-medium line-clamp-2">{attr.description}</p>
+            {/* Automation Hero Section */}
+            <Card 
+                className="bg-slate-900 overflow-hidden" 
+                styles={{ body: { padding: '32px 40px' } }}
+                bordered={false}
+            >
+                <Row align="middle" gutter={40}>
+                    <Col>
+                        <Avatar 
+                            size={80} 
+                            icon={<ThunderboltOutlined />} 
+                            style={{ backgroundColor: 'rgba(24, 144, 255, 0.15)', color: '#1890ff' }} 
+                        />
+                    </Col>
+                    <Col flex="1">
+                        <Title level={4} style={{ color: 'white', margin: 0 }}>Smart Surcharge Engine</Title>
+                        <Text style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: 14 }}>
+                            Our AI automatically applies <Text strong style={{ color: 'white' }}>Insurance Premium</Text> and <Text strong style={{ color: 'white' }}>High Value Handling</Text> based on real-time price scanning of declared contents.
+                        </Text>
+                    </Col>
+                    <Col>
+                        <Button type="primary" size="large" ghost icon={<SettingOutlined />}>
+                            Configure AI Logic
+                        </Button>
+                    </Col>
+                </Row>
+            </Card>
 
- <div className="pt-6 border-t border-slate-50">
- <p className="text-[10px] font-bold text-slate-400 mb-3">Auto-Assigned Categories</p>
- <div className="flex flex-wrap gap-2">
- {attr.assignedCategories.map((cat, i) => (
- <div key={i} className="px-3 py-1.5 bg-slate-50 text-slate-600 text-[10px] font-bold rounded-xl border border-slate-100 flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-full bg-primary" />
- {cat}
- </div>
- ))}
- <button className="px-3 py-1.5 text-primary text-[10px] font-black hover:bg-primary/5 rounded-xl transition-colors">
- + {attr.assignedCategories.length > 2 ? 'Assign More' : 'Assign Category'}
- </button>
- </div>
- </div>
- </div>
- </div>
- </div>
- ))}
+            <Card bordered={false} className="shadow-sm overflow-hidden" styles={{ body: { padding: 0 } }}>
+                <Table 
+                    columns={columns} 
+                    dataSource={mockAttributes} 
+                    rowKey="id"
+                    pagination={false}
+                />
+            </Card>
 
- {/* Automation Rule Card */}
- <div className="bg-slate-900 rounded-[48px] p-10 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden group border border-white/5 lg:col-span-2">
- <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full translate-x-32 -translate-y-32 blur-3xl" />
- <div className="w-32 h-32 bg-white/5 rounded-full flex items-center justify-center animate-pulse-slow">
- <Zap className="w-16 h-16 text-primary" />
- </div>
- <div className="flex-1 text-center md:text-left space-y-2 relative z-10">
- <h4 className="text-2xl font-display font-black text-white tracking-tight">Smart Surcharge Engine</h4>
- <p className="text-slate-400 text-sm font-medium max-w-xl">
- Our AI automatically applies <span className="text-white font-bold italic">Insurance Premium</span> and <span className="text-white font-bold italic">High Value Handling</span> based on real-time price scanning of declared contents.
- </p>
- </div>
- <div className="relative z-10">
- <button className="px-8 py-4 bg-white text-slate-900 rounded-2xl text-[10px] font-bold font-small-caps shadow-2xl hover:scale-105 active:scale-95 transition-all">
- Configure AI Logic
- </button>
- </div>
- </div>
- </div>
- </div>
- );
+            <Alert
+                message="Optimization Insight"
+                description="Linking 'Fragile Handling' to 'Electronics' has reduced accidental damage claims by 24% this quarter. Consider adding 'Proof of Age' for Pharma categories."
+                type="success"
+                showIcon
+                action={
+                    <Button size="small" type="link">
+                        View Analytics
+                    </Button>
+                }
+            />
+        </Space>
+    );
 };
+

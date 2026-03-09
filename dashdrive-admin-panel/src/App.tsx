@@ -29,6 +29,13 @@ import { ContentManagerPage } from './pages/ContentManagerPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { HeatMapPage } from './pages/HeatMapPage';
 import { DispatchManagementPage } from './pages/DispatchManagementPage';
+import { FoodDeliveryPage } from './pages/FoodDeliveryPage';
+import { MartDeliveryPage } from './pages/MartDeliveryPage';
+import { ShoppingPage } from './pages/ShoppingPage';
+import { RideHailingPage } from './pages/RideHailingPage';
+import { ParcelDeliveryPage } from './pages/ParcelDeliveryPage';
+import { FintechPage } from './pages/FintechPage';
+
 
 export default function App() {
   const { isAuthenticated } = useAuth();
@@ -50,12 +57,12 @@ export default function App() {
           <Route path="dashboard/dispatch" element={<DispatchManagementPage />} />
 
           {/* Services */}
-          <Route path="services/ride" element={<ServiceConfigPage />} />
-          <Route path="services/food" element={<ServiceConfigPage />} />
-          <Route path="services/mart" element={<MerchantListPage />} />
-          <Route path="services/shopping" element={<ServiceConfigPage />} />
-          <Route path="services/parcel" element={<ServiceConfigPage />} />
-          <Route path="services/payments" element={<ServiceConfigPage />} />
+          <Route path="services/ride" element={<RideHailingPage />} />
+          <Route path="services/food" element={<FoodDeliveryPage />} />
+          <Route path="services/mart" element={<MartDeliveryPage />} />
+          <Route path="services/shopping" element={<ShoppingPage />} />
+          <Route path="services/parcel" element={<ParcelDeliveryPage />} />
+          <Route path="services/payments" element={<FintechPage />} />
           
           {/* Driver Management */}
           <Route path="drivers/list" element={<DriverListPage />} />

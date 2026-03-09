@@ -1,671 +1,1007 @@
 import React, { useState } from 'react';
-import {
- User, Phone, Mail, CheckCircle2, XCircle,
- TrendingUp, Star, Download, FileText,
- Search, Filter, ChevronRight, ArrowLeft,
- CreditCard, History, ShieldCheck, AlertCircle,
- Eye, MoreVertical, Trash2, Activity, Edit3,
- Ban, Bike, Car, Settings, Wallet, DollarSign,
- Clock, PieChart, Banknote, ArrowUpRight,
- Crown, Award, Diamond, Target, Gift, Zap, Percent
-} from 'lucide-react';
-import { cn } from '../utils';
-import { Tabs } from 'antd';
+import { 
+  Row, 
+  Col, 
+  Card, 
+  Typography, 
+  Button, 
+  Avatar, 
+  Space, 
+  Tag, 
+  Statistic, 
+  Divider, 
+  Badge, 
+  Tabs, 
+  Table, 
+  Progress,
+  Descriptions,
+  Rate,
+  Modal,
+  Timeline,
+  Select,
+  Image,
+  List,
+  Form,
+  Input,
+  message,
+  notification,
+  Alert
+} from 'antd';
+import { 
+  ArrowLeftOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  StarFilled,
+  DownloadOutlined,
+  FileTextOutlined,
+  HistoryOutlined,
+  SafetyCertificateOutlined,
+  EditOutlined,
+  StopOutlined,
+  CarOutlined,
+  WalletOutlined,
+  DollarOutlined,
+  RiseOutlined,
+  TrophyOutlined,
+  EnvironmentOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  GlobalOutlined,
+  BankOutlined,
+  FilterOutlined,
+  UserOutlined,
+  LockOutlined,
+  UnlockOutlined,
+  EyeOutlined,
+  CloudUploadOutlined,
+  FileProtectOutlined,
+  WarningOutlined as WarningIcon,
+  IdcardOutlined,
+  CameraOutlined,
+  MessageOutlined,
+  SendOutlined,
+  ExclamationCircleOutlined
+} from '@ant-design/icons';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
+
+// Fix Leaflet icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface DriverDetailsProps {
- driverId: string;
- onBack: () => void;
+  driverId: string;
+  onBack: () => void;
 }
 
 export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }) => {
- const [activeTab, setActiveTab] = useState('Overview');
- const [reviewTab, setReviewTab] = useState('From Customer');
- const [isActive, setIsActive] = useState(true);
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [status, setStatus] = useState<'Active' | 'Suspended'>('Active');
+  const [selectedTrip, setSelectedTrip] = useState<any>(null);
+  const [showAuditLogs, setShowAuditLogs] = useState(false);
+  const [showDocsModal, setShowDocsModal] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [docTab, setDocTab] = useState('Personal');
+  const [auditFilter, setAuditFilter] = useState('All');
+  
+  const [form] = Form.useForm();
+  const [msgForm] = Form.useForm();
 
- const driver = {
- id: driverId,
- name: 'Devid Jack',
- phone: '+1 555-****-0101',
- email: 'devid.jack@example.com',
- avatar: `https://picsum.photos/seed/${driverId}/200/200`,
- tier: 'Platinum',
- points: 16250,
- peakPoints: 12450,
- nextTierPoints: 25500,
- acceptanceRate: 98.5,
- rating: 5.0,
- services: ['Ride Request', 'Parcel (Capacity Unlimited)'],
- stats: {
- avgEarning: 96.79,
- positiveReview: 100,
- successRate: 85.71,
- cancellationRate: 14.29,
- idleHourRate: 0,
- completedTrips: 6,
- cancelTrips: 1,
- lowestPrice: 15.00,
- highestPrice: 120.00
- },
- wallet: {
- collectableCash: 0.00,
- pendingWithdraw: 100.00,
- alreadyWithdrawn: 0.00,
- withdrawableAmount: 36.11,
- totalEarning: 466.48
- },
- vehicle: {
- image: 'https://picsum.photos/seed/bike/400/300',
- ownership: 'Owner driver',
- category: 'Bike',
- brand: 'Honda',
- model: 'R15',
- tripRate: 100,
- parcelRate: 100,
- specs: {
- vin: 'VIN1234567890',
- licensePlate: 'ABC-1234',
- fuelType: 'Petrol',
- engineType: '150cc',
- licenseExpiry: '2025-12-31',
- seatCapacity: '2',
- transmission: 'Manual',
- hatchBag: 'None'
- }
- }
- };
+  // Mock Data (Enhanced for Ant Design)
+  const [driverData, setDriverData] = useState({
+    id: driverId || 'D-201',
+    name: 'John Makoni',
+    phone: '+263 771 222 333',
+    email: 'john.m@dashdrive.com',
+    avatar: `https://picsum.photos/seed/${driverId}/200/200`,
+    tier: 'Platinum',
+    points: 16250,
+    rating: 4.85,
+    joinDate: '20 Nov 2023',
+    city: 'Harare',
+    appliedDate: '2023-11-15 09:22',
+    fraudFlags: ['Multiple vehicles linked'],
+    stats: {
+      avgEarning: 96.79,
+      positiveReview: 98,
+      successRate: 94,
+      cancellationRate: 2,
+      idleHourRate: 15,
+      completedTrips: 1240,
+      cancelTrips: 12
+    },
+    wallet: {
+      total: 1841.25,
+      withdrawable: 450.75,
+      pending: 150.00
+    },
+    identity: [
+      { name: 'National ID', status: 'Verified', expiry: '2030-01-01', url: 'https://images.unsplash.com/photo-1579444741240-62400e9fe707?w=400', type: 'Personal' },
+      { name: 'Driver\'s License', status: 'Verified', expiry: '2028-10-15', url: 'https://images.unsplash.com/photo-1554224155-1696413565d3?w=400', type: 'Personal' },
+      { name: 'Selfie with ID', status: 'Verified', expiry: 'N/A', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400', type: 'Personal' },
+    ],
+    vehicle: {
+      brand: 'Honda',
+      model: 'R15',
+      plate: 'AB-123',
+      type: 'Economy Car',
+      category: 'Bike',
+      expiry: '2026-01-07',
+      color: 'Midnight Blue',
+      year: '2022',
+      documents: [
+        { name: 'Vehicle Registration', status: 'Verified', expiry: '2026-05-12', url: 'https://images.unsplash.com/photo-1579444741240-62400e9fe707?w=400', type: 'Vehicle' },
+        { name: 'Motor Insurance', status: 'Expiring Soon', expiry: '2024-04-20', url: 'https://images.unsplash.com/photo-1554224155-1696413565d3?w=400', type: 'Vehicle' },
+        { name: 'Roadworthiness Certificate', status: 'Verified', expiry: '2025-11-30', url: 'https://images.unsplash.com/photo-1586281380117-5a60ae2050cc?w=400', type: 'Vehicle' },
+      ]
+    }
+  });
 
- const driverTransactions = [
- { id: 'TXN-7721-1001', type: 'Received balance', to: 'Devid Jack', debit: 0, credit: 450.00, balance: 450.00, date: '2024-02-20 10:00' },
- { id: 'TXN-7721-1002', type: 'Payable', to: 'System', debit: 20.00, credit: 0, balance: 430.00, date: '2024-02-21 14:30' },
- { id: 'TXN-7721-1003', type: 'Withdraw', to: 'Devid Jack', debit: 100.00, credit: 0, balance: 330.00, date: '2024-02-22 09:15' },
- ];
+  const handleStatusChange = () => {
+    const action = status === 'Active' ? 'Suspend' : 'Activate';
+    Modal.confirm({
+      title: `Confirm ${action}`,
+      icon: <ExclamationCircleOutlined />,
+      content: `Are you sure you want to ${action.toLowerCase()} this driver? This will affect their ability to accept trips.`,
+      okText: 'Yes',
+      okType: action === 'Suspend' ? 'danger' : 'primary',
+      cancelText: 'No',
+      onOk() {
+        setStatus(status === 'Active' ? 'Suspended' : 'Active');
+        message.success(`Driver successfully ${status === 'Active' ? 'suspended' : 'activated'}.`);
+      },
+    });
+  };
 
- const driverTrips = [
- { id: 'TRP-1001', date: '2024-02-22 14:30', customer: 'Test User', cost: 25.00, discount: 5.00, status: 'Completed', payment: 'Paid' },
- { id: 'TRP-1002', date: '2024-02-21 09:15', customer: 'Jane Doe', cost: 18.50, discount: 0.00, status: 'Completed', payment: 'Paid' },
- { id: 'TRP-1003', date: '2024-02-20 18:45', customer: 'John Smith', cost: 42.00, discount: 10.00, status: 'Cancelled', payment: 'Unpaid' },
- ];
+  const handleSendMessage = (values: any) => {
+    message.loading({ content: 'Sending message...', key: 'msg' });
+    setTimeout(() => {
+      message.success({ content: 'Message sent successfully!', key: 'msg', duration: 2 });
+      setShowMessageModal(false);
+      msgForm.resetFields();
+    }, 1000);
+  };
 
- const handleExportTransactions = () => {
- const headers = ['Transaction ID', 'Type', 'To', 'Debit', 'Credit', 'Balance', 'Date'];
- const csvContent = [
- headers.join(','),
- ...driverTransactions.map(txn => [
- txn.id,
- txn.type,
- txn.to,
- txn.debit,
- txn.credit,
- txn.balance,
- txn.date
- ].join(','))
- ].join('\n');
+  const handleEditProfile = (values: any) => {
+    setDriverData({
+      ...driverData,
+      name: values.name,
+      phone: values.phone,
+      email: values.email,
+      tier: values.tier,
+      city: values.city,
+      appliedDate: values.appliedDate,
+      vehicle: {
+        ...driverData.vehicle,
+        brand: values.vBrand,
+        model: values.vModel,
+        plate: values.plate,
+        color: values.vColor,
+        type: values.vType,
+        year: values.vYear
+      }
+    });
+    message.success('Profile updated successfully!');
+    setShowEditModal(false);
+  };
 
- const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
- const link = document.createElement('a');
- const url = URL.createObjectURL(blob);
- link.setAttribute('href', url);
- link.setAttribute('download', `driver_${driverId}_transactions.csv`);
- link.style.visibility = 'hidden';
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
- };
+  const handleDownloadReport = () => {
+    setIsGeneratingReport(true);
+    message.loading({ content: 'Generating detailed performance report...', key: 'report' });
+    setTimeout(() => {
+      setIsGeneratingReport(false);
+      message.success({ content: 'Report ready! Check your downloads.', key: 'report', duration: 3 });
+    }, 2000);
+  };
 
- const handleExportTrips = () => {
- const headers = ['Trip ID', 'Date', 'Customer', 'Cost', 'Status'];
- const csvContent = [
- headers.join(','),
- ...driverTrips.map(trip => [
- trip.id,
- trip.date,
- trip.customer,
- trip.cost,
- trip.status
- ].join(','))
- ].join('\n');
+  const auditLogs = [
+    { key: '1', timestamp: '2024-03-09 10:15 AM', event: 'Status Change', detail: 'Driver Account Suspended (Compliance Check)', admin: 'Sarah Connor', type: 'Status' },
+    { key: '2', timestamp: '2024-03-08 04:30 PM', event: 'Document Verified', detail: 'Vehicle Registration Approved', admin: 'Mark Z.', type: 'Verification' },
+    { key: '3', timestamp: '2024-03-07 09:12 AM', event: 'Reward Disbursement', detail: '500 Loyalty Points Credited (Bonus)', admin: 'System', type: 'Reward' },
+    { key: '4', timestamp: '2024-03-05 11:45 AM', event: 'Profile Edit', detail: 'Email updated to john.m@dashdrive.com', admin: 'John Makoni (Self)', type: 'Profile' },
+    { key: '5', timestamp: '2024-03-01 02:00 PM', event: 'Status Change', detail: 'Account Activated after verification', admin: 'Sarah Connor', type: 'Status' },
+  ];
 
- const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
- const link = document.createElement('a');
- const url = URL.createObjectURL(blob);
- link.setAttribute('href', url);
- link.setAttribute('download', `driver_${driverId}_trips.csv`);
- link.style.visibility = 'hidden';
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
- };
+  const transactions = [
+    { key: '1', id: 'TXN-7721', type: 'Credit', amount: 450.00, status: 'Success', date: '2024-02-20' },
+    { key: '2', id: 'TXN-7722', type: 'Debit', amount: 20.00, status: 'Success', date: '2024-02-21' },
+  ];
 
- return (
- <div className="flex flex-col h-full space-y-6">
- {/* Top Header: ID & Actions */}
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
- <div className="flex items-center gap-4">
- <button
- onClick={onBack}
- className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500"
- >
- <ArrowLeft className="w-5 h-5" />
- </button>
- <div>
- <h2 className="text-xl font-bold text-slate-800">Driver #{driver.id}</h2>
- <p className="text-sm text-slate-500">Operational profile & performance dashboard</p>
- </div>
- </div>
- <div className="flex items-center gap-2 flex-wrap">
- <button className="p-2 bg-white border border-slate-100 rounded-xl text-slate-500 hover:text-red-500 transition-colors shadow-sm">
- <Trash2 className="w-4 h-4" />
- </button>
- <button className="p-2 bg-white border border-slate-100 rounded-xl text-slate-500 hover:text-primary transition-colors shadow-sm">
- <Activity className="w-4 h-4" />
- </button>
- <div className="flex items-center gap-2 bg-white border border-slate-100 px-3 py-1.5 rounded-xl shadow-sm">
- <span className="text-[10px] font-bold text-slate-400 ">Status</span>
- <button
- onClick={() => setIsActive(!isActive)}
- className={cn(
- "w-10 h-5 rounded-full relative transition-colors",
- isActive ? "bg-primary" : "bg-slate-200"
- )}
- >
- <div className={cn(
- "absolute top-1 w-3 h-3 bg-white rounded-full transition-all",
- isActive ? "right-1" : "left-1"
- )} />
- </button>
- </div>
- <button className="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 transition-all">
- Suspend Driver
- </button>
- <button className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-sm flex items-center gap-2">
- <Edit3 className="w-3.5 h-3.5" /> Edit
- </button>
- </div>
- </div>
+  const trips = [
+    { 
+      key: '1', 
+      id: 'ORD-991', 
+      customer: 'Tapfuma J.', 
+      destination: 'Central Park', 
+      cost: '$25.00', 
+      status: 'Completed', 
+      date: '2024-02-22',
+      pickupAddr: '123 Samora Machel Ave, Harare',
+      dropoffAddr: '456 Borrowdale Rd, Harare',
+      pickupCoords: [-17.8200, 31.0500] as [number, number],
+      dropoffCoords: [-17.8300, 31.0600] as [number, number],
+      amountAgreed: 25.00,
+      commission: 3.75,
+      driverEarnings: 21.25,
+      tax: 1.25,
+      distance: '4.2 km',
+      duration: '18 mins'
+    },
+    { 
+      key: '2', 
+      id: 'ORD-992', 
+      customer: 'Nyasha C.', 
+      destination: 'Downtown', 
+      cost: '$18.50', 
+      status: 'Completed', 
+      date: '2024-02-22',
+      pickupAddr: '789 Churchill Ave, Harare',
+      dropoffAddr: '101 Second St, Harare',
+      pickupCoords: [-17.8100, 31.0400] as [number, number],
+      dropoffCoords: [-17.8250, 31.0550] as [number, number],
+      amountAgreed: 18.50,
+      commission: 2.78,
+      driverEarnings: 15.72,
+      tax: 0.93,
+      distance: '2.8 km',
+      duration: '12 mins'
+    },
+    { 
+      key: '3', 
+      id: 'ORD-993', 
+      customer: 'Chengetai M.', 
+      destination: 'Avondale', 
+      cost: '$12.00', 
+      status: 'Cancelled', 
+      canceledBy: 'Customer',
+      date: '2024-02-21',
+      pickupAddr: '55 Leopold Takawira, Harare',
+      dropoffAddr: '22 King George Rd, Harare',
+      pickupCoords: [-17.8000, 31.0450] as [number, number],
+      dropoffCoords: [-17.7900, 31.0350] as [number, number],
+      amountAgreed: 12.00,
+      commission: 0,
+      driverEarnings: 0,
+      tax: 0,
+      distance: '3.1 km',
+      duration: '0 mins'
+    },
+    { 
+      key: '4', 
+      id: 'ORD-994', 
+      customer: 'Farai G.', 
+      destination: 'Highfield', 
+      cost: '$15.50', 
+      status: 'Cancelled', 
+      canceledBy: 'Driver',
+      date: '2024-02-21',
+      pickupAddr: '10 Sam Nujoma, Harare',
+      dropoffAddr: '88 Willowvale Rd, Harare',
+      pickupCoords: [-17.8250, 31.0500] as [number, number],
+      dropoffCoords: [-17.8600, 31.0100] as [number, number],
+      amountAgreed: 15.50,
+      commission: 0,
+      driverEarnings: 0,
+      tax: 0,
+      distance: '6.4 km',
+      duration: '0 mins'
+    },
+  ];
 
- {/* Row 1: Info & Analytics */}
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
- {/* Driver Info Card */}
- <div className="bg-white p-6 rounded-[24px] shadow-soft border border-slate-100 flex flex-col items-center text-center space-y-4">
- <div className="relative">
- <div className="w-24 h-24 rounded-full border-4 border-slate-50 overflow-hidden shadow-inner">
- <img src={driver.avatar} alt={driver.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
- </div>
- <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full border-4 border-white flex items-center justify-center">
- <ShieldCheck className="w-4 h-4 text-white" />
- </div>
- </div>
- <div>
- <h3 className="text-xl font-bold text-slate-800">{driver.name}</h3>
- <div className="flex items-center justify-center gap-2 mt-1">
- <span className={cn(
- "px-2 py-0.5 rounded text-[10px] font-bold ",
- driver.tier === 'Gold' ? "bg-yellow-50 text-yellow-600 border border-yellow-200" : "bg-slate-100 text-slate-600"
- )}>{driver.tier} Tier</span>
- <div className="flex items-center gap-1 text-yellow-400">
- <Star className="w-3 h-3 fill-yellow-400" />
- <span className="text-xs font-bold text-slate-700">{driver.rating}</span>
- </div>
- </div>
- </div>
- <div className="w-full pt-4 border-t border-slate-50 space-y-3">
- <div className="flex items-center gap-3 text-slate-500">
- <Phone className="w-4 h-4" />
- <span className="text-xs font-medium">{driver.phone}</span>
- </div>
- <div className="flex items-center gap-3 text-slate-500">
- <Mail className="w-4 h-4" />
- <span className="text-xs font-medium">{driver.email}</span>
- </div>
- <div className="flex flex-wrap gap-2 pt-2">
- {driver.services.map(s => (
- <span key={s} className="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-[9px] font-bold ">{s}</span>
- ))}
- </div>
- </div>
- </div>
+  return (
+    <div style={{ padding: '0px' }}>
+      {/* Header Section */}
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Space size="middle">
+          <Button icon={<ArrowLeftOutlined />} onClick={onBack} shape="circle" />
+          <div>
+            <Title level={4} style={{ margin: 0 }}>Driver Profile: {driverData.name}</Title>
+            <Space>
+              <Text type="secondary">ID: {driverData.id} • Joined {driverData.joinDate}</Text>
+              <Badge status={status === 'Active' ? 'success' : 'error'} text={status} />
+            </Space>
+          </div>
+        </Space>
+        <Space>
+          <Button icon={<DownloadOutlined />} onClick={handleDownloadReport} loading={isGeneratingReport}>Report</Button>
+          <Button icon={<EditOutlined />} onClick={() => setShowEditModal(true)}>Edit</Button>
+          <Button 
+            danger={status === 'Active'} 
+            icon={status === 'Active' ? <StopOutlined /> : <CheckCircleOutlined />} 
+            onClick={handleStatusChange}
+          >
+            {status === 'Active' ? 'Suspend' : 'Activate'}
+          </Button>
+          <Button type="primary" icon={<MessageOutlined />} onClick={() => setShowMessageModal(true)}>Message</Button>
+        </Space>
+      </div>
 
- {/* Analytics Card */}
- <div className="lg:col-span-2 bg-white p-6 rounded-[24px] shadow-soft border border-slate-100">
- <h3 className="text-sm font-bold text-slate-800 mb-6">Driver Rate Info</h3>
- <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
- {[
- { label: 'Avg Earning', value: driver.stats.avgEarning, color: 'text-primary' },
- { label: 'Positive Review', value: driver.stats.positiveReview, color: 'text-emerald-500' },
- { label: 'Success Rate', value: driver.stats.successRate, color: 'text-blue-500' },
- { label: 'Cancellation', value: driver.stats.cancellationRate, color: 'text-red-500' },
- { label: 'Idle Hour', value: driver.stats.idleHourRate, color: 'text-amber-500' },
- ].map((stat) => (
- <div key={stat.label} className="flex flex-col items-center gap-3">
- <div className="relative w-16 h-16">
- <svg className="w-full h-full" viewBox="0 0 36 36">
- <path className="text-slate-100" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
- <path className={stat.color} strokeWidth="3" strokeDasharray={`${stat.value}, 100`} strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
- </svg>
- <div className="absolute inset-0 flex items-center justify-center">
- <span className="text-[10px] font-bold text-slate-800">{stat.value}%</span>
- </div>
- </div>
- <span className="text-[9px] font-bold text-slate-400 text-center leading-tight">{stat.label}</span>
- </div>
- ))}
- </div>
- </div>
- </div>
+      <Row gutter={[24, 24]}>
+        {/* Profile Info Card */}
+        <Col span={8}>
+          <Card bordered={false} className="shadow-sm">
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <Badge count={<SafetyCertificateOutlined style={{ color: '#52c41a', fontSize: 18 }} />} offset={[-10, 80]}>
+                <Avatar src={driverData.avatar} size={100} border-4 />
+              </Badge>
+              <Title level={4} style={{ marginTop: 16, marginBottom: 4 }}>{driverData.name}</Title>
+              <Tag color="gold" icon={<TrophyOutlined />}>{driverData.tier} Partner</Tag>
+              <div style={{ marginTop: 8 }}>
+                <Rate disabled defaultValue={4.5} style={{ fontSize: 14 }} />
+                <Text strong style={{ marginLeft: 8 }}>{driverData.rating}</Text>
+              </div>
+            </div>
+            
+            <Descriptions column={1} size="small" bordered>
+              <Descriptions.Item label={<Space><PhoneOutlined /> Phone</Space>}>{driverData.phone}</Descriptions.Item>
+              <Descriptions.Item label={<Space><MailOutlined /> Email</Space>}>{driverData.email}</Descriptions.Item>
+              <Descriptions.Item label="City">{driverData.city}</Descriptions.Item>
+              <Descriptions.Item label="Applied">{driverData.appliedDate}</Descriptions.Item>
+              <Descriptions.Item label="Level">{driverData.tier}</Descriptions.Item>
+              <Descriptions.Item label="Trips">{driverData.stats.completedTrips}</Descriptions.Item>
+            </Descriptions>
+            <Divider dashed />
+            <Button block icon={<IdcardOutlined />} onClick={() => { setShowDocsModal(true); setDocTab('Personal'); }}>View Identity Docs</Button>
+          </Card>
 
- {/* Row 2: Wallet Info Section */}
- <div className="bg-white p-6 rounded-[24px] shadow-soft border border-slate-100">
- <div className="flex items-center gap-2 mb-6">
- <Wallet className="w-5 h-5 text-primary" />
- <h3 className="text-sm font-bold text-slate-800 ">Wallet Info</h3>
- </div>
+          <Card bordered={false} className="shadow-sm" style={{ marginTop: 24 }}>
+            <Title level={5}><CarOutlined /> Vehicle Info</Title>
+            <Descriptions column={1} size="small">
+              <Descriptions.Item label="Type">{driverData.vehicle.type}</Descriptions.Item>
+              <Descriptions.Item label="Model">{driverData.vehicle.brand} {driverData.vehicle.model}</Descriptions.Item>
+              <Descriptions.Item label="Plate">{driverData.vehicle.plate}</Descriptions.Item>
+              <Descriptions.Item label="Color">{driverData.vehicle.color}</Descriptions.Item>
+              <Descriptions.Item label="Year">{driverData.vehicle.year}</Descriptions.Item>
+              <Descriptions.Item label="Expires">{driverData.vehicle.expiry}</Descriptions.Item>
+            </Descriptions>
+            <Divider dashed />
+            <Button block icon={<FileProtectOutlined />} onClick={() => { setShowDocsModal(true); setDocTab('Vehicle'); }}>View Vehicle Docs</Button>
+            
+            {driverData.fraudFlags && driverData.fraudFlags.length > 0 && (
+              <Alert
+                message="Compliance Alerts"
+                description={
+                  <ul style={{ paddingLeft: 16, margin: 0 }}>
+                    {driverData.fraudFlags.map((flag, idx) => <li key={idx}><Text type="danger" style={{ fontSize: 12 }}>{flag}</Text></li>)}
+                  </ul>
+                }
+                type="error"
+                showIcon
+                icon={<WarningIcon />}
+                style={{ marginTop: 16 }}
+              />
+            )}
+          </Card>
+        </Col>
 
- <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
- {/* Large Card: Collectable Cash */}
- <div className="lg:col-span-2 bg-slate-50/50 rounded-[20px] border border-slate-100 p-8 flex flex-col items-center justify-center text-center space-y-4">
- <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center">
- <Banknote className="w-8 h-8 text-emerald-500" />
- </div>
- <div>
- <p className="text-4xl font-bold text-slate-800">$ {driver.wallet.collectableCash.toFixed(2)}</p>
- <p className="text-xs font-bold text-slate-400 tracking-wide mt-1">Collectable Cash</p>
- </div>
- </div>
+        {/* Analytics and Dynamic Content */}
+        <Col span={16}>
+          <Row gutter={[16, 16]}>
+            <Col span={8}>
+              <Card bordered={false} className="shadow-sm">
+                <Statistic 
+                  title="Total Revenue" 
+                  value={driverData.wallet.total} 
+                  prefix={<DollarOutlined />} 
+                  precision={2}
+                  valueStyle={{ color: '#3f8600' }}
+                />
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card bordered={false} className="shadow-sm">
+                <Statistic 
+                  title="Success Rate" 
+                  value={driverData.stats.successRate} 
+                  suffix="%" 
+                  prefix={<RiseOutlined />}
+                  valueStyle={{ color: '#1677ff' }}
+                />
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card bordered={false} className="shadow-sm">
+                <Statistic 
+                  title="Wallet Balance" 
+                  value={driverData.wallet.withdrawable} 
+                  prefix={<WalletOutlined />} 
+                  precision={2}
+                />
+              </Card>
+            </Col>
+          </Row>
 
- {/* 2x2 Grid: Other Stats */}
- <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
- {[
- { label: 'Pending Withdraw', value: driver.wallet.pendingWithdraw, icon: <Clock className="text-amber-500" /> },
- { label: 'Already Withdrawn', value: driver.wallet.alreadyWithdrawn, icon: <ArrowUpRight className="text-emerald-500" /> },
- { label: 'Withdrawable Amount', value: driver.wallet.withdrawableAmount, icon: <CreditCard className="text-blue-500" /> },
- { label: 'Total Earning', value: driver.wallet.totalEarning, icon: <Wallet className="text-primary" /> },
- ].map((card) => (
- <div key={card.label} className="bg-white p-6 rounded-[20px] border border-slate-100 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-all">
- <div>
- <p className="text-2xl font-bold text-slate-800">$ {card.value.toFixed(2)}</p>
- <p className="text-[10px] font-bold text-slate-400 tracking-wide mt-1">{card.label}</p>
- </div>
- <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
- {React.cloneElement(card.icon as React.ReactElement, { className: "w-6 h-6" })}
- </div>
- </div>
- ))}
- </div>
- </div>
- </div>
+          <Card bordered={false} className="shadow-sm" style={{ marginTop: 24 }}>
+            <Tabs 
+              activeKey={activeTab} 
+              onChange={setActiveTab}
+              items={[
+                {
+                  key: 'Overview',
+                  label: 'Performance Overview',
+                  children: (
+                    <Row gutter={[32, 32]} style={{ padding: '16px 0' }}>
+                      <Col span={6} style={{ textAlign: 'center' }}>
+                        <Progress type="circle" percent={driverData.stats.positiveReview} size={80} strokeColor="#52c41a" />
+                        <div style={{ marginTop: 12 }}><Text type="secondary">Positive Reviews</Text></div>
+                      </Col>
+                      <Col span={6} style={{ textAlign: 'center' }}>
+                        <Progress type="circle" percent={driverData.stats.successRate} size={80} strokeColor="#1677ff" />
+                        <div style={{ marginTop: 12 }}><Text type="secondary">Trip Success</Text></div>
+                      </Col>
+                      <Col span={6} style={{ textAlign: 'center' }}>
+                        <Progress type="circle" percent={driverData.stats.cancellationRate} size={80} status="exception" />
+                        <div style={{ marginTop: 12 }}><Text type="secondary">Cancellation</Text></div>
+                      </Col>
+                      <Col span={6} style={{ textAlign: 'center' }}>
+                        <Progress type="circle" percent={driverData.stats.idleHourRate} size={80} strokeColor="#faad14" />
+                        <div style={{ marginTop: 12 }}><Text type="secondary">Idle Rate</Text></div>
+                      </Col>
+                    </Row>
+                  )
+                },
+                {
+                  key: 'Trips',
+                  label: 'Recent Trips',
+                  children: (
+                    <Table 
+                      size="small"
+                      dataSource={trips}
+                      columns={[
+                        { title: 'Trip ID', dataIndex: 'id', key: 'id', render: (t) => <Text strong>{t}</Text> },
+                        { title: 'Customer', dataIndex: 'customer', key: 'customer' },
+                        { title: 'Cost', dataIndex: 'cost', key: 'cost' },
+                        { title: 'Status', dataIndex: 'status', key: 'status', render: (s, record: any) => (
+                          <Space direction="vertical" size={0}>
+                            <Badge status={s === 'Completed' ? 'success' : 'error'} text={s} />
+                            {s === 'Cancelled' && <Text type="secondary" style={{ fontSize: 10 }}>By: {record.canceledBy}</Text>}
+                          </Space>
+                        )},
+                        { title: 'Action', key: 'action', render: (_, record) => <Button size="small" type="link" onClick={() => setSelectedTrip(record)}>Details</Button> },
+                      ]}
+                      pagination={false}
+                    />
+                  )
+                },
+                {
+                  key: 'Transactions',
+                  label: 'Payments',
+                  children: (
+                    <Table 
+                      size="small"
+                      dataSource={transactions}
+                      columns={[
+                        { title: 'TXN ID', dataIndex: 'id', key: 'id' },
+                        { title: 'Type', dataIndex: 'type', key: 'type', render: (t) => <Tag color={t === 'Credit' ? 'green' : 'red'}>{t}</Tag> },
+                        { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (a) => <Text strong>${a.toFixed(2)}</Text> },
+                        { title: 'Date', dataIndex: 'date', key: 'date' },
+                      ]}
+                      pagination={false}
+                    />
+                  )
+                }
+              ]}
+            />
+          </Card>
 
- {/* Tab Navigation */}
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={['Overview', 'Vehicle', 'Trips', 'Transaction', 'Rewards & Tier', 'Review'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
+          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+            <Col span={24}>
+              <Card bordered={false} className="shadow-sm">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <Text type="secondary" style={{ display: 'block' }}>Compliance Status</Text>
+                    <Space>
+                      <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                      <Text strong>Fully Verified Partner</Text>
+                    </Space>
+                  </div>
+                  <Button icon={<HistoryOutlined />} onClick={() => setShowAuditLogs(true)}>Audit Logs</Button>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
 
- {/* Tab Content */}
- <div className="flex-1 min-h-0">
- {activeTab === 'Overview' && (
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
- <div className="lg:col-span-2 bg-white p-6 rounded-[24px] shadow-soft border border-slate-100">
- <div className="flex items-center justify-between mb-6">
- <h3 className="text-sm font-bold text-slate-800 ">Performance Stats</h3>
- <div className="flex bg-slate-50 rounded-lg p-1">
- {['Trip', 'Duty & Review', 'Wallet'].map(s => (
- <button key={s} className="px-3 py-1 text-[10px] font-bold rounded-md hover:bg-white hover:shadow-sm transition-all text-slate-500 hover:text-slate-800">
- {s}
- </button>
- ))}
- </div>
- </div>
- <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
- {[
- { label: 'Completed Trips', value: driver.stats.completedTrips, icon: <CheckCircle2 className="text-emerald-500" /> },
- { label: 'Cancel Trips', value: driver.stats.cancelTrips, icon: <XCircle className="text-red-500" /> },
- { label: 'Lowest Price', value: `$${driver.stats.lowestPrice}`, icon: <TrendingUp className="text-blue-500 rotate-180" /> },
- { label: 'Highest Price', value: `$${driver.stats.highestPrice}`, icon: <TrendingUp className="text-primary" /> },
- ].map((item) => (
- <div key={item.label} className="space-y-2">
- <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center">
- {React.cloneElement(item.icon as React.ReactElement, { className: "w-5 h-5" })}
- </div>
- <div>
- <p className="text-lg font-bold text-slate-800">{item.value}</p>
- <p className="text-[10px] text-slate-400 font-bold ">{item.label}</p>
- </div>
- </div>
- ))}
- </div>
- </div>
- <div className="bg-white p-6 rounded-[24px] shadow-soft border border-slate-100">
- <h3 className="text-sm font-bold text-slate-800 mb-6">Documents</h3>
- <div className="space-y-4">
- {['Identity_Verification.jpg', 'License_Front.png'].map((doc) => (
- <div key={doc} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 group">
- <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-slate-200">
- <FileText className="w-5 h-5 text-slate-400" />
- </div>
- <p className="text-xs font-bold text-slate-800 truncate max-w-[120px]">{doc}</p>
- </div>
- <button className="p-2 hover:bg-white rounded-lg transition-all text-slate-400 hover:text-primary">
- <Download className="w-4 h-4" />
- </button>
- </div>
- ))}
- </div>
- </div>
- </div>
- )}
+      {/* Trip Details Modal */}
+      <Modal
+        title={
+          <Space>
+            <GlobalOutlined />
+            <span>Trip Audit: {selectedTrip?.id}</span>
+          </Space>
+        }
+        open={!!selectedTrip}
+        onCancel={() => setSelectedTrip(null)}
+        width={900}
+        footer={[
+          <Button key="close" onClick={() => setSelectedTrip(null)}>Close Audit</Button>,
+          <Button key="download" icon={<DownloadOutlined />} type="primary">Export Receipt</Button>
+        ]}
+      >
+        {selectedTrip && (
+          <Row gutter={[24, 24]}>
+            <Col span={14}>
+              <Card 
+                size="small" 
+                title="Route Visualization" 
+                style={{ height: 400, overflow: 'hidden' }}
+                bodyStyle={{ padding: 0 }}
+              >
+                <MapContainer 
+                  center={selectedTrip.pickupCoords} 
+                  zoom={13} 
+                  style={{ height: '365px', width: '100%' }}
+                  zoomControl={false}
+                >
+                  <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
+                  <Marker position={selectedTrip.pickupCoords}>
+                    <Popup>Pickup: {selectedTrip.pickupAddr}</Popup>
+                  </Marker>
+                  <Marker position={selectedTrip.dropoffCoords}>
+                    <Popup>Drop-off: {selectedTrip.dropoffAddr}</Popup>
+                  </Marker>
+                  <Polyline 
+                    positions={[selectedTrip.pickupCoords, selectedTrip.dropoffCoords]} 
+                    color="#1677ff" 
+                    dashArray="10, 10"
+                  />
+                </MapContainer>
+              </Card>
+              
+              <div style={{ marginTop: 16 }}>
+                <Title level={5}><EnvironmentOutlined /> Location Details</Title>
+                <Descriptions column={1} size="small" bordered>
+                  <Descriptions.Item label="Pickup Location">
+                    <Text strong>{selectedTrip.pickupAddr}</Text>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Drop-off Location">
+                    <Text strong>{selectedTrip.dropoffAddr}</Text>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Distance / Duration">
+                    <Space split={<Divider type="vertical" />}>
+                      <Text>{selectedTrip.distance}</Text>
+                      <Text>{selectedTrip.duration}</Text>
+                    </Space>
+                  </Descriptions.Item>
+                </Descriptions>
+              </div>
+            </Col>
+            <Col span={10}>
+              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <Card size="small" title={<Space><BankOutlined /> Financial Breakdown</Space>}>
+                  <Statistic 
+                    title="Amount Agreed (Total Fare)" 
+                    value={selectedTrip.amountAgreed} 
+                    prefix="$" 
+                    precision={2}
+                    valueStyle={{ color: '#1677ff', fontSize: 24 }}
+                  />
+                  <Divider style={{ margin: '12px 0' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Text type="secondary">Platform Commission (15%)</Text>
+                      <Text type="danger">-${selectedTrip.commission.toFixed(2)}</Text>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Text type="secondary">Tax / VAT</Text>
+                      <Text type="secondary">${selectedTrip.tax.toFixed(2)}</Text>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: '1px solid #f0f0f0' }}>
+                      <Text strong>Settled Driver Earnings</Text>
+                      <Text strong style={{ color: '#52c41a' }}>${selectedTrip.driverEarnings.toFixed(2)}</Text>
+                    </div>
+                  </div>
+                </Card>
 
- {activeTab === 'Vehicle' && (
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
- <div className="bg-white p-6 rounded-[24px] shadow-soft border border-slate-100 space-y-6">
- <div className="aspect-video rounded-xl overflow-hidden border border-slate-100">
- <img src={driver.vehicle.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
- </div>
- <div className="space-y-4">
- <div className="flex items-center justify-between">
- <h3 className="text-lg font-bold text-slate-800">{driver.vehicle.brand} {driver.vehicle.model}</h3>
- <span className="px-2 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold ">{driver.vehicle.category}</span>
- </div>
- <div className="grid grid-cols-2 gap-4">
- <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
- <p className="text-[10px] text-slate-400 font-bold mb-1">Ownership</p>
- <p className="text-xs font-bold text-slate-800">{driver.vehicle.ownership}</p>
- </div>
- <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
- <p className="text-[10px] text-slate-400 font-bold mb-1">Trip Rate</p>
- <p className="text-xs font-bold text-emerald-500">{driver.vehicle.tripRate}%</p>
- </div>
- </div>
- </div>
- </div>
- <div className="lg:col-span-2 bg-white rounded-[24px] shadow-soft border border-slate-100 overflow-hidden">
- <div className="p-6 border-b border-slate-50">
- <h3 className="text-sm font-bold text-slate-800 ">Vehicle Specifications</h3>
- </div>
- <div className="grid grid-cols-1 md:grid-cols-2 divide-x divide-slate-50">
- <div className="divide-y divide-slate-50">
- {Object.entries(driver.vehicle.specs).slice(0, 4).map(([key, value]) => (
- <div key={key} className="px-6 py-4 flex justify-between items-center">
- <span className="text-xs font-bold text-slate-400 tracking-tight">{key.replace(/([A-Z])/g, ' $1')}</span>
- <span className="text-xs font-bold text-slate-800">{value}</span>
- </div>
- ))}
- </div>
- <div className="divide-y divide-slate-50">
- {Object.entries(driver.vehicle.specs).slice(4).map(([key, value]) => (
- <div key={key} className="px-6 py-4 flex justify-between items-center">
- <span className="text-xs font-bold text-slate-400 tracking-tight">{key.replace(/([A-Z])/g, ' $1')}</span>
- <span className="text-xs font-bold text-slate-800">{value}</span>
- </div>
- ))}
- </div>
- </div>
- </div>
- </div>
- )}
+                <Card size="small" title={<Space><ClockCircleOutlined /> Trip Timeline</Space>} style={{ flex: 1 }}>
+                  <Timeline 
+                    mode="left"
+                    items={[
+                      { label: '05:40 PM', children: 'Trip Requested', color: 'blue' },
+                      { label: '05:41 PM', children: 'Accepted by John Makoni', color: 'blue' },
+                      { label: '05:45 PM', children: 'Arrived at Pickup', color: 'blue' },
+                      { 
+                        label: selectedTrip.status === 'Cancelled' ? '05:50 PM' : '05:48 PM', 
+                        children: selectedTrip.status === 'Cancelled' ? `Trip Cancelled (by ${selectedTrip.canceledBy})` : 'Trip Started', 
+                        color: selectedTrip.status === 'Cancelled' ? 'red' : 'green' 
+                      },
+                      selectedTrip.status === 'Completed' && { label: '06:12 PM', children: 'Trip Completed', color: 'green' },
+                    ].filter(Boolean)}
+                  />
+                </Card>
+              </div>
+            </Col>
+          </Row>
+        )}
+      </Modal>
 
- {activeTab === 'Transaction' && (
- <div className="bg-white rounded-[24px] shadow-soft border border-slate-100 overflow-hidden">
- <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
- <div className="relative flex-1 max-w-md">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
- <input type="text" placeholder="Search by Transaction ID..." className="w-full pl-10 pr-4 py-2 bg-slate-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all" />
- </div>
- <div className="flex items-center gap-3">
- <button
- onClick={handleExportTransactions}
- className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition-all"
- >
- <Download className="w-4 h-4" /> Export
- </button>
- </div>
- </div>
- <div className="overflow-x-auto">
- <table className="w-full text-left border-collapse">
- <thead>
- <tr className="bg-slate-50/50">
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Transaction ID</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Type</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Transaction To</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Debit</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Credit</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Balance</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Date</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-slate-50">
- {driverTransactions.map((txn) => (
- <tr key={txn.id} className="hover:bg-slate-50/50 transition-colors">
- <td className="px-6 py-4">
- <span className="text-xs font-mono text-slate-500">{txn.id}</span>
- </td>
- <td className="px-6 py-4">
- <span className={cn(
- "text-[10px] font-bold px-2 py-1 rounded-lg ",
- txn.type === 'Received balance' ? "bg-emerald-50 text-emerald-600" :
- txn.type === 'Withdraw' ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
- )}>
- {txn.type}
- </span>
- </td>
- <td className="px-6 py-4">
- <span className="text-xs font-medium text-slate-700">{txn.to}</span>
- </td>
- <td className="px-6 py-4">
- <span className="text-xs font-bold text-red-500">{txn.debit > 0 ? `-$${txn.debit.toFixed(2)}` : '-'}</span>
- </td>
- <td className="px-6 py-4">
- <span className="text-xs font-bold text-emerald-500">{txn.credit > 0 ? `+$${txn.credit.toFixed(2)}` : '-'}</span>
- </td>
- <td className="px-6 py-4">
- <span className="text-xs font-bold text-slate-800">${txn.balance.toFixed(2)}</span>
- </td>
- <td className="px-6 py-4">
- <span className="text-xs text-slate-400">{txn.date}</span>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- )}
+      {/* Audit Logs Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: 32 }}>
+            <Space>
+              <HistoryOutlined />
+              <span>Operational Audit Logs: {driverData.name}</span>
+            </Space>
+            <Space>
+              <FilterOutlined style={{ fontSize: 14, color: '#94a3b8' }} />
+              <Select 
+                defaultValue="All" 
+                style={{ width: 150 }} 
+                bordered={false}
+                onChange={setAuditFilter}
+              >
+                <Option value="All">All Events</Option>
+                <Option value="Status">Status Changes</Option>
+                <Option value="Verification">Verifications</Option>
+                <Option value="Profile">Profile Updates</Option>
+                <Option value="Reward">Rewards</Option>
+              </Select>
+            </Space>
+          </div>
+        }
+        open={showAuditLogs}
+        onCancel={() => setShowAuditLogs(false)}
+        width={900}
+        footer={[
+          <Button key="close" onClick={() => setShowAuditLogs(false)}>Close Registry</Button>,
+          <Button key="export" icon={<DownloadOutlined />}>Export CSV</Button>
+        ]}
+      >
+        <Table 
+          dataSource={auditFilter === 'All' ? auditLogs : auditLogs.filter(log => log.type === auditFilter)}
+          pagination={{ pageSize: 8 }}
+          columns={[
+            { 
+              title: 'Timestamp', 
+              dataIndex: 'timestamp', 
+              key: 'timestamp',
+              render: (t) => <Text style={{ fontSize: 12, color: '#64748b' }}>{t}</Text>
+            },
+            { 
+              title: 'Event Type', 
+              dataIndex: 'event', 
+              key: 'event',
+              render: (e, record) => (
+                <Space>
+                  {record.type === 'Status' && <LockOutlined style={{ color: '#ef4444' }} />}
+                  {record.type === 'Verification' && <SafetyCertificateOutlined style={{ color: '#1677ff' }} />}
+                  {record.type === 'Profile' && <UserOutlined style={{ color: '#8b5cf6' }} />}
+                  {record.type === 'Reward' && <TrophyOutlined style={{ color: '#eab308' }} />}
+                  <Text strong style={{ fontSize: 13 }}>{e}</Text>
+                </Space>
+              )
+            },
+            { 
+              title: 'Change Detail', 
+              dataIndex: 'detail', 
+              key: 'detail',
+              render: (d) => <Text style={{ fontSize: 13 }}>{d}</Text>
+            },
+            { 
+              title: 'Performed By', 
+              dataIndex: 'admin', 
+              key: 'admin',
+              render: (a) => <Tag icon={<UserOutlined />} color="blue">{a}</Tag>
+            }
+          ]}
+        />
+      </Modal>
 
- {activeTab === 'Trips' && (
- <div className="bg-white rounded-[24px] shadow-soft border border-slate-100 overflow-hidden">
- <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
- <div className="relative flex-1 max-w-md">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
- <input type="text" placeholder="Search by Trip ID..." className="w-full pl-10 pr-4 py-2 bg-slate-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all" />
- </div>
- <div className="flex items-center gap-3">
- <button
- onClick={handleExportTrips}
- className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition-all"
- >
- <Download className="w-4 h-4" /> Export
- </button>
- </div>
- </div>
- <div className="overflow-x-auto">
- <table className="w-full text-left border-collapse">
- <thead>
- <tr className="bg-slate-50/50">
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Trip ID</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Date & Time</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Customer</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Cost</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 ">Status</th>
- <th className="px-6 py-4 text-[10px] font-bold text-slate-400 text-right">Action</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-slate-50">
- {driverTrips.map((trip) => (
- <tr key={trip.id} className="hover:bg-slate-50/50 transition-colors group">
- <td className="px-6 py-4">
- <span className="text-xs font-bold text-slate-800">{trip.id}</span>
- </td>
- <td className="px-6 py-4">
- <span className="text-xs text-slate-500">{trip.date}</span>
- </td>
- <td className="px-6 py-4">
- <div className="flex items-center gap-2">
- <div className="w-6 h-6 rounded-full bg-slate-100 overflow-hidden">
- <img src={`https://picsum.photos/seed/${trip.customer}/50/50`} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
- </div>
- <span className="text-xs font-medium text-slate-700">{trip.customer}</span>
- </div>
- </td>
- <td className="px-6 py-4">
- <span className="text-xs font-bold text-slate-800">${trip.cost.toFixed(2)}</span>
- </td>
- <td className="px-6 py-4">
- <span className={cn(
- "text-[10px] font-bold px-2 py-1 rounded-lg ",
- trip.status === 'Completed' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
- )}>
- {trip.status}
- </span>
- </td>
- <td className="px-6 py-4 text-right">
- <button className="p-2 hover:bg-primary/10 rounded-lg transition-all text-slate-400 hover:text-primary">
- <Eye className="w-4 h-4" />
- </button>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- )}
+      {/* Unified Document Vault Modal */}
+      <Modal
+        title={
+          <Space>
+            <FileProtectOutlined />
+            <span>Operational Document Vault: {driverData.name}</span>
+          </Space>
+        }
+        open={showDocsModal}
+        onCancel={() => setShowDocsModal(false)}
+        width={850}
+        footer={[
+          <Button key="close" onClick={() => setShowDocsModal(false)}>Close Vault</Button>,
+          <Button key="audit" icon={<HistoryOutlined />} onClick={() => { setShowDocsModal(false); setShowAuditLogs(true); }}>Audit History</Button>
+        ]}
+      >
+        <Tabs
+          activeKey={docTab}
+          onChange={setDocTab}
+          items={[
+            {
+              key: 'Personal',
+              label: <Space><IdcardOutlined /> Identity & License</Space>,
+              children: (
+                <List
+                  grid={{ gutter: 16, column: 1 }}
+                  dataSource={driverData.identity}
+                  renderItem={(doc) => (
+                    <List.Item>
+                      <Card size="small" className="shadow-sm">
+                        <Row align="middle" gutter={16}>
+                          <Col span={6}>
+                            <Image
+                              src={doc.url}
+                              alt={doc.name}
+                              style={{ borderRadius: 8, height: 100, width: '100%', objectFit: 'cover' }}
+                              preview={{
+                                mask: <Space><EyeOutlined /> Full View</Space>
+                              }}
+                            />
+                          </Col>
+                          <Col span={10}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <Text strong style={{ fontSize: 16 }}>{doc.name}</Text>
+                              <Text type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
+                                {doc.name === 'Selfie with ID' ? 'Live verification photo for face-match' : 'Government issued document'}
+                              </Text>
+                              <Space>
+                                <Tag color="success">Verified</Tag>
+                                {doc.expiry !== 'N/A' && <Text type="secondary" style={{ fontSize: 12 }}>Expires: {doc.expiry}</Text>}
+                              </Space>
+                            </div>
+                          </Col>
+                          <Col span={8} style={{ textAlign: 'right' }}>
+                            <Space direction="vertical" style={{ width: '100%' }}>
+                              <Button block size="small" icon={<CloudUploadOutlined />}>Revide / Update</Button>
+                              <Button block size="small" icon={<DownloadOutlined />}>Download</Button>
+                            </Space>
+                          </Col>
+                        </Row>
+                      </Card>
+                    </List.Item>
+                  )}
+                />
+              )
+            },
+            {
+              key: 'Vehicle',
+              label: <Space><CarOutlined /> Vehicle Registration</Space>,
+              children: (
+                <div>
+                  <List
+                    grid={{ gutter: 16, column: 1 }}
+                    dataSource={driverData.vehicle.documents}
+                    renderItem={(doc) => (
+                      <List.Item>
+                        <Card size="small" className="shadow-sm">
+                          <Row align="middle" gutter={16}>
+                            <Col span={6}>
+                              <Image
+                                src={doc.url}
+                                alt={doc.name}
+                                style={{ borderRadius: 8, height: 100, width: '100%', objectFit: 'cover' }}
+                                preview={{
+                                  mask: <Space><EyeOutlined /> View</Space>
+                                }}
+                              />
+                            </Col>
+                            <Col span={10}>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <Text strong style={{ fontSize: 16 }}>{doc.name}</Text>
+                                <Text type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
+                                  {doc.name === 'Motor Insurance' ? 'Insures driver & vehicle' : 'Official registration records'}
+                                </Text>
+                                <Space>
+                                  <Tag color={doc.status === 'Verified' ? 'success' : 'warning'}>
+                                    {doc.status}
+                                  </Tag>
+                                  <Text type="secondary" style={{ fontSize: 12 }}>
+                                    {doc.status === 'Expiring Soon' ? <Text type="danger">Expires: {doc.expiry}</Text> : `Expires: ${doc.expiry}`}
+                                  </Text>
+                                </Space>
+                              </div>
+                            </Col>
+                            <Col span={8} style={{ textAlign: 'right' }}>
+                              <Space direction="vertical" style={{ width: '100%' }}>
+                                <Button block size="small" icon={<CloudUploadOutlined />}>Update Document</Button>
+                                <Button block size="small" icon={<DownloadOutlined />}>Download PDF</Button>
+                              </Space>
+                            </Col>
+                          </Row>
+                        </Card>
+                      </List.Item>
+                    )}
+                  />
+                  {(driverData.vehicle.documents.some(d => d.status === 'Expiring Soon')) && (
+                    <div style={{ marginTop: 16 }}>
+                      <Badge.Ribbon text="Critical Action" color="volcano">
+                        <Card size="small" style={{ backgroundColor: '#fff2f0' }}>
+                          <Space>
+                            <WarningIcon style={{ color: '#ff4d4f' }} />
+                            <Text type="danger" strong>Action Required: Motor Insurance is expiring in 11 days.</Text>
+                          </Space>
+                        </Card>
+                      </Badge.Ribbon>
+                    </div>
+                  )}
+                </div>
+              )
+            }
+          ]}
+        />
+      </Modal>
 
- {activeTab === 'Rewards & Tier' && (
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
- {/* Tier Progress Card */}
- <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-8">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
- <div className="p-3 bg-yellow-50 rounded-2xl border border-yellow-200">
- <Award className="w-8 h-8 text-yellow-600" />
- </div>
- <div>
- <h3 className="text-xl font-black text-slate-900 leading-none">{driver.tier} Tier</h3>
- <p className="text-xs font-bold text-slate-400 mt-2 ">Active Status</p>
- </div>
- </div>
- <div className="text-right">
- <p className="text-2xl font-black text-slate-900">{driver.points.toLocaleString()}</p>
- <p className="text-[10px] font-bold text-slate-400 leading-none mt-1">Total Points</p>
- <div className="mt-2 flex items-center justify-end gap-1.5 text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
- <Zap className="w-2.5 h-2.5 fill-amber-600" />
- <span className="text-[9px] font-black">{driver.peakPoints.toLocaleString()} Peak Points</span>
- </div>
- </div>
- </div>
+      {/* Messaging Modal */}
+      <Modal
+        title={
+          <Space>
+            <MessageOutlined />
+            <span>Operational Messaging: {driverData.name}</span>
+          </Space>
+        }
+        open={showMessageModal}
+        onCancel={() => setShowMessageModal(false)}
+        onOk={() => msgForm.submit()}
+        okText="Send Message"
+        okButtonProps={{ icon: <SendOutlined /> }}
+        width={500}
+      >
+        <Form form={msgForm} layout="vertical" onFinish={handleSendMessage}>
+          <Form.Item label="Message Template" name="template">
+            <Select placeholder="Select a quick response...">
+              <Option value="compliance">Document Compliance Notice</Option>
+              <Option value="performance">Peak Performance Incentive</Option>
+              <Option value="warning">Safety Warning</Option>
+              <Option value="tip">Weekly Pro Tip</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item 
+            label="Message Content" 
+            name="content"
+            rules={[{ required: true, message: 'Please type a message' }]}
+          >
+            <TextArea rows={4} placeholder="Type your instruction to the driver here..." />
+          </Form.Item>
+          <div style={{ backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '8px' }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              <InfoCircleOutlined style={{ marginRight: 4 }} />
+              This message will be delivered as an in-app notification and an SMS to the driver's registered phone number.
+            </Text>
+          </div>
+        </Form>
+      </Modal>
 
- <div className="space-y-4">
- <div className="flex justify-between items-end text-[11px] font-bold">
- <span className="text-slate-400">NEXT TIER: DIAMOND</span>
- <span className="text-primary">{Math.round((driver.points / driver.nextTierPoints) * 100)}% Complete</span>
- </div>
- <div className="h-3 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
- <div
- className="h-full bg-[#0089D1] rounded-full transition-all duration-1000 shadow-lg shadow-[#0089D1]/20"
- style={{ width: `${(driver.points / driver.nextTierPoints) * 100}%` }}
- />
- </div>
- <p className="text-[10px] font-medium text-slate-400 text-center italic">Earn {(driver.nextTierPoints - driver.points).toLocaleString()} more points to reach Diamond</p>
- </div>
-
- <div className="grid grid-cols-2 gap-4 pt-4">
- <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
- <Target className="w-5 h-5 text-emerald-500 mb-2" />
- <p className="text-lg font-bold text-slate-900">{driver.acceptanceRate}%</p>
- <p className="text-[10px] font-bold text-slate-400 ">Acceptance Rate</p>
- </div>
- <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
- <Clock className="w-5 h-5 text-indigo-500 mb-2" />
- <p className="text-lg font-bold text-slate-900">105/150</p>
- <p className="text-[10px] font-bold text-slate-400 ">Monthly Trips</p>
- </div>
- <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
- <Star className="w-5 h-5 text-amber-500 mb-2" />
- <p className="text-lg font-bold text-slate-900">4.92</p>
- <p className="text-[10px] font-bold text-slate-400 ">Avg. Rating</p>
- </div>
- </div>
- </div>
-
- {/* Active Benefits Card */}
- <div className="bg-slate-900 p-8 rounded-[32px] text-white space-y-8 relative overflow-hidden">
- <div className="absolute -right-10 -top-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl" />
- <div className="flex items-center gap-3">
- <Gift className="w-5 h-5 text-yellow-500" />
- <h3 className="text-sm font-bold opacity-60">Active Benefits</h3>
- </div>
-
- <div className="space-y-4">
- {[
- { label: 'Platform Commission', value: '8%', icon: Percent },
- { label: 'Bidding Advantage', value: 'Early Access', icon: Zap },
- { label: 'Zero-Comm Rides', value: '5/wk Left', icon: Activity },
- ].map((benefit) => (
- <div key={benefit.label} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
- <div className="flex items-center gap-4">
- <div className="p-2 bg-white/10 rounded-xl">
- <benefit.icon className="w-4 h-4 text-yellow-500" />
- </div>
- <span className="text-[11px] font-bold opacity-80 tracking-tight">{benefit.label}</span>
- </div>
- <span className="text-xs font-black text-white">{benefit.value}</span>
- </div>
- ))}
- </div>
-
- <button className="w-full py-4 bg-white text-slate-900 rounded-[20px] text-[11px] font-bold hover:bg-slate-100 transition-all">
- View All Rewards
- </button>
- </div>
-
- {/* Loyalty History (Small Table) */}
- <div className="lg:col-span-2 bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
- <div className="flex items-center gap-3 mb-6">
- <History className="w-5 h-5 text-slate-400" />
- <h3 className="text-sm font-bold text-slate-800 ">Rewards History</h3>
- </div>
- <table className="w-full text-left">
- <thead>
- <tr className="border-b border-slate-50">
- <th className="pb-4 text-[9px] font-bold text-slate-400 text-left">EVENT</th>
- <th className="pb-4 text-[9px] font-bold text-slate-400 text-center">POINTS</th>
- <th className="pb-4 text-[9px] font-bold text-slate-400 text-right">DATE</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-slate-50">
- {[
- { event: 'Tier Promotion: Gold', points: '+1500', date: 'Feb 12, 2024' },
- { event: 'Completed 100 Trips Bonus', points: '+250', date: 'Feb 10, 2024' },
- { event: 'Weekend Surge Bonus', points: '+50', date: 'Feb 05, 2024' },
- ].map((h, i) => (
- <tr key={i} className="group">
- <td className="py-4 text-xs font-bold text-slate-800">{h.event}</td>
- <td className="py-4 text-xs font-bold text-emerald-500 text-center">{h.points}</td>
- <td className="py-4 text-xs font-bold text-slate-400 text-right">{h.date}</td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- )}
-
- {/* Review tab would follow similar table patterns as CustomerDetails */}
- {activeTab === 'Review' && (
- <div className="bg-white p-12 rounded-[24px] shadow-soft border border-slate-100 flex flex-col items-center justify-center text-slate-400">
- <Activity className="w-16 h-16 mb-4 opacity-10" />
- <p className="text-sm font-medium">Detailed {activeTab} history for Driver #{driver.id}</p>
- <p className="text-xs mt-1">This module is synchronized with the operational ledger.</p>
- </div>
- )}
- </div>
- </div>
- );
+      {/* Edit Profile Modal */}
+      <Modal
+        title={
+          <Space>
+            <EditOutlined />
+            <span>Edit Operational Profile: {driverData.id}</span>
+          </Space>
+        }
+        open={showEditModal}
+        onCancel={() => setShowEditModal(false)}
+        onOk={() => form.submit()}
+        width={650}
+        okText="Update Registry"
+      >
+        <Form 
+          form={form} 
+          layout="vertical" 
+          onFinish={handleEditProfile}
+          initialValues={{
+            name: driverData.name,
+            phone: driverData.phone,
+            email: driverData.email,
+            tier: driverData.tier,
+            city: driverData.city,
+            appliedDate: driverData.appliedDate,
+            vType: driverData.vehicle.type,
+            vBrand: driverData.vehicle.brand,
+            vModel: driverData.vehicle.model,
+            vYear: driverData.vehicle.year,
+            plate: driverData.vehicle.plate,
+            vColor: driverData.vehicle.color
+          }}
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Full Name" name="name" rules={[{ required: true }]}>
+                <Input prefix={<UserOutlined />} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Partner Tier" name="tier">
+                <Select>
+                  <Option value="Standard">Standard</Option>
+                  <Option value="Silver">Silver</Option>
+                  <Option value="Gold">Gold</Option>
+                  <Option value="Platinum">Platinum</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Registration City" name="city">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Applied Date" name="appliedDate">
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Phone Number" name="phone" rules={[{ required: true }]}>
+                <Input prefix={<PhoneOutlined />} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Email Address" name="email" rules={[{ required: true, type: 'email' }]}>
+                <Input prefix={<MailOutlined />} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Divider dashed>Vehicle Information</Divider>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item label="Brand" name="vBrand">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Model" name="vModel">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Vehicle Type" name="vType">
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item label="Year" name="vYear">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Number Plate" name="plate">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Vehicle Color" name="vColor">
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+    </div>
+  );
 };
+
+// Helper for Info Icon (Ant Design doesn't have it by default in some versions, using this for safety)
+const InfoCircleOutlined = ({ style }: { style?: React.CSSProperties }) => (
+  <svg 
+    viewBox="64 64 896 896" 
+    focusable="false" 
+    data-icon="info-circle" 
+    width="1em" 
+    height="1em" 
+    fill="currentColor" 
+    aria-hidden="true"
+    style={style}
+  >
+    <path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"></path>
+    <path d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"></path>
+  </svg>
+);
