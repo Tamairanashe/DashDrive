@@ -39,6 +39,12 @@ import { FintechPage } from './pages/FintechPage';
 import { DriverLeaderboardPage } from './pages/DriverLeaderboardPage';
 import { DriverLevelSetupPage } from './pages/DriverLevelSetupPage';
 import { GrowthEnginePage } from './pages/GrowthEnginePage';
+import { FuelServicesPage } from './pages/FuelServicesPage';
+import { PublicTransportPage } from './pages/PublicTransportPage';
+import { MarketplaceConfigPage } from './pages/MarketplaceConfigPage';
+import { LoanProductManagement } from './pages/Fintech/LoanProductManagement';
+import { InsuranceManagement } from './pages/Fintech/InsuranceManagement';
+import { KycVerification } from './pages/Fintech/KycVerification';
 
 export default function App() {
   const { isAuthenticated } = useAuth();
@@ -65,7 +71,16 @@ export default function App() {
           <Route path="services/mart" element={<MartDeliveryPage />} />
           <Route path="services/shopping" element={<ShoppingPage />} />
           <Route path="services/parcel" element={<ParcelDeliveryPage />} />
+          <Route path="services/hotels" element={<ServiceConfigPage />} />
+          <Route path="services/events" element={<ServiceConfigPage />} />
+          <Route path="services/rental" element={<ServiceConfigPage />} />
+          <Route path="services/transport" element={<PublicTransportPage />} />
+          <Route path="services/fuel" element={<FuelServicesPage />} />
           <Route path="services/payments" element={<FintechPage />} />
+          <Route path="services/payments/loans" element={<LoanProductManagement />} />
+          <Route path="services/payments/insurance" element={<InsuranceManagement />} />
+          <Route path="services/payments/kyc" element={<KycVerification />} />
+          <Route path="services/config" element={<ServiceConfigPage />} />
           
           {/* Driver Management */}
           <Route path="drivers/list" element={<DriverListPage />} />
@@ -107,6 +122,7 @@ export default function App() {
           <Route path="finance/commissions" element={<FinanceAnalyticsPage />} />
           <Route path="finance/analytics" element={<FinanceAnalyticsPage />} />
           <Route path="finance/settlements" element={<SettlementPage />} />
+          <Route path="finance/marketplace" element={<MarketplaceConfigPage />} />
 
           {/* Content */}
           <Route path="content/blog" element={<ContentManagerPage />} />

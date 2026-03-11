@@ -13,6 +13,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { OperationsModule } from './modules/operations/operations.module';
 import { RidersModule } from './modules/riders/riders.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
+import { FintechModule } from './modules/fintech/fintech.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AlertsModule } from './modules/alerts/alerts.module';
     OperationsModule,
     RidersModule,
     AlertsModule,
+    FintechModule,
     // EventBusModule,
     // RealTimeModule
   ],

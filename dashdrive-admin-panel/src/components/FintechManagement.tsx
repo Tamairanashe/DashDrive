@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Tabs, 
   Card, 
@@ -89,15 +89,28 @@ export const FintechManagement: React.FC = () => {
   const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
   const [viewingProduct, setViewingProduct] = useState<FintechProduct | null>(null);
   
-  const [products, setProducts] = useState<FintechProduct[]>([
-    { 
-      id: 'FP-001', name: 'Vehicle Rent-to-Buy', provider: 'XYZ Bank', type: 'Financing', eligibleUsers: 'Drivers Only', status: 'Active', applications: 128, commission: '7%', 
-      deposit: '40-50%', historyReq: '6 Months', finScore: 'Normal+', driverTier: 'Premium/High', behavior: 'Good Reviews', interest: '12%' 
-    },
-    { id: 'FP-002', name: 'Fuel Credit', provider: 'DashDrive Finance', type: 'Credit', eligibleUsers: 'All Drivers', status: 'Active', applications: 450, commission: '2%', interest: '5%' },
-    { id: 'FP-003', name: 'Microloans', provider: 'ABC Lenders', type: 'Loan', eligibleUsers: 'Drivers & Riders', status: 'Active', applications: 12, commission: '5%', interest: '15%' },
-    { id: 'FP-004', name: 'Personal Insurance', provider: 'Global Insure', type: 'Insurance', eligibleUsers: 'Drivers & Riders', status: 'Active', applications: 85, commission: '$50 flat' },
-  ]);
+  const [products, setProducts] = useState<FintechProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Sync with Backend
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const response = await fetch('http://localhost:3001/api/products');
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
+      }
+    } catch (error) {
+      console.error('Failed to sync products:', error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   const [applications, setApplications] = useState<FintechApplication[]>([
     { id: 'APP-8821', userId: 'DRV-223', userType: 'Driver', product: 'Vehicle Financing', provider: 'XYZ Bank', requestedAmount: '$4,000', status: 'Approved', date: '2026-03-08' },
@@ -264,7 +277,22 @@ export const FintechManagement: React.FC = () => {
             {
               key: 'all',
               label: 'All Products',
-              children: <Table columns={columns} dataSource={products} rowKey="id" pagination={{ pageSize: 8 }} className="shadow-sm" scroll={{ x: 1000 }} />
+              children: <Table columns={columns} dataSource={products} loading={loadingProducts} rowKey="id" pagination={{ pageSize: 8 }} className="shadow-sm" scroll={{ x: 1000 }} />
+            },
+            {
+              key: 'wallets',
+              label: 'DashWallet & P2P',
+              children: <div style={{ padding: '20px 0' }}><Statistic title="Active DashWallets" value={1420} prefix={<WalletOutlined />} /></div>
+            },
+            {
+              key: 'transfers',
+              label: 'Global Transfers',
+              children: <div style={{ padding: '20px 0' }}><Statistic title="Daily Transfer Volume" value={12400.50} precision={2} prefix="$" /></div>
+            },
+            {
+              key: 'bills',
+              label: 'Bill Payments',
+              children: <div style={{ padding: '20px 0' }}><Statistic title="Utility Merchants" value={24} prefix={<ThunderboltOutlined />} /></div>
             },
             {
               key: 'loans',
@@ -289,12 +317,12 @@ export const FintechManagement: React.FC = () => {
           <Form 
             form={form}
             layout="vertical" 
-            onFinish={(values) => {
-              const newProduct: FintechProduct = {
-                id: `FP-00${products.length + 1}`,
+            onFinish={async (values) => {
+              const newProduct = {
                 name: values.name,
                 provider: values.provider || 'Internal',
                 type: values.type,
+                category: values.type === 'Insurance' ? 'insurance' : 'finance',
                 eligibleUsers: values.users?.includes('riders') ? 'Drivers & Riders' : 'Drivers Only',
                 status: 'Active',
                 applications: 0,
@@ -306,7 +334,18 @@ export const FintechManagement: React.FC = () => {
                 behavior: values.behavior || undefined,
                 interest: values.interest ? `${values.interest}%` : undefined,
               };
-              setProducts([...products, newProduct]);
+
+              try {
+                await fetch('http://localhost:3001/api/products', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(newProduct)
+                });
+                await fetchProducts(); // Reload from backend
+              } catch (err) {
+                console.error('Failed to create product', err);
+              }
+
               setIsProductModalVisible(false);
               form.resetFields();
             }}

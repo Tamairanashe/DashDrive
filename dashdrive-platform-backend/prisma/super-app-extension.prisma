@@ -1,0 +1,823 @@
+// ==========================================
+// DASHDRIVE UNIVERSAL SUPER-APP SCHEMA
+// Extension: Mobility, Travel, Lifestyle, Notifications, Audit
+// ==========================================
+// This file extends the logistics-engine schema with the
+// remaining domains to reach 150+ tables.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 1. RIDE HAILING (25 models)
+// ==========================================
+
+model RideServiceType {
+  id           String   @id @default(uuid())
+  name         String   @unique // economy, comfort, premium, xl, moto
+  description  String?
+  basePrice    Float
+  pricePerKm   Float
+  pricePerMin  Float
+  maxPassengers Int     @default(4)
+  iconUrl      String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  rides RideRequest[]
+
+  @@map("ride_service_types")
+}
+
+model RideRequest {
+  id                String      @id @default(uuid())
+  userId            String
+  serviceTypeId     String
+  pickupLat         Float
+  pickupLng         Float
+  pickupAddress     String
+  dropoffLat        Float
+  dropoffLng        Float
+  dropoffAddress    String
+  estimatedDistance  Float?      // km
+  estimatedDuration Int?        // minutes
+  estimatedFare     Float?
+  surgeMultiplier   Float       @default(1.0)
+  status            RideStatus  @default(REQUESTED)
+  scheduledAt       DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  serviceType RideServiceType @relation(fields: [serviceTypeId], references: [id])
+  trip        RideTrip?
+  stops       RideStop[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("ride_requests")
+}
+
+enum RideStatus {
+  REQUESTED
+  SEARCHING
+  DRIVER_ASSIGNED
+  DRIVER_ARRIVING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_DRIVERS
+}
+
+model RideTrip {
+  id            String    @id @default(uuid())
+  rideRequestId String    @unique
+  driverId      String
+  vehicleId     String
+  startedAt     DateTime?
+  completedAt   DateTime?
+  actualDistance Float?
+  actualDuration Int?
+  baseFare      Float?
+  distanceFare  Float?
+  timeFare      Float?
+  surgeFare     Float?
+  tollsFare     Float?
+  totalFare     Float?
+  paymentMethod String    @default("wallet")
+  paymentStatus String    @default("pending")
+  rating        Float?
+  createdAt     DateTime  @default(now())
+
+  rideRequest RideRequest @relation(fields: [rideRequestId], references: [id])
+
+  @@index([driverId])
+  @@map("ride_trips")
+}
+
+model RideStop {
+  id            String   @id @default(uuid())
+  rideRequestId String
+  lat           Float
+  lng           Float
+  address       String
+  stopOrder     Int
+  arrivedAt     DateTime?
+
+  rideRequest RideRequest @relation(fields: [rideRequestId], references: [id])
+
+  @@map("ride_stops")
+}
+
+model RideFareEstimate {
+  id              String   @id @default(uuid())
+  userId          String
+  serviceTypeId   String
+  pickupLat       Float
+  pickupLng       Float
+  dropoffLat      Float
+  dropoffLng      Float
+  estimatedFare   Float
+  surgeMultiplier Float    @default(1.0)
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@map("ride_fare_estimates")
+}
+
+model DriverDocument {
+  id           String   @id @default(uuid())
+  driverId     String
+  documentType String   // license, insurance, registration, background_check
+  documentUrl  String
+  status       String   @default("pending") // pending, verified, rejected, expired
+  expiresAt    DateTime?
+  verifiedBy   String?
+  verifiedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([driverId])
+  @@map("driver_documents")
+}
+
+model DriverEarning {
+  id          String   @id @default(uuid())
+  driverId    String
+  tripId      String?
+  amount      Float
+  type        String   // trip_fare, tip, bonus, referral, adjustment
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([driverId])
+  @@index([createdAt])
+  @@map("driver_earnings")
+}
+
+model DriverRating {
+  id        String   @id @default(uuid())
+  driverId  String
+  userId    String
+  tripId    String
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@index([driverId])
+  @@map("driver_ratings")
+}
+
+model DriverSchedule {
+  id          String   @id @default(uuid())
+  driverId    String
+  dayOfWeek   Int      // 0-6
+  startTime   String   // HH:mm
+  endTime     String   // HH:mm
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([driverId, dayOfWeek])
+  @@map("driver_schedules")
+}
+
+// ==========================================
+// 2. HOTEL BOOKING (12 models)
+// ==========================================
+
+model Hotel {
+  id           String   @id @default(uuid())
+  ownerId      String
+  name         String
+  description  String?
+  address      String
+  city         String
+  country      String
+  latitude     Float?
+  longitude    Float?
+  starRating   Int      @default(3)
+  checkInTime  String   @default("14:00")
+  checkOutTime String   @default("11:00")
+  imageUrls    String[]
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  roomTypes     HotelRoomType[]
+  amenities     HotelAmenity[]
+  reviews       HotelReview[]
+
+  @@index([city])
+  @@map("hotels")
+}
+
+model HotelRoomType {
+  id             String   @id @default(uuid())
+  hotelId        String
+  name           String   // Standard, Deluxe, Suite, Presidential
+  description    String?
+  maxGuests      Int      @default(2)
+  bedType        String   @default("double") // single, double, queen, king, twin
+  pricePerNight  Float
+  totalRooms     Int      @default(1)
+  imageUrls      String[]
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  hotel    Hotel          @relation(fields: [hotelId], references: [id])
+  bookings HotelBooking[]
+
+  @@map("hotel_room_types")
+}
+
+model HotelAmenity {
+  id       String @id @default(uuid())
+  hotelId  String
+  name     String // WiFi, Pool, Gym, Spa, Restaurant, Parking
+  iconUrl  String?
+
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+
+  @@map("hotel_amenities")
+}
+
+model HotelBooking {
+  id              String   @id @default(uuid())
+  userId          String
+  roomTypeId      String
+  checkIn         DateTime
+  checkOut        DateTime
+  guests          Int      @default(1)
+  totalNights     Int
+  pricePerNight   Float
+  totalPrice      Float
+  specialRequests String?
+  status          String   @default("confirmed") // confirmed, checked_in, checked_out, cancelled, no_show
+  paymentMethod   String   @default("wallet")
+  paymentStatus   String   @default("paid")
+  createdAt       DateTime @default(now())
+
+  roomType   HotelRoomType   @relation(fields: [roomTypeId], references: [id])
+  addOns     HotelBookingAddOn[]
+
+  @@index([userId])
+  @@map("hotel_bookings")
+}
+
+model HotelBookingAddOn {
+  id        String @id @default(uuid())
+  bookingId String
+  name      String // breakfast, airport_transfer, late_checkout
+  price     Float
+
+  booking HotelBooking @relation(fields: [bookingId], references: [id])
+
+  @@map("hotel_booking_addons")
+}
+
+model HotelReview {
+  id          String   @id @default(uuid())
+  hotelId     String
+  userId      String
+  bookingId   String?
+  rating      Int      // 1-5
+  title       String?
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+
+  @@map("hotel_reviews")
+}
+
+// ==========================================
+// 3. EVENTS & TICKETING (8 models)
+// ==========================================
+
+model EventVenue {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  city      String
+  capacity  Int
+  latitude  Float?
+  longitude Float?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+
+  events Event[]
+
+  @@map("event_venues")
+}
+
+model Event {
+  id           String   @id @default(uuid())
+  venueId      String
+  organizerId  String
+  title        String
+  description  String?
+  category     String   // music, sports, conference, festival, comedy
+  imageUrl     String?
+  startDate    DateTime
+  endDate      DateTime
+  status       String   @default("upcoming") // upcoming, live, completed, cancelled
+  isFeatured   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  venue       EventVenue     @relation(fields: [venueId], references: [id])
+  ticketTypes EventTicketType[]
+
+  @@index([category])
+  @@index([startDate])
+  @@map("events")
+}
+
+model EventTicketType {
+  id          String   @id @default(uuid())
+  eventId     String
+  name        String   // General, VIP, VVIP, Early Bird
+  price       Float
+  totalQty    Int
+  soldQty     Int      @default(0)
+  description String?
+  createdAt   DateTime @default(now())
+
+  event   Event         @relation(fields: [eventId], references: [id])
+  tickets EventTicket[]
+
+  @@map("event_ticket_types")
+}
+
+model EventTicket {
+  id           String   @id @default(uuid())
+  ticketTypeId String
+  userId       String
+  qrCode       String   @unique
+  status       String   @default("valid") // valid, used, cancelled, refunded
+  purchasedAt  DateTime @default(now())
+
+  ticketType EventTicketType @relation(fields: [ticketTypeId], references: [id])
+
+  @@index([userId])
+  @@map("event_tickets")
+}
+
+// ==========================================
+// 4. CAR RENTAL (8 models)
+// ==========================================
+
+model RentalFleet {
+  id             String   @id @default(uuid())
+  make           String
+  model          String
+  year           Int
+  color          String
+  licensePlate   String   @unique
+  category       String   // economy, compact, sedan, suv, luxury, van
+  transmission   String   @default("automatic")
+  fuelType       String   @default("petrol")
+  seatingCapacity Int     @default(5)
+  pricePerDay    Float
+  pricePerHour   Float?
+  imageUrls      String[]
+  mileage        Int      @default(0)
+  status         String   @default("available") // available, rented, maintenance, retired
+  locationId     String?
+  createdAt      DateTime @default(now())
+
+  rentals      RentalBooking[]
+
+  @@map("rental_fleet")
+}
+
+model RentalLocation {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  city      String
+  latitude  Float?
+  longitude Float?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("rental_locations")
+}
+
+model RentalBooking {
+  id             String   @id @default(uuid())
+  userId         String
+  vehicleId      String
+  pickupLocation String
+  dropoffLocation String
+  pickupDate     DateTime
+  dropoffDate    DateTime
+  totalDays      Int
+  dailyRate      Float
+  totalPrice     Float
+  insuranceType  String?  // basic, standard, premium
+  insuranceCost  Float    @default(0)
+  status         String   @default("confirmed") // confirmed, active, returned, cancelled
+  createdAt      DateTime @default(now())
+
+  vehicle        RentalFleet          @relation(fields: [vehicleId], references: [id])
+  inspections    RentalInspection[]
+
+  @@index([userId])
+  @@map("rental_bookings")
+}
+
+model RentalInspection {
+  id          String   @id @default(uuid())
+  bookingId   String
+  type        String   // pickup, return
+  photos      String[]
+  fuelLevel   Float?
+  mileage     Int?
+  damageNotes String?
+  inspectedBy String
+  createdAt   DateTime @default(now())
+
+  booking RentalBooking @relation(fields: [bookingId], references: [id])
+
+  @@map("rental_inspections")
+}
+
+// ==========================================
+// 5. PUBLIC TRANSPORT (6 models)
+// ==========================================
+
+model TransitRoute {
+  id          String   @id @default(uuid())
+  name        String
+  routeNumber String   @unique
+  type        String   // bus, minibus, train, ferry
+  startPoint  String
+  endPoint    String
+  fare        Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  stops      TransitStop[]
+  schedules  TransitSchedule[]
+
+  @@map("transit_routes")
+}
+
+model TransitStop {
+  id        String   @id @default(uuid())
+  routeId   String
+  name      String
+  latitude  Float
+  longitude Float
+  stopOrder Int
+  createdAt DateTime @default(now())
+
+  route TransitRoute @relation(fields: [routeId], references: [id])
+
+  @@map("transit_stops")
+}
+
+model TransitSchedule {
+  id           String   @id @default(uuid())
+  routeId      String
+  departureTime String  // HH:mm
+  arrivalTime   String  // HH:mm
+  daysActive   Int[]    // [1,2,3,4,5] = weekdays
+  createdAt    DateTime @default(now())
+
+  route TransitRoute @relation(fields: [routeId], references: [id])
+
+  @@map("transit_schedules")
+}
+
+model TransitPass {
+  id         String   @id @default(uuid())
+  userId     String
+  passType   String   // daily, weekly, monthly
+  routeIds   String[] // which routes it covers, empty = all
+  validFrom  DateTime
+  validUntil DateTime
+  price      Float
+  status     String   @default("active")
+  qrCode     String   @unique
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("transit_passes")
+}
+
+model TransitTrip {
+  id          String   @id @default(uuid())
+  userId      String
+  routeId     String
+  boardStop   String
+  alightStop  String?
+  fare        Float
+  passId      String?
+  paymentMethod String @default("wallet")
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@map("transit_trips")
+}
+
+// ==========================================
+// 6. FUEL SERVICES (6 models)
+// ==========================================
+
+model FuelStation {
+  id          String   @id @default(uuid())
+  name        String
+  address     String
+  city        String
+  latitude    Float
+  longitude   Float
+  ownerId     String?
+  isActive    Boolean  @default(true)
+  operatingHours String? // JSON: {"open": "06:00", "close": "22:00"}
+  createdAt   DateTime @default(now())
+
+  fuelTypes FuelType[]
+  orders    FuelOrder[]
+
+  @@map("fuel_stations")
+}
+
+model FuelType {
+  id         String  @id @default(uuid())
+  stationId  String
+  name       String  // Petrol, Diesel, LPG, Electric
+  pricePerUnit Float
+  unit       String  @default("litre")
+  isAvailable Boolean @default(true)
+
+  station FuelStation @relation(fields: [stationId], references: [id])
+
+  @@map("fuel_types")
+}
+
+model FuelOrder {
+  id          String   @id @default(uuid())
+  userId      String
+  stationId   String
+  fuelTypeId  String
+  quantity    Float
+  totalPrice  Float
+  orderType   String   @default("self") // self, delivery
+  status      String   @default("pending") // pending, confirmed, fueling, completed, cancelled
+  paymentMethod String @default("wallet")
+  createdAt   DateTime @default(now())
+
+  station FuelStation @relation(fields: [stationId], references: [id])
+
+  @@index([userId])
+  @@map("fuel_orders")
+}
+
+// ==========================================
+// 7. NOTIFICATION SYSTEM (3 models)
+// ==========================================
+
+model NotificationTemplate {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  channel   String   // push, sms, email, in_app
+  subject   String?
+  body      String
+  variables String[] // e.g., ["userName", "orderId"]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("notification_templates")
+}
+
+model UserNotification {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  body        String
+  channel     String   // push, sms, email, in_app
+  data        Json?    // Extra payload
+  isRead      Boolean  @default(false)
+  sentAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([sentAt])
+  @@map("user_notifications")
+}
+
+model NotificationPreference {
+  id            String  @id @default(uuid())
+  userId        String  @unique
+  pushEnabled   Boolean @default(true)
+  smsEnabled    Boolean @default(true)
+  emailEnabled  Boolean @default(true)
+  marketingEnabled Boolean @default(true)
+
+  @@map("notification_preferences")
+}
+
+// ==========================================
+// 8. AUDIT & SYSTEM TABLES (6 models)
+// ==========================================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  actorType  String   // admin, user, system, driver, merchant
+  action     String   // create, update, delete, login, logout
+  entity     String   // order, user, wallet, etc.
+  entityId   String?
+  changes    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemConfig {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+  description String?
+  updatedAt DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+model FeatureFlag {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  isEnabled   Boolean  @default(false)
+  description String?
+  targetRoles String[] // which roles can see this
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("feature_flags")
+}
+
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  source      String   // bank, insurance, payment_gateway
+  eventType   String   // loan.approved, payment.completed
+  payload     Json
+  status      String   @default("received") // received, processed, failed
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([source, eventType])
+  @@map("webhook_events")
+}
+
+model ApiRateLimit {
+  id           String   @id @default(uuid())
+  clientId     String
+  endpoint     String
+  requestCount Int      @default(0)
+  windowStart  DateTime @default(now())
+  maxRequests  Int      @default(100)
+
+  @@unique([clientId, endpoint])
+  @@map("api_rate_limits")
+}
+
+model ScheduledJob {
+  id          String   @id @default(uuid())
+  name        String
+  cronExpr    String   // e.g., "0 0 * * *"
+  handler     String   // module.function
+  payload     Json?
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+
+  @@map("scheduled_jobs")
+}
+
+// ==========================================
+// 9. USER PROFILES & ADDRESSES (4 models)
+// ==========================================
+
+model UserProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  firstName   String
+  lastName    String
+  avatarUrl   String?
+  dateOfBirth DateTime?
+  gender      String?
+  language    String   @default("en")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("user_profiles")
+}
+
+model UserAddress {
+  id          String   @id @default(uuid())
+  userId      String
+  label       String   @default("Home") // Home, Work, Other
+  address     String
+  city        String
+  country     String
+  latitude    Float?
+  longitude   Float?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@map("user_addresses")
+}
+
+model UserFavorite {
+  id         String   @id @default(uuid())
+  userId     String
+  entityType String   // store, hotel, restaurant, driver
+  entityId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, entityType, entityId])
+  @@map("user_favorites")
+}
+
+model UserReferral {
+  id            String   @id @default(uuid())
+  referrerId    String
+  refereeId     String?
+  referralCode  String   @unique
+  status        String   @default("pending") // pending, completed, rewarded
+  rewardAmount  Float?
+  createdAt     DateTime @default(now())
+
+  @@index([referrerId])
+  @@map("user_referrals")
+}
+
+// ==========================================
+// 10. ANALYTICS & REPORTING (4 models)
+// ==========================================
+
+model PlatformDailyMetric {
+  id              String   @id @default(uuid())
+  date            DateTime @unique
+  totalOrders     Int      @default(0)
+  totalRevenue    Float    @default(0)
+  totalRides      Int      @default(0)
+  totalUsers      Int      @default(0)
+  activeDrivers   Int      @default(0)
+  activeMerchants Int      @default(0)
+  walletVolume    Float    @default(0)
+  createdAt       DateTime @default(now())
+
+  @@map("platform_daily_metrics")
+}
+
+model ServiceMetric {
+  id           String   @id @default(uuid())
+  serviceType  String   // ride, food, mart, parcel, hotel, event, rental, fuel, transport
+  date         DateTime
+  totalBookings Int     @default(0)
+  totalRevenue  Float   @default(0)
+  avgRating     Float   @default(0)
+  createdAt     DateTime @default(now())
+
+  @@unique([serviceType, date])
+  @@map("service_metrics")
+}
+
+model CohortAnalysis {
+  id            String   @id @default(uuid())
+  cohortMonth   String   // "2026-01"
+  userCount     Int
+  retentionDay7  Float?
+  retentionDay30 Float?
+  retentionDay90 Float?
+  avgRevenue    Float?
+  createdAt     DateTime @default(now())
+
+  @@unique([cohortMonth])
+  @@map("cohort_analyses")
+}
+
+model FunnelEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  event     String   // app_open, search, view_product, add_to_cart, checkout, payment_success
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([event])
+  @@index([createdAt])
+  @@map("funnel_events")
+}

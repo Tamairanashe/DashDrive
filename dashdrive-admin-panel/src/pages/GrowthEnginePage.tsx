@@ -15,7 +15,12 @@ import {
   Badge,
   Divider,
   Timeline,
-  Alert
+  Alert,
+  Form,
+  Select,
+  InputNumber,
+  Slider,
+  Switch
 } from 'antd';
 import { 
   RocketOutlined, 
@@ -31,13 +36,71 @@ import {
   NotificationOutlined,
   ThunderboltOutlined,
   CarOutlined,
-  ShoppingOutlined
+  ShoppingOutlined,
+  ExperimentOutlined,
+  SafetyOutlined,
+  SettingOutlined,
+  WarningOutlined
 } from '@ant-design/icons';
+import { OfferMatchingEngine, FinancialProduct, UserProfile, MatchingResult, EngineConfig, DEFAULT_ENGINE_CONFIG } from '../utils/OfferMatchingEngine';
 
 const { Title, Text } = Typography;
 
 export const GrowthEnginePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [engineConfig, setEngineConfig] = useState<EngineConfig>(DEFAULT_ENGINE_CONFIG);
+  const [simulationResults, setSimulationResults] = useState<MatchingResult[]>([]);
+
+  const mockProducts: FinancialProduct[] = [
+    {
+      id: 'P-001', name: 'Premium Vehicle Loan', provider: 'XYZ Bank', type: 'Loan', interestRate: 9, maxAmount: 15000,
+      partnerPriority: 8, revenuePotential: 9, approvalProbability: 0.85, estimatedCommission: 150,
+      thresholds: { minEarnings: 800, minRating: 4.5, minAccountAge: 12, userType: 'Driver', minCreditScore: 650 }
+    },
+    {
+      id: 'P-002', name: 'Micro-Fuel Credit', provider: 'FuelPay', type: 'Credit', maxAmount: 500,
+      partnerPriority: 6, revenuePotential: 4, approvalProbability: 0.95, estimatedCommission: 15,
+      thresholds: { minEarnings: 200, minRating: 4.0, userType: 'Driver' }
+    },
+    {
+      id: 'P-003', name: 'Rider Insurance Bundle', provider: 'ABC Insurance', type: 'Insurance',
+      partnerPriority: 5, revenuePotential: 3, approvalProbability: 0.99, estimatedCommission: 5,
+      thresholds: { userType: 'Customer' }
+    },
+    {
+      id: 'P-004', name: 'Gold Tier Personal Loan', provider: 'FinCap', type: 'Loan', interestRate: 12, maxAmount: 5000,
+      partnerPriority: 7, revenuePotential: 7, approvalProbability: 0.65, estimatedCommission: 80,
+      thresholds: { minEarnings: 1000, minAccountAge: 6, userType: 'Both', minCreditScore: 700 }
+    }
+  ];
+
+  const handleSimulate = (values: any) => {
+    const user: UserProfile = {
+      id: 'SIM-001',
+      name: 'Simulator User',
+      type: values.type,
+      earnings: values.earnings,
+      rating: values.rating,
+      tripVolume: values.trips,
+      accountAgeMonths: values.age,
+      location: 'Harare',
+      creditScore: values.creditScore || 700,
+      fraudFlags: values.fraudFlags || 0
+    };
+
+    const results = OfferMatchingEngine.rankOffers(user, mockProducts, engineConfig);
+    setSimulationResults(results);
+  };
+
+  const handleWeightChange = (key: keyof EngineConfig['weights'], value: number) => {
+    setEngineConfig({
+      ...engineConfig,
+      weights: {
+        ...engineConfig.weights,
+        [key]: value
+      }
+    });
+  };
 
   const summaryData = [
     { title: 'Active Campaigns', value: 8, icon: <RocketOutlined />, color: '#1890ff' },
@@ -95,7 +158,7 @@ export const GrowthEnginePage: React.FC = () => {
                 valueStyle={{ color: stat.color, fontWeight: 700 }}
               />
               <div style={{ marginTop: 8 }}>
-                <Text type="success" size="small"><RiseOutlined /> +12%</Text> <Text type="secondary" size="small">vs last month</Text>
+                <Text type="success" style={{ fontSize: 12 }}><RiseOutlined /> +12%</Text> <Text type="secondary" style={{ fontSize: 12 }}>vs last month</Text>
               </div>
             </Card>
           </Col>
@@ -181,6 +244,110 @@ export const GrowthEnginePage: React.FC = () => {
                         </Card>
                      </Col>
                    </Row>
+                </div>
+              )
+            },
+            {
+              key: 'engine-config',
+              label: <span><SettingOutlined /> Engine Config</span>,
+              children: (
+                <div style={{ padding: 24 }}>
+                  <Row gutter={24}>
+                    <Col span={16}>
+                      <Card title={
+                        <div>
+                          <Text strong style={{ fontSize: 16 }}>Global Weighting Controls</Text>
+                          <br />
+                          <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>Adjust how the engine ranks offers in real-time.</Text>
+                        </div>
+                      }>
+                        <div style={{ marginBottom: 32 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <Text strong>Approval Probability Weight</Text>
+                            <Tag color="blue">{engineConfig.weights.approvalProbability}%</Tag>
+                          </div>
+                          <Slider 
+                            value={engineConfig.weights.approvalProbability} 
+                            onChange={(val) => handleWeightChange('approvalProbability', val)}
+                            marks={{ 0: 'Organic', 50: 'Balanced', 100: 'Safe' }}
+                          />
+                          <Text type="secondary" style={{ fontSize: 12 }}>Prioritize offers with the highest likelihood of conversion.</Text>
+                        </div>
+
+                        <div style={{ marginBottom: 32 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <Text strong>Commission Value Weight</Text>
+                            <Tag color="green">{engineConfig.weights.commissionValue}%</Tag>
+                          </div>
+                          <Slider 
+                            value={engineConfig.weights.commissionValue} 
+                            onChange={(val) => handleWeightChange('commissionValue', val)}
+                            marks={{ 0: 'Service', 50: 'Optimized', 100: 'Revenue' }}
+                          />
+                          <Text type="secondary" style={{ fontSize: 12 }}>Prioritize offers that generate higher revenue for DashDrive.</Text>
+                        </div>
+
+                        <div style={{ marginBottom: 32 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <Text strong>User Relevance Weight</Text>
+                            <Tag color="orange">{engineConfig.weights.userRelevance}%</Tag>
+                          </div>
+                          <Slider 
+                            value={engineConfig.weights.userRelevance} 
+                            onChange={(val) => handleWeightChange('userRelevance', val)}
+                            marks={{ 0: 'Broad', 50: 'Targeted', 100: 'Hyper-Local' }}
+                          />
+                          <Text type="secondary" style={{ fontSize: 12 }}>Match offers strictly based on user profile and behavior.</Text>
+                        </div>
+
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <Text strong>Partner Priority (Boost)</Text>
+                            <Tag color="purple">{engineConfig.weights.partnerPriority}%</Tag>
+                          </div>
+                          <Slider 
+                            value={engineConfig.weights.partnerPriority} 
+                            onChange={(val) => handleWeightChange('partnerPriority', val)}
+                            marks={{ 0: 'Fair', 50: 'Weighted', 100: 'Sponsored' }}
+                          />
+                          <Text type="secondary" style={{ fontSize: 12 }}>Influence rankings based on strategic partner agreements.</Text>
+                        </div>
+                      </Card>
+                    </Col>
+                    <Col span={8}>
+                      <Card title="Risk Controls" style={{ marginBottom: 24 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                          <Text strong>Fraud Filtering</Text>
+                          <Switch defaultChecked />
+                        </div>
+                        <div style={{ marginBottom: 24 }}>
+                          <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>Fraud Flag Threshold</Text>
+                          <InputNumber 
+                            min={0} max={100} value={engineConfig.riskThreshold} 
+                            onChange={(val) => setEngineConfig({...engineConfig, riskThreshold: val || 80})}
+                            style={{ width: '100%' }}
+                            suffix="%"
+                          />
+                        </div>
+                        <Alert 
+                          message="High Risk Exclusion" 
+                          description="Users exceeding this threshold will see limited/no high-value loan products."
+                          type="warning"
+                          showIcon
+                        />
+                      </Card>
+
+                      <Card title="Seasonal Boosts" size="small">
+                        <Button block type="dashed" style={{ marginBottom: 12 }}>Add Event Trigger</Button>
+                        <Timeline 
+                          items={[
+                            { color: 'blue', children: 'Back to School - Microloan Boost (Active)' },
+                            { color: 'gray', children: 'Rainy Season - Insurance Boost (Scheduled)' },
+                          ]}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
                 </div>
               )
             },
@@ -292,6 +459,100 @@ export const GrowthEnginePage: React.FC = () => {
               )
             },
             {
+              key: 'simulator',
+              label: <span><ExperimentOutlined /> Offer Simulator</span>,
+              children: (
+                <div style={{ padding: 24 }}>
+                  <Row gutter={24}>
+                    <Col span={8}>
+                      <Card title="Simulation Parameters" size="small">
+                        <Form layout="vertical" initialValues={{ type: 'Driver', earnings: 1000, rating: 4.8, trips: 500, age: 12, creditScore: 720, fraudFlags: 0 }} onValuesChange={(_, all) => handleSimulate(all)}>
+                          <Form.Item name="type" label="User Type">
+                            <Select options={[{ label: 'Driver', value: 'Driver' }, { label: 'Customer', value: 'Customer' }]} />
+                          </Form.Item>
+                          <Row gutter={16}>
+                            <Col span={12}>
+                              <Form.Item name="earnings" label="Earnings ($)">
+                                <InputNumber style={{ width: '100%' }} />
+                              </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                              <Form.Item name="rating" label="Rating">
+                                <InputNumber step={0.1} max={5} style={{ width: '100%' }} />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                          <Row gutter={16}>
+                            <Col span={12}>
+                              <Form.Item name="age" label="Account Age">
+                                <InputNumber style={{ width: '100%' }} />
+                              </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                              <Form.Item name="creditScore" label="Credit Score">
+                                <InputNumber style={{ width: '100%' }} />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                          <Form.Item name="fraudFlags" label="Fraud Risk Score (0-100)">
+                             <Slider />
+                          </Form.Item>
+                          <Button type="primary" block onClick={() => handleSimulate({ type: 'Driver', earnings: 1000, rating: 4.8, trips: 500, age: 12, creditScore: 720, fraudFlags: 0 })}>Refresh Rankings</Button>
+                        </Form>
+                      </Card>
+                    </Col>
+                    <Col span={16}>
+                      <Card title="Live Marketplace Rankings" extra={<Text type="secondary">Based on current weighting logic</Text>} size="small">
+                        <Table 
+                          dataSource={simulationResults}
+                          pagination={false}
+                          size="small"
+                          rowKey={(r) => r.product.id}
+                          columns={[
+                            { 
+                              title: 'Rank / Product', 
+                              render: (_, r, i) => (
+                                <Space>
+                                  <Text type="secondary">{i + 1}</Text>
+                                  <div>
+                                    <Text strong>{r.product.name}</Text>
+                                    <br />
+                                    <Text type="secondary" style={{ fontSize: 11 }}>{r.product.provider}</Text>
+                                  </div>
+                                </Space>
+                              ) 
+                            },
+                            { 
+                              title: 'Eligibility', 
+                              dataIndex: 'isEligible', 
+                              render: (e, r) => (
+                                <Tag color={e ? 'green' : 'red'} icon={e ? <CheckCircleOutlined /> : <WarningOutlined />}>
+                                  {e ? 'Pass' : r.matchReason}
+                                </Tag>
+                              ) 
+                            },
+                            { 
+                              title: 'Conversion Score', 
+                              dataIndex: 'score', 
+                              render: (s) => (
+                                <div style={{ minWidth: 100 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                    <Text style={{ fontSize: 12 }}>{s}% Match</Text>
+                                  </div>
+                                  <Progress percent={s} size="small" strokeColor={s > 80 ? '#52c41a' : s > 50 ? '#faad14' : '#ff4d4f'} showInfo={false} />
+                                </div>
+                              ) 
+                            },
+                            { title: 'Confidence', dataIndex: 'matchReason' }
+                          ]}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
+                </div>
+              )
+            },
+            {
               key: 'fintech',
               label: <span><BankOutlined /> Fintech Subs</span>,
               children: (
@@ -321,3 +582,5 @@ export const GrowthEnginePage: React.FC = () => {
     </div>
   );
 };
+
+

@@ -1,0 +1,542 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["core", "finance", "insurance", "billing", "marketing", "integration", "analytics", "fintech"]
+}
+
+// ==========================================
+// 1. CORE SCHEMA
+// ==========================================
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique
+  phone         String?
+  password_hash String
+  status        String    @default("active")
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  roles         UserRole[]
+  borrower      Borrower?
+  bnpl_account  BnplAccount?
+  policies      Policy[]
+  claims        Claim[]
+  wallet        Wallet?
+
+  @@schema("core")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  role_name   String   @unique
+  description String?
+  
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@schema("core")
+}
+
+model UserRole {
+  user_id String @db.Uuid
+  role_id String @db.Uuid
+  user    User   @relation(fields: [user_id], references: [id])
+  role    Role   @relation(fields: [role_id], references: [id])
+
+  @@id([user_id, role_id])
+  @@schema("core")
+}
+
+model Permission {
+  id              String   @id @default(uuid()) @db.Uuid
+  permission_name String   @unique
+  
+  roles           RolePermission[]
+
+  @@schema("core")
+}
+
+model RolePermission {
+  role_id       String @db.Uuid
+  permission_id String @db.Uuid
+  role          Role   @relation(fields: [role_id], references: [id])
+  permission    Permission @relation(fields: [permission_id], references: [id])
+
+  @@id([role_id, permission_id])
+  @@schema("core")
+}
+
+model Organization {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  type       String   // financier_partner, insurance_partner, dashdrive_admin
+  created_at DateTime @default(now())
+
+  @@schema("core")
+}
+
+model Document {
+  id          String   @id @default(uuid()) @db.Uuid
+  owner_id    String   @db.Uuid
+  type        String   // loan_agreement, insurance_policy, etc.
+  file_url    String
+  uploaded_at DateTime @default(now())
+
+  @@schema("core")
+}
+
+// ==========================================
+// 2. FINANCE SCHEMA
+// ==========================================
+
+model LoanProduct {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  type          String
+  min_amount    Decimal
+  max_amount    Decimal
+  min_term      Int
+  max_term      Int
+  interest_type String
+  apr_min       Decimal
+  apr_max       Decimal
+
+  applications  Application[]
+
+  @@schema("finance")
+}
+
+model Lead {
+  id            String   @id @default(uuid()) @db.Uuid
+  source        String
+  external_id   String?
+  first_name    String
+  last_name     String
+  email         String
+  phone         String
+  loan_amount   Decimal?
+  status        String
+  created_at    DateTime @default(now())
+
+  @@schema("finance")
+}
+
+model Borrower {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @unique @db.Uuid
+  first_name String
+  last_name  String
+  dob        DateTime
+  ssn_last4  String?
+  address    String?
+  created_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id])
+  applications Application[]
+
+  @@schema("finance")
+}
+
+model Application {
+  id               String   @id @default(uuid()) @db.Uuid
+  borrower_id      String   @db.Uuid
+  product_id       String   @db.Uuid
+  requested_amount Decimal
+  status           String   @default("submitted")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  borrower         Borrower @relation(fields: [borrower_id], references: [id])
+  product          LoanProduct @relation(fields: [product_id], references: [id])
+  underwriting     UnderwritingDecision?
+  offers           LoanOffer[]
+  loans            Loan[]
+
+  @@schema("finance")
+}
+
+model UnderwritingDecision {
+  id              String   @id @default(uuid()) @db.Uuid
+  application_id  String   @unique @db.Uuid
+  decision        String
+  approved_amount Decimal?
+  approved_term   Int?
+  approved_apr    Decimal?
+  notes           String?
+  created_at      DateTime @default(now())
+
+  application     Application @relation(fields: [application_id], references: [id])
+
+  @@schema("finance")
+}
+
+model LoanOffer {
+  id               String   @id @default(uuid()) @db.Uuid
+  application_id   String   @db.Uuid
+  lender_name      String
+  amount           Decimal
+  term             Int
+  apr              Decimal
+  monthly_payment  Decimal
+  selected         Boolean  @default(false)
+
+  application      Application @relation(fields: [application_id], references: [id])
+
+  @@schema("finance")
+}
+
+model Loan {
+  id             String   @id @default(uuid()) @db.Uuid
+  application_id String   @db.Uuid
+  lender_id      String   @db.Uuid
+  amount         Decimal
+  apr            Decimal
+  term           Int
+  status         String
+  funded_at      DateTime?
+
+  application    Application @relation(fields: [application_id], references: [id])
+  repayments     Repayment[]
+
+  @@schema("finance")
+}
+
+model Repayment {
+  id             String   @id @default(uuid()) @db.Uuid
+  loan_id        String   @db.Uuid
+  amount         Decimal
+  payment_source String   // trip_deduction, wallet, card, bank_transfer
+  status         String
+  payment_date   DateTime @default(now())
+
+  loan           Loan     @relation(fields: [loan_id], references: [id])
+
+  @@schema("finance")
+}
+
+// BNPL
+model BnplAccount {
+  id               String   @id @default(uuid()) @db.Uuid
+  user_id          String   @unique @db.Uuid
+  credit_limit     Decimal
+  available_credit Decimal
+  status           String   @default("active")
+
+  user             User     @relation(fields: [user_id], references: [id])
+  transactions     BnplTransaction[]
+
+  @@schema("finance")
+}
+
+model BnplTransaction {
+  id          String   @id @default(uuid()) @db.Uuid
+  account_id  String   @db.Uuid
+  amount      Decimal
+  merchant    String
+  status      String   @default("active")
+  created_at  DateTime @default(now())
+
+  account     BnplAccount @relation(fields: [account_id], references: [id])
+  repayments  BnplRepayment[]
+
+  @@schema("finance")
+}
+
+model BnplRepayment {
+  id             String   @id @default(uuid()) @db.Uuid
+  transaction_id String   @db.Uuid
+  amount         Decimal
+  paid_at        DateTime @default(now())
+
+  transaction    BnplTransaction @relation(fields: [transaction_id], references: [id])
+
+  @@schema("finance")
+}
+
+// Vehicle Financing
+model Vehicle {
+  id    String @id @default(uuid()) @db.Uuid
+  make  String
+  model String
+  year  Int
+  price Decimal
+
+  applications VehicleFinanceApplication[]
+
+  @@schema("finance")
+}
+
+model VehicleFinanceApplication {
+  id           String   @id @default(uuid()) @db.Uuid
+  driver_id    String   @db.Uuid
+  vehicle_id   String   @db.Uuid
+  down_payment Decimal
+  status       String   @default("pending")
+  created_at   DateTime @default(now())
+
+  vehicle      Vehicle  @relation(fields: [vehicle_id], references: [id])
+  loan         VehicleLoan?
+
+  @@schema("finance")
+}
+
+model VehicleLoan {
+  id             String   @id @default(uuid()) @db.Uuid
+  application_id String   @unique @db.Uuid
+  amount         Decimal
+  weekly_payment Decimal
+  term_weeks     Int
+  status         String
+
+  application    VehicleFinanceApplication @relation(fields: [application_id], references: [id])
+
+  @@schema("finance")
+}
+
+// ==========================================
+// 3. INSURANCE SCHEMA
+// ==========================================
+
+model InsuranceProvider {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  api_endpoint String?
+  status       String   @default("active")
+  created_at   DateTime @default(now())
+
+  products     InsuranceProduct[]
+
+  @@schema("insurance")
+}
+
+model InsuranceProduct {
+  id              String   @id @default(uuid()) @db.Uuid
+  provider_id     String   @db.Uuid
+  name            String
+  coverage_amount Decimal
+  premium         Decimal
+  policy_type     String   // driver_accident, vehicle, trip, loan_protection
+
+  provider        InsuranceProvider @relation(fields: [provider_id], references: [id])
+  policies        Policy[]
+
+  @@schema("insurance")
+}
+
+model Policy {
+  id              String   @id @default(uuid()) @db.Uuid
+  user_id         String   @db.Uuid
+  product_id      String   @db.Uuid
+  premium         Decimal
+  coverage_amount Decimal
+  status          String
+  start_date      DateTime
+  end_date        DateTime
+
+  user            User     @relation(fields: [user_id], references: [id])
+  product         InsuranceProduct @relation(fields: [product_id], references: [id])
+  claims          Claim[]
+
+  @@schema("insurance")
+}
+
+model Claim {
+  id            String   @id @default(uuid()) @db.Uuid
+  policy_id     String   @db.Uuid
+  user_id       String   @db.Uuid
+  incident_type String
+  description   String?
+  status        String   @default("submitted")
+  created_at    DateTime @default(now())
+
+  policy        Policy   @relation(fields: [policy_id], references: [id])
+  user          User     @relation(fields: [user_id], references: [id])
+
+  @@schema("insurance")
+}
+
+// ==========================================
+// 4. BILLING SCHEMA
+// ==========================================
+
+model Transaction {
+  id             String   @id @default(uuid()) @db.Uuid
+  reference_id   String?  @db.Uuid
+  type           String   // loan_disbursement, loan_repayment, insurance_premium, commission
+  amount         Decimal
+  status         String
+  created_at     DateTime @default(now())
+
+  @@schema("billing")
+}
+
+model Commission {
+  id              String   @id @default(uuid()) @db.Uuid
+  partner_id      String   @db.Uuid
+  application_id  String   @db.Uuid
+  amount          Decimal
+  status          String
+  due_date        DateTime
+  paid_at         DateTime?
+
+  @@schema("billing")
+}
+
+model Payout {
+  id           String   @id @default(uuid()) @db.Uuid
+  partner_id   String   @db.Uuid
+  amount       Decimal
+  status       String
+  created_at   DateTime @default(now())
+
+  @@schema("billing")
+}
+
+// ==========================================
+// 5. MARKETING SCHEMA
+// ==========================================
+
+model Campaign {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  start_date DateTime
+  end_date   DateTime
+  status     String
+
+  @@schema("marketing")
+}
+
+// ==========================================
+// 6. INTEGRATION SCHEMA
+// ==========================================
+
+model Integration {
+  id     String @id @default(uuid()) @db.Uuid
+  name   String
+  type   String
+  config Json
+  status String
+
+  @@schema("integration")
+}
+
+// ==========================================
+// 7. ANALYTICS SCHEMA & EVENTS
+// ==========================================
+
+// ==========================================
+// 8. FINTECH SCHEMA (DashWallet & Payments)
+// ==========================================
+
+model Wallet {
+  id            String    @id @default(uuid()) @db.Uuid
+  user_id       String    @unique @db.Uuid
+  balance       Decimal   @default(0.00)
+  currency      String    @default("USD")
+  status        String    @default("active") // active, frozen, closed
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  user          User      @relation(fields: [user_id], references: [id])
+  transactions  WalletTransaction[]
+
+  @@schema("fintech")
+}
+
+model WalletTransaction {
+  id            String    @id @default(uuid()) @db.Uuid
+  wallet_id     String    @db.Uuid
+  type          String    // credit, debit, transfer, payment, refund, withdrawal
+  amount        Decimal
+  status        String    @default("completed") // pending, completed, failed
+  reference     String?   @unique
+  description   String?
+  created_at    DateTime  @default(now())
+
+  wallet        Wallet    @relation(fields: [wallet_id], references: [id])
+
+  @@schema("fintech")
+}
+
+model Transfer {
+  id            String    @id @default(uuid()) @db.Uuid
+  sender_id     String    @db.Uuid
+  receiver_id   String    @db.Uuid
+  amount        Decimal
+  status        String    @default("completed")
+  reference     String    @unique
+  created_at    DateTime  @default(now())
+
+  @@schema("fintech")
+}
+
+model Merchant {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  business_type String
+  location      String?
+  status        String    @default("active")
+  created_at    DateTime  @default(now())
+
+  payments      MerchantPayment[]
+
+  @@schema("fintech")
+}
+
+model MerchantPayment {
+  id             String    @id @default(uuid()) @db.Uuid
+  merchant_id    String    @db.Uuid
+  user_id        String    @db.Uuid
+  amount         Decimal
+  payment_method String    @default("wallet")
+  status         String    @default("completed")
+  created_at     DateTime  @default(now())
+
+  merchant       Merchant  @relation(fields: [merchant_id], references: [id])
+
+  @@schema("fintech")
+}
+
+model BillPayment {
+  id             String    @id @default(uuid()) @db.Uuid
+  user_id        String    @db.Uuid
+  provider       String
+  account_number String
+  amount         Decimal
+  status         String    @default("completed")
+  created_at     DateTime  @default(now())
+
+  @@schema("fintech")
+}
+
+model KYCRecord {
+  id                  String    @id @default(uuid()) @db.Uuid
+  user_id             String    @db.Uuid
+  document_type       String    // passport, national_id, driver_license
+  document_number     String
+  verification_status String    @default("pending") // pending, verified, rejected
+  created_at          DateTime  @default(now())
+
+  @@schema("fintech")
+}
+
+model FintechLoan {
+  id             String    @id @default(uuid()) @db.Uuid
+  user_id        String    @db.Uuid
+  amount         Decimal
+  interest_rate  Decimal
+  status         String    @default("active")
+  due_date       DateTime
+  created_at     DateTime  @default(now())
+
+  @@schema("fintech")
+}

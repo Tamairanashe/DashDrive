@@ -1,0 +1,89 @@
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CommissionService } from './commission.service';
+import { LeadService } from './lead.service';
+import { FintechStatus } from '@prisma/client';
+
+@Injectable()
+export class WebhookService {
+  private readonly logger = new Logger(WebhookService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private leadService: LeadService,
+    private commissionService: CommissionService,
+  ) {}
+
+  async handlePostback(payload: {
+    event: string;
+    leadUuid: string;
+    transactionId: string;
+    payoutAmount: number;
+    currency?: string;
+    metadata?: any;
+  }) {
+    this.logger.log(`Received webhook postback: ${payload.event} for lead ${payload.leadUuid}`);
+
+    const lead = await this.leadService.getLeadByUuid(payload.leadUuid);
+    if (!lead) {
+      throw new BadRequestException(`Lead with UUID ${payload.leadUuid} not found`);
+    }
+
+    // 1. Transactional Integrity
+    return this.prisma.$transaction(async (tx) => {
+      let status: FintechStatus;
+
+      switch (payload.event) {
+        case 'converted':
+          status = FintechStatus.CONVERTED;
+          break;
+        case 'funded':
+          status = FintechStatus.FUNDED;
+          break;
+        case 'invalidated':
+          status = FintechStatus.INVALIDATED;
+          break;
+        case 'reversed':
+          status = FintechStatus.REVERSED;
+          break;
+        default:
+          status = FintechStatus.APPLICATION_COMPLETED;
+      }
+
+      // 2. Update Lead Status
+      await tx.fintechLead.update({
+        where: { id: lead.id },
+        data: { status },
+      });
+
+      // 3. Record Payout
+      const payout = await tx.fintechPayout.upsert({
+        where: { transactionId: payload.transactionId },
+        update: {
+          status,
+          metadata: payload.metadata,
+        },
+        create: {
+          transactionId: payload.transactionId,
+          leadId: lead.id,
+          amount: payload.payoutAmount,
+          currency: payload.currency || 'USD',
+          eventType: payload.event,
+          status,
+          metadata: payload.metadata,
+        },
+      });
+
+      // 4. Record Commission if it's a positive payout
+      if (payload.payoutAmount > 0 && (status === FintechStatus.CONVERTED || status === FintechStatus.FUNDED)) {
+        await this.commissionService.recordCommission(tx, {
+          payoutId: payout.id,
+          provider: lead.provider,
+          amount: payload.payoutAmount, // In real world, may be a percentage
+        });
+      }
+
+      return { leadId: lead.id, status };
+    });
+  }
+}

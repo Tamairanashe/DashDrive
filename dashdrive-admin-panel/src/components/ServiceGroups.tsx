@@ -21,7 +21,10 @@ import {
  Clock,
  Smartphone,
  Info,
- ArrowRight
+ ArrowRight,
+ Hotel,
+ Calendar,
+ Key
 } from 'lucide-react';
 import { cn } from '../utils';
 
@@ -82,6 +85,33 @@ export const ServiceGroups: React.FC = () => {
  status: 'Inactive',
  servicesCount: 2,
  color: 'slate'
+ },
+ {
+ id: '6',
+ name: 'Hotels',
+ description: 'Luxury and budget hotel bookings with instant confirmation.',
+ icon: Hotel,
+ status: 'Active',
+ servicesCount: 12,
+ color: 'violet'
+ },
+ {
+ id: '7',
+ name: 'Events Booking',
+ description: 'Tickets for concerts, movies, and local entertainment events.',
+ icon: Calendar,
+ status: 'Active',
+ servicesCount: 8,
+ color: 'fuchsia'
+ },
+ {
+ id: '8',
+ name: 'Car Rental',
+ description: 'Self-drive and chauffeur-driven car rental services.',
+ icon: Key,
+ status: 'Active',
+ servicesCount: 4,
+ color: 'cyan'
  }
  ]);
 
@@ -163,6 +193,9 @@ export const ServiceGroups: React.FC = () => {
  group.color === 'rose' ? "bg-rose-50 text-rose-500" :
  group.color === 'emerald' ? "bg-emerald-50 text-emerald-500" :
  group.color === 'amber' ? "bg-amber-50 text-amber-500" :
+ group.color === 'violet' ? "bg-violet-50 text-violet-500" :
+ group.color === 'fuchsia' ? "bg-fuchsia-50 text-fuchsia-500" :
+ group.color === 'cyan' ? "bg-cyan-50 text-cyan-500" :
  "bg-slate-100 text-slate-500"
  )}>
  <group.icon className="w-8 h-8" />

@@ -30,11 +30,12 @@ const { Title, Text } = Typography;
 
 export const FintechDashboard: React.FC = () => {
   const serviceRevenue = [
-    { label: 'Ride Hailing', value: '$120,400', percent: 35, color: '#1677ff' },
-    { label: 'Food Delivery', value: '$92,800', percent: 27, color: '#52c41a' },
-    { label: 'Mart & Shopping', value: '$68,200', percent: 20, color: '#722ed1' },
-    { label: 'Fintech Fees', value: '$34,500', percent: 10, color: '#faad14' },
-    { label: 'Others', value: '$26,900', percent: 8, color: '#64748b' }
+    { label: 'Ride & Transport', value: '$120,400', percent: 30, color: '#1677ff' },
+    { label: 'Food & Mart', value: '$92,800', percent: 23, color: '#52c41a' },
+    { label: 'DashWallet Transfers', value: '$45,200', percent: 11, color: '#722ed1' },
+    { label: 'Bill Payments', value: '$38,900', percent: 9, color: '#faad14' },
+    { label: 'Merchant QR Payments', value: '$22,500', percent: 6, color: '#f5222d' },
+    { label: 'Fintech Commissions', value: '$23,000', percent: 5, color: '#64748b' }
   ];
 
   const failedTransactions = [
@@ -44,10 +45,10 @@ export const FintechDashboard: React.FC = () => {
   ];
 
   const paymentMix = [
-    { label: 'Dash Wallet', value: '42%', color: '#1677ff' },
-    { label: 'Credit/Debit Card', value: '38%', color: '#3b82f6' },
-    { label: 'Cash on Delivery', value: '15%', color: '#faad14' },
-    { label: 'PayLater (BNPL)', value: '5%', color: '#f5222d' }
+    { label: 'DashWallet (Direct)', value: '48%', color: '#1677ff' },
+    { label: 'Credit/Debit Card', value: '32%', color: '#3b82f6' },
+    { label: 'Bank Transfer (P2P)', value: '12%', color: '#faad14' },
+    { label: 'PayLater (BNPL)', value: '8%', color: '#f5222d' }
   ];
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Typography, Row, Col, Card, Tabs, Switch, Form, InputNumber, Button, Divider, message } from 'antd';
-import { CarOutlined, CoffeeOutlined, ShopOutlined, ShoppingOutlined, PushpinOutlined, WalletOutlined, SaveOutlined } from '@ant-design/icons';
+import { CarOutlined, CoffeeOutlined, ShopOutlined, ShoppingOutlined, PushpinOutlined, WalletOutlined, SaveOutlined, BankOutlined, CalendarOutlined, KeyOutlined, ThunderboltOutlined, GlobalOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -67,6 +67,36 @@ export const ServiceConfigPage: React.FC = () => {
                     <Tabs.TabPane tab={<span><PushpinOutlined /> Parcel Delivery</span>} key="parcel">
                         <Title level={5}>Parcel Delivery Configuration</Title>
                         {renderConfigForm('Parcel Delivery', 20, 5.00)}
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane tab={<span><BankOutlined /> Hotels</span>} key="hotels">
+                        <Title level={5}>Hotels Configuration</Title>
+                        {renderConfigForm('Hotels', 10, 0)}
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane tab={<span><CalendarOutlined /> Events Booking</span>} key="events">
+                        <Title level={5}>Events Configuration</Title>
+                        {renderConfigForm('Events', 12, 1.00)}
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane tab={<span><KeyOutlined /> Car Rental</span>} key="rental">
+                        <Title level={5}>Car Rental Configuration</Title>
+                        {renderConfigForm('Car Rental', 15, 10.00)}
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane tab={<span><CarOutlined /> Taxis</span>} key="taxis">
+                        <Title level={5}>City Taxi Configuration</Title>
+                        {renderConfigForm('Taxis', 12, 1.50)}
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane tab={<span><GlobalOutlined /> Public Transport</span>} key="transport">
+                        <Title level={5}>Public Transport Configuration</Title>
+                        {renderConfigForm('Transport', 5, 0)}
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane tab={<span><ThunderboltOutlined /> Fuel & Energy</span>} key="fuel">
+                        <Title level={5}>Fuel & Energy Configuration</Title>
+                        {renderConfigForm('Fuel Services', 2, 0.50)}
                     </Tabs.TabPane>
                     
                     <Tabs.TabPane tab={<span><WalletOutlined /> Core Payments</span>} key="payments">

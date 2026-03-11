@@ -45,6 +45,14 @@ import {
   PlusCircleOutlined,
   TrophyOutlined,
   CrownOutlined,
+  RiseOutlined,
+  MedicineBoxOutlined,
+  CalendarOutlined,
+  KeyOutlined,
+  AppstoreOutlined,
+  ClockCircleOutlined,
+  CompassOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { themeConfig } from '../theme/ThemeConfig';
@@ -85,7 +93,13 @@ export const AdminLayout: React.FC = () => {
         { key: '/services/mart', icon: <ShopOutlined />, label: 'Mart Delivery' },
         { key: '/services/shopping', icon: <ShoppingOutlined />, label: 'Shopping' },
         { key: '/services/parcel', icon: <PushpinOutlined />, label: 'Parcel Delivery' },
+        { key: '/services/hotels', icon: <BankOutlined />, label: 'Hotels' },
+        { key: '/services/events', icon: <CalendarOutlined />, label: 'Events Booking' },
+        { key: '/services/rental', icon: <KeyOutlined />, label: 'Car Rental' },
+        { key: '/services/transport', icon: <CompassOutlined />, label: 'Public Transport' },
+        { key: '/services/fuel', icon: <ThunderboltOutlined />, label: 'Fuel Services' },
         { key: '/services/payments', icon: <WalletOutlined />, label: 'Payments & Fintech' },
+        { key: '/services/config', icon: <AppstoreOutlined />, label: 'Master Config' },
       ],
     },
     {
@@ -153,11 +167,15 @@ export const AdminLayout: React.FC = () => {
       type: 'group',
       children: [
         { key: '/services/payments', icon: <BankOutlined />, label: 'Fintech Hub' },
+        { key: '/services/payments/loans', icon: <DollarOutlined />, label: 'Loan Management' },
+        { key: '/services/payments/insurance', icon: <SafetyCertificateOutlined />, label: 'Insurance Management' },
+        { key: '/services/payments/kyc', icon: <SolutionOutlined />, label: 'KYC Verification' },
         { key: '/finance/transactions', icon: <DollarOutlined />, label: 'Transactions' },
         { key: '/finance/earnings', icon: <PieChartOutlined />, label: 'Earnings Reports' },
         { key: '/finance/commissions', icon: <FileTextOutlined />, label: 'Commission Reports' },
         { key: '/finance/analytics', icon: <BarChartOutlined />, label: 'Financial Analytics' },
         { key: '/finance/settlements', icon: <DollarOutlined />, label: 'Settlements & Payouts' },
+        { key: '/finance/marketplace', icon: <ShopOutlined />, label: 'Product Marketplace' },
       ],
     },
     {

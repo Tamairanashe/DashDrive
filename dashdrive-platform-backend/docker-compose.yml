@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  dashdrive-db:
+    image: postgres:latest
+    container_name: dashdrive-postgres
+    environment:
+      POSTGRES_USER: johndoe
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: dashdrive_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - dashdrive-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U johndoe -d dashdrive_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dashdrive-rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: dashdrive-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  dashdrive-db-data:

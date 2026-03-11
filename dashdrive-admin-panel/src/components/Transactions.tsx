@@ -102,13 +102,25 @@ export const Transactions: React.FC = () => {
       id: 'TX-15977',
       user: 'John Doe',
       userType: 'Customer',
-      service: 'Ride Hailing',
-      method: 'Credit Card',
-      amount: '$25.00',
-      commission: '$5.00',
-      status: 'Disputed',
+      service: 'P2P Transfer',
+      method: 'Wallet',
+      amount: '$50.00',
+      commission: '$0.50',
+      status: 'Successful',
       date: 'Feb 23, 2026, 10:45',
-      ref: 'ORD-8604'
+      ref: 'TRF-9042'
+    },
+    {
+      id: 'TX-15976',
+      user: 'Global Power Ltd',
+      userType: 'Merchant',
+      service: 'Bill Payment',
+      method: 'Wallet',
+      amount: '$120.00',
+      commission: '$1.20',
+      status: 'Successful',
+      date: 'Feb 23, 2026, 09:30',
+      ref: 'BILL-4021'
     }
   ];
 

@@ -290,7 +290,7 @@ model Rider {
   name            String
   phone           String     @unique
   email           String?
-  vehicleType     String
+  vehicleType     String     @default("BICYCLE")
   licensePlate    String?
   isOnline        Boolean    @default(false)
   isActive        Boolean    @default(true)
@@ -545,4 +545,98 @@ model AdminSystemLog {
   context   String?
   metadata  Json?
   createdAt DateTime @default(now())
+}
+
+// Fintech Distribution Platform Models
+
+enum FintechProductType {
+  LOAN
+  INSURANCE
+  CREDIT
+  INVESTMENT
+}
+
+enum FintechStatus {
+  LEAD_CREATED
+  APPLICATION_STARTED
+  APPLICATION_COMPLETED
+  CONDITIONALLY_APPROVED
+  APPROVED
+  FUNDED
+  CONVERTED
+  DECLINED
+  CANCELLED
+  INVALIDATED
+  REVERSED
+}
+
+model FintechLead {
+  id             String             @id @default(uuid())
+  leadUuid       String             @unique // External UUID from partner
+  userId         String
+  userType       String             // Driver, Customer
+  productType    FintechProductType
+  provider       String
+  offerId        String?
+  initialAmount  Float?
+  apr            Float?
+  status         FintechStatus      @default(LEAD_CREATED)
+  metadata       Json?              // Additional criteria used for the lead
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  
+  applications   FintechApplication[]
+  payouts        FintechPayout[]
+
+  @@index([userId])
+  @@index([leadUuid])
+  @@index([status])
+}
+
+model FintechApplication {
+  id             String        @id @default(uuid())
+  leadId         String
+  externalAppId  String?       @unique
+  status         FintechStatus @default(APPLICATION_STARTED)
+  currentStep    String?
+  lastUpdate     DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  lead           FintechLead   @relation(fields: [leadId], references: [id])
+
+  @@index([leadId])
+}
+
+model FintechPayout {
+  id             String        @id @default(uuid())
+  transactionId  String        @unique // external transaction id
+  leadId         String
+  amount         Float
+  currency       String        @default("USD")
+  eventType      String        // funded, conversion, etc.
+  status         FintechStatus @default(CONVERTED)
+  processedAt    DateTime      @default(now())
+  metadata       Json?
+
+  lead           FintechLead   @relation(fields: [leadId], references: [id])
+  commission     FintechCommission?
+
+  @@index([leadId])
+  @@index([transactionId])
+}
+
+model FintechCommission {
+  id               String   @id @default(uuid())
+  payoutId         String   @unique
+  provider         String
+  billingCycle     String?  // e.g. "2026-03"
+  commissionAmount Float
+  status           String   @default("PENDING") // PENDING, INVOICED, PAID, REVERSED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  payout           FintechPayout @relation(fields: [payoutId], references: [id])
+
+  @@index([provider])
 }

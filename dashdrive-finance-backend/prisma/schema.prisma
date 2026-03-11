@@ -1,0 +1,430 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("FINANCE_DATABASE_URL")
+}
+
+// 1. Wallet System Tables
+model Wallet {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  currency   String   @default("USD")
+  balance    Decimal  @default(0.00) @db.Decimal(20, 2)
+  status     String   @default("active") // active, frozen, closed
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  transactions WalletTransaction[]
+  adjustments  WalletAdjustment[]
+  topups       WalletTopup[]
+  withdrawals  WalletWithdrawal[]
+  sent_transfers     Transfer[] @relation("SenderWallet")
+  received_transfers Transfer[] @relation("ReceiverWallet")
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id               String   @id @default(uuid())
+  wallet_id        String
+  transaction_type String   // credit, debit, transfer, topup, withdrawal, payment, refund, loan_disbursement, loan_repayment, insurance_premium, insurance_payout
+  amount           Decimal  @db.Decimal(20, 2)
+  currency         String
+  status           String   @default("completed")
+  reference        String?  @unique
+  service_type     String?
+  created_at       DateTime @default(now())
+
+  wallet Wallet @relation(fields: [wallet_id], references: [id])
+
+  @@map("wallet_transactions")
+}
+
+model WalletAdjustment {
+  id         String   @id @default(uuid())
+  wallet_id  String
+  admin_id   String
+  amount     Decimal  @db.Decimal(20, 2)
+  reason     String
+  created_at DateTime @default(now())
+
+  wallet Wallet @relation(fields: [wallet_id], references: [id])
+
+  @@map("wallet_adjustments")
+}
+
+// 2. Payment & Top-Up Tables
+model PaymentMethod {
+  id         String   @id @default(uuid())
+  name       String
+  type       String   // Card, Mobile Money, Bank Transfer, Agent Deposit
+  provider   String
+  status     String   @default("active")
+  created_at DateTime @default(now())
+
+  topups WalletTopup[]
+
+  @@map("payment_methods")
+}
+
+model WalletTopup {
+  id                String   @id @default(uuid())
+  user_id           String
+  wallet_id         String
+  payment_method_id String
+  amount            Decimal  @db.Decimal(20, 2)
+  status            String   @default("pending") // pending, completed, failed
+  reference         String?  @unique
+  created_at        DateTime @default(now())
+
+  wallet         Wallet        @relation(fields: [wallet_id], references: [id])
+  payment_method PaymentMethod @relation(fields: [payment_method_id], references: [id])
+
+  @@map("wallet_topups")
+}
+
+// 3. Withdrawal Tables
+model WalletWithdrawal {
+  id           String    @id @default(uuid())
+  user_id      String
+  wallet_id    String
+  amount       Decimal    @db.Decimal(20, 2)
+  method       String    // bank, mobile_money, agent
+  status       String    @default("pending")
+  reference    String?   @unique
+  requested_at DateTime  @default(now())
+  processed_at DateTime?
+
+  wallet Wallet @relation(fields: [wallet_id], references: [id])
+
+  @@map("wallet_withdrawals")
+}
+
+// 4. Transfer Tables (P2P)
+model Transfer {
+  id               String   @id @default(uuid())
+  sender_wallet_id   String
+  receiver_wallet_id String
+  amount           Decimal  @db.Decimal(20, 2)
+  status           String   @default("completed")
+  reference        String   @unique
+  created_at       DateTime @default(now())
+
+  sender_wallet   Wallet @relation("SenderWallet", fields: [sender_wallet_id], references: [id])
+  receiver_wallet Wallet @relation("ReceiverWallet", fields: [receiver_wallet_id], references: [id])
+  disputes        TransferDispute[]
+
+  @@map("transfers")
+}
+
+model TransferDispute {
+  id          String    @id @default(uuid())
+  transfer_id String
+  user_id     String
+  reason      String
+  status      String    @default("pending")
+  created_at  DateTime  @default(now())
+  resolved_at DateTime?
+
+  transfer Transfer @relation(fields: [transfer_id], references: [id])
+
+  @@map("transfer_disputes")
+}
+
+// 5. Merchant Payments
+model Merchant {
+  id            String   @id @default(uuid())
+  business_name String
+  business_type String   // restaurant, hotel, store, fuel_station, event_organizer
+  owner_user_id String
+  status        String   @default("active")
+  created_at    DateTime @default(now())
+
+  transactions MerchantTransaction[]
+  settlements  MerchantSettlement[]
+
+  @@map("merchants")
+}
+
+model MerchantTransaction {
+  id             String   @id @default(uuid())
+  merchant_id    String
+  user_id        String
+  amount         Decimal  @db.Decimal(20, 2)
+  payment_method String?
+  status         String   @default("completed")
+  reference      String?  @unique
+  created_at     DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchant_id], references: [id])
+
+  @@map("merchant_transactions")
+}
+
+model MerchantSettlement {
+  id              String   @id @default(uuid())
+  merchant_id     String
+  amount          Decimal  @db.Decimal(20, 2)
+  status          String   @default("pending")
+  settlement_date DateTime
+  created_at      DateTime @default(now())
+
+  merchant Merchant @relation(fields: [merchant_id], references: [id])
+
+  @@map("merchant_settlements")
+}
+
+// 6. Bill Payment Tables
+model BillProvider {
+  id           String   @id @default(uuid())
+  name         String
+  category     String   // electricity, water, internet, airtime, tv
+  api_endpoint String?
+  status       String   @default("active")
+  created_at   DateTime @default(now())
+
+  transactions BillTransaction[]
+
+  @@map("bill_providers")
+}
+
+model BillTransaction {
+  id             String   @id @default(uuid())
+  user_id        String
+  provider_id    String
+  account_number String
+  amount         Decimal  @db.Decimal(20, 2)
+  status         String   @default("completed")
+  reference      String?  @unique
+  created_at     DateTime @default(now())
+
+  provider BillProvider @relation(fields: [provider_id], references: [id])
+
+  @@map("bill_transactions")
+}
+
+// 7. Loan System Tables
+model LoanProduct {
+  id                    String   @id @default(uuid())
+  name                  String
+  interest_rate         Decimal  @db.Decimal(5, 2)
+  max_amount            Decimal  @db.Decimal(20, 2)
+  repayment_period_days Int
+  status                String   @default("active")
+  created_at            DateTime @default(now())
+
+  loans        Loan[]
+  applications LoanApplication[]
+
+  @@map("loan_products")
+}
+
+model Loan {
+  id               String   @id @default(uuid())
+  user_id          String
+  loan_product_id  String
+  principal_amount Decimal  @db.Decimal(20, 2)
+  interest_amount  Decimal  @db.Decimal(20, 2)
+  total_payable    Decimal  @db.Decimal(20, 2)
+  status           String   @default("active") // pending, approved, active, completed, defaulted, rejected
+  issued_at        DateTime @default(now())
+  due_date         DateTime
+
+  product    LoanProduct     @relation(fields: [loan_product_id], references: [id])
+  repayments LoanRepayment[]
+
+  @@map("loans")
+}
+
+model LoanRepayment {
+  id           String   @id @default(uuid())
+  loan_id      String
+  amount       Decimal  @db.Decimal(20, 2)
+  status       String   @default("completed")
+  payment_date DateTime @default(now())
+  reference    String?  @unique
+
+  loan Loan @relation(fields: [loan_id], references: [id])
+
+  @@map("loan_repayments")
+}
+
+model LoanApplication {
+  id               String    @id @default(uuid())
+  user_id          String
+  loan_product_id  String
+  requested_amount Decimal   @db.Decimal(20, 2)
+  status           String    @default("pending")
+  created_at       DateTime  @default(now())
+  reviewed_at      DateTime?
+
+  product LoanProduct @relation(fields: [loan_product_id], references: [id])
+
+  @@map("loan_applications")
+}
+
+// 8. BNPL Tables
+model BnplOrder {
+  id               String   @id @default(uuid())
+  user_id          String
+  service_type     String   // hotel, event, car_rental, shopping
+  service_id       String
+  total_amount     Decimal  @db.Decimal(20, 2)
+  down_payment     Decimal  @db.Decimal(20, 2)
+  remaining_amount Decimal  @db.Decimal(20, 2)
+  status           String   @default("active")
+  created_at       DateTime @default(now())
+
+  installments BnplInstallment[]
+
+  @@map("bnpl_orders")
+}
+
+model BnplInstallment {
+  id                 String    @id @default(uuid())
+  bnpl_order_id      String
+  installment_number Int
+  amount             Decimal    @db.Decimal(20, 2)
+  due_date           DateTime
+  status             String    @default("pending")
+  paid_at            DateTime?
+
+  order BnplOrder @relation(fields: [bnpl_order_id], references: [id])
+
+  @@map("bnpl_installments")
+}
+
+// 9. Insurance Tables
+model InsuranceProvider {
+  id            String   @id @default(uuid())
+  name          String
+  contact_email String
+  api_endpoint  String?
+  status        String   @default("active")
+  created_at    DateTime @default(now())
+
+  products InsuranceProduct[]
+
+  @@map("insurance_providers")
+}
+
+model InsuranceProduct {
+  id              String   @id @default(uuid())
+  provider_id     String
+  name            String
+  coverage_amount Decimal  @db.Decimal(20, 2)
+  premium_price   Decimal  @db.Decimal(20, 2)
+  service_type    String   // ride, parcel, car_rental, hotel, event
+  status          String   @default("active")
+  created_at      DateTime @default(now())
+
+  provider InsuranceProvider @relation(fields: [provider_id], references: [id])
+  policies InsurancePolicy[]
+
+  @@map("insurance_products")
+}
+
+model InsurancePolicy {
+  id                String    @id @default(uuid())
+  user_id           String
+  product_id        String
+  service_reference String
+  premium           Decimal   @db.Decimal(20, 2)
+  coverage_amount   Decimal   @db.Decimal(20, 2)
+  status            String    @default("active")
+  created_at        DateTime  @default(now())
+  expires_at        DateTime
+
+  product InsuranceProduct @relation(fields: [product_id], references: [id])
+  claims  InsuranceClaim[]
+
+  @@map("insurance_policies")
+}
+
+model InsuranceClaim {
+  id           String    @id @default(uuid())
+  policy_id    String
+  user_id      String
+  claim_amount Decimal   @db.Decimal(20, 2)
+  status       String    @default("pending") // pending, under_review, approved, rejected, paid
+  submitted_at DateTime  @default(now())
+  reviewed_at  DateTime?
+
+  policy InsurancePolicy @relation(fields: [policy_id], references: [id])
+
+  @@map("insurance_claims")
+}
+
+// 10. Fraud Monitoring Tables
+model FraudAlert {
+  id             String   @id @default(uuid())
+  user_id        String
+  transaction_id String?
+  risk_level     String   // low, medium, high
+  alert_type     String
+  status         String   @default("open")
+  created_at     DateTime @default(now())
+
+  @@map("fraud_alerts")
+}
+
+model BlockedAccount {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  reason     String
+  blocked_by String
+  blocked_at DateTime @default(now())
+  status     String   @default("blocked")
+
+  @@map("blocked_accounts")
+}
+
+// 11. KYC Compliance Tables
+model KycSubmission {
+  id            String    @id @default(uuid())
+  user_id       String
+  document_type String    // national_id, passport, driver_license, business_registration
+  document_url  String
+  status        String    @default("pending")
+  submitted_at  DateTime  @default(now())
+  reviewed_at   DateTime?
+
+  @@map("kyc_submissions")
+}
+
+model KycVerification {
+  id                  String   @id @default(uuid())
+  user_id             String   @unique
+  verification_status String   @default("pending")
+  verified_by        String?
+  verified_at        DateTime?
+
+  @@map("kyc_verifications")
+}
+
+// 12. Financial Reporting Tables
+model FinancialReport {
+  id           String   @id @default(uuid())
+  report_type  String
+  report_date  DateTime
+  generated_by String
+  created_at   DateTime @default(now())
+
+  @@map("financial_reports")
+}
+
+model RevenueSummary {
+  id                String   @id @default(uuid())
+  service_type      String
+  total_revenue     Decimal  @db.Decimal(20, 2)
+  commission_earned Decimal  @db.Decimal(20, 2)
+  report_date       DateTime
+
+  @@map("revenue_summary")
+}
