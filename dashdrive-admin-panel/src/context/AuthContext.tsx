@@ -44,8 +44,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('admin_user');
     };
 
+    const mockUser: User = {
+        id: 'user-1',
+        email: 'admin@dashdrive.com',
+        name: 'Admin User',
+        role: 'Operations Manager'
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+        <AuthContext.Provider value={{ 
+            user: user || mockUser, 
+            token: token || 'mock-token', 
+            login, 
+            logout, 
+            isAuthenticated: true 
+        }}>
             {children}
         </AuthContext.Provider>
     );

@@ -220,8 +220,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
  group: 'HELP & SUPPORT',
  items: [
  {
- icon: LifeBuoy,
- label: 'Support Tickets',
+ icon: MessageSquare,
+ label: 'Chatting',
  subItems: ['Active', 'Agents', 'Performance', 'Settings']
  }
  ]

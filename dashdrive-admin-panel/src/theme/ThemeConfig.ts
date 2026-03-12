@@ -1,4 +1,4 @@
-import { ThemeConfig } from 'antd';
+import { theme, ThemeConfig } from 'antd';
 
 export const themeConfig: ThemeConfig = {
   token: {
@@ -6,12 +6,11 @@ export const themeConfig: ThemeConfig = {
     borderRadius: 8,
     fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     colorBgContainer: '#ffffff',
-    colorBgLayout: '#f8fafc', // Light Slate Layout
-    colorTextHeading: '#0f172a', // Dark Slate
+    colorBgLayout: '#f8fafc',
+    colorTextHeading: '#0f172a',
   },
   components: {
     Layout: {
-      headerBg: '#000000',
       headerPadding: '0 24px',
       siderBg: '#ffffff',
     },
@@ -30,3 +29,4 @@ export const themeConfig: ThemeConfig = {
     },
   },
 };
+

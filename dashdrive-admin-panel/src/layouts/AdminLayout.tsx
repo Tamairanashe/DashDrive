@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminSocketStore } from '../lib/adminSocketStore';
-import { Layout, Menu, Button, Input, Badge, Avatar, Space, Typography, ConfigProvider } from 'antd';
+import { Layout, Menu, Button, Input, Badge, Avatar, Space, Typography, ConfigProvider, theme, Segmented } from 'antd';
 import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
@@ -53,9 +53,14 @@ import {
   ClockCircleOutlined,
   CompassOutlined,
   ThunderboltOutlined,
+  ApiOutlined,
+  SunOutlined,
+  MoonOutlined,
+  DesktopOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { themeConfig } from '../theme/ThemeConfig';
+import { useTheme } from '../context/ThemeContext';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -65,6 +70,7 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { connect, disconnect } = useAdminSocketStore();
+  const { theme: themeMode, setTheme, isDark } = useTheme();
 
   useEffect(() => {
     connect();
@@ -193,7 +199,7 @@ export const AdminLayout: React.FC = () => {
       label: 'SUPPORT',
       type: 'group',
       children: [
-        { key: '/support/tickets', icon: <CustomerServiceOutlined />, label: 'Support Tickets' },
+        { key: '/support/tickets', icon: <CustomerServiceOutlined />, label: 'Chatting' },
       ],
     },
     {
@@ -204,50 +210,77 @@ export const AdminLayout: React.FC = () => {
         { key: '/enterprise/setup', icon: <BankOutlined />, label: 'Enterprise Business Setup' },
         { key: '/enterprise/config', icon: <ControlOutlined />, label: 'Configuration' },
         { key: '/enterprise/roles', icon: <LockOutlined />, label: 'Roles & Permissions' },
+        { key: '/enterprise/api', icon: <ApiOutlined />, label: 'API Management' },
         { key: '/enterprise/settings', icon: <SettingOutlined />, label: 'System Settings' },
       ],
     },
   ];
 
   return (
-    <ConfigProvider theme={themeConfig}>
-      <Layout style={{ minHeight: '100vh' }}>
+    <ConfigProvider 
+      theme={{
+        ...themeConfig,
+        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        token: {
+          ...themeConfig.token,
+          colorBgLayout: isDark ? '#121212' : '#f8fafc',
+          colorBgContainer: isDark ? '#1e1e1e' : '#ffffff',
+          colorBorder: isDark ? '#2d2d2d' : '#f1f5f9',
+          colorText: isDark ? '#e3e3e3' : '#0f172a',
+          colorTextSecondary: isDark ? '#8e8e8e' : '#64748b',
+        },
+        components: {
+          ...themeConfig.components,
+          Menu: {
+            ...themeConfig.components?.Menu,
+            itemSelectedBg: isDark ? '#2d2d2d' : '#f1f5f9',
+          },
+          Card: {
+            ...themeConfig.components?.Card,
+            colorBgContainer: isDark ? '#1e1e1e' : '#ffffff',
+          }
+        }
+      }}
+    >
+      <Layout style={{ minHeight: '100vh', background: isDark ? '#121212' : '#f8fafc' }}>
         <Sider
           trigger={null}
           collapsible
           collapsed={collapsed}
           width={280}
-          theme="light"
+          theme={isDark ? 'dark' : 'light'}
           style={{
-            borderRight: '1px solid #f1f5f9',
+            borderRight: isDark ? '1px solid #2d2d2d' : '1px solid #f1f5f9',
             position: 'fixed',
             height: '100vh',
             left: 0,
             zIndex: 100,
+            background: isDark ? '#1e1e1e' : '#ffffff'
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ minHeight: 64, margin: '16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
               <div style={{ 
-                minWidth: 40, height: 40, background: '#0e172a', borderRadius: 12, 
+                minWidth: 40, height: 40, background: isDark ? '#2d2d2d' : '#0e172a', borderRadius: 12, 
                 display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' 
               }}>
-                <RocketOutlined style={{ fontSize: 20 }} />
+                <RocketOutlined style={{ fontSize: 20, color: '#10b981' }} />
               </div>
-              {!collapsed && <Text strong style={{ fontSize: 18, letterSpacing: -0.5, whiteSpace: 'nowrap' }}>DashDrive</Text>}
+              {!collapsed && <Text strong style={{ fontSize: 18, letterSpacing: -0.5, whiteSpace: 'nowrap', color: isDark ? '#e3e3e3' : '#0f172a' }}>DashDrive</Text>}
             </div>
             
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
               <Menu
                 mode="inline"
+                theme={isDark ? 'dark' : 'light'}
                 selectedKeys={[location.pathname]}
                 items={menuItems}
                 onClick={({ key }) => navigate(key)}
-                style={{ borderRight: 0 }}
+                style={{ borderRight: 0, background: 'transparent' }}
               />
             </div>
             
-            <div style={{ padding: '16px', borderTop: '1px solid #f1f5f9', flexShrink: 0 }}>
+            <div style={{ padding: '16px', borderTop: isDark ? '1px solid #2d2d2d' : '1px solid #f1f5f9', flexShrink: 0 }}>
               <Button 
                   block={!collapsed}
                   type="text" 
@@ -260,9 +293,9 @@ export const AdminLayout: React.FC = () => {
           </div>
         </Sider>
         
-        <Layout style={{ marginLeft: collapsed ? 80 : 280, transition: 'all 0.2s', minHeight: '100vh' }}>
+        <Layout style={{ marginLeft: collapsed ? 80 : 280, transition: 'all 0.2s', minHeight: '100vh', background: 'transparent' }}>
           <Header style={{ 
-            background: '#fff', 
+            background: isDark ? '#1e1e1e' : '#fff', 
             padding: '0 24px', 
             display: 'flex', 
             alignItems: 'center', 
@@ -270,7 +303,7 @@ export const AdminLayout: React.FC = () => {
             position: 'sticky',
             top: 0,
             zIndex: 99,
-            borderBottom: '1px solid #f1f5f9',
+            borderBottom: isDark ? '1px solid #2d2d2d' : '1px solid #f1f5f9',
             height: 64,
             lineHeight: 'normal'
           }}>
@@ -279,36 +312,156 @@ export const AdminLayout: React.FC = () => {
                 type="text"
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                 onClick={() => setCollapsed(!collapsed)}
-                style={{ fontSize: '16px', width: 40, height: 40 }}
+                style={{ fontSize: '16px', width: 40, height: 40, color: isDark ? '#e3e3e3' : 'inherit' }}
               />
               <Input
                 prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
                 placeholder="Search orders, drivers, customers..."
                 variant="filled"
-                style={{ width: '100%', maxWidth: 400, background: '#f8fafc', border: 'none' }}
+                style={{ 
+                  width: '100%', 
+                  maxWidth: 400, 
+                  background: isDark ? '#2d2d2d' : '#f8fafc', 
+                  border: 'none',
+                  color: isDark ? '#e3e3e3' : 'inherit'
+                }}
               />
             </Space>
 
             <Space size="middle">
-              <Button type="text" icon={<QuestionCircleOutlined />} />
+              <Segmented
+                size="small"
+                value={themeMode}
+                onChange={(value) => setTheme(value as any)}
+                options={[
+                  { value: 'light', icon: <SunOutlined /> },
+                  { value: 'dark', icon: <MoonOutlined /> },
+                  { value: 'system', icon: <DesktopOutlined /> },
+                ]}
+                style={{ background: isDark ? '#2d2d2d' : '#f1f5f9' }}
+              />
+              <Button type="text" icon={<QuestionCircleOutlined />} style={{ color: isDark ? '#8e8e8e' : 'inherit' }} />
               <Badge dot color="#10b981">
-                <Button type="text" icon={<BellOutlined />} />
+                <Button type="text" icon={<BellOutlined />} style={{ color: isDark ? '#8e8e8e' : 'inherit' }} />
               </Badge>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 12, borderLeft: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 12, borderLeft: isDark ? '1px solid #333' : '1px solid #f1f5f9' }}>
                 <div style={{ textAlign: 'right', display: collapsed ? 'none' : 'block' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>Admin User</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', lineHeight: 1.2 }}>Admin User</div>
                   <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.2 }}>Operations Manager</div>
                 </div>
-                <Avatar shape="square" icon={<UserOutlined />} style={{ background: '#0e172a' }} />
+                <Avatar shape="square" icon={<UserOutlined />} style={{ background: isDark ? '#2d2d2d' : '#0e172a' }} />
               </div>
             </Space>
           </Header>
           
-          <Content style={{ padding: 24, background: '#f8fafc', flex: 1 }}>
+          <Content style={{ padding: 24, background: 'transparent', flex: 1 }}>
             <Outlet />
           </Content>
         </Layout>
       </Layout>
+      
+      <style dangerouslySetInnerHTML={{ __html: `
+        :root {
+          --bg-layout: ${isDark ? '#121212' : '#f8fafc'};
+          --bg-container: ${isDark ? '#1e1e1e' : '#ffffff'};
+          --border-color: ${isDark ? '#2d2d2d' : '#f1f5f9'};
+          --text-main: ${isDark ? '#e3e3e3' : '#0f172a'};
+          --text-secondary: ${isDark ? '#8e8e8e' : '#64748b'};
+        }
+
+        ${isDark ? `
+          body {
+            background-color: #121212 !important;
+            color: #e3e3e3 !important;
+          }
+
+          /* Force grayscale for hardcoded theme-related colors */
+          [data-theme='dark'] .ant-typography, 
+          [data-theme='dark'] h1, 
+          [data-theme='dark'] h2, 
+          [data-theme='dark'] h3, 
+          [data-theme='dark'] h4, 
+          [data-theme='dark'] .ant-list-item-meta-title,
+          [data-theme='dark'] .ant-statistic-title {
+             color: #e3e3e3 !important;
+          }
+
+          [data-theme='dark'] .ant-typography-secondary,
+          [data-theme='dark'] .ant-list-item-meta-description,
+          [data-theme='dark'] .ant-statistic-content {
+             color: #8e8e8e !important;
+          }
+
+          .ant-modal-content, .ant-drawer-content {
+            background-color: #1e1e1e !important;
+            color: #e3e3e3 !important;
+          }
+          .ant-modal-header, .ant-drawer-header {
+            background-color: #1e1e1e !important;
+            border-bottom: 1px solid #2d2d2d !important;
+          }
+          .ant-modal-title, .ant-drawer-title {
+            color: #e3e3e3 !important;
+          }
+          .ant-modal-close, .ant-drawer-close {
+            color: #8e8e8e !important;
+          }
+          .ant-table {
+            background: transparent !important;
+          }
+          .ant-table-thead > tr > th {
+            background: #1e1e1e !important;
+            color: #8e8e8e !important;
+            border-bottom: 1px solid #2d2d2d !important;
+          }
+          .ant-table-tbody > tr > td {
+            border-bottom: 1px solid #2d2d2d !important;
+          }
+          .ant-table-row:hover > td {
+            background: #2d2d2d !important;
+          }
+          .ant-dropdown-menu {
+            background-color: #1e1e1e !important;
+            border: 1px solid #2d2d2d !important;
+          }
+          .ant-select-dropdown {
+            background-color: #1e1e1e !important;
+          }
+          .ant-card {
+            border-color: #2d2d2d !important;
+            background: #1e1e1e !important;
+          }
+          .ant-pagination-item, .ant-pagination-prev, .ant-pagination-next {
+            background: #1e1e1e !important;
+            border-color: #2d2d2d !important;
+          }
+          .ant-pagination-item a {
+            color: #8e8e8e !important;
+          }
+          .ant-pagination-item-active {
+            border-color: #10b981 !important;
+          }
+          .ant-pagination-item-active a {
+            color: #10b981 !important;
+          }
+
+          /* Scrollbar Styling */
+          ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: #121212;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: #2d2d2d;
+            border-radius: 4px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: #3d3d3d;
+          }
+        ` : ''}
+      `}} />
     </ConfigProvider>
   );
 };

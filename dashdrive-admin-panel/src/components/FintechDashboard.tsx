@@ -1,34 +1,7 @@
-import React from 'react';
-import { 
-  Typography, 
-  Row, 
-  Col, 
-  Card, 
-  Statistic, 
-  Progress, 
-  Table, 
-  Badge, 
-  Button, 
-  Space,
-  Divider,
-  Tag
-} from 'antd';
-import { 
-  RiseOutlined, 
-  FallOutlined, 
-  WalletOutlined, 
-  CreditCardOutlined, 
-  BarChartOutlined, 
-  SyncOutlined,
-  HistoryOutlined,
-  AlertOutlined,
-  SafetyCertificateOutlined,
-  ArrowUpOutlined
-} from '@ant-design/icons';
-
-const { Title, Text } = Typography;
+import { useTheme } from '../context/ThemeContext';
 
 export const FintechDashboard: React.FC = () => {
+  const { isDark } = useTheme();
   const serviceRevenue = [
     { label: 'Ride & Transport', value: '$120,400', percent: 30, color: '#1677ff' },
     { label: 'Food & Mart', value: '$92,800', percent: 23, color: '#52c41a' },
@@ -169,28 +142,28 @@ export const FintechDashboard: React.FC = () => {
             title={<Title level={4} style={{ margin: 0 }}>Payment Mix Breakdown</Title>}
             bordered={false} 
             className="shadow-sm"
-            styles={{ body: { background: '#0f172a', borderRadius: '0 0 16px 16px', padding: 24 } }}
+            styles={{ body: { background: isDark ? '#262626' : '#0f172a', borderRadius: '0 0 16px 16px', padding: 24 } }}
             headStyle={{ borderBottom: 'none' }}
           >
              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {paymentMix.map(method => (
                 <div key={method.label}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{method.label}</Text>
-                    <Text style={{ color: '#fff', fontWeight: 800 }}>{method.value}</Text>
+                    <Text style={{ color: isDark ? '#e3e3e3' : 'rgba(255,255,255,0.7)', fontSize: 13 }}>{method.label}</Text>
+                    <Text style={{ color: isDark ? '#fff' : '#fff', fontWeight: 800 }}>{method.value}</Text>
                   </div>
-                  <Progress percent={parseInt(method.value)} strokeColor={method.color} showInfo={false} trailColor="rgba(255,255,255,0.1)" />
+                  <Progress percent={parseInt(method.value)} strokeColor={method.color} showInfo={false} trailColor={isDark ? '#444' : 'rgba(255,255,255,0.1)'} />
                 </div>
               ))}
             </div>
-            <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-            <div style={{ background: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)' }}>
-              <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, display: 'block', marginBottom: 4 }}>WAlLET ADOPTION RATIO</Text>
+            <Divider style={{ borderColor: isDark ? '#333' : 'rgba(255,255,255,0.1)' }} />
+            <div style={{ background: isDark ? '#333' : 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 12, border: isDark ? '1px solid #444' : '1px solid rgba(255,255,255,0.1)' }}>
+              <Text style={{ color: isDark ? '#aaa' : 'rgba(255,255,255,0.5)', fontSize: 11, display: 'block', marginBottom: 4 }}>WAlLET ADOPTION RATIO</Text>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ fontSize: 28, fontWeight: 900, color: '#fff' }}>1.4x</span>
                 <Tag color="success" icon={<RiseOutlined />}>More Wallet Usage</Tag>
               </div>
-              <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, display: 'block', marginTop: 8 }}>
+              <Text style={{ color: isDark ? '#888' : 'rgba(255,255,255,0.4)', fontSize: 10, display: 'block', marginTop: 8 }}>
                 Digital wallet adoption has increased by 12% following the recent Dash Rewards campaign.
               </Text>
             </div>
@@ -210,22 +183,22 @@ export const FintechDashboard: React.FC = () => {
           pagination={false}
           size="middle"
           columns={[
-            { title: 'TX ID', dataIndex: 'id', key: 'id', render: (t) => <Text style={{ fontSize: 12, color: '#64748b', fontWeight: 'bold' }}>{t}</Text> },
+            { title: 'TX ID', dataIndex: 'id', key: 'id', render: (t) => <Text style={{ fontSize: 12, color: isDark ? '#8e8e8e' : '#64748b', fontWeight: 'bold' }}>{t}</Text> },
             { 
               title: 'User', 
               dataIndex: 'user', 
               key: 'user', 
               render: (u, record) => (
                 <div>
-                  <Text strong style={{ display: 'block' }}>{u}</Text>
-                  <Text type="secondary" style={{ fontSize: 11 }}>{record.time}</Text>
+                  <Text strong style={{ display: 'block', color: isDark ? '#e3e3e3' : 'inherit' }}>{u}</Text>
+                  <Text type="secondary" style={{ fontSize: 11, color: isDark ? '#8e8e8e' : 'inherit' }}>{record.time}</Text>
                 </div>
               ) 
             },
-            { title: 'Service', dataIndex: 'service', key: 'service', render: (s) => <Tag>{s}</Tag> },
-            { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (a) => <Text strong>{a}</Text> },
-            { title: 'Failure Reason', dataIndex: 'reason', key: 'reason', render: (r) => <Badge status="error" text={r} /> },
-            { title: 'Action', key: 'action', align: 'right', render: () => <Button type="primary" size="small" ghost>Re-verify</Button> }
+            { title: 'Service', dataIndex: 'service', key: 'service', render: (s) => <Tag style={{ background: isDark ? '#2d2d2d' : 'inherit', color: isDark ? '#e3e3e3' : 'inherit', border: isDark ? '1px solid #3d3d3d' : 'inherit' }}>{s}</Tag> },
+            { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (a) => <Text strong style={{ color: isDark ? '#e3e3e3' : 'inherit' }}>{a}</Text> },
+            { title: 'Failure Reason', dataIndex: 'reason', key: 'reason', render: (r) => <Badge status="error" text={<span style={{ color: isDark ? '#e3e3e3' : 'inherit' }}>{r}</span>} /> },
+            { title: 'Action', key: 'action', align: 'right', render: () => <Button type="primary" size="small" ghost style={{ borderColor: isDark ? '#444' : 'inherit', color: isDark ? '#10b981' : 'inherit' }}>Re-verify</Button> }
           ]}
         />
       </Card>

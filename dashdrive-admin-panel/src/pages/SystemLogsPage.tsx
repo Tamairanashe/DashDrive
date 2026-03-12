@@ -6,10 +6,13 @@ const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 
+import { useTheme } from '../context/ThemeContext';
+
 export const SystemLogsPage: React.FC = () => {
     const [logs, setLogs] = useState<any[]>([]);
     const [autoScroll, setAutoScroll] = useState(true);
     const terminalRef = useRef<HTMLDivElement>(null);
+    const { isDark } = useTheme();
 
     useEffect(() => {
         // Mock streaming logs
@@ -47,15 +50,15 @@ export const SystemLogsPage: React.FC = () => {
     };
 
     return (
-        <div>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <div style={{ padding: '0 24px' }}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: 24, marginTop: 24 }}>
                 <Col>
-                    <Title level={4} style={{ margin: 0 }}>System Logs Console</Title>
-                    <Text type="secondary">Real-time metrics and tracing from microservice containers.</Text>
+                    <Title level={4} style={{ margin: 0, color: isDark ? '#e3e3e3' : 'inherit' }}>System Logs Console</Title>
+                    <Text type="secondary" style={{ color: isDark ? '#8e8e8e' : 'inherit' }}>Real-time metrics and tracing from microservice containers.</Text>
                 </Col>
                 <Col>
                     <Space>
-                        <Select defaultValue="ALL" style={{ width: 120 }}>
+                        <Select defaultValue="ALL" style={{ width: 120 }} dropdownStyle={{ background: isDark ? '#1e1e1e' : '#fff' }}>
                             <Option value="ALL">All Services</Option>
                             <Option value="AUTH">Auth</Option>
                             <Option value="DISPATCH">Dispatch</Option>
@@ -70,13 +73,13 @@ export const SystemLogsPage: React.FC = () => {
             <Card 
                 bordered={false} 
                 className="shadow-sm" 
-                style={{ background: '#0f172a', color: '#f8fafc', height: '65vh', overflow: 'hidden' }}
-                bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+                style={{ background: isDark ? '#1a1a1a' : '#0f172a', color: '#f8fafc', height: '65vh', overflow: 'hidden', border: isDark ? '1px solid #2d2d2d' : 'none' }}
+                styles={{ body: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column' } }}
             >
-                <div style={{ padding: '12px 24px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ padding: '12px 24px', borderBottom: isDark ? '1px solid #2d2d2d' : '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Space>
                         <BugOutlined style={{ color: '#ef4444' }} />
-                        <Text style={{ color: '#94a3b8', fontFamily: 'monospace' }}>tail -f /var/log/dashdrive/*.log</Text>
+                        <Text style={{ color: isDark ? '#666' : '#94a3b8', fontFamily: 'monospace' }}>tail -f /var/log/dashdrive/*.log</Text>
                     </Space>
                     <Button 
                         type="text" 
@@ -94,7 +97,7 @@ export const SystemLogsPage: React.FC = () => {
                 >
                     {logs.map((log, index) => (
                         <div key={index} style={{ marginBottom: 4 }}>
-                            <span style={{ color: '#64748b', marginRight: 12 }}>[{new Date(log.time).toLocaleTimeString()}]</span>
+                            <span style={{ color: isDark ? '#444' : '#64748b', marginRight: 12 }}>[{new Date(log.time).toLocaleTimeString()}]</span>
                             <span style={{ 
                                 color: log.level === 'ERROR' ? '#ef4444' : log.level === 'WARN' ? '#f59e0b' : '#38bdf8',
                                 fontWeight: 'bold', 
@@ -103,8 +106,8 @@ export const SystemLogsPage: React.FC = () => {
                             }}>
                                 {log.level}
                             </span>
-                            <span style={{ color: '#e2e8f0', marginRight: 16 }}>[{log.service}]</span>
-                            <span style={{ color: '#cbd5e1' }}>{log.msg}</span>
+                            <span style={{ color: isDark ? '#8e8e8e' : '#e2e8f0', marginRight: 16 }}>[{log.service}]</span>
+                            <span style={{ color: isDark ? '#666' : '#cbd5e1' }}>{log.msg}</span>
                         </div>
                     ))}
                 </div>
