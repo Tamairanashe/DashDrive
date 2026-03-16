@@ -2,14 +2,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MapView, { Marker, PROVIDER_GOOGLE } from "../../src/lib/MapView";
-import { darkMapStyle, mapStyle } from "../../src/styles/mapStyles";
+import MapView, { Marker, PROVIDER_GOOGLE } from "@/src/lib/MapView";
+import { darkMapStyle, mapStyle } from "@/src/styles/mapStyles";
 
 // Mock trip data
 const TRIP = {
     destination: { lat: 51.4700, lng: -0.4543, address: "Terminal 2, Heathrow" },
+    rider: { name: "Zoe Chit", rating: 5.0 },
     eta: "28 min",
     distance: "17.3 km",
     vertical: "SCHOOL_RUN",

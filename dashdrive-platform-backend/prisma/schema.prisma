@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "finance", "insurance", "billing", "marketing", "integration", "analytics", "fintech"]
+  schemas  = ["core", "finance", "insurance", "billing", "marketing", "integration", "analytics", "fintech", "events", "marketplace"]
 }
 
 // ==========================================
@@ -32,6 +32,15 @@ model User {
   claims        Claim[]
   wallet        Wallet?
   students      Student[]
+  reservations  Reservation[]
+  
+  // Marketplace relations
+  listings      Listing[]    @relation("HostListings")
+  bookings      Booking[]    @relation("GuestBookings")
+  messages_sent Message[]    @relation("SenderMessages")
+  messages_received Message[] @relation("ReceiverMessages")
+  wishlists     Wishlist[]
+  reviews       Review[]     @relation("Reviewer")
 
   @@schema("core")
 }
@@ -568,4 +577,225 @@ model FintechLoan {
   created_at     DateTime  @default(now())
 
   @@schema("fintech")
+}
+
+// ==========================================
+// 9. EVENTS SCHEMA
+// ==========================================
+
+model Event {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  venue_id    String?  @db.Uuid
+  start_time  DateTime
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  seats       Seat[]
+  reservations Reservation[]
+
+  @@schema("events")
+}
+
+model Seat {
+  id          String   @id @default(uuid()) @db.Uuid
+  event_id    String   @db.Uuid
+  section     String
+  row         String
+  number      String
+  status      String   @default("available") // available, locked, sold
+  price       Decimal  @db.Decimal(10, 2)
+
+  event       Event    @relation(fields: [event_id], references: [id])
+  reservations Reservation[]
+  tickets     Ticket[]
+
+  @@schema("events")
+}
+
+model Reservation {
+  id          String   @id @default(uuid()) @db.Uuid
+  user_id     String   @db.Uuid
+  event_id    String   @db.Uuid
+  seat_id     String   @db.Uuid
+  expires_at  DateTime
+  status      String   @default("pending") // pending, completed, expired
+  created_at  DateTime @default(now())
+
+  user        User     @relation(fields: [user_id], references: [id])
+  event       Event    @relation(fields: [event_id], references: [id])
+  seat        Seat     @relation(fields: [seat_id], references: [id])
+  ticket      Ticket?
+
+  @@schema("events")
+}
+
+model Ticket {
+  id             String   @id @default(uuid()) @db.Uuid
+  reservation_id String   @unique @db.Uuid
+  seat_id        String   @db.Uuid
+  qr_code        String   @unique
+  created_at     DateTime @default(now())
+
+  reservation    Reservation @relation(fields: [reservation_id], references: [id])
+  seat           Seat        @relation(fields: [seat_id], references: [id])
+
+  @@schema("events")
+}
+
+// ==========================================
+// 10. MARKETPLACE SCHEMA
+// ==========================================
+
+model Listing {
+  id              String    @id @default(uuid()) @db.Uuid
+  host_id         String    @db.Uuid
+  title           String
+  description     String?
+  property_type   String    // apartment, house, car, boat, etc.
+  price_per_night Decimal   @db.Decimal(10, 2)
+  cleaning_fee    Decimal?  @db.Decimal(10, 2)
+  max_guests      Int?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  host            User      @relation("HostListings", fields: [host_id], references: [id])
+  location        Location?
+  photos          ListingPhoto[]
+  amenities       ListingAmenity[]
+  bookings        Booking[]
+  messages        Message[]
+  wishlist_items  WishlistListing[]
+
+  @@schema("marketplace")
+}
+
+model Location {
+  id         String   @id @default(uuid()) @db.Uuid
+  listing_id String   @unique @db.Uuid
+  country    String
+  city       String
+  address    String
+  latitude   Float
+  longitude  Float
+
+  listing    Listing  @relation(fields: [listing_id], references: [id])
+
+  @@schema("marketplace")
+}
+
+model ListingPhoto {
+  id         String   @id @default(uuid()) @db.Uuid
+  listing_id String   @db.Uuid
+  url        String
+  caption    String?
+  sort_order Int      @default(0)
+
+  listing    Listing  @relation(fields: [listing_id], references: [id])
+
+  @@schema("marketplace")
+}
+
+model Amenity {
+  id    String @id @default(uuid()) @db.Uuid
+  name  String @unique
+
+  listings ListingAmenity[]
+
+  @@schema("marketplace")
+}
+
+model ListingAmenity {
+  listing_id String @db.Uuid
+  amenity_id String @db.Uuid
+
+  listing    Listing @relation(fields: [listing_id], references: [id])
+  amenity    Amenity @relation(fields: [amenity_id], references: [id])
+
+  @@id([listing_id, amenity_id])
+  @@schema("marketplace")
+}
+
+model Booking {
+  id           String    @id @default(uuid()) @db.Uuid
+  listing_id   String    @db.Uuid
+  guest_id     String    @db.Uuid
+  check_in     DateTime
+  check_out    DateTime
+  total_price  Decimal   @db.Decimal(10, 2)
+  status       String    @default("pending") // pending, confirmed, cancelled, completed
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  listing      Listing   @relation(fields: [listing_id], references: [id])
+  guest        User      @relation("GuestBookings", fields: [guest_id], references: [id])
+  payment      MarketplacePayment?
+  review       Review?
+
+  @@schema("marketplace")
+}
+
+model MarketplacePayment {
+  id             String    @id @default(uuid()) @db.Uuid
+  booking_id     String    @unique @db.Uuid
+  amount         Decimal   @db.Decimal(10, 2)
+  status         String    @default("pending")
+  payment_method String
+  created_at     DateTime  @default(now())
+
+  booking        Booking   @relation(fields: [booking_id], references: [id])
+
+  @@schema("marketplace")
+}
+
+model Message {
+  id           String    @id @default(uuid()) @db.Uuid
+  sender_id    String    @db.Uuid
+  receiver_id  String    @db.Uuid
+  listing_id   String?   @db.Uuid
+  message_text String
+  sent_at      DateTime  @default(now())
+
+  sender       User      @relation("SenderMessages", fields: [sender_id], references: [id])
+  receiver     User      @relation("ReceiverMessages", fields: [receiver_id], references: [id])
+  listing      Listing?  @relation(fields: [listing_id], references: [id])
+
+  @@schema("marketplace")
+}
+
+model Review {
+  id          String   @id @default(uuid()) @db.Uuid
+  booking_id  String   @unique @db.Uuid
+  reviewer_id String   @db.Uuid
+  rating      Int
+  comment     String?
+  created_at  DateTime @default(now())
+
+  booking     Booking  @relation(fields: [booking_id], references: [id])
+  reviewer    User     @relation("Reviewer", fields: [reviewer_id], references: [id])
+
+  @@schema("marketplace")
+}
+
+model Wishlist {
+  id      String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+  name    String
+
+  user    User @relation(fields: [user_id], references: [id])
+  items   WishlistListing[]
+
+  @@schema("marketplace")
+}
+
+model WishlistListing {
+  wishlist_id String @db.Uuid
+  listing_id  String @db.Uuid
+
+  wishlist    Wishlist @relation(fields: [wishlist_id], references: [id])
+  listing     Listing  @relation(fields: [listing_id], references: [id])
+
+  @@id([wishlist_id, listing_id])
+  @@schema("marketplace")
 }

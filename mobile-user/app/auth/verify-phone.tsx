@@ -1,8 +1,8 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { Button } from "../../src/components/ui/Button";
-import { Input } from "../../src/components/ui/Input";
+import { Button } from "@/src/components/ui/Button";
+import { Input } from "@/src/components/ui/Input";
 import { StyledFontAwesome5, StyledIonicons, StyledSafeAreaView } from "../../src/lib/interop";
 
 export default function VerifyPhoneScreen() {

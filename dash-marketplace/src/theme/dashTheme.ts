@@ -2,33 +2,39 @@ import { theme, type ThemeConfig } from 'antd';
 
 export const dashTheme: ThemeConfig = {
   token: {
-    colorPrimary: '#ffcc00', // Dash Premium Yellow
-    borderRadius: 16,
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    colorBgBase: '#000000',
-    colorTextBase: '#ffffff',
+    colorPrimary: '#ff385c', // Airbnb Coral
+    borderRadius: 12,
+    fontFamily: "'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    colorBgBase: '#ffffff',
+    colorTextBase: '#222222',
+    colorLink: '#222222',
   },
-  algorithm: theme.darkAlgorithm,
+  algorithm: theme.defaultAlgorithm,
   components: {
     Layout: {
-      headerBg: '#141414',
-      bodyBg: '#000000',
-      headerHeight: 72,
+      headerBg: '#ffffff',
+      bodyBg: '#ffffff',
+      headerHeight: 80,
     },
     Button: {
-      borderRadius: 12,
-      controlHeight: 40,
+      borderRadius: 8,
+      controlHeight: 48,
       fontWeight: 600,
+      primaryShadow: 'none',
     },
     Card: {
-      borderRadiusLG: 24,
-      colorBgContainer: '#141414',
+      borderRadiusLG: 12,
+      colorBgContainer: '#ffffff',
     },
     Input: {
-      borderRadius: 12,
+      borderRadius: 8,
       controlHeight: 48,
-      colorBgContainer: '#262626',
-      colorBorder: 'transparent',
+      colorBgContainer: '#ffffff',
+      colorBorder: '#dddddd',
     },
+    Divider: {
+      marginLG: 24,
+      colorSplit: '#ebebeb',
+    }
   },
 };

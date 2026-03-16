@@ -37,6 +37,7 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require("./routes/admin.routes");
 const platformRoutes = require("./routes/platform.routes");
 const mobileRoutes = require("./routes/mobile.routes");
+const eventRoutes = require("./routes/eventRoutes");
 
 // Mount Routes
 app.use('/api/v1/auth', authRoutes);
@@ -44,6 +45,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes); // Merchant-specific Admin Layer
 app.use('/api/platform', platformRoutes); // Global Platform SuperAdmin Layer
+app.use('/api/mobile/events', eventRoutes); // DashEvents Ticketing Layer
 app.use('/api/mobile', mobileRoutes); // Unified Rider & Pilot Mobile Layer
 app.use('/api/v1/merchant', merchantRoutes); // Main Merchant Engine
 app.use('/api/merchant', legacyMerchantRoutes); // Legacy Dashboard Endpoints

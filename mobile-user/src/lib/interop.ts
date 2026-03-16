@@ -64,3 +64,9 @@ cssInterop(FontAwesome, {
     },
 });
 export const StyledFontAwesome = FontAwesome;
+import { TextInput } from "react-native";
+
+cssInterop(TextInput, {
+    className: "style",
+});
+export const StyledTextInput = TextInput;

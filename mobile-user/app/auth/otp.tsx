@@ -15,7 +15,7 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../../src/components/ui/Button";
+import { Button } from "@/src/components/ui/Button";
 
 const CORRECT_CODE = "3045";
 

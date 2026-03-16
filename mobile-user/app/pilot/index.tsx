@@ -25,11 +25,11 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SideMenu } from "../../src/components/SideMenu";
-import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "../../src/lib/MapView";
-import { useSavedPlacesStore } from "../../src/lib/store";
-import { darkMapStyle, mapStyle } from "../../src/styles/mapStyles";
-import { useSocketStore } from "../../src/lib/socketStore";
+import { SideMenu } from "@/src/components/SideMenu";
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "@/src/lib/MapView";
+import { useSavedPlacesStore } from "@/src/lib/store";
+import { darkMapStyle, mapStyle } from "@/src/styles/mapStyles";
+import { useSocketStore } from "@/src/lib/socketStore";
 
 const { width, height } = Dimensions.get("window");
 

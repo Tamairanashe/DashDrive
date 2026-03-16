@@ -104,6 +104,7 @@ export const AdminLayout: React.FC = () => {
         { key: '/services/hotels', icon: <BankOutlined />, label: 'Hotels' },
         { key: '/services/events', icon: <CalendarOutlined />, label: 'Events Booking' },
         { key: '/services/rental', icon: <KeyOutlined />, label: 'Car Rental' },
+        { key: '/services/marketplace', icon: <ShopOutlined />, label: 'Marketplace Management' },
         { key: '/services/transport', icon: <CompassOutlined />, label: 'Public Transport' },
         { key: '/services/fuel', icon: <ThunderboltOutlined />, label: 'Fuel Services' },
         { key: '/services/school-run', icon: <SafetyOutlined />, label: 'School Run Monitor' },

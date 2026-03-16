@@ -1,0 +1,12 @@
+import { MarketplaceController } from './marketplace.controller';
+import { MarketplaceService } from './marketplace.service';
+import { MarketplaceGateway } from './marketplace.gateway';
+import { PrismaModule } from '../../prisma/prisma.module';
+
+@Module({
+  imports: [PrismaModule],
+  controllers: [MarketplaceController],
+  providers: [MarketplaceService, MarketplaceGateway],
+  exports: [MarketplaceService],
+})
+export class MarketplaceModule {}

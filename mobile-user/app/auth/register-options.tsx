@@ -7,7 +7,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../../src/components/ui/Button";
+import { Button } from "@/src/components/ui/Button";
 
 export default function RegisterOptionsScreen() {
     const router = useRouter();

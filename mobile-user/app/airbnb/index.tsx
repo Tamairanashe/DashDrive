@@ -35,7 +35,7 @@ const LISTINGS = [
         date: "Feb 23 – 28",
         price: "K1,200",
         rating: 4.85,
-        image: require("../../airbnb/76oXAEp0R9qh12ih0YHeeH1Hf84.png"),
+        image: { uri: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070&auto=format&fit=crop" },
     },
     {
         id: "2",
@@ -44,7 +44,7 @@ const LISTINGS = [
         date: "Mar 10 – 15",
         price: "K2,500",
         rating: 4.92,
-        image: require("../../airbnb/5pkGRl4FLuGG24ii1t4lI5bOgfk.png"),
+        image: { uri: "https://images.unsplash.com/photo-1493246507139-91e8bef99c02?q=80&w=2070&auto=format&fit=crop" },
     },
     {
         id: "3",
@@ -53,7 +53,7 @@ const LISTINGS = [
         date: "Apr 2 – 7",
         price: "K1,800",
         rating: 4.78,
-        image: require("../../airbnb/8ULQXqVkMXjPaaYXHyNgZCCPDY (1).png"),
+        image: { uri: "https://images.unsplash.com/photo-1510227272981-aa5f236375b2?q=80&w=2070&auto=format&fit=crop" },
     },
     {
         id: "4",
@@ -62,7 +62,7 @@ const LISTINGS = [
         date: "May 15 – 20",
         price: "K950",
         rating: 4.65,
-        image: require("../../airbnb/CB4FVfHJG9m210DWOwd7kaSQ4.png"),
+        image: { uri: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2070&auto=format&fit=crop" },
     },
 ];
 

@@ -11,12 +11,12 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../../src/components/ui/Button";
-import { Card } from "../../src/components/ui/Card";
-import { Input } from "../../src/components/ui/Input";
-import MapView, { Marker, PROVIDER_GOOGLE } from "../../src/lib/MapView";
-import { useSavedPlacesStore } from "../../src/lib/store";
-import { darkMapStyle, mapStyle } from "../../src/styles/mapStyles";
+import { Button } from "@/src/components/ui/Button";
+import { Card } from "@/src/components/ui/Card";
+import { Input } from "@/src/components/ui/Input";
+import MapView, { Marker, PROVIDER_GOOGLE } from "@/src/lib/MapView";
+import { useSavedPlacesStore } from "@/src/lib/store";
+import { darkMapStyle, mapStyle } from "@/src/styles/mapStyles";
 
 export default function FareInputScreen() {
     const router = useRouter();

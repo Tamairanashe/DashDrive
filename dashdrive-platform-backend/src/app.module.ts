@@ -27,6 +27,8 @@ import { RentalModule } from './modules/rentals/rental.module';
 import { TransitModule } from './modules/transit/transit.module';
 import { FuelModule } from './modules/fuel/fuel.module';
 
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -34,7 +36,6 @@ import { FuelModule } from './modules/fuel/fuel.module';
     EventBusModule,
     PartnerGatewayModule,
     IntegrationsModule,
-    ProductsModule,
     ApplicationsModule,
     FintechModule,
     SchoolModule,
@@ -59,6 +60,7 @@ import { FuelModule } from './modules/fuel/fuel.module';
     RentalModule,
     TransitModule,
     FuelModule,
+    MarketplaceModule,
   ],
   controllers: [],
   providers: [],

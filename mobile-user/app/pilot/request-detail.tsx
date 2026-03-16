@@ -10,8 +10,8 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "../../src/lib/MapView";
-import { darkMapStyle, mapStyle } from "../../src/styles/mapStyles";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "@/src/lib/MapView";
+import { darkMapStyle, mapStyle } from "@/src/styles/mapStyles";
 
 // Mock fallback
 const MOCK_REQUEST = {

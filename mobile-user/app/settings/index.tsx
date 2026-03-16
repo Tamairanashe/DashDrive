@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemeSwitcher } from "../../src/components/ThemeSwitcher";
+import { useSavedPlacesStore } from "../../src/lib/store";
 
 const ACCOUNT_ITEMS = [
     { id: "profile", label: "Edit Profile", icon: "person-outline", route: "/account/profile" },
@@ -32,6 +33,7 @@ const LEGAL_ITEMS = [
 export default function SettingsScreen() {
     const router = useRouter();
     const { colorScheme, setColorScheme } = useColorScheme();
+    const { isDriverMode, setIsDriverMode } = useSavedPlacesStore();
     const [preferences, setPreferences] = useState({
         notifications: true,
         email: true,
@@ -98,26 +100,33 @@ export default function SettingsScreen() {
                                 <Ionicons name="chevron-forward" size={18} color="#adadad" />
                             </TouchableOpacity>
                         ))}
-                        {/* Don't lock screen custom row */}
-                        <View className="flex-row items-center p-5">
-                            <View className="w-10 h-10 bg-white dark:bg-zinc-800 rounded-2xl items-center justify-center mr-4 shadow-sm">
-                                <Ionicons name="phone-portrait-outline" size={20} color={colorScheme === 'dark' ? '#fff' : '#000'} />
-                            </View>
-                            <View className="flex-1">
-                                <Text className="font-uber-medium text-lg dark:text-white">Don't lock the screen</Text>
-                                <Text className="text-sm text-accent-gray dark:text-zinc-500 font-uber">Keep display active while navigating</Text>
-                            </View>
-                            <Switch
-                                value={preferences.keepScreenOn}
-                                onValueChange={() => togglePreference('keepScreenOn')}
-                                trackColor={{ false: '#d4d4d8', true: '#00ff90' }}
-                                thumbColor="#fff"
-                            />
                         </View>
                     </View>
                 </View>
-
-                {/* Appearance */}
++
++                {/* Driver Settings */}
++                <View className="px-6 mb-8">
++                    <Text className="text-sm font-uber-bold text-accent-gray dark:text-zinc-500 mb-3 uppercase tracking-widest">Driver Settings</Text>
++                    <View className="bg-zinc-50 dark:bg-zinc-900 rounded-[32px] overflow-hidden border border-black/5 dark:border-zinc-800">
++                        <View className="flex-row items-center p-5">
++                            <View className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-2xl items-center justify-center mr-4 shadow-sm">
++                                <Ionicons name="car-outline" size={20} color={colorScheme === 'dark' ? '#00ff90' : '#000'} />
++                            </View>
++                            <View className="flex-1">
++                                <Text className="font-uber-medium text-lg dark:text-white">Driver Mode</Text>
++                                <Text className="text-sm text-accent-gray dark:text-zinc-500 font-uber">Switch to driver dashboard</Text>
++                            </View>
++                            <Switch
++                                value={isDriverMode}
++                                onValueChange={setIsDriverMode}
++                                trackColor={{ false: '#d4d4d8', true: '#00ff90' }}
++                                thumbColor="#fff"
++                            />
++                        </View>
++                    </View>
++                </View>
++
+                 {/* Appearance */}
                 <View className="px-6 mb-8">
                     <Text className="text-sm font-uber-bold text-accent-gray dark:text-zinc-500 mb-3 uppercase tracking-widest">Appearance</Text>
                     <View className="bg-zinc-50 dark:bg-zinc-900 rounded-[32px] p-6 shadow-sm border border-black/5 dark:border-zinc-800">

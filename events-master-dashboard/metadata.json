@@ -1,0 +1,5 @@
+{
+  "name": "EventPartner Portal",
+  "description": "A comprehensive dashboard for event organizers to create events, manage tickets, monitor sales, and validate attendees.",
+  "requestFramePermissions": []
+}

@@ -6,17 +6,27 @@ export class EventBookingController {
   constructor(private readonly eventService: EventBookingService) {}
 
   @Get()
-  listEvents(@Query('category') category?: string) {
-    return this.eventService.listEvents(category);
+  async listEvents() {
+    return this.eventService.listEvents();
   }
 
-  @Get(':id/tickets')
-  getTicketTypes(@Param('id') id: string) {
-    return this.eventService.getTicketTypes(id);
+  @Get(':id/seats')
+  async getSeats(@Param('id') eventId: string) {
+    return this.eventService.getEventSeats(eventId);
   }
 
-  @Post('purchase')
-  purchaseTicket(@Body() data: { userId: string; ticketTypeId: string; quantity: number }) {
-    return this.eventService.purchaseTicket(data);
+  @Post(':id/lock-seat')
+  async lockSeat(
+    @Param('id') eventId: string,
+    @Body() body: { seatId: string; userId: string },
+  ) {
+    return this.eventService.reserveSeat(eventId, body.seatId, body.userId);
+  }
+
+  @Post('confirm-booking')
+  async confirmBooking(
+    @Body() body: { reservationId: string; userId: string },
+  ) {
+    return this.eventService.confirmBooking(body.reservationId, body.userId);
   }
 }

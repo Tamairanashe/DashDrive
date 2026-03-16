@@ -13,8 +13,9 @@ import {
     StyledFontAwesome5,
     StyledIonicons,
     StyledMaterialCommunityIcons,
-    StyledSafeAreaView
-} from "../../src/lib/interop";
+    StyledSafeAreaView,
+    StyledTextInput
+} from "@/src/lib/interop";
 
 const MART_CATEGORIES = [
     { id: "1", name: "Groceries", icon: "basket-outline" },
@@ -69,7 +70,7 @@ const FEATURED_ITEMS = [
 ];
 
 import { Alert } from "react-native";
-import { useCartStore } from "../../src/lib/cartStore";
+import { useCartStore } from "@/src/lib/cartStore";
 
 export default function MartLandingScreen() {
     const router = useRouter();

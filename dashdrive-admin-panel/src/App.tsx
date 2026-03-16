@@ -41,6 +41,7 @@ import { GrowthEnginePage } from './pages/GrowthEnginePage';
 import { FuelServicesPage } from './pages/FuelServicesPage';
 import { PublicTransportPage } from './pages/PublicTransportPage';
 import { MarketplaceConfigPage } from './pages/MarketplaceConfigPage';
+import { MarketplaceManagementPage } from './pages/MarketplaceManagementPage';
 import { LoanProductManagement } from './pages/Fintech/LoanProductManagement';
 import { InsuranceManagement } from './pages/Fintech/InsuranceManagement';
 import { KycVerification } from './pages/Fintech/KycVerification';
@@ -94,6 +95,7 @@ export default function App() {
             <Route path="services/hotels" element={<ServiceConfigPage />} />
             <Route path="services/events" element={<ServiceConfigPage />} />
             <Route path="services/rental" element={<ServiceConfigPage />} />
+            <Route path="services/marketplace" element={<MarketplaceManagementPage />} />
             <Route path="services/transport" element={<PublicTransportPage />} />
             <Route path="services/fuel" element={<FuelServicesPage />} />
             <Route path="services/payments" element={<FintechPage />} />

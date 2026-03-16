@@ -7,90 +7,79 @@ import './App.css';
 import { dashTheme } from './theme/dashTheme';
 import Header from './components/layout/Header';
 import Marketplace from './pages/Marketplace';
-import Restaurant from './pages/Restaurant';
+import ListingDetailsPage from './pages/ListingDetailsPage';
 import Checkout from './pages/Checkout';
-import Tracking from './pages/Tracking';
+import MyTripsPage from './pages/MyTripsPage';
 
 const { Content } = Layout;
 
+type ViewType = 'EXPLORE' | 'LISTING_DETAILS' | 'BOOKING_CONFIRMATION' | 'MY_TRIPS';
+
 function App() {
-  const [currentView, setCurrentView] = useState<'MARKETPLACE' | 'RESTAURANT' | 'CHECKOUT' | 'TRACKING'>('MARKETPLACE');
-  const [selectedStore, setSelectedStore] = useState<any>(null);
+  const [currentView, setCurrentView] = useState<ViewType>('EXPLORE');
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [cartCount, setCartCount] = useState(0);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const headerOffset = 84;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-    }
-  };
 
   const handlePlaceOrder = () => {
     setIsPlacingOrder(true);
     setTimeout(() => {
       setIsPlacingOrder(false);
-      setCurrentView('TRACKING');
+      setCurrentView('MY_TRIPS');
     }, 2000);
   };
 
   return (
     <ConfigProvider theme={dashTheme}>
-      <Layout className="yandex-layout">
+      <Layout className="marketplace-layout">
         <Header 
           cartCount={cartCount} 
           onLogoClick={() => {
-            setSelectedStore(null);
-            setCurrentView('MARKETPLACE');
+            setSelectedProperty(null);
+            setCurrentView('EXPLORE');
           }}
-          onCartClick={() => { if (cartCount > 0) setCurrentView('CHECKOUT'); }}
+          onCartClick={() => { if (cartCount > 0) setCurrentView('BOOKING_CONFIRMATION'); }}
         />
 
-        <Content className="yandex-content">
-          {currentView === 'MARKETPLACE' && (
+        <Content>
+          {currentView === 'EXPLORE' && (
             <Marketplace 
-              onStoreSelect={(store) => {
-                setSelectedStore(store);
-                setCurrentView('RESTAURANT');
+              onStoreSelect={(property) => {
+                setSelectedProperty(property);
+                setCurrentView('LISTING_DETAILS');
+                window.scrollTo(0, 0);
               }}
-              scrollToSection={scrollToSection}
             />
           )}
-          {currentView === 'RESTAURANT' && (
-            <Restaurant 
-              selectedStore={selectedStore}
-              cartCount={cartCount}
-              onBack={() => setCurrentView('MARKETPLACE')}
-              onAddToCart={() => setCartCount(c => c + 1)}
-              onCheckout={() => setCurrentView('CHECKOUT')}
+          {currentView === 'LISTING_DETAILS' && (
+            <ListingDetailsPage 
+              property={selectedProperty}
+              onBack={() => setCurrentView('EXPLORE')}
+              onReserve={() => {
+                setCartCount(1);
+                setCurrentView('BOOKING_CONFIRMATION');
+                window.scrollTo(0, 0);
+              }}
             />
           )}
-          {currentView === 'CHECKOUT' && (
+          {currentView === 'BOOKING_CONFIRMATION' && (
             <Checkout 
-              selectedStore={selectedStore}
+              selectedStore={selectedProperty}
               cartCount={cartCount}
-              onBack={() => setCurrentView('RESTAURANT')}
+              onBack={() => setCurrentView('LISTING_DETAILS')}
               onPlaceOrder={handlePlaceOrder}
               isPlacingOrder={isPlacingOrder}
             />
           )}
-          {currentView === 'TRACKING' && (
-            <Tracking onBackHome={() => {
+          {currentView === 'MY_TRIPS' && (
+            <MyTripsPage onBackHome={() => {
               setCartCount(0);
-              setSelectedStore(null);
-              setCurrentView('MARKETPLACE');
+              setSelectedProperty(null);
+              setCurrentView('EXPLORE');
             }} />
           )}
         </Content>
-
-        <footer className="yandex-footer">
-          <div className="container" style={{ textAlign: 'center', padding: '40px 0', borderTop: '1px solid #262626' }}>
-            <span style={{ color: '#888' }}>© 2026 DashDrive. All rights reserved.</span>
-          </div>
-        </footer>
       </Layout>
     </ConfigProvider>
   );

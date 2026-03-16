@@ -4,8 +4,8 @@ import { useColorScheme } from "nativewind";
 import React, { useState } from "react";
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../../src/components/ui/Button";
-import { Card } from "../../src/components/ui/Card";
+import { Button } from "@/src/components/ui/Button";
+import { Card } from "@/src/components/ui/Card";
 
 export default function AddStudentScreen() {
     const router = useRouter();

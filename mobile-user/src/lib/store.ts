@@ -15,6 +15,7 @@ interface SavedPlacesState {
     hasCompanyProfile: boolean;
     userMode: 'rider' | 'pilot';
     isPilotRegistered: boolean;
+    isDriverMode: boolean;
 }
 
 let state: SavedPlacesState = {
@@ -25,6 +26,7 @@ let state: SavedPlacesState = {
     hasCompanyProfile: false,
     userMode: 'rider',
     isPilotRegistered: false,
+    isDriverMode: false,
 };
 
 const listeners = new Set<() => void>();
@@ -66,7 +68,8 @@ export const useSavedPlacesStore = () => {
         }),
         setIsBusinessMode: (value: boolean) => setState({ isBusinessMode: value }),
         setHasCompanyProfile: (value: boolean) => setState({ hasCompanyProfile: value }),
-        setUserMode: (mode: 'rider' | 'pilot') => setState({ userMode: mode }),
+        setUserMode: (mode: 'rider' | 'pilot') => setState({ userMode: mode, isDriverMode: mode === 'pilot' }),
         setIsPilotRegistered: (value: boolean) => setState({ isPilotRegistered: value }),
+        setIsDriverMode: (value: boolean) => setState({ isDriverMode: value, userMode: value ? 'pilot' : 'rider' }),
     };
 };

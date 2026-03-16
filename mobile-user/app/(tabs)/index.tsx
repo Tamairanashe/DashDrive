@@ -1,4 +1,3 @@
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -85,9 +84,7 @@ export default function HomeScreen() {
     const { colorScheme } = useColorScheme();
     const [isMoreServicesOpen, setIsMoreServicesOpen] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-    const bottomSheetRef = useRef<BottomSheet>(null);
-    const animatedIndex = useSharedValue(1);
-    const [mapPadding, setMapPadding] = useState(height * 0.4);
+    const { isDriverMode } = useSavedPlacesStore();
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const placeholders = ["Where to?", "Order food", "Send a parcel", "Shop essentials"];
 
@@ -143,12 +140,6 @@ export default function HomeScreen() {
         return () => clearInterval(interval);
     }, []);
 
-    const snapPoints = useMemo(() => ["15%", "60%", "100%"], []);
-    const handleSheetChange = useCallback((index: number) => {
-        if (index === 0) setMapPadding(height * 0.15);
-        else if (index === 1) setMapPadding(height * 0.4);
-        else if (index === 2) setMapPadding(height * 0.2);
-    }, []);
 
     const [activeMapStyle, setActiveMapStyle] = useState(colorScheme === 'dark' ? darkMapStyle : mapStyle);
     const [showLocationModal, setShowLocationModal] = useState(false);
@@ -157,130 +148,180 @@ export default function HomeScreen() {
         setActiveMapStyle(colorScheme === 'dark' ? darkMapStyle : mapStyle);
     }, [colorScheme]);
 
-    const headerAnimatedStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(animatedIndex.value, [1, 1.7], [1, 0], "clamp"),
-        transform: [{ translateY: interpolate(animatedIndex.value, [1, 2], [0, -50], "clamp") }],
-    }));
 
     return (
         <View className="flex-1 bg-white dark:bg-black">
-            <MapView
-                provider={PROVIDER_GOOGLE}
-                style={StyleSheet.absoluteFillObject}
-                initialRegion={region}
-                customMapStyle={activeMapStyle}
-                mapPadding={{ top: 0, right: 0, bottom: mapPadding, left: 0 }}
+            <ScrollView 
+                className="flex-1" 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 40 }}
             >
-                <Marker coordinate={{ latitude: -15.4190, longitude: 28.2840 }}>
-                    <View className="h-4 w-4 rounded-full bg-blue-500 border-2 border-white shadow-lg" />
-                </Marker>
-                {drivers.map((driver) => (
-                    <Marker
-                        key={driver.id}
-                        coordinate={{ latitude: driver.latitude, longitude: driver.longitude }}
-                        rotation={driver.heading}
-                        anchor={{ x: 0.5, y: 0.5 }}
-                        tracksViewChanges={false}
-                        flat={true}
-                        image={CAR_IMAGE}
-                    />
-                ))}
-            </MapView>
-
-            <SafeAreaView className="absolute top-12 left-6 right-6 z-40" pointerEvents="box-none">
-                <Animated.View style={[headerAnimatedStyle]}>
-                    <TouchableOpacity
-                        onPress={() => router.push("/search" as any)}
-                        activeOpacity={0.9}
-                        className="flex-row items-center rounded-3xl bg-white dark:bg-zinc-900 px-6 py-5 shadow-2xl border border-gray-100 dark:border-zinc-800"
+                {/* Map Section */}
+                <View style={{ height: 280, width: '100%' }}>
+                    <MapView
+                        provider={PROVIDER_GOOGLE}
+                        style={StyleSheet.absoluteFillObject}
+                        initialRegion={region}
+                        customMapStyle={activeMapStyle}
                     >
-                        <StyledIonicons name="search" size={20} color={colorScheme === 'dark' ? '#adadad' : '#71717a'} />
-                        <Text className="ml-4 flex-1 font-uber-bold text-secondary/60 dark:text-white/60 text-xl">
-                            {placeholders[placeholderIndex]}
-                        </Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </SafeAreaView>
+                        <Marker coordinate={{ latitude: -15.4190, longitude: 28.2840 }}>
+                            <View className="h-4 w-4 rounded-full bg-blue-500 border-2 border-white shadow-lg" />
+                        </Marker>
+                        {drivers.map((driver) => (
+                            <Marker
+                                key={driver.id}
+                                coordinate={{ latitude: driver.latitude, longitude: driver.longitude }}
+                                rotation={driver.heading}
+                                anchor={{ x: 0.5, y: 0.5 }}
+                                tracksViewChanges={false}
+                                flat={true}
+                                image={CAR_IMAGE}
+                            />
+                        ))}
+                    </MapView>
+                </View>
 
-            <BottomSheet
-                ref={bottomSheetRef}
-                index={1}
-                snapPoints={snapPoints}
-                animatedIndex={animatedIndex}
-                onChange={handleSheetChange}
-                handleIndicatorStyle={{ backgroundColor: colorScheme === 'dark' ? '#3f3f46' : '#e7e8ec', width: 48 }}
-                backgroundStyle={{ borderRadius: 40, backgroundColor: colorScheme === 'dark' ? '#111111' : 'white' }}
-            >
-                <BottomSheetScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
-                    <View className="px-6 pt-2">
-                        {/* Super App Bento Grid */}
-                        <View className="flex-row gap-4 mb-4">
-                            <YangoCard 
-                                label="Rides" 
-                                subtitle="Now" 
-                                image={require("../../assets/images/legend.png")} 
+                {/* Content Section */}
+                <View className="px-6 -mt-10 bg-white dark:bg-black rounded-t-[40px] pt-8">
+                    {/* Header integration */}
+                    <View className="mb-6">
+                        {isDriverMode ? (
+                            <View className="flex-row items-center rounded-3xl bg-zinc-900 px-6 py-5 shadow-2xl border border-zinc-800">
+                                <View className="flex-1">
+                                    <Text className="text-white font-uber-bold text-xl">Driver Dashboard</Text>
+                                    <View className="flex-row items-center mt-1">
+                                        <View className="h-2 w-2 rounded-full bg-primary mr-2" />
+                                        <Text className="text-primary font-uber-medium text-sm">Online</Text>
+                                    </View>
+                                </View>
+                                <TouchableOpacity className="h-12 w-12 rounded-full bg-zinc-800 items-center justify-center">
+                                    <StyledIonicons name="notifications" size={24} color="white" />
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <TouchableOpacity
                                 onPress={() => router.push("/search" as any)}
-                                containerStyle="flex-1 h-[140px]" 
-                                imageStyle={{ width: 140, height: 140, position: 'absolute', right: -30, bottom: -20 }}
-                            />
-                            <View className="flex-1 gap-4">
-                                <YangoCard 
-                                    label="Food" 
-                                    image={require("../../assets/images/Fast Food.png")} 
-                                    onPress={() => router.push("/food" as any)}
-                                    containerStyle="h-[62px]" 
-                                    imageStyle={{ width: 80, height: 80, position: 'absolute', right: -10, top: -15 }}
-                                />
-                                <YangoCard 
-                                    label="School Run" 
-                                    image={require("../../assets/images/school_bus.png")} 
-                                    onPress={() => router.push("/school-run" as any)}
-                                    containerStyle="h-[62px]" 
-                                    imageStyle={{ width: 80, height: 80, position: 'absolute', right: -10, bottom: -15 }}
-                                    bgColor="#FFD70015"
-                                />
-                            </View>
-                        </View>
-
-                        <View className="flex-row gap-4 mb-6">
-                            <YangoCard 
-                                label="Grocery" 
-                                subtitle="Mart"
-                                image={require("../../assets/images/grocery.png")} 
-                                onPress={() => router.push("/mart" as any)}
-                                containerStyle="flex-1 h-[100px]" 
-                                imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
-                            />
-                            <YangoCard 
-                                label="Parcel" 
-                                subtitle="Send items"
-                                image={require("../../assets/images/bikedelivery.png")} 
-                                onPress={() => router.push("/negotiation/fare-input" as any)}
-                                containerStyle="flex-1 h-[100px]" 
-                                imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
-                            />
-                        </View>
-
-                        {/* Fintech / Wallet Banner */}
-                        <TouchableOpacity 
-                            onPress={() => router.push("/(tabs)/wallet" as any)}
-                            className="bg-primary rounded-[32px] p-6 mb-8 flex-row items-center overflow-hidden h-[100px]"
-                        >
-                            <View className="flex-1">
-                                <Text className="text-black font-uber-bold text-xl">Dash Wallet</Text>
-                                <Text className="text-black/60 font-uber-medium text-sm">Pay bills, send money & more</Text>
-                            </View>
-                            <View className="h-12 w-12 rounded-full bg-black/10 items-center justify-center">
-                                <StyledIonicons name="arrow-forward" size={20} color="black" />
-                            </View>
-                        </TouchableOpacity>
-
-                        <Text className="text-secondary dark:text-white font-uber-bold text-xl mb-4">Around you</Text>
-                        <LocationItem label="Inter City Bus Station" subtitle="Lusaka, Central" icon="bus" />
-                        <LocationItem label="Levy Mall" subtitle="Church Road, Lusaka" icon="cart" />
+                                activeOpacity={0.9}
+                                className="flex-row items-center rounded-3xl bg-white dark:bg-zinc-900 px-6 py-5 shadow-2xl border border-gray-100 dark:border-zinc-800"
+                            >
+                                <StyledIonicons name="search" size={20} color={colorScheme === 'dark' ? '#adadad' : '#71717a'} />
+                                <Text className="ml-4 flex-1 font-uber-bold text-secondary/60 dark:text-white/60 text-xl">
+                                    {placeholders[placeholderIndex]}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
-                </BottomSheetScrollView>
-            </BottomSheet>
+
+                    {/* Super App Bento Grid */}
+                    <View className="flex-row gap-4 mb-4">
+                        <YangoCard 
+                            label="Rides" 
+                            subtitle="Now" 
+                            image={require("../../assets/images/legend.png")} 
+                            onPress={() => router.push("/search" as any)}
+                            containerStyle="flex-1 h-[140px]" 
+                            imageStyle={{ width: 140, height: 140, position: 'absolute', right: -30, bottom: -20 }}
+                        />
+                        <View className="flex-1 gap-4">
+                            <YangoCard 
+                                label="Food" 
+                                image={require("../../assets/images/Fast Food.png")} 
+                                onPress={() => router.push("/food" as any)}
+                                containerStyle="h-[62px]" 
+                                imageStyle={{ width: 80, height: 80, position: 'absolute', right: -10, top: -15 }}
+                            />
+                            <YangoCard 
+                                label="School Run" 
+                                image={require("../../assets/images/school_bus.png")} 
+                                onPress={() => router.push("/school-run" as any)}
+                                containerStyle="h-[62px]" 
+                                imageStyle={{ width: 80, height: 80, position: 'absolute', right: -10, bottom: -15 }}
+                                bgColor="#FFD70015"
+                            />
+                        </View>
+                    </View>
+
+                    <View className="flex-row gap-4 mb-4">
+                        <YangoCard 
+                            label="Grocery" 
+                            subtitle="Mart"
+                            image={require("../../assets/images/grocery.png")} 
+                            onPress={() => router.push("/mart" as any)}
+                            containerStyle="flex-1 h-[100px]" 
+                            imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
+                        />
+                        <YangoCard 
+                            label="Shopping" 
+                            subtitle="Essentials"
+                            image={require("../../assets/images/shopping_bag.png")} 
+                            onPress={() => router.push("/mart" as any)}
+                            containerStyle="flex-1 h-[100px]" 
+                            imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
+                            bgColor="#E8F5E9"
+                        />
+                    </View>
+
+                    <View className="flex-row gap-4 mb-4">
+                        <YangoCard 
+                            label="Airbnb" 
+                            subtitle="Homes"
+                            image={require("../../assets/images/airbnb_home.png")} 
+                            onPress={() => router.push("/airbnb" as any)}
+                            containerStyle="flex-1 h-[100px]" 
+                            imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
+                            bgColor="#FFEBEE"
+                        />
+                        <YangoCard 
+                            label="Car Rental" 
+                            subtitle="Hire"
+                            image={require("../../assets/images/car_rental.png")} 
+                            onPress={() => router.push("/rentals" as any)}
+                            containerStyle="flex-1 h-[100px]" 
+                            imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
+                            bgColor="#E3F2FD"
+                        />
+                    </View>
+
+                    <View className="flex-row gap-4 mb-6">
+                        <YangoCard 
+                            label="Parcel" 
+                            subtitle="Send items"
+                            image={require("../../assets/images/bikedelivery.png")} 
+                            onPress={() => router.push("/negotiation/fare-input" as any)}
+                            containerStyle="flex-1 h-[100px]" 
+                            imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
+                            bgColor="#FFF3E0"
+                        />
+                        <YangoCard 
+                            label="Events" 
+                            subtitle="Tickets"
+                            image={require("../../assets/images/events.png")} 
+                            onPress={() => router.push("/events" as any)}
+                            containerStyle="flex-1 h-[100px]" 
+                            imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
+                            bgColor="#F3E5F5"
+                        />
+                    </View>
+
+                    {/* Fintech / Wallet Banner */}
+                    <TouchableOpacity 
+                        onPress={() => router.push("/(tabs)/wallet" as any)}
+                        className="bg-primary rounded-[32px] p-6 mb-8 flex-row items-center overflow-hidden h-[100px]"
+                    >
+                        <View className="flex-1">
+                            <Text className="text-black font-uber-bold text-xl">Dash Wallet</Text>
+                            <Text className="text-black/60 font-uber-medium text-sm">Pay bills, send money & more</Text>
+                        </View>
+                        <View className="h-12 w-12 rounded-full bg-black/10 items-center justify-center">
+                            <StyledIonicons name="arrow-forward" size={20} color="black" />
+                        </View>
+                    </TouchableOpacity>
+
+                    <Text className="text-secondary dark:text-white font-uber-bold text-xl mb-4">Around you</Text>
+                    <LocationItem label="Inter City Bus Station" subtitle="Lusaka, Central" icon="bus" />
+                    <LocationItem label="Levy Mall" subtitle="Church Road, Lusaka" icon="cart" />
+                </View>
+            </ScrollView>
         </View>
     );
 }

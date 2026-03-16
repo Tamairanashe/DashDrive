@@ -4,9 +4,9 @@ import { useColorScheme } from "nativewind";
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../../src/components/ui/Button";
-import { Card } from "../../src/components/ui/Card";
-import { useSavedPlacesStore } from "../../src/lib/store";
+import { Button } from "@/src/components/ui/Button";
+import { Card } from "@/src/components/ui/Card";
+import { useSavedPlacesStore } from "@/src/lib/store";
 
 export default function ReceiptScreen() {
     const router = useRouter();

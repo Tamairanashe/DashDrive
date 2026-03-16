@@ -1,0 +1,5 @@
+{
+  "name": "Turo-Style Host Dashboard",
+  "description": "A centralized control panel for car owners to manage listings, trips, pricing, communication, and earnings.",
+  "requestFramePermissions": []
+}

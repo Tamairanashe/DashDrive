@@ -14,7 +14,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../../src/components/ui/Button";
+import { Button } from "@/src/components/ui/Button";
 
 export default function EmailScreen() {
     const router = useRouter();

@@ -3,10 +3,10 @@ import { useColorScheme } from "nativewind";
 import React, { useEffect, useState } from "react";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StyledIonicons } from "../../src/lib/interop";
-import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "../../src/lib/MapView";
-import { useSavedPlacesStore } from "../../src/lib/store";
-import { darkMapStyle, mapStyle } from "../../src/styles/mapStyles";
+import { StyledIonicons } from "@/src/lib/interop";
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "@/src/lib/MapView";
+import { useSavedPlacesStore } from "@/src/lib/store";
+import { darkMapStyle, mapStyle } from "@/src/styles/mapStyles";
 
 const { width, height } = Dimensions.get("window");
 

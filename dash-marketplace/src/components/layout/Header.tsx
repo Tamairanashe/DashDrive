@@ -1,24 +1,15 @@
 import React from 'react';
 import { 
   Layout, 
-  Input, 
   Button, 
   Space, 
   Avatar, 
-  Dropdown, 
-  type MenuProps,
 } from 'antd';
 import { 
-  SearchOutlined,
   UserOutlined,
-  EnvironmentFilled,
   ShoppingCartOutlined,
-  FileTextOutlined,
-  DownOutlined,
-  ShoppingOutlined,
-  CarOutlined,
-  ThunderboltFilled,
-  MedicineBoxOutlined
+  GlobalOutlined,
+  MenuOutlined,
 } from '@ant-design/icons';
 
 const { Header: AntHeader } = Layout;
@@ -30,65 +21,50 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ cartCount, onLogoClick, onCartClick }) => {
-  const serviceItems: MenuProps['items'] = [
-    { key: 'market', icon: <ShoppingOutlined />, label: 'Dash @Market' },
-    { key: 'ride', icon: <CarOutlined />, label: 'Dash Ride' },
-    { key: 'parcel', icon: <ThunderboltFilled />, label: 'Dash Parcel' },
-    { key: 'pharmacy', icon: <MedicineBoxOutlined />, label: 'Dash Pharmacy' },
-  ];
-
   return (
-    <AntHeader className="yandex-header">
-      <div className="container header-inner">
-        <div className="header-left">
-          <Dropdown menu={{ items: serviceItems }} trigger={['click']}>
-            <Button type="text" className="service-switcher">
-              <Space size={4}>
-                <div className="yandex-logo" onClick={(e) => {
-                  e.stopPropagation();
-                  onLogoClick();
-                }}>
-                  <span className="logo-brand">Dash</span>
-                  <span className="logo-eats">@Market</span>
-                </div>
-                <DownOutlined style={{ fontSize: 10, color: '#888' }} />
-              </Space>
-            </Button>
-          </Dropdown>
-        </div>
-
-        <div className="header-center">
-          <div className="header-search-wrapper">
-            <Input
-              placeholder="Search restaurants or products"
-              prefix={<SearchOutlined style={{ color: '#888' }} />}
-              className="yandex-search-header"
-            />
+    <AntHeader className="premium-header">
+      <div className="header-inner-content">
+        {/* Left: Brand */}
+        <div className="header-left-section" onClick={onLogoClick} style={{ cursor: 'pointer' }}>
+          <div className="brand-logo-wrapper">
+            <span className="logo-text">dash</span>
           </div>
-          <Button 
-            type="primary" 
-            icon={<EnvironmentFilled />} 
-            className="address-btn-header shadow-sm"
-          >
-            Enter address
-          </Button>
         </div>
 
-        <div className="header-right">
-          <Space size={16}>
-            <Button type="text" icon={<FileTextOutlined />} className="header-nav-btn">
-              Orders
-            </Button>
+        {/* Center: Navigation */}
+        <div className="header-center-section">
+          <div className="center-nav-item active">
+            <span>Homes</span>
+          </div>
+          <div className="center-nav-item">
+            <span>Experiences</span>
+            <span className="dot-new"></span>
+          </div>
+          <div className="center-nav-item">
+            <span>Services</span>
+            <span className="dot-new"></span>
+          </div>
+        </div>
+
+        {/* Right: Actions */}
+        <div className="header-right-section">
+          <Space size={20}>
+            <Button type="text" className="nav-action-link">Switch to hosting</Button>
+            <Button type="text" icon={<GlobalOutlined />} className="nav-utility-icon" />
+            
+            <div className="user-menu-pill">
+              <MenuOutlined style={{ fontSize: 16 }} />
+              <Avatar size={30} icon={<UserOutlined />} className="user-avatar-small" />
+            </div>
+
             <Button 
-              type="primary" 
-              icon={<ShoppingCartOutlined />} 
-              className="header-cart-btn"
+              type="text" 
+              icon={<ShoppingCartOutlined style={{ fontSize: 24 }} />} 
+              className="cart-btn-premium"
               onClick={onCartClick}
             >
-              {cartCount > 0 && <span className="cart-badge-header">{cartCount}</span>}
-              <span>Cart</span>
+              {cartCount > 0 && <span className="cart-badge-premium">{cartCount}</span>}
             </Button>
-            <Avatar icon={<UserOutlined />} className="user-avatar-header" />
           </Space>
         </div>
       </div>

@@ -3,10 +3,13 @@ import { EventBookingService } from './event.service';
 import { EventBookingController } from './event.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 
+import { ConfigModule } from '@nestjs/config';
+import { SeatLockService } from './seat-lock.service';
+
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, ConfigModule],
   controllers: [EventBookingController],
-  providers: [EventBookingService],
-  exports: [EventBookingService],
+  providers: [EventBookingService, SeatLockService],
+  exports: [EventBookingService, SeatLockService],
 })
 export class EventBookingModule {}
