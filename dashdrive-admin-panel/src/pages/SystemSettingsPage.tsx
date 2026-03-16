@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-  Tabs, Card, Form, Input, Select, Switch, Button, Table, Tag, Space, Modal,
-  Alert, Checkbox, Typography, Divider, Popconfirm, InputNumber, message, Badge, Progress, Tooltip
+  Tabs, Card, Form, Input, Select, Switch, Button, Table, Tag, Space,
+  Alert, Checkbox, Typography, Divider, Popconfirm, InputNumber, message, Badge, Progress, Tooltip, Drawer
 } from 'antd';
 import {
   SettingOutlined, CloudOutlined, MobileOutlined, DatabaseOutlined, GlobalOutlined,
@@ -476,8 +476,8 @@ const LanguagesTab: React.FC = () => {
     { key: '6', name: 'Swahili', shortCode: 'sw', direction: 'ltr', status: true, translationProgress: 58 },
     { key: '7', name: 'Spanish', shortCode: 'es', direction: 'ltr', status: false, translationProgress: 30 },
   ]);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [translationModalOpen, setTranslationModalOpen] = useState(false);
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [translationDrawerOpen, setTranslationDrawerOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState<LanguageData | null>(null);
   const [addForm] = Form.useForm();
 
@@ -518,13 +518,13 @@ const LanguagesTab: React.FC = () => {
       translationProgress: 0,
     }]);
     addForm.resetFields();
-    setAddModalOpen(false);
+    setAddDrawerOpen(false);
     message.success('Language added successfully');
   };
 
   const handleOpenTranslation = (lang: LanguageData) => {
     setSelectedLang(lang);
-    setTranslationModalOpen(true);
+    setTranslationDrawerOpen(true);
   };
 
   const columns = [
@@ -631,7 +631,7 @@ const LanguagesTab: React.FC = () => {
         title={<Space><GlobalOutlined /> Language List</Space>}
         style={{ borderRadius: 12 }}
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)}
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddDrawerOpen(true)}
             style={{ background: '#0e172a' }}>
             Add Language
           </Button>
@@ -646,15 +646,14 @@ const LanguagesTab: React.FC = () => {
       </Card>
 
       {/* Add Language Modal */}
-      <Modal
+      <Drawer
         title="Add New Language"
-        open={addModalOpen}
-        onCancel={() => setAddModalOpen(false)}
-        onOk={handleAddLanguage}
-        okText="Add Language"
-        okButtonProps={{ style: { background: '#0e172a' } }}
+        open={addDrawerOpen}
+        onClose={() => setAddDrawerOpen(false)}
+        width={500}
+        extra={<Button type="primary" onClick={handleAddLanguage} style={{ background: '#0e172a' }}>Add Language</Button>}
       >
-        <Form form={addForm} layout="vertical" initialValues={{ direction: 'ltr' }}>
+        <Form form={addForm} layout="vertical" initialValues={{ direction: 'ltr' }} style={{ marginTop: 24 }}>
           <Form.Item label="Language Name" name="name" rules={[{ required: true }]}>
             <Input placeholder="e.g. German" />
           </Form.Item>
@@ -670,43 +669,45 @@ const LanguagesTab: React.FC = () => {
             </Form.Item>
           </div>
         </Form>
-      </Modal>
+      </Drawer>
 
       {/* Translation Modal */}
-      <Modal
+      <Drawer
         title={<Space><TranslationOutlined /> Translations — {selectedLang?.name}</Space>}
-        open={translationModalOpen}
-        onCancel={() => setTranslationModalOpen(false)}
+        open={translationDrawerOpen}
+        onClose={() => setTranslationDrawerOpen(false)}
         width={900}
-        footer={[
-          <Button key="cancel" onClick={() => setTranslationModalOpen(false)}>Cancel</Button>,
-          <Button key="save" type="primary" icon={<SaveOutlined />} style={{ background: '#0e172a' }}
-            onClick={() => { message.success('Translations saved'); setTranslationModalOpen(false); }}>
-            Save Translations
-          </Button>,
-        ]}
+        extra={
+          <Space>
+            <Button onClick={() => setTranslationDrawerOpen(false)}>Cancel</Button>
+            <Button type="primary" icon={<SaveOutlined />} style={{ background: '#0e172a' }}
+              onClick={() => { message.success('Translations saved'); setTranslationDrawerOpen(false); }}>
+              Save Translations
+            </Button>
+          </Space>
+        }
       >
         <Alert
           type="info"
           showIcon
           message={`Editing translations for ${selectedLang?.name} (${selectedLang?.shortCode})`}
-          style={{ marginBottom: 16, borderRadius: 10 }}
+          style={{ marginBottom: 24, borderRadius: 10 }}
         />
         <Table
           size="small"
-          pagination={{ pageSize: 8 }}
+          pagination={{ pageSize: 12 }}
           dataSource={translationKeys.map((t, i) => ({ ...t, key: i }))}
           columns={[
             {
               title: 'Key',
               dataIndex: 'key',
-              width: 160,
-              render: (text: string) => <Text code style={{ fontSize: 11 }}>{text}</Text>,
+              width: 200,
+              render: (text: string) => <Text code style={{ fontSize: 12 }}>{text}</Text>,
             },
             {
               title: 'English (Source)',
               dataIndex: 'en',
-              width: 240,
+              width: 280,
               render: (text: string) => <Text type="secondary">{text}</Text>,
             },
             {
@@ -725,7 +726,7 @@ const LanguagesTab: React.FC = () => {
             },
           ]}
         />
-      </Modal>
+      </Drawer>
     </div>
   );
 };
@@ -932,7 +933,7 @@ interface WebhookEndpoint {
 }
 
 const ServiceWebhooksTab: React.FC = () => {
-  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [addForm] = Form.useForm();
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>([
     { key: '1', name: 'Payment Gateway', url: 'https://api.dashdrive.app/webhooks/payments', events: ['payment.completed', 'payment.failed', 'refund.processed'], status: 'active', lastTriggered: '2 min ago', successRate: 99.8, secret: 'whsec_••••••••' },
@@ -978,7 +979,7 @@ const ServiceWebhooksTab: React.FC = () => {
       secret: `whsec_${Math.random().toString(36).substring(2, 14)}`,
     }]);
     addForm.resetFields();
-    setAddModalOpen(false);
+    setAddDrawerOpen(false);
     message.success('Webhook endpoint registered');
   };
 
@@ -1080,7 +1081,7 @@ const ServiceWebhooksTab: React.FC = () => {
         title={<Space><LinkOutlined /> Registered Endpoints</Space>}
         style={{ borderRadius: 12 }}
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)}
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddDrawerOpen(true)}
             style={{ background: '#0e172a' }}>
             Register Endpoint
           </Button>
@@ -1109,16 +1110,14 @@ const ServiceWebhooksTab: React.FC = () => {
       </Card>
 
       {/* Add Modal */}
-      <Modal
+      <Drawer
         title="Register Webhook Endpoint"
-        open={addModalOpen}
-        onCancel={() => setAddModalOpen(false)}
-        onOk={handleAdd}
-        okText="Register"
-        okButtonProps={{ style: { background: '#0e172a' } }}
+        open={addDrawerOpen}
+        onClose={() => setAddDrawerOpen(false)}
         width={600}
+        extra={<Button type="primary" onClick={handleAdd} style={{ background: '#0e172a' }}>Register</Button>}
       >
-        <Form form={addForm} layout="vertical">
+        <Form form={addForm} layout="vertical" style={{ marginTop: 24 }}>
           <Form.Item label="Endpoint Name" name="name" rules={[{ required: true }]}>
             <Input placeholder="e.g. Payment Gateway" />
           </Form.Item>
@@ -1129,7 +1128,7 @@ const ServiceWebhooksTab: React.FC = () => {
             <Select mode="multiple" placeholder="Select events" options={allEvents.map(e => ({ label: e, value: e }))} />
           </Form.Item>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

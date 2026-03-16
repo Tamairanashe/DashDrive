@@ -7,9 +7,9 @@ import { RiderWalletService } from './rider-wallet.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [RidersController, RiderWalletController],
-    providers: [RidersService, VerificationService, RiderWalletService],
-    exports: [RidersService, VerificationService, RiderWalletService],
+  imports: [PrismaModule],
+  controllers: [RidersController, RiderWalletController],
+  providers: [RidersService, VerificationService, RiderWalletService],
+  exports: [RidersService, VerificationService, RiderWalletService],
 })
-export class RidersModule { }
+export class RidersModule {}

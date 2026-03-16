@@ -5,8 +5,8 @@ import { PrismaModule } from '../../prisma/prisma.module';
 
 @Global()
 @Module({
-    imports: [PrismaModule, WalletModule],
-    providers: [CommissionService],
-    exports: [CommissionService],
+  imports: [PrismaModule, WalletModule],
+  providers: [CommissionService],
+  exports: [CommissionService],
 })
-export class CommissionModule { }
+export class CommissionModule {}

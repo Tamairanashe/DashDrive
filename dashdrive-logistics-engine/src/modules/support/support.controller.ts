@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { SupportService } from './support.service';
 import { TicketStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';

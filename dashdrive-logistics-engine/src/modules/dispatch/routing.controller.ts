@@ -8,11 +8,14 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class RoutingController {
-    constructor(private readonly routingService: RoutingService) { }
+  constructor(private readonly routingService: RoutingService) {}
 
-    @Get('riders/:id/optimal-route')
-    @ApiOperation({ summary: 'Calculate and return the optimal delivery sequence for a rider (TSP)' })
-    getOptimalRoute(@Param('id') id: string) {
-        return this.routingService.optimizeBatch(id);
-    }
+  @Get('riders/:id/optimal-route')
+  @ApiOperation({
+    summary:
+      'Calculate and return the optimal delivery sequence for a rider (TSP)',
+  })
+  getOptimalRoute(@Param('id') id: string) {
+    return this.routingService.optimizeBatch(id);
+  }
 }

@@ -6,9 +6,9 @@ import { InventoryConsumer } from './inventory.consumer';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [ProductsController, InventoryConsumer],
-    providers: [ProductsService, InventoryService],
-    exports: [ProductsService, InventoryService],
+  imports: [PrismaModule],
+  controllers: [ProductsController, InventoryConsumer],
+  providers: [ProductsService, InventoryService],
+  exports: [ProductsService, InventoryService],
 })
-export class ProductsModule { }
+export class ProductsModule {}

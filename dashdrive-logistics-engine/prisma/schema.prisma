@@ -23,6 +23,7 @@ enum BusinessType {
   FOOD
   MART
   DIRECT
+  SCHOOL_RUN
 }
 
 model Enterprise {
@@ -893,4 +894,19 @@ enum CreditTransactionType {
   CONSUMPTION
   BONUS
   REFUND
+}
+
+model SchoolRunSubscription {
+  id           String   @id @default(uuid())
+  studentId    String   @db.Uuid
+  parentId     String   @db.Uuid
+  schoolId     String   @db.Uuid
+  pickupTime   String   // HH:mm
+  dropoffTime  String   // HH:mm
+  daysOfWeek   Int[]    // [1, 2, 3, 4, 5]
+  status       String   @default("ACTIVE") // ACTIVE, PAUSED, CANCELLED
+  startDate    DateTime @default(now())
+  endDate      DateTime?
+  
+  createdAt    DateTime @default(now())
 }

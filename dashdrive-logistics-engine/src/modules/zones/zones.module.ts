@@ -5,9 +5,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { GeoModule } from '../geo/geo.module';
 
 @Module({
-    imports: [PrismaModule, GeoModule],
-    providers: [ZonesService],
-    controllers: [ZonesController],
-    exports: [ZonesService],
+  imports: [PrismaModule, GeoModule],
+  providers: [ZonesService],
+  controllers: [ZonesController],
+  exports: [ZonesService],
 })
-export class ZonesModule { }
+export class ZonesModule {}

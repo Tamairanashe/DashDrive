@@ -14,7 +14,9 @@ import {
   Avatar,
   Tooltip,
   Badge,
-  Modal,
+  Drawer,
+  Form,
+  Select,
   message
 } from 'antd';
 import { 
@@ -40,10 +42,13 @@ export const CustomerListPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [searchText, setSearchText] = useState('');
 
-  // Modals state
-  const [isSuspendModalVisible, setIsSuspendModalVisible] = useState(false);
-  const [isComplaintModalVisible, setIsComplaintModalVisible] = useState(false);
+  // Drawers state
+  const [isSuspendDrawerVisible, setIsSuspendDrawerVisible] = useState(false);
+  const [isComplaintDrawerVisible, setIsComplaintDrawerVisible] = useState(false);
+  const [isAddCustomerVisible, setIsAddCustomerVisible] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [customerForm] = Form.useForm();
 
   const stats = [
     { title: 'Total Customers', value: '124,502', icon: <UserOutlined />, color: '#10b981' },
@@ -54,17 +59,31 @@ export const CustomerListPage: React.FC = () => {
 
   const handleSuspend = (customer: any) => {
     setSelectedCustomer(customer);
-    setIsSuspendModalVisible(true);
+    setIsSuspendDrawerVisible(true);
   };
 
   const handleReviewComplaints = (customer: any) => {
     setSelectedCustomer(customer);
-    setIsComplaintModalVisible(true);
+    setIsComplaintDrawerVisible(true);
   };
 
   const confirmSuspension = () => {
-    message.success(`Account for ${selectedCustomer?.name} has been suspended.`);
-    setIsSuspendModalVisible(false);
+    setLoading(true);
+    setTimeout(() => {
+      message.success(`Account for ${selectedCustomer?.name} has been suspended.`);
+      setIsSuspendDrawerVisible(false);
+      setLoading(false);
+    }, 1000);
+  };
+
+  const handleAddCustomer = (values: any) => {
+    setLoading(true);
+    setTimeout(() => {
+      message.success(`Customer ${values.name} added successfully.`);
+      setIsAddCustomerVisible(false);
+      customerForm.resetFields();
+      setLoading(false);
+    }, 1000);
   };
 
   const columns = [
@@ -181,7 +200,13 @@ export const CustomerListPage: React.FC = () => {
           <Text type="secondary">View customers, manage balances, and handle account suspensions.</Text>
         </Col>
         <Col>
-          <Button type="primary" size="large" icon={<PlusOutlined />} style={{ borderRadius: 8 }}>
+          <Button 
+            type="primary" 
+            size="large" 
+            icon={<PlusOutlined />} 
+            style={{ borderRadius: 8 }}
+            onClick={() => setIsAddCustomerVisible(true)}
+          >
             Add Customer
           </Button>
         </Col>
@@ -239,41 +264,71 @@ export const CustomerListPage: React.FC = () => {
         />
       </Card>
 
-      {/* Modals */}
-      <Modal
-        title={<span><StopOutlined style={{ color: '#ef4444' }} /> Suspend Customer Account</span>}
-        open={isSuspendModalVisible}
-        onCancel={() => setIsSuspendModalVisible(false)}
-        onOk={confirmSuspension}
-        okText="Suspend Account"
-        okButtonProps={{ danger: true }}
+      {/* Drawers */}
+      <Drawer
+        title={<span><PlusOutlined /> Add New Customer</span>}
+        open={isAddCustomerVisible}
+        onClose={() => setIsAddCustomerVisible(false)}
+        width={400}
+        extra={<Button type="primary" onClick={() => customerForm.submit()} loading={loading}>Add</Button>}
+        destroyOnClose
       >
-        <p>Are you sure you want to suspend the account for <strong>{selectedCustomer?.name}</strong>?</p>
-        <p>They will not be able to request rides or use any DashDrive services until the suspension is lifted.</p>
-        <Input.TextArea placeholder="Reason for suspension (Optional)" rows={3} />
-      </Modal>
+        <Form form={customerForm} layout="vertical" onFinish={handleAddCustomer}>
+          <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
+            <Input placeholder="Ex: Sarah Jenkins" />
+          </Form.Item>
+          <Form.Item name="phone" label="Phone Number" rules={[{ required: true }]}>
+            <Input placeholder="+1 555-0000" />
+          </Form.Item>
+          <Form.Item name="level" label="Customer Level" initialValue="Bronze">
+            <Select options={[{ value: 'Bronze', label: 'Bronze' }, { value: 'Silver', label: 'Silver' }, { value: 'Gold', label: 'Gold' }, { value: 'VIP', label: 'VIP' }]} />
+          </Form.Item>
+        </Form>
+      </Drawer>
 
-      <Modal
-        title={<span><WarningOutlined style={{ color: '#faad14' }} /> Complaints Review</span>}
-        open={isComplaintModalVisible}
-        onCancel={() => setIsComplaintModalVisible(false)}
-        footer={[<Button key="close" onClick={() => setIsComplaintModalVisible(false)}>Close</Button>]}
+      <Drawer
+        title={<span><StopOutlined style={{ color: '#ef4444' }} /> Suspend Customer Account</span>}
+        open={isSuspendDrawerVisible}
+        onClose={() => setIsSuspendDrawerVisible(false)}
+        width={400}
+        extra={<Button danger type="primary" onClick={confirmSuspension} loading={loading}>Suspend Account</Button>}
       >
-        <div style={{ padding: 16, background: '#fffbe6', borderRadius: 8, border: '1px solid #ffe58f' }}>
+        <div style={{ padding: '0 0 24px 0' }}>
+            <p>Are you sure you want to suspend the account for <strong>{selectedCustomer?.name}</strong>?</p>
+            <p>They will not be able to request rides or use any DashDrive services until the suspension is lifted.</p>
+            <Form.Item label="Reason for suspension">
+                <Input.TextArea placeholder="Type reason here..." rows={4} />
+            </Form.Item>
+        </div>
+      </Drawer>
+
+      <Drawer
+        title={<span><WarningOutlined style={{ color: '#faad14' }} /> Complaints Review</span>}
+        open={isComplaintDrawerVisible}
+        onClose={() => setIsComplaintDrawerVisible(false)}
+        width={400}
+      >
+        <div style={{ padding: 16, background: '#fffbe6', borderRadius: 12, border: '1px solid #ffe58f', marginBottom: 20 }}>
             <Title level={5}>Customer: {selectedCustomer?.name}</Title>
             <Text>Total Recorded Complaints: <strong>{selectedCustomer?.complaints}</strong></Text>
         </div>
-        <div style={{ marginTop: 16 }}>
+        <div style={{ padding: '0 10px' }}>
              {selectedCustomer?.complaints > 0 ? (
                  <ul style={{ paddingLeft: 20 }}>
-                     <li><Text>Reported rude behavior by Driver D-991 (2 days ago)</Text></li>
-                     {selectedCustomer?.complaints > 1 && <li><Text>Cancelled 3 rides consecutively (1 week ago)</Text></li>}
+                     <li style={{ marginBottom: 16 }}>
+                        <Text strong>Reported rude behavior</Text><br/>
+                        <Text type="secondary" style={{ fontSize: 12 }}>by Driver D-991 (2 days ago)</Text>
+                     </li>
+                     {selectedCustomer?.complaints > 1 && <li>
+                        <Text strong>Cancelled 3 rides consecutively</Text><br/>
+                        <Text type="secondary" style={{ fontSize: 12 }}>(1 week ago)</Text>
+                     </li>}
                  </ul>
              ) : (
                  <Text type="secondary">No complaints recorded for this user. Excellent standing.</Text>
              )}
         </div>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

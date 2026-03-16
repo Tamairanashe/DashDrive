@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Tabs, Card, Form, Input, Select, Switch, Button, Table, Tag, Space, Typography,
-  Divider, InputNumber, message, Alert, Badge, Tooltip, Modal, Popconfirm, Progress
+  Divider, InputNumber, message, Alert, Badge, Tooltip, Modal, Popconfirm, Progress, Drawer
 } from 'antd';
 import {
   BankOutlined, ApiOutlined, KeyOutlined, SaveOutlined, ReloadOutlined,
@@ -40,8 +40,8 @@ interface BankProviderConfig {
 
 const BankFintechTab: React.FC = () => {
   const [saving, setSaving] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [addProviderModalOpen, setAddProviderModalOpen] = useState(false);
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [addProviderDrawerOpen, setAddProviderDrawerOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<BankProviderConfig | null>(null);
   const [addProviderForm] = Form.useForm();
   const [selectedType, setSelectedType] = useState<string>('banking');
@@ -105,7 +105,7 @@ const BankFintechTab: React.FC = () => {
 
   const handleEdit = (provider: BankProviderConfig) => {
     setSelectedProvider(provider);
-    setEditModalOpen(true);
+    setEditDrawerOpen(true);
   };
 
   const handleDeleteProvider = (key: string) => {
@@ -135,7 +135,7 @@ const BankFintechTab: React.FC = () => {
       };
       setProviders(prev => [...prev, newProvider]);
       addProviderForm.resetFields();
-      setAddProviderModalOpen(false);
+      setAddProviderDrawerOpen(false);
       message.success(`${values.providerName} added successfully — testing connection...`);
       setTimeout(() => message.success(`${values.providerName} connection verified ✓`), 1500);
     });
@@ -295,7 +295,7 @@ const BankFintechTab: React.FC = () => {
       {/* Provider Table */}
       <Card title={<Space><CloudServerOutlined /> Connected Providers</Space>}
         style={{ borderRadius: 12 }}
-        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setAddProviderModalOpen(true)} style={{ background: '#0e172a' }}>Add Provider</Button>}
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setAddProviderDrawerOpen(true)} style={{ background: '#0e172a' }}>Add Provider</Button>}
       >
         <Table dataSource={providers} columns={columns} pagination={false} size="middle" />
       </Card>
@@ -364,15 +364,15 @@ const BankFintechTab: React.FC = () => {
       </Card>
 
       {/* Edit Provider Modal */}
-      <Modal
+      <Drawer
         title={`Configure — ${selectedProvider?.name || ''}`}
-        open={editModalOpen}
-        onCancel={() => setEditModalOpen(false)}
+        open={editDrawerOpen}
+        onClose={() => setEditDrawerOpen(false)}
         width={700}
-        footer={[
+        extra={[
           <Button key="test" icon={<ReloadOutlined />} onClick={() => message.success('Connection test passed')}>Test Connection</Button>,
           <Button key="save" type="primary" icon={<SaveOutlined />} style={{ background: '#0e172a' }}
-            onClick={() => { message.success('Provider settings saved'); setEditModalOpen(false); }}>
+            onClick={() => { message.success('Provider settings saved'); setEditDrawerOpen(false); }}>
             Save Configuration
           </Button>,
         ]}
@@ -426,18 +426,18 @@ const BankFintechTab: React.FC = () => {
             </div>
           </Form>
         )}
-      </Modal>
+      </Drawer>
 
       {/* ============================================================ */}
       {/* ADD PROVIDER MODAL                                           */}
       {/* ============================================================ */}
-      <Modal
+      <Drawer
         title={<Space><PlusOutlined /> Add API Provider</Space>}
-        open={addProviderModalOpen}
-        onCancel={() => { setAddProviderModalOpen(false); addProviderForm.resetFields(); setSelectedType('banking'); }}
+        open={addProviderDrawerOpen}
+        onClose={() => { setAddProviderDrawerOpen(false); addProviderForm.resetFields(); setSelectedType('banking'); }}
         width={780}
-        footer={[
-          <Button key="cancel" onClick={() => { setAddProviderModalOpen(false); addProviderForm.resetFields(); }}>Cancel</Button>,
+        extra={[
+          <Button key="cancel" onClick={() => { setAddProviderDrawerOpen(false); addProviderForm.resetFields(); }}>Cancel</Button>,
           <Button key="test" icon={<ReloadOutlined />} onClick={() => {
             const url = addProviderForm.getFieldValue('baseUrl');
             if (url) { message.loading({ content: 'Testing...', key: 'test' }); setTimeout(() => message.success({ content: 'Connection successful', key: 'test' }), 1200); }
@@ -560,7 +560,7 @@ const BankFintechTab: React.FC = () => {
             </Form.Item>
           </div>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };
@@ -583,7 +583,7 @@ interface ApiClient {
 }
 
 const DashDirectApiTab: React.FC = () => {
-  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [addForm] = Form.useForm();
 
   const availableScopes = [
@@ -657,7 +657,7 @@ const DashDirectApiTab: React.FC = () => {
       totalRequests: 0,
     }]);
     addForm.resetFields();
-    setAddModalOpen(false);
+    setAddDrawerOpen(false);
     message.success('API client created — key generated');
   };
 
@@ -763,7 +763,7 @@ const DashDirectApiTab: React.FC = () => {
 
       {/* Client Table */}
       <Card title={<Space><KeyOutlined /> API Clients</Space>} style={{ borderRadius: 12 }}
-        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)} style={{ background: '#0e172a' }}>Generate API Key</Button>}
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setAddDrawerOpen(true)} style={{ background: '#0e172a' }}>Generate API Key</Button>}
       >
         <Table dataSource={clients} columns={columns} pagination={false} size="middle" />
       </Card>
@@ -837,15 +837,15 @@ const DashDirectApiTab: React.FC = () => {
         ]} />
       </Card>
 
-      {/* Add Client Modal */}
-      <Modal
+      <Drawer
         title="Create API Client"
-        open={addModalOpen}
-        onCancel={() => setAddModalOpen(false)}
-        onOk={handleAdd}
-        okText="Generate Key"
-        okButtonProps={{ style: { background: '#0e172a' } }}
+        open={addDrawerOpen}
+        onClose={() => setAddDrawerOpen(false)}
         width={600}
+        extra={[
+          <Button key="cancel" onClick={() => setAddDrawerOpen(false)}>Cancel</Button>,
+          <Button key="submit" type="primary" onClick={handleAdd} style={{ background: '#0e172a' }}>Generate Key</Button>
+        ]}
       >
         <Alert type="warning" showIcon message="A new API key will be generated. Store it securely — it will only be shown once." style={{ marginBottom: 16, borderRadius: 10 }} />
         <Form form={addForm} layout="vertical">
@@ -861,7 +861,7 @@ const DashDirectApiTab: React.FC = () => {
             <InputNumber defaultValue={100} min={1} max={10000} style={{ width: '100%' }} />
           </Form.Item>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

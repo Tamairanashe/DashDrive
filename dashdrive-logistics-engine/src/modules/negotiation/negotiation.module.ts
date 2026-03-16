@@ -5,9 +5,9 @@ import { PricingModule } from '../pricing/pricing.module';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
-    imports: [PricingModule, PrismaModule],
-    controllers: [NegotiationController],
-    providers: [NegotiationService],
-    exports: [NegotiationService],
+  imports: [PricingModule, PrismaModule],
+  controllers: [NegotiationController],
+  providers: [NegotiationService],
+  exports: [NegotiationService],
 })
 export class NegotiationModule {}

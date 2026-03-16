@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package",
   "name": "dashdrive-logistics-engine",
   "version": "0.0.1",
   "description": "",

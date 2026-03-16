@@ -6,16 +6,16 @@ import { PrismaModule } from '../../prisma/prisma.module';
 
 @Global()
 @Module({
-    imports: [PrismaModule],
-    providers: [NotificationsService, NotificationsProcessor],
-    controllers: [NotificationsConsumer],
-    exports: [NotificationsService],
+  imports: [PrismaModule],
+  providers: [NotificationsService, NotificationsProcessor],
+  controllers: [NotificationsConsumer],
+  exports: [NotificationsService],
 })
 export class NotificationsModule implements OnModuleInit {
-    constructor(private processor: NotificationsProcessor) { }
+  constructor(private processor: NotificationsProcessor) {}
 
-    onModuleInit() {
-        // Processor is instantiated via DI and starts its worker in constructor
-        console.log('Notifications Module Initialized');
-    }
+  onModuleInit() {
+    // Processor is instantiated via DI and starts its worker in constructor
+    console.log('Notifications Module Initialized');
+  }
 }

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import {
   Typography, Card, Tabs, Table, Button, Tag, Space, Switch, Input, Form, Divider,
-  message, Checkbox, Select, Modal, Badge, Tooltip, Popconfirm, Dropdown, Avatar,
-  Upload, DatePicker, Radio
+  message, Checkbox, Select, Badge, Tooltip, Popconfirm, Dropdown, Avatar,
+  Upload, DatePicker, Radio, Drawer
 } from 'antd';
 import {
   LockOutlined, PlusOutlined, DeleteOutlined, EditOutlined, SearchOutlined,
@@ -143,6 +143,28 @@ const initialEmployees: Employee[] = [
     modules: ['support_tickets'],
     status: 'inactive', joinedAt: '2024-07-01', lastActive: '1 month ago',
   },
+];
+
+// ============================================================
+// SYSTEM ACTIVITY LOG DATA
+// ============================================================
+export interface ActivityLogRecord {
+  key: string;
+  sl: number;
+  timestamp: string;
+  actionType: string;
+  entityId: string;
+  performedBy: string;
+  remarks: string;
+  status: 'Success' | 'Failed' | 'Warning';
+}
+
+const initialSystemActivityLogs: ActivityLogRecord[] = [
+  { key: 'al1', sl: 1, timestamp: '20 July 2025, 05:10:22 pm', actionType: 'Wallet Freeze', entityId: 'WLT-504', performedBy: 'Admin (Sarah)', remarks: 'Security hold due to suspicious login', status: 'Success' },
+  { key: 'al2', sl: 2, timestamp: '20 July 2025, 05:08:15 pm', actionType: 'Fund Injection', entityId: 'WLT-501', performedBy: 'System', remarks: 'Automated weekly driver incentive', status: 'Success' },
+  { key: 'al3', sl: 3, timestamp: '19 July 2025, 11:45:02 am', actionType: 'Manual Reversal', entityId: 'RFD-201', performedBy: 'Admin (Mike)', remarks: 'Corrected duplicate chargeback', status: 'Success' },
+  { key: 'al4', sl: 4, timestamp: '19 July 2025, 09:22:18 am', actionType: 'Tax Filing Upload', entityId: 'TAX-101', performedBy: 'CFO (Robert)', remarks: 'Quarterly VAT submission', status: 'Success' },
+  { key: 'al5', sl: 5, timestamp: '18 July 2025, 02:30:45 pm', actionType: 'Settlement Failed', entityId: 'SET-88003', performedBy: 'Payment Gateway', remarks: 'Invalid IBAN provided by recipient', status: 'Failed' },
 ];
 
 // ============================================================
@@ -557,14 +579,12 @@ const AttributeTab: React.FC = () => {
       {/* ============================================================ */}
       {/* ADD EMPLOYEE MODAL                                           */}
       {/* ============================================================ */}
-      <Modal
+      <Drawer
         title={<Space><PlusOutlined /> Add New Employee</Space>}
         open={addModalOpen}
-        onCancel={() => { setAddModalOpen(false); addForm.resetFields(); }}
-        onOk={handleAddEmployee}
-        okText="Add Employee"
-        okButtonProps={{ style: { background: '#0e172a' } }}
+        onClose={() => { setAddModalOpen(false); addForm.resetFields(); }}
         width={750}
+        extra={<Button type="primary" onClick={handleAddEmployee} style={{ background: '#0e172a' }}>Add Employee</Button>}
       >
         <Form form={addForm} layout="vertical">
           {/* ---- SECTION: Profile Picture ---- */}
@@ -726,19 +746,17 @@ const AttributeTab: React.FC = () => {
             </Form.Item>
           </div>
         </Form>
-      </Modal>
+      </Drawer>
 
       {/* ============================================================ */}
       {/* EDIT EMPLOYEE MODAL                                          */}
       {/* ============================================================ */}
-      <Modal
+      <Drawer
         title={<Space><EditOutlined /> Edit Employee — {selectedEmployee?.name}</Space>}
         open={editModalOpen}
-        onCancel={() => setEditModalOpen(false)}
-        onOk={handleEditEmployee}
-        okText="Save Changes"
-        okButtonProps={{ style: { background: '#0e172a' } }}
+        onClose={() => setEditModalOpen(false)}
         width={750}
+        extra={<Button type="primary" onClick={handleEditEmployee} style={{ background: '#0e172a' }}>Save Changes</Button>}
       >
         <Form form={editForm} layout="vertical">
           {/* ---- SECTION: Profile Picture ---- */}
@@ -900,63 +918,62 @@ const AttributeTab: React.FC = () => {
             </Form.Item>
           </div>
         </Form>
-      </Modal>
+      </Drawer>
 
       {/* ============================================================ */}
       {/* ACTIVITY LOG MODAL                                           */}
       {/* ============================================================ */}
-      <Modal
+      <Drawer
         title={<Space><HistoryOutlined /> Activity Log — {selectedEmployee?.name}</Space>}
         open={activityLogModal}
-        onCancel={() => setActivityLogModal(false)}
-        footer={null}
+        onClose={() => setActivityLogModal(false)}
         width={600}
       >
-        <div style={{ maxHeight: 400, overflow: 'auto' }}>
+        <div style={{ maxHeight: 'calc(100vh - 120px)', overflow: 'auto' }}>
           {activityLogs.map((log, i) => (
             <div key={i} style={{
-              padding: '10px 12px', borderBottom: '1px solid #f1f5f9',
+              padding: '16px 20px', borderBottom: '1px solid #f1f5f9',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              background: i % 2 === 0 ? '#fbfcfe' : 'white'
             }}>
               <div>
-                <Text style={{ fontSize: 13 }}>{log.action}</Text><br />
-                <Tag style={{ fontSize: 10, marginTop: 4 }}>{log.module}</Tag>
+                <Text style={{ fontSize: 14, fontWeight: 500 }}>{log.action}</Text><br />
+                <Tag color="geekblue" style={{ fontSize: 11, marginTop: 6, borderRadius: 4 }}>{log.module}</Tag>
               </div>
-              <Text type="secondary" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>{log.time}</Text>
+              <Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{log.time}</Text>
             </div>
           ))}
         </div>
-      </Modal>
+      </Drawer>
 
       {/* ============================================================ */}
       {/* TRASHED EMPLOYEES MODAL                                      */}
       {/* ============================================================ */}
-      <Modal
+      <Drawer
         title={<Space><RestOutlined /> Trashed Employees</Space>}
         open={trashedModalOpen}
-        onCancel={() => setTrashedModalOpen(false)}
-        footer={null}
+        onClose={() => setTrashedModalOpen(false)}
         width={650}
       >
         {trashedEmployees.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <RestOutlined style={{ fontSize: 40, color: '#d1d5db' }} />
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary">No trashed employees</Text>
+          <div style={{ textAlign: 'center', padding: '60px 0' }}>
+            <RestOutlined style={{ fontSize: 48, color: '#e2e8f0' }} />
+            <div style={{ marginTop: 12 }}>
+              <Text type="secondary">No entries in the trash bin</Text>
             </div>
           </div>
         ) : (
           <Table
             dataSource={trashedEmployees}
-            size="small"
+            size="middle"
             pagination={false}
             columns={[
               {
                 title: 'Employee', render: (_: any, r: Employee) => (
                   <Space>
-                    <Avatar size="small" style={{ background: '#94a3b8' }}>{r.avatar}</Avatar>
+                    <Avatar style={{ background: '#94a3b8' }}>{r.avatar}</Avatar>
                     <div>
-                      <Text>{r.name}</Text><br />
+                      <Text strong>{r.name}</Text><br />
                       <Text type="secondary" style={{ fontSize: 11 }}>{r.email}</Text>
                     </div>
                   </Space>
@@ -976,96 +993,91 @@ const AttributeTab: React.FC = () => {
             ]}
           />
         )}
-      </Modal>
+      </Drawer>
 
       {/* ============================================================ */}
-      {/* VIEW EMPLOYEE DETAILS MODAL                                  */}
+      {/* VIEW EMPLOYEE DETAILS DRAWER                                 */}
       {/* ============================================================ */}
-      <Modal
+      <Drawer
         title={<Space><EyeOutlined /> Employee Registration Details</Space>}
         open={detailsModalOpen}
-        onCancel={() => setDetailsModalOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setDetailsModalOpen(false)}>Close</Button>,
-          <Button key="edit" type="primary" icon={<EditOutlined />} onClick={() => { 
-            setDetailsModalOpen(false); 
-            const [firstName, ...lastNameParts] = selectedEmployee.name.split(' ');
-            editForm.setFieldsValue({ ...selectedEmployee, firstName, lastName: lastNameParts.join(' ') }); 
-            setEditModalOpen(true); 
-          }} style={{ background: '#0e172a' }}>
-            Edit Employee
-          </Button>
-        ]}
+        onClose={() => setDetailsModalOpen(false)}
         width={700}
+        extra={
+          <Space>
+            <Button onClick={() => setDetailsModalOpen(false)}>Close</Button>
+            <Button type="primary" icon={<EditOutlined />} onClick={() => { 
+              setDetailsModalOpen(false); 
+              const [firstName, ...lastNameParts] = selectedEmployee.name.split(' ');
+              editForm.setFieldsValue({ ...selectedEmployee, firstName, lastName: lastNameParts.join(' ') }); 
+              setEditModalOpen(true); 
+            }} style={{ background: '#0e172a' }}>
+              Edit Employee
+            </Button>
+          </Space>
+        }
       >
         {selectedEmployee && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {/* Header: Avatar & Basic Info */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-              <Avatar size={64} style={{ background: '#0e172a', fontWeight: 600, fontSize: 24 }}>{selectedEmployee.avatar}</Avatar>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '0 4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '20px', background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+              <Avatar size={80} style={{ background: '#0e172a', fontWeight: 600, fontSize: 32 }}>{selectedEmployee.avatar}</Avatar>
               <div style={{ flex: 1 }}>
                 <Title level={4} style={{ margin: 0 }}>{selectedEmployee.name}</Title>
-                <Text type="secondary">{selectedEmployee.position}</Text>
-                <div style={{ marginTop: 8 }}>
-                  <Tag color={selectedEmployee.status === 'active' ? 'success' : 'default'} style={{ textTransform: 'capitalize' }}>
+                <Text type="secondary" style={{ fontSize: 15 }}>{selectedEmployee.position}</Text>
+                <div style={{ marginTop: 12 }}>
+                  <Tag color={selectedEmployee.status === 'active' ? 'success' : 'default'} style={{ textTransform: 'capitalize', padding: '2px 10px', borderRadius: 6 }}>
                     {selectedEmployee.status}
                   </Tag>
-                  <Tag color={roles.find(r => r.name === selectedEmployee.role)?.color || '#64748b'}>{selectedEmployee.role}</Tag>
+                  <Tag color={roles.find(r => r.name === selectedEmployee.role)?.color || '#64748b'} style={{ padding: '2px 10px', borderRadius: 6 }}>{selectedEmployee.role}</Tag>
                 </div>
               </div>
             </div>
 
-            {/* Personal Info */}
             <div>
-              <Divider style={{ margin: '0 0 16px 0' }} />
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Personal Information</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' }}>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Email Address</Text><br /><Text strong>{selectedEmployee.email}</Text></div>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Phone Number</Text><br /><Text strong>{selectedEmployee.phone || '—'}</Text></div>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Date of Birth</Text><br /><Text strong>15 May 1990</Text></div>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Gender</Text><br /><Text strong>Female</Text></div>
-                <div style={{ gridColumn: 'span 2' }}><Text type="secondary" style={{ fontSize: 11 }}>Residential Address</Text><br /><Text strong>42 Samora Machel Ave, Harare, Zimbabwe</Text></div>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Emergency Contact</Text><br /><Text strong>John Doe</Text></div>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Emergency Phone</Text><br /><Text strong>+263 71 234 5678</Text></div>
+              <Divider style={{ margin: '0 0 20px 0', fontSize: 13, color: '#64748b' }}>Personal Information</Divider>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 24px' }}>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Email Address</Text><Text strong>{selectedEmployee.email}</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Phone Number</Text><Text strong>{selectedEmployee.phone || '—'}</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Date of Birth</Text><Text strong>15 May 1990</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Gender</Text><Text strong>Female</Text></div>
+                <div style={{ gridColumn: 'span 2' }}><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Residential Address</Text><Text strong>42 Samora Machel Ave, Harare, Zimbabwe</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Emergency Contact</Text><Text strong>John Doe</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Emergency Phone</Text><Text strong>+263 71 234 5678</Text></div>
               </div>
             </div>
 
-            {/* Identity Info */}
             <div>
-              <Divider style={{ margin: '0 0 16px 0' }} />
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Identity Information</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px', marginBottom: 16 }}>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Identity Type</Text><br /><Text strong>National ID Card</Text></div>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Identity Number</Text><br /><Text strong>63-2345678-M-08</Text></div>
+              <Divider style={{ margin: '0 0 20px 0', fontSize: 13, color: '#64748b' }}>Identity Information</Divider>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 24px', marginBottom: 20 }}>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Identity Type</Text><Text strong>National ID Card</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Identity Number</Text><Text strong>63-2345678-M-08</Text></div>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div style={{ padding: 12, border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', background: '#f8fafc' }}>
-                  <IdcardOutlined style={{ fontSize: 32, color: '#94a3b8', marginBottom: 8 }} />
-                  <div><Text strong style={{ fontSize: 12 }}>ID Card (Front)</Text></div>
-                  <Button type="link" size="small" icon={<EyeOutlined />}>View Image</Button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div style={{ padding: 16, border: '1px dashed #cbd5e1', borderRadius: 12, textAlign: 'center', background: '#f8fafc' }}>
+                  <IdcardOutlined style={{ fontSize: 36, color: '#94a3b8', marginBottom: 8 }} />
+                  <div><Text strong style={{ fontSize: 13 }}>ID Card (Front)</Text></div>
+                  <Button type="link" size="small" icon={<EyeOutlined />}>View Original</Button>
                 </div>
-                <div style={{ padding: 12, border: '1px dashed #cbd5e1', borderRadius: 8, textAlign: 'center', background: '#f8fafc' }}>
-                  <IdcardOutlined style={{ fontSize: 32, color: '#94a3b8', marginBottom: 8 }} />
-                  <div><Text strong style={{ fontSize: 12 }}>ID Card (Back)</Text></div>
-                  <Button type="link" size="small" icon={<EyeOutlined />}>View Image</Button>
+                <div style={{ padding: 16, border: '1px dashed #cbd5e1', borderRadius: 12, textAlign: 'center', background: '#f8fafc' }}>
+                  <IdcardOutlined style={{ fontSize: 36, color: '#94a3b8', marginBottom: 8 }} />
+                  <div><Text strong style={{ fontSize: 13 }}>ID Card (Back)</Text></div>
+                  <Button type="link" size="small" icon={<EyeOutlined />}>View Original</Button>
                 </div>
               </div>
             </div>
 
-            {/* System Info */}
             <div>
-              <Divider style={{ margin: '0 0 16px 0' }} />
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>System Information</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' }}>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Date Joined</Text><br /><Text strong>{selectedEmployee.joinedAt}</Text></div>
-                <div><Text type="secondary" style={{ fontSize: 11 }}>Last Active</Text><br /><Text strong>{selectedEmployee.lastActive}</Text></div>
+              <Divider style={{ margin: '0 0 20px 0', fontSize: 13, color: '#64748b' }}>System Administration</Divider>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 24px' }}>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Date Joined</Text><Text strong>{selectedEmployee.joinedAt}</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Last Active</Text><Text strong>{selectedEmployee.lastActive}</Text></div>
                 <div style={{ gridColumn: 'span 2' }}>
-                  <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>Module Access ({selectedEmployee.modules.length})</Text>
+                  <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>Module Permissions ({selectedEmployee.modules.length})</Text>
                   <Space wrap size={4}>
                     {selectedEmployee.modules.map(m => {
                       const mod = serviceModules.find(sm => sm.key === m);
-                      return <Tag key={m} style={{ margin: 0, fontSize: 11 }}>{mod?.icon} {mod?.label}</Tag>;
+                      return <Tag key={m} style={{ margin: 0, fontSize: 11, padding: '2px 8px', borderRadius: 4 }}>{mod?.icon} {mod?.label}</Tag>;
                     })}
                   </Space>
                 </div>
@@ -1073,8 +1085,100 @@ const AttributeTab: React.FC = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
     </div>
+  );
+};
+
+// ============================================================
+// SYSTEM ACTIVITY LOG TAB
+// ============================================================
+const SystemActivityLogTab: React.FC = () => {
+  const [logs] = useState<ActivityLogRecord[]>(initialSystemActivityLogs);
+  const [searchText, setSearchText] = useState('');
+
+  const columns = [
+    { title: 'SL', dataIndex: 'sl', key: 'sl', width: 60 },
+    { 
+      title: 'Timestamp', 
+      dataIndex: 'timestamp', 
+      key: 'timestamp', 
+      render: (text: string) => <Text style={{ fontFamily: 'monospace', fontSize: 13 }}>{text}</Text> 
+    },
+    { 
+      title: 'Action Type', 
+      dataIndex: 'actionType', 
+      key: 'actionType', 
+      render: (text: string) => <Tag color="blue" style={{ borderRadius: 4 }}>{text}</Tag> 
+    },
+    { 
+      title: 'Entity ID', 
+      dataIndex: 'entityId', 
+      key: 'entityId', 
+      render: (text: string) => <Text strong>{text}</Text> 
+    },
+    { title: 'Performed By', dataIndex: 'performedBy', key: 'performedBy' },
+    { title: 'Remarks', dataIndex: 'remarks', key: 'remarks', width: 300 },
+    { 
+      title: 'Status', 
+      dataIndex: 'status', 
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={status === 'Success' ? 'green' : (status === 'Failed' ? 'red' : 'orange')} style={{ borderRadius: 4 }}>
+          {status}
+        </Tag>
+      )
+    },
+  ];
+
+  const filteredLogs = logs.filter(log => 
+    log.entityId.toLowerCase().includes(searchText.toLowerCase()) ||
+    log.actionType.toLowerCase().includes(searchText.toLowerCase()) ||
+    log.performedBy.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const handleExport = () => {
+    message.success('System activity log exported successfully');
+  };
+
+  return (
+    <Card
+      title={
+        <Space>
+          <HistoryOutlined /> 
+          System Activity Log
+          <Tag color="cyan" style={{ marginLeft: 8, borderRadius: 4, fontWeight: 500 }}>Governance Trail</Tag>
+        </Space>
+      }
+      style={{ borderRadius: 12 }}
+      styles={{ header: { background: '#fafafa', borderRadius: '12px 12px 0 0', fontWeight: 600 } }}
+      extra={
+        <Space>
+          <Input
+            placeholder="Search Entity ID, Action..."
+            prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+            style={{ width: 250 }}
+            allowClear
+          />
+          <Button icon={<FilterOutlined />}>Filter</Button>
+          <Button type="primary" icon={<DownloadOutlined />} onClick={handleExport} style={{ background: '#10b981', borderColor: '#10b981' }}>
+            Export
+          </Button>
+        </Space>
+      }
+    >
+      <div style={{ marginBottom: 16 }}>
+        <Text type="secondary">Total logs: {filteredLogs.length}</Text>
+      </div>
+      <Table 
+        columns={columns} 
+        dataSource={filteredLogs} 
+        size="middle"
+        pagination={{ pageSize: 10 }}
+      />
+    </Card>
   );
 };
 
@@ -1085,13 +1189,13 @@ export const EnterpriseSettingsPage: React.FC = () => {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, fontWeight: 700 }}>Roles & Permissions</Title>
-        <Text type="secondary">Manage employee roles, module access permissions, and team members</Text>
+        <Title level={3} style={{ margin: 0, fontWeight: 700 }}>Access & Governance Hub</Title>
+        <Text type="secondary">Manage employee roles, system-wide module permissions, and the governance activity trail</Text>
       </div>
 
       <Tabs
         defaultActiveKey="attribute"
-        type="card"
+        className="premium-tabs"
         size="large"
         items={[
           {
@@ -1099,8 +1203,13 @@ export const EnterpriseSettingsPage: React.FC = () => {
             label: <span><LockOutlined /> Attribute</span>,
             children: <AttributeTab />,
           },
+          {
+            key: 'activity',
+            label: <span><HistoryOutlined /> System Activity Log</span>,
+            children: <SystemActivityLogTab />,
+          },
         ]}
-        style={{ background: 'white', padding: 24, borderRadius: 16, border: '1px solid #e2e8f0' }}
+        style={{ padding: 24, borderRadius: 16 }}
       />
     </div>
   );

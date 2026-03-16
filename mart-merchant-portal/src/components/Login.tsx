@@ -11,12 +11,21 @@ interface LoginProps {
     onForgotPassword: () => void;
 }
 
+interface LoginValues {
+    email: string;
+    password: string;
+}
+
+interface AuthError {
+    message?: string;
+}
+
 export function Login({ onLogin, onSwitchToSignup, onForgotPassword }: LoginProps) {
     const { message } = App.useApp();
     const [isLoading, setIsLoading] = useState(false);
     const [form] = Form.useForm();
 
-    const handleLogin = async (values: any) => {
+    const handleLogin = async (values: LoginValues) => {
         setIsLoading(true);
         try {
             const result = await api.auth.login({
@@ -25,12 +34,12 @@ export function Login({ onLogin, onSwitchToSignup, onForgotPassword }: LoginProp
             });
             if (result.access_token) {
                 localStorage.setItem('merchant_token', result.access_token);
-                message.success('Login successful!');
                 onLogin();
             }
         } catch (error: any) {
-            console.error('Login failed:', error);
-            message.error(error.message || 'Login failed. Please check your credentials.');
+            const err = error as AuthError;
+            console.error('Login failed:', err);
+            message.error(err.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }

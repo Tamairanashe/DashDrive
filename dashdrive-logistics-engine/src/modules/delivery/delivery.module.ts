@@ -7,9 +7,9 @@ import { RidersModule } from '../riders/riders.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
-    imports: [PrismaModule, RidersModule, WebhooksModule],
-    controllers: [DeliveryController],
-    providers: [DeliveryService, DeliveryGateway],
-    exports: [DeliveryService],
+  imports: [PrismaModule, RidersModule, WebhooksModule],
+  controllers: [DeliveryController],
+  providers: [DeliveryService, DeliveryGateway],
+  exports: [DeliveryService],
 })
-export class DeliveryModule { }
+export class DeliveryModule {}

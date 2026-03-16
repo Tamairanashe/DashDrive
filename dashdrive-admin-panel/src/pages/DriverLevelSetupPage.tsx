@@ -8,7 +8,6 @@ import {
   Typography, 
   Row, 
   Col, 
-  Modal,
   Form,
   Input,
   Select,
@@ -16,7 +15,8 @@ import {
   message,
   Divider,
   List,
-  Statistic
+  Statistic,
+  Drawer
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -287,16 +287,13 @@ export const DriverLevelSetupPage: React.FC = () => {
             { title: 'When', dataIndex: 'time', render: (val: string) => <Text type="secondary">{val}</Text> }
           ]}
         />
-      </Card>
-
-      <Modal
+      </Card>      <Drawer
         title={<span>{editingTier ? 'Configure Driver Tier Benefits' : 'Create New Driver Tier'}</span>}
         open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={handleSave}
-        okText="Save Configuration"
+        onClose={() => setIsModalVisible(false)}
         width={600}
         destroyOnClose
+        extra={<Button type="primary" onClick={handleSave}>Save Configuration</Button>}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 24 }}>
           <Form.Item 
@@ -306,70 +303,46 @@ export const DriverLevelSetupPage: React.FC = () => {
           >
             <Input placeholder="e.g. Diamond" />
           </Form.Item>
-
-          <Divider orientation="left">Unlock Requirements</Divider>
-
+          {/* ... (rest of the form content is the same) */}
+          <Divider>Unlock Requirements</Divider>
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item 
-                name="reqTrips" 
-                label="Min. Trips/Month" 
-                rules={[{ required: true, message: 'Required' }]}
-              >
+              <Form.Item name="reqTrips" label="Min. Trips/Month" rules={[{ required: true, message: 'Required' }]}>
                 <InputNumber min={0} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item 
-                name="minAcceptance" 
-                label="Min. Acceptance Rate (%)" 
-                rules={[{ required: true, message: 'Required' }]}
-              >
+              <Form.Item name="minAcceptance" label="Min. Acceptance Rate (%)" rules={[{ required: true, message: 'Required' }]}>
                 <InputNumber min={0} max={100} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item 
-                name="minHours" 
-                label="Min. Active Hours/Mo" 
-                rules={[{ required: true, message: 'Required' }]}
-              >
+              <Form.Item name="minHours" label="Min. Active Hours/Mo" rules={[{ required: true, message: 'Required' }]}>
                 <InputNumber min={0} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>
-
-          <Divider orientation="left">Granted Benefits</Divider>
-          
-          <Form.Item 
-            name="benefits" 
-            label="Select Benefits to Apply"
-            rules={[{ required: true, message: 'Please select at least one benefit' }]}
-          >
-            <Select 
-              mode="tags" 
-              style={{ width: '100%' }} 
-              placeholder="Type and press enter to add custom benefits"
-              options={[
-                { value: 'Reduced Commission (18%)', label: 'Reduced Commission (18%)' },
-                { value: 'Low Commission (15%)', label: 'Low Commission (15%)' },
-                { value: 'Lowest Commission (12%)', label: 'Lowest Commission (12%)' },
-                { value: 'Priority Airport Dispatch', label: 'Priority Airport Dispatch' },
-                { value: 'Priority High-Demand Zones', label: 'Priority High-Demand Zones' },
-                { value: 'VIP-Only Ride Requests', label: 'VIP-Only Ride Requests' },
-                { value: 'Weekly $10 Fuel Voucher', label: 'Weekly $10 Fuel Voucher' },
-                { value: 'Weekly $25 Fuel Voucher', label: 'Weekly $25 Fuel Voucher' },
-                { value: 'Free Monthly Car Wash', label: 'Free Monthly Car Wash' },
-                { value: 'Free Premium Car Wash', label: 'Free Premium Car Wash' },
-                { value: 'Free Vehicle Inspection', label: 'Free Vehicle Inspection' },
-                { value: '24/7 Dedicated Driver Support', label: '24/7 Dedicated Driver Support' },
-                { value: 'Guaranteed Minimum Earnings', label: 'Guaranteed Minimum Earnings' },
-              ]}
-            />
+          <Divider>Granted Benefits</Divider>
+          <Form.Item name="benefits" label="Select Benefits to Apply" rules={[{ required: true, message: 'Please select at least one benefit' }]}>
+            <Select mode="tags" style={{ width: '100%' }} placeholder="Type and press enter to add custom benefits" options={[
+              { value: 'Reduced Commission (18%)', label: 'Reduced Commission (18%)' },
+              { value: 'Low Commission (15%)', label: 'Low Commission (15%)' },
+              { value: 'Lowest Commission (12%)', label: 'Lowest Commission (12%)' },
+              { value: 'Priority Airport Dispatch', label: 'Priority Airport Dispatch' },
+              { value: 'Priority High-Demand Zones', label: 'Priority High-Demand Zones' },
+              { value: 'VIP-Only Ride Requests', label: 'VIP-Only Ride Requests' },
+              { value: 'Weekly $10 Fuel Voucher', label: 'Weekly $10 Fuel Voucher' },
+              { value: 'Weekly $25 Fuel Voucher', label: 'Weekly $25 Fuel Voucher' },
+              { value: 'Free Monthly Car Wash', label: 'Free Monthly Car Wash' },
+              { value: 'Free Premium Car Wash', label: 'Free Premium Car Wash' },
+              { value: 'Free Vehicle Inspection', label: 'Free Vehicle Inspection' },
+              { value: '24/7 Dedicated Driver Support', label: '24/7 Dedicated Driver Support' },
+              { value: 'Guaranteed Minimum Earnings', label: 'Guaranteed Minimum Earnings' },
+            ]} />
           </Form.Item>
           <Text type="secondary">These benefits activate instantly in the driver app once a driver reaches this tier.</Text>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

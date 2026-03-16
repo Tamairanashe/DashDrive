@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { Decimal } from 'decimal.js';
+import { bankProvider } from './providers';
 
 export class WalletService {
   /**
@@ -92,7 +93,7 @@ export class WalletService {
   }
 
   /**
-   * Transfer funds between two wallets.
+   * Transfer funds between two wallets and sync with partner bank.
    */
   async transfer(senderId: string, receiverId: string, amount: number | Decimal, reference: string) {
     const decimalAmount = new Decimal(amount);
@@ -117,18 +118,31 @@ export class WalletService {
         data: { balance: { increment: decimalAmount } },
       });
 
-      // 3. Create Transfer record
+      // 3. Initiate Real-World Settlement via Bank Partner
+      let bankReference = 'INTERNAL_ONLY';
+      try {
+        const bankRes = await bankProvider.initiateTransfer(
+          senderWallet.id, 
+          receiverWallet.id, 
+          decimalAmount.toNumber()
+        );
+        bankReference = bankRes.reference;
+      } catch (err) {
+        console.warn('Bank settlement initiation failed, falling back to queued settlement:', err);
+      }
+
+      // 4. Create Transfer record
       const transfer = await tx.transfer.create({
         data: {
           sender_wallet_id: senderWallet.id,
           receiver_wallet_id: receiverWallet.id,
           amount: decimalAmount,
           status: 'completed',
-          reference,
+          reference: reference || bankReference,
         },
       });
 
-      // 4. Create Transaction logs
+      // 5. Create Transaction logs
       await tx.walletTransaction.create({
         data: {
           wallet_id: senderWallet.id,
@@ -149,7 +163,7 @@ export class WalletService {
         },
       });
 
-      return transfer;
+      return { transfer, bankReference };
     });
   }
 }

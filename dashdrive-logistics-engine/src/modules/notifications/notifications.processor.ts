@@ -3,90 +3,114 @@ import * as admin from 'firebase-admin';
 
 @Injectable()
 export class NotificationsProcessor {
-    private readonly logger = new Logger(NotificationsProcessor.name);
-    private worker: any;
+  private readonly logger = new Logger(NotificationsProcessor.name);
+  private worker: any;
 
-    constructor() {
-        // Initialize Firebase Admin (Assuming service account path is in env)
-        if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
-            admin.initializeApp({
-                credential: admin.credential.cert(process.env.FIREBASE_SERVICE_ACCOUNT_PATH),
-            });
-            this.logger.log('Firebase Admin initialized');
-        } else {
-            this.logger.warn('FIREBASE_SERVICE_ACCOUNT_PATH not found. Push notifications will be simulated.');
-        }
-
-        this.initWorker();
+  constructor() {
+    // Initialize Firebase Admin (Assuming service account path is in env)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
+      admin.initializeApp({
+        credential: admin.credential.cert(
+          process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
+        ),
+      });
+      this.logger.log('Firebase Admin initialized');
+    } else {
+      this.logger.warn(
+        'FIREBASE_SERVICE_ACCOUNT_PATH not found. Push notifications will be simulated.',
+      );
     }
 
-    private async initWorker() {
-        const useMock = process.env.USE_MOCK_REDIS === 'true';
-        if (useMock) {
-            this.logger.warn('🚀 NotificationsProcessor: Skipping BullMQ Worker (mock mode)');
-            return;
-        }
+    this.initWorker();
+  }
 
-        try {
-            const { Worker } = await import('bullmq');
+  private async initWorker() {
+    const useMock = process.env.USE_MOCK_REDIS === 'true';
+    if (useMock) {
+      this.logger.warn(
+        '🚀 NotificationsProcessor: Skipping BullMQ Worker (mock mode)',
+      );
+      return;
+    }
 
-            this.worker = new Worker(
-                'notifications',
-                async (job: any) => {
-                    await this.processNotification(job);
-                },
-                {
-                    connection: {
-                        host: process.env.REDIS_HOST || 'localhost',
-                        port: parseInt(process.env.REDIS_PORT || '6379'),
-                    },
-                }
+    try {
+      const { Worker } = await import('bullmq');
+
+      this.worker = new Worker(
+        'notifications',
+        async (job: any) => {
+          await this.processNotification(job);
+        },
+        {
+          connection: {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT || '6379'),
+          },
+        },
+      );
+
+      this.worker.on('error', (error) => {
+        this.logger.error(`BullMQ Worker Error: ${error.message}`);
+      });
+
+      this.worker.on('completed', (job) => {
+        this.logger.log(`Job ${job.id} has completed!`);
+      });
+
+      this.worker.on('failed', (job, err) => {
+        this.logger.error(`Job ${job?.id} failed with ${err.message}`);
+      });
+      this.logger.log('🚀 Notifications Worker Initialized');
+    } catch (error) {
+      this.logger.error(
+        `Failed to initialize Notifications Worker: ${error.message}`,
+      );
+    }
+  }
+
+  private async processNotification(job: any) {
+    const {
+      type,
+      to,
+      subject,
+      template,
+      context,
+      phoneNumber,
+      message,
+      targetToken,
+      title,
+      body,
+      data,
+    } = job.data;
+
+    switch (type) {
+      case 'EMAIL':
+        this.logger.log(`[PROCESSOR] Sending Email to ${to}...`);
+        break;
+      case 'SMS':
+        this.logger.log(
+          `[PROCESSOR] Sending SMS to ${phoneNumber}: ${message}`,
+        );
+        break;
+      case 'PUSH':
+        this.logger.log(`[PROCESSOR] Sending Push to ${targetToken}: ${title}`);
+        if (admin.apps.length > 0) {
+          try {
+            await admin.messaging().send({
+              token: targetToken,
+              notification: { title, body },
+              data: data || {},
+            });
+            this.logger.log(
+              `[PROCESSOR] Push sent successfully to ${targetToken}`,
             );
-
-            this.worker.on('error', (error) => {
-                this.logger.error(`BullMQ Worker Error: ${error.message}`);
-            });
-
-            this.worker.on('completed', (job) => {
-                this.logger.log(`Job ${job.id} has completed!`);
-            });
-
-            this.worker.on('failed', (job, err) => {
-                this.logger.error(`Job ${job?.id} failed with ${err.message}`);
-            });
-            this.logger.log('🚀 Notifications Worker Initialized');
-        } catch (error) {
-            this.logger.error(`Failed to initialize Notifications Worker: ${error.message}`);
+          } catch (error) {
+            this.logger.error(`[PROCESSOR] FCM Error: ${error.message}`);
+          }
         }
+        break;
+      default:
+        this.logger.warn(`Unknown notification type: ${type}`);
     }
-
-    private async processNotification(job: any) {
-        const { type, to, subject, template, context, phoneNumber, message, targetToken, title, body, data } = job.data;
-
-        switch (type) {
-            case 'EMAIL':
-                this.logger.log(`[PROCESSOR] Sending Email to ${to}...`);
-                break;
-            case 'SMS':
-                this.logger.log(`[PROCESSOR] Sending SMS to ${phoneNumber}: ${message}`);
-                break;
-            case 'PUSH':
-                this.logger.log(`[PROCESSOR] Sending Push to ${targetToken}: ${title}`);
-                if (admin.apps.length > 0) {
-                    try {
-                        await admin.messaging().send({
-                            token: targetToken,
-                            notification: { title, body },
-                            data: data || {},
-                        });
-                        this.logger.log(`[PROCESSOR] Push sent successfully to ${targetToken}`);
-                    } catch (error) {
-                        this.logger.error(`[PROCESSOR] FCM Error: ${error.message}`);
-                    }
-                }
-                break;
-            default:
-                this.logger.warn(`Unknown notification type: ${type}`);
-        }
-    }
+  }
 }

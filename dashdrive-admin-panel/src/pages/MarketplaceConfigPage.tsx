@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Typography, Row, Col, Card, Table, Tag, Switch, 
-  Button, Space, InputNumber, Select, Divider, Statistic, message 
+  Button, Space, InputNumber, Select, Divider, Statistic, message, Tooltip, Badge 
 } from 'antd';
 import { 
   ShopOutlined, 
@@ -9,8 +9,11 @@ import {
   DollarOutlined, 
   SafetyCertificateOutlined,
   GlobalOutlined,
-  SaveOutlined
+  SaveOutlined,
+  ApiOutlined,
+  ArrowRightOutlined
 } from '@ant-design/icons';
+import { useTheme } from '../context/ThemeContext';
 
 const { Title, Text } = Typography;
 
@@ -25,6 +28,7 @@ interface FinancialProduct {
 }
 
 export const MarketplaceConfigPage: React.FC = () => {
+  const { isDark } = useTheme();
   const [products, setProducts] = useState<FinancialProduct[]>([
     { id: 'FP-001', name: 'Micro-Loan 500', type: 'Loan', provider: 'XYZ Bank', commission: 5, status: true, region: 'Harare' },
     { id: 'FP-002', name: 'Driver Accident Cover', type: 'Insurance', provider: 'SafeGuard Insure', commission: 15, status: true, region: 'All' },
@@ -77,6 +81,15 @@ export const MarketplaceConfigPage: React.FC = () => {
       render: (t: string) => <Space><GlobalOutlined /> {t}</Space>
     },
     {
+      title: 'Provider Health',
+      key: 'health',
+      render: (_, r: FinancialProduct) => (
+        <Tooltip title="View technical logs in Fintech Hub">
+          <Badge status={r.provider === 'DashDrive Finance' ? 'success' : 'processing'} text="98% (Active)" />
+        </Tooltip>
+      )
+    },
+    {
       title: 'Platform Commission (%)',
       dataIndex: 'commission',
       key: 'commission',
@@ -86,7 +99,7 @@ export const MarketplaceConfigPage: React.FC = () => {
           max={100} 
           value={v} 
           formatter={value => `${value}%`}
-          parser={value => value!.replace('%', '')}
+          parser={value => value ? parseFloat(value.replace('%', '')) : 0}
           onChange={(val) => handleCommissionChange(r.id, val)}
           style={{ width: 100 }}
         />
@@ -110,36 +123,41 @@ export const MarketplaceConfigPage: React.FC = () => {
           <Text type="secondary" style={{ fontSize: 16 }}>Manage the catalog of financial products, regions, and platform commissions.</Text>
         </Col>
         <Col>
-          <Button type="primary" icon={<SaveOutlined />} size="large" onClick={() => message.success('All configurations saved to production.')}>
-            Save All Changes
-          </Button>
+          <Space>
+            <Button icon={<ApiOutlined />} onClick={() => window.location.hash = '#/fintech-hub'}>
+               Fintech Partner Hub
+            </Button>
+            <Button type="primary" icon={<SaveOutlined />} size="large" onClick={() => message.success('All configurations saved to production.')}>
+              Save All Changes
+            </Button>
+          </Space>
         </Col>
       </Row>
 
       <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
         <Col span={6}>
-          <Card bordered={false} className="shadow-sm">
+          <Card variant="borderless" className="shadow-sm">
             <Statistic title="ACTIVE PRODUCTS" value={products.filter(p => p.status).length} prefix={<ShopOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
-          <Card bordered={false} className="shadow-sm">
+          <Card variant="borderless" className="shadow-sm">
             <Statistic title="AVG COMMISSION" value={10.5} suffix="%" prefix={<DollarOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
-          <Card bordered={false} className="shadow-sm">
+          <Card variant="borderless" className="shadow-sm">
             <Statistic title="INSURANCE PARTNERS" value={2} prefix={<SafetyCertificateOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
-          <Card bordered={false} className="shadow-sm">
+          <Card variant="borderless" className="shadow-sm">
             <Statistic title="LOAN PARTNERS" value={1} prefix={<SettingOutlined />} />
           </Card>
         </Col>
       </Row>
 
-      <Card bordered={false} title="Product Catalog & Commission Tiers" className="shadow-sm" style={{ borderRadius: 16 }}>
+      <Card variant="borderless" title="Product Catalog & Commission Tiers" className="shadow-sm" style={{ borderRadius: 16 }}>
         <Table columns={columns} dataSource={products} rowKey="id" pagination={false} />
         
         <Divider />

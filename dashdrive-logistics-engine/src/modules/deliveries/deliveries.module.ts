@@ -5,8 +5,8 @@ import { PricingModule } from '../pricing/pricing.module';
 import { DispatchModule } from '../dispatch/dispatch.module';
 
 @Module({
-    imports: [PricingModule, DispatchModule],
-    controllers: [DeliveriesController],
-    providers: [DeliveriesService],
+  imports: [PricingModule, DispatchModule],
+  controllers: [DeliveriesController],
+  providers: [DeliveriesService],
 })
-export class DeliveriesModule { }
+export class DeliveriesModule {}

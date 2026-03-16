@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Row, Col, Card, Typography, Select, Input, Button, Avatar, Space, Tag, List, Statistic, Divider, Alert, message, Badge, Modal, Switch, Drawer, Tabs, Table, Progress
+  Row, Col, Card, Typography, Select, Input, Button, Avatar, Space, Tag, List, Statistic, Divider, Alert, message, Badge, Switch, Drawer, Tabs, Table, Progress, Modal
 } from 'antd';
 import { 
     SearchOutlined, PhoneOutlined, MessageOutlined, StarOutlined, 
@@ -210,7 +210,7 @@ export const FleetViewPage: React.FC = () => {
     const [chatMessages, setChatMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [callDuration, setCallDuration] = useState(0);
-    const [isGovernanceModalVisible, setIsGovernanceModalVisible] = useState(false);
+    const [isGovernanceDrawerVisible, setIsGovernanceDrawerVisible] = useState(false);
     const [governanceAction, setGovernanceAction] = useState<'suspend' | 'ban' | 'delete' | null>(null);
     const [governanceTargetType, setGovernanceTargetType] = useState<'driver' | 'customer' | null>(null);
     const [governanceReason, setGovernanceReason] = useState<string>('');
@@ -319,7 +319,7 @@ export const FleetViewPage: React.FC = () => {
         setGovernanceTargetType(target);
         setGovernanceReason('');
         setGovernanceCustomReason('');
-        setIsGovernanceModalVisible(true);
+        setIsGovernanceDrawerVisible(true);
     };
 
     const confirmGovernanceAction = () => {
@@ -338,7 +338,7 @@ export const FleetViewPage: React.FC = () => {
             message.error(`Customer banned. Reason: ${finalReason}`);
         }
 
-        setIsGovernanceModalVisible(false);
+        setIsGovernanceDrawerVisible(false);
     };
 
     const handleUnsuspend = (type: 'driver' | 'customer') => {
@@ -762,7 +762,7 @@ export const FleetViewPage: React.FC = () => {
                                         </Space>
                                     </Card>
                                     <div style={{ marginTop: 24 }}>
-                                        <Button danger block size="large" icon={<StopOutlined />} onClick={() => setIsSuspendModalVisible(true)}>
+                                        <Button danger block size="large" icon={<StopOutlined />} onClick={() => openGovernanceModal('suspend', 'driver')}>
                                             Suspend Driver Access
                                         </Button>
                                     </div>
@@ -1178,15 +1178,13 @@ export const FleetViewPage: React.FC = () => {
         </div>
       </Drawer>
 
-      {/* VoIP Call Simulation Modal */}
-      <Modal
+      <Drawer
         open={isCallVisible}
-        onCancel={() => setIsCallVisible(false)}
-        footer={null}
+        onClose={() => setIsCallVisible(false)}
         closable={false}
-        centered
+        footer={null}
         width={320}
-        bodyStyle={{ padding: '40px 24px', textAlign: 'center', background: '#1e293b', color: 'white', borderRadius: 24 }}
+        styles={{ body: { padding: '40px 24px', textAlign: 'center', background: '#1e293b', color: 'white' } }}
       >
         <Avatar size={100} src={`https://picsum.photos/seed/${selectedDriver?.id}/200/200`} style={{ border: '4px solid #3b82f6', marginBottom: 20 }} />
         <Title level={3} style={{ color: 'white', margin: 0 }}>{selectedDriver?.name}</Title>
@@ -1212,84 +1210,84 @@ export const FleetViewPage: React.FC = () => {
             />
             <Button shape="circle" size="large" icon={<SettingOutlined />} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white' }} />
         </Space>
-      </Modal>
+      </Drawer>
 
-      {/* Administrative Governance Modal */}
-      <Modal
-        title={
-            <Space>
-                <WarningOutlined style={{ color: '#ef4444' }} /> 
-                <Text strong>
-                    Confirm {governanceAction === 'delete' ? 'Deletion' : governanceAction === 'ban' ? 'Ban' : 'Suspension'} 
-                </Text>
-            </Space>
-        }
-        open={isGovernanceModalVisible}
-        onCancel={() => setIsGovernanceModalVisible(false)}
-        footer={[
-            <Button key="cancel" onClick={() => setIsGovernanceModalVisible(false)}>Go Back</Button>,
-            <Button 
-                key="submit" 
-                type="primary" 
-                danger 
-                disabled={!governanceReason || (governanceReason === 'Other' && !governanceCustomReason.trim())} 
-                onClick={confirmGovernanceAction}
-            >
-                Confirm {governanceAction === 'delete' ? 'Deletion' : 'Action'}
-            </Button>
-        ]}
-        centered
-        width={450}
+      {/* Governance Action Drawer */}
+      <Drawer
+          title={<Space><WarningOutlined style={{ color: '#ef4444' }} /> <Text strong>Administrative Action: {governanceAction?.toUpperCase()}</Text></Space>}
+          open={isGovernanceDrawerVisible}
+          onClose={() => setIsGovernanceDrawerVisible(false)}
+          width={400}
+          extra={
+              <Space>
+                  <Button onClick={() => setIsGovernanceDrawerVisible(false)}>Cancel</Button>
+                  <Button
+                      type="primary"
+                      danger
+                      disabled={!governanceReason.trim() && (governanceReason !== 'Other' || !governanceCustomReason.trim())}
+                      onClick={confirmGovernanceAction}
+                  >
+                      Confirm {governanceAction}
+                  </Button>
+              </Space>
+          }
       >
-        <div style={{ marginBottom: 16 }}>
-            <Alert 
-                type="warning"
-                showIcon
-                message="Critical Administrative Action"
-                description={`You are about to ${governanceAction} ${governanceTargetType === 'driver' ? selectedDriver?.name : selectedCustomer?.name}. ${governanceAction === 'delete' ? 'This action permanent.' : 'This restricts their access.'}`}
-                style={{ marginBottom: 16 }}
-            />
-            
-            <Text strong style={{ display: 'block', marginBottom: 8 }}>Select Reason (Mandatory)</Text>
-            <Select 
-                style={{ width: '100%', marginBottom: governanceReason === 'Other' ? 12 : 0 }} 
-                placeholder="Choose a reason..."
-                value={governanceReason || undefined}
-                onChange={setGovernanceReason}
-            >
-                {governanceAction && SUGGESTED_REASONS[governanceAction].map(reason => (
-                    <Select.Option key={reason} value={reason}>{reason}</Select.Option>
-                ))}
-            </Select>
+          <div style={{ marginBottom: 24 }}>
+              <Alert
+                  message="Security Override"
+                  description={`You are about to ${governanceAction} this ${governanceTargetType}. This action will be logged in the system audit trail.`}
+                  type="warning"
+                  showIcon
+              />
+          </div>
 
-            {governanceReason === 'Other' && (
-                <>
-                    <Text strong style={{ display: 'block', marginBottom: 8 }}>Provide specific details</Text>
-                    <Input.TextArea 
-                        placeholder="Please detail the reason for this action..." 
-                        rows={3} 
-                        value={governanceCustomReason}
-                        onChange={(e) => setGovernanceCustomReason(e.target.value)}
-                    />
-                </>
-            )}
-        </div>
-      </Modal>
+          <Title level={5}>Primary Rationale</Title>
+          <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #f1f5f9' }}>
+              <Select
+                  placeholder="Select primary reason"
+                  style={{ width: '100%', marginBottom: 16 }}
+                  value={governanceReason}
+                  onChange={setGovernanceReason}
+              >
+                  {governanceAction && SUGGESTED_REASONS[governanceAction].map(r => (
+                      <Option key={r} value={r}>{r}</Option>
+                  ))}
+              </Select>
 
-      {/* Profile Editing Modal */}
-      <Modal
+              {governanceReason === 'Other' && (
+                  <Input.TextArea
+                      placeholder="Please specify detailed reason..."
+                      rows={4}
+                      value={governanceCustomReason}
+                      onChange={(e) => setGovernanceCustomReason(e.target.value)}
+                  />
+              )}
+          </div>
+
+          <div style={{ marginTop: 24, padding: 16, background: '#fef2f2', borderRadius: 12 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                  Note: This action is immediate across all region clusters. The user/driver will be notified via in-app push notification.
+              </Text>
+          </div>
+      </Drawer>
+
+      {/* Profile Editing Drawer */}
+      <Drawer
         title={`Edit ${editingProfileType === 'driver' ? 'Driver' : 'Customer'} Profile`}
         open={isEditProfileVisible}
-        onOk={() => {
-            if (editingProfileType === 'driver' && editingDriver) {
-                setDrivers(prev => prev.map(d => d.id === editingDriver.id ? editingDriver : d));
-            } else if (editingProfileType === 'customer' && editingCustomer) {
-                setCustomers(prev => prev.map(c => c.id === editingCustomer.id ? editingCustomer : c));
-            }
-            setIsEditProfileVisible(false);
-            message.success('Profile updated successfully.');
-        }}
-        onCancel={() => setIsEditProfileVisible(false)}
+        onClose={() => setIsEditProfileVisible(false)}
+        width={450}
+        extra={
+            <Button type="primary" onClick={() => {
+                if (editingProfileType === 'driver' && editingDriver) {
+                    setDrivers(prev => prev.map(d => d.id === editingDriver.id ? editingDriver : d));
+                } else if (editingProfileType === 'customer' && editingCustomer) {
+                    setCustomers(prev => prev.map(c => c.id === editingCustomer.id ? editingCustomer : c));
+                }
+                setIsEditProfileVisible(false);
+                message.success('Profile updated successfully.');
+            }}>Save Changes</Button>
+        }
       >
         {editingProfileType === 'driver' && editingDriver && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
@@ -1305,7 +1303,7 @@ export const FleetViewPage: React.FC = () => {
                 <div><Text strong>Email Address</Text><Input value={editingCustomer.email} onChange={e => setEditingCustomer({...editingCustomer, email: e.target.value})} /></div>
             </div>
         )}
-      </Modal>
+      </Drawer>
     </div>
   );
 };

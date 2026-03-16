@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { adminApi } from '../api/adminApi';
 import { Typography, Card, Form, Input, Select, Button, Space, Divider, Row, Col, Switch, Upload, message, Tooltip, InputNumber, Tabs, Alert, Collapse, Table, Tag, Checkbox } from 'antd';
 import {
   SaveOutlined, ShopOutlined, EnvironmentOutlined, ClockCircleOutlined,
@@ -65,8 +66,12 @@ export const EnterpriseSetupPage: React.FC = () => {
     
     // Settings
     tripCommission: 15,
-    vat: 14.5,
+    vat: 15,
     imttTax: 2,
+    imttResponsibility: 'Customer',
+    imttOnWalletTransfer: true,
+    vatTreatment: 'Exclusive',
+    vatOnCommission: false,
     thirdPartyFees: 1.5,
     searchRadius: 5,
     completionRadius: 50,
@@ -298,12 +303,34 @@ export const EnterpriseSetupPage: React.FC = () => {
     ],
   };
 
-  const handleSave = (values: any) => {
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await adminApi.settings.get();
+        if (response.data.success) {
+          const setupConfig = response.data.data.find((c: any) => c.key === 'enterprise_setup');
+          if (setupConfig) {
+            form.setFieldsValue(setupConfig.value);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+      }
+    };
+    fetchSettings();
+  }, [form]);
+
+  const handleSave = async (values: any) => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await adminApi.settings.update('enterprise_setup', values, 'Main platform configuration');
       message.success('Business settings saved successfully');
+    } catch (err) {
+      console.error('Save failed:', err);
+      message.error('Failed to save settings');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleReset = () => {
@@ -358,7 +385,7 @@ export const EnterpriseSetupPage: React.FC = () => {
         initialValues={initialValues}
         onFinish={handleSave}
       >
-        <Tabs defaultActiveKey="info" type="card" style={{ marginBottom: 24 }}>
+        <Tabs defaultActiveKey="info" className="premium-tabs" style={{ marginBottom: 24 }}>
           {/* ============================================================ */}
           {/* TAB 1: BUSINESS INFO                                         */}
           {/* ============================================================ */}
@@ -678,6 +705,37 @@ export const EnterpriseSetupPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item label="3rd Party Fees" name="thirdPartyFees" tooltip="Fixed fee amount directed to third-party services (e.g., payment gateways).">
                           <InputNumber prefix="$" style={{ width: '100%' }} min={0} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Divider style={{ margin: '16px 0', fontSize: 13 }}><SafetyCertificateOutlined /> Taxation Responsibility (Zimbabwe Compliance)</Divider>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item label="IMTT Responsibility" name="imttResponsibility" tooltip="Who pays the 2% IMTT tax on transactions.">
+                          <Select>
+                            <Option value="Customer">Customer</Option>
+                            <Option value="Driver">Driver</Option>
+                            <Option value="Platform">Platform</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="VAT Treatment" name="vatTreatment" tooltip="Whether VAT is included in the fare or added on top.">
+                          <Select>
+                            <Option value="Inclusive">Inclusive (In-Fare)</Option>
+                            <Option value="Exclusive">Exclusive (Add-on)</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="IMTT on Wallet Xfer" name="imttOnWalletTransfer" valuePropName="checked">
+                          <Switch checkedChildren="ON" unCheckedChildren="OFF" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="VAT on Commission Only" name="vatOnCommission" valuePropName="checked">
+                          <Switch checkedChildren="YES" unCheckedChildren="NO" />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -2615,7 +2673,7 @@ export const EnterpriseSetupPage: React.FC = () => {
                     style={{ borderRadius: 12 }}
                     styles={{ header: { background: '#fafafa', borderRadius: '12px 12px 0 0', fontWeight: 600 } }}
                   >
-                    <Tabs defaultActiveKey="qa" type="card" size="small">
+                    <Tabs defaultActiveKey="qa" className="premium-tabs" size="small">
                       <Tabs.TabPane tab="Predefined Q&A" key="qa">
                         <div style={{ background: '#f8fafc', padding: '16px 12px', borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: 20, marginTop: 12 }}>
                           <Typography.Text strong>Add New Q&A</Typography.Text>

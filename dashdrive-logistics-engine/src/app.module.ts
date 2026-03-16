@@ -41,7 +41,7 @@ import { BullModule } from '@nestjs/bullmq';
 
 const useMockRedis = process.env.USE_MOCK_REDIS === 'true';
 
-// Core modules — all modules included. 
+// Core modules — all modules included.
 // DispatchModule and WebhooksModule internally handle mock mode.
 const appModules = [
   ConfigModule.forRoot({ isGlobal: true }),
@@ -64,26 +64,30 @@ const appModules = [
           }),
         };
       } catch (error) {
-        console.warn('⚠️ Could not connect to Redis, falling back to in-memory cache');
+        console.warn(
+          '⚠️ Could not connect to Redis, falling back to in-memory cache',
+        );
         return { ttl: 600 };
       }
     },
     inject: [ConfigService],
   }),
   // Only register BullMQ root if Redis is available
-  ...(useMockRedis ? [] : [
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get('REDIS_HOST', 'localhost'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-          maxRetriesPerRequest: null,
-        },
-      }),
-    }),
-  ]),
+  ...(useMockRedis
+    ? []
+    : [
+        BullModule.forRootAsync({
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => ({
+            connection: {
+              host: configService.get('REDIS_HOST', 'localhost'),
+              port: configService.get<number>('REDIS_PORT', 6379),
+              maxRetriesPerRequest: null,
+            },
+          }),
+        }),
+      ]),
   ScheduleModule.forRoot(),
   PrismaModule,
   AuthModule,
@@ -122,7 +126,9 @@ const appModules = [
 
 if (useMockRedis) {
   console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.warn('🚀 MOCK MODE: Redis-dependent modules (Dispatch, Webhooks) are DISABLED.');
+  console.warn(
+    '🚀 MOCK MODE: Redis-dependent modules (Dispatch, Webhooks) are DISABLED.',
+  );
   console.warn('   To enable them, set USE_MOCK_REDIS=false and start Redis.');
   console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
@@ -132,4 +138,4 @@ if (useMockRedis) {
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

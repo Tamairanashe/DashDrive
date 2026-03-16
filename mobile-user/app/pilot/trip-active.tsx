@@ -9,10 +9,11 @@ import { darkMapStyle, mapStyle } from "../../src/styles/mapStyles";
 
 // Mock trip data
 const TRIP = {
-    rider: { name: "Emma W.", rating: 4.89 },
     destination: { lat: 51.4700, lng: -0.4543, address: "Terminal 2, Heathrow" },
     eta: "28 min",
     distance: "17.3 km",
+    vertical: "SCHOOL_RUN",
+    student: { name: "Zoe Chit", school: "St. Andrews Primary" }
 };
 
 export default function TripActiveScreen() {
@@ -21,6 +22,14 @@ export default function TripActiveScreen() {
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
     const [seconds, setSeconds] = useState(0);
+    const [isSafetyModalVisible, setIsSafetyModalVisible] = useState(TRIP.vertical === "SCHOOL_RUN");
+    const [checklist, setChecklist] = useState({
+        identity: false,
+        seatbelt: false,
+        locks: false
+    });
+    const [pinCode, setPinCode] = useState("");
+    const [isPinVerified, setIsPinVerified] = useState(false);
 
     // Trip timer
     useEffect(() => {
@@ -37,8 +46,14 @@ export default function TripActiveScreen() {
     };
 
     const handleComplete = () => {
+        if (TRIP.vertical === "SCHOOL_RUN" && !isPinVerified) {
+            alert("Please verify the School Drop-off PIN first.");
+            return;
+        }
         router.replace("/pilot/trip-completed" as any);
     };
+
+    const isChecklistComplete = checklist.identity && checklist.seatbelt && checklist.locks;
 
     return (
         <View style={styles.container}>
@@ -139,15 +154,91 @@ export default function TripActiveScreen() {
                     <TouchableOpacity style={styles.safetyButton}>
                         <Ionicons name="shield-checkmark" size={24} color="#ef4444" />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={handleComplete}
-                        style={[styles.completeButton, { backgroundColor: isDark ? '#fff' : '#18181b' }]}
-                    >
-                        <Text style={[styles.completeText, { color: isDark ? '#000' : '#fff' }]}>Complete Trip</Text>
-                    </TouchableOpacity>
+                    {TRIP.vertical === "SCHOOL_RUN" && !isPinVerified ? (
+                         <TouchableOpacity
+                            onPress={() => setIsSafetyModalVisible(true)}
+                            style={[styles.completeButton, { backgroundColor: '#FFD700' }]}
+                        >
+                            <Text style={[styles.completeText, { color: '#000' }]}>Verify Drop-off PIN</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            onPress={handleComplete}
+                            style={[styles.completeButton, { backgroundColor: isDark ? '#fff' : '#18181b' }]}
+                        >
+                            <Text style={[styles.completeText, { color: isDark ? '#000' : '#fff' }]}>Complete Trip</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
+
+                {/* Safety Modal */}
+                <Modal visible={isSafetyModalVisible} animationType="slide" transparent>
+                    <View className="flex-1 bg-black/50 justify-end">
+                        <View className="bg-white dark:bg-zinc-900 rounded-t-[40px] p-8 pb-12">
+                            <View className="flex-row items-center justify-between mb-6">
+                                <Text className="text-2xl font-uber-bold dark:text-white">Safety Check</Text>
+                                <Ionicons name="shield-checkmark" size={28} color="#FFD700" />
+                            </View>
+
+                            {!isChecklistComplete ? (
+                                <>
+                                    <Text className="text-zinc-500 font-uber-medium mb-6">Complete the following before starting the trip.</Text>
+                                    <CheckItem 
+                                        label="Student Identity Verified" 
+                                        checked={checklist.identity} 
+                                        onPress={() => setChecklist(prev => ({ ...prev, identity: !prev.identity }))} 
+                                    />
+                                    <CheckItem 
+                                        label="Seatbelts Fastened" 
+                                        checked={checklist.seatbelt} 
+                                        onPress={() => setChecklist(prev => ({ ...prev, seatbelt: !prev.seatbelt }))} 
+                                    />
+                                    <CheckItem 
+                                        label="Child Safety Locks Engaged" 
+                                        checked={checklist.locks} 
+                                        onPress={() => setChecklist(prev => ({ ...prev, locks: !prev.locks }))} 
+                                    />
+                                    <TouchableOpacity 
+                                        disabled={!isChecklistComplete}
+                                        onPress={() => setIsSafetyModalVisible(false)}
+                                        className={`mt-6 py-4 rounded-2xl items-center ${isChecklistComplete ? 'bg-primary' : 'bg-zinc-100 dark:bg-zinc-800'}`}
+                                    >
+                                        <Text className={`font-uber-bold text-lg ${isChecklistComplete ? 'text-black' : 'text-zinc-400'}`}>Start Run</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <>
+                                    <Text className="text-zinc-500 font-uber-medium mb-6">Enter the 4-digit PIN provided by the school official at drop-off.</Text>
+                                    <View className="bg-zinc-100 dark:bg-zinc-800 p-6 rounded-2xl mb-6">
+                                        <Text className="text-center text-3xl font-uber-bold tracking-[10px] dark:text-white">****</Text>
+                                    </View>
+                                    <TouchableOpacity 
+                                        onPress={() => {
+                                            setIsPinVerified(true);
+                                            setIsSafetyModalVisible(false);
+                                        }}
+                                        className="py-4 rounded-2xl items-center bg-primary"
+                                    >
+                                        <Text className="font-uber-bold text-lg text-black">Verify PIN</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </View>
+    );
+}
+
+function CheckItem({ label, checked, onPress }: any) {
+    return (
+        <TouchableOpacity onPress={onPress} className="flex-row items-center py-3 mb-2">
+            <View className={`h-6 w-6 rounded-lg border-2 items-center justify-center mr-4 ${checked ? 'bg-primary border-primary' : 'border-zinc-300 dark:border-zinc-700'}`}>
+                {checked && <Ionicons name="checkmark" size={16} color="black" />}
+            </View>
+            <Text className="text-lg font-uber-medium dark:text-white">{label}</Text>
+        </TouchableOpacity>
     );
 }
 

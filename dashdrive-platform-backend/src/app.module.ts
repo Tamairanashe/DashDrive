@@ -14,9 +14,10 @@ import { BillingModule } from './modules/billing/billing.module';
 import { EventBusModule } from './modules/core/event-bus/event-bus.module';
 import { PartnerGatewayModule } from './modules/core/partner-gateway/partner-gateway.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
-import { ProductsModule } from './modules/core/products/products.module';
 import { ApplicationsModule } from './modules/core/applications/applications.module';
 import { FintechModule } from './modules/fintech/fintech.module';
+import { SchoolModule } from './modules/core/schools/school.module';
+import { StudentModule } from './modules/core/students/student.module';
 
 // Super-App Service Modules
 import { RideModule } from './modules/rides/ride.module';
@@ -36,6 +37,20 @@ import { FuelModule } from './modules/fuel/fuel.module';
     ProductsModule,
     ApplicationsModule,
     FintechModule,
+    SchoolModule,
+    StudentModule,
+
+    // Core & Finance (Adding missing modules)
+    AuthModule,
+    UserModule,
+    DocumentModule,
+    NotificationModule,
+    LoanModule,
+    BnplModule,
+    VehicleModule,
+    PolicyModule,
+    ClaimModule,
+    BillingModule,
 
     // Super-App Services
     RideModule,

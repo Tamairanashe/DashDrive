@@ -1,245 +1,325 @@
 import React, { useState } from 'react';
 import {
- Download,
- RotateCcw,
- Save,
- Smartphone,
- Globe,
- ExternalLink,
- SmartphoneNfc,
- Monitor,
- Tablet,
- Layout,
- ImageIcon,
- Link,
- Shield,
- Info,
- CheckCircle2,
- XCircle,
- Copy,
- Share2,
- Zap,
- Store,
- ArrowRight
-} from 'lucide-react';
-import { cn } from '../utils';
+  Typography,
+  Card,
+  Row,
+  Col,
+  Input,
+  Switch,
+  Button,
+  Space,
+  Upload,
+  message,
+  Divider,
+  Tooltip,
+  Alert,
+  Badge
+} from 'antd';
+import {
+  InfoCircleOutlined,
+  AndroidOutlined,
+  AppleOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SaveOutlined,
+  CheckCircleFilled,
+  PictureOutlined
+} from '@ant-design/icons';
+import { useTheme } from '../context/ThemeContext';
+
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 export const AppDownloadSetup: React.FC = () => {
- const [enabled, setEnabled] = useState(true);
- const [playStoreUrl, setPlayStoreUrl] = useState('https://play.google.com/store/apps/details?id=com.dashdrive.app');
- const [appStoreUrl, setAppStoreUrl] = useState('https://apps.apple.com/app/dashdrive/id123456789');
- const [downloadTitle, setDownloadTitle] = useState('Download Our Super App');
- const [downloadDesc, setDownloadDesc] = useState('Available on all platforms. Get the app now to start your journey.');
+  const { isDark } = useTheme();
+  const [active, setActive] = useState(true);
+  
+  // State for Driver App Section
+  const [driverTitle, setDriverTitle] = useState('');
+  const [driverSubtitle, setDriverSubtitle] = useState('');
+  
+  // State for User App Section
+  const [userTitle, setUserTitle] = useState('');
+  const [userSubtitle, setUserSubtitle] = useState('');
+  const [userPlayStore, setUserPlayStore] = useState(true);
+  const [userAppleStore, setUserAppleStore] = useState(true);
 
- const renderHeader = () => (
- <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 px-4 mt-4">
- <div className="space-y-4">
- <div className="flex items-center gap-3">
- <div className="p-3 bg-slate-900 rounded-2xl text-white shadow-lg">
- <Download className="w-6 h-6 text-emerald-400" />
- </div>
- <div>
- <div className="flex items-center gap-2">
- <span className="text-[10px] font-black text-slate-400 tracking-[0.2em]">Configuration</span>
- <div className="w-1 h-1 rounded-full bg-slate-200" />
- <span className="text-[10px] font-black text-[#0089D1] tracking-[0.2em]">Growth & Distribution</span>
- </div>
- <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-none mt-1">App Download Setup</h1>
- </div>
- </div>
- <p className="text-base font-medium text-slate-500 max-w-lg leading-relaxed">
- Configure mobile store links, promotional messaging, and platform-wide app distribution settings.
- </p>
- </div>
+  const beforeUpload = (file: any) => {
+    const isLt1M = file.size / 1024 / 1024 < 1;
+    if (!isLt1M) {
+      message.error('Image must be smaller than 1MB!');
+    }
+    return isLt1M || Upload.LIST_IGNORE;
+  };
 
- <div className="flex items-center gap-4">
- <button
- onClick={() => {
- setPlayStoreUrl('');
- setAppStoreUrl('');
- setDownloadTitle('');
- setDownloadDesc('');
- }}
- className="flex items-center gap-3 px-8 py-4 bg-white border border-slate-200 text-slate-400 rounded-[24px] text-xs font-black hover:bg-slate-50 hover:text-slate-600 transition-all focus:ring-4 focus:ring-slate-100"
- >
- <RotateCcw className="w-5 h-5" /> Reset
- </button>
- <button className="flex items-center gap-3 px-10 py-4 bg-[#0089D1] text-white rounded-[24px] text-xs font-black hover:bg-[#007AB8] transition-all shadow-xl shadow-[#0089D1]/20 font-display focus:ring-4 focus:ring-[#007AB8]/20">
- <Save className="w-5 h-5" /> Persist Changes
- </button>
- </div>
- </div>
- );
+  const handleReset = () => {
+    setDriverTitle('');
+    setDriverSubtitle('');
+    setUserTitle('');
+    setUserSubtitle('');
+    message.info('Form has been reset');
+  };
 
- return (
- <div className="max-w-[1700px] mx-auto space-y-12 pb-20 px-4">
- {renderHeader()}
+  const handleSave = () => {
+    message.success('Settings saved successfully');
+  };
 
- <div className="flex flex-col lg:flex-row gap-10 min-h-[600px] animate-in fade-in slide-in-from-bottom-8 duration-700">
- {/* Left Panel: Store Link Configuration */}
- <div className="lg:w-1/2 space-y-10">
- <div className="bg-white p-12 rounded-[60px] border border-slate-100 shadow-sm space-y-10 relative overflow-hidden group">
- <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] -mr-32 -mt-32 transition-all group-hover:bg-emerald-500/10" />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Visibility Status */}
+      <Card 
+        bordered={false} 
+        className="shadow-sm"
+        style={{ borderRadius: 12 }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Title level={5} style={{ margin: 0 }}>Status</Title>
+            <Text type="secondary">If you turn of the availability status, this section will not show in the website</Text>
+          </div>
+          <Switch 
+            checked={active} 
+            onChange={setActive} 
+            style={{ background: active ? '#10b981' : undefined }}
+          />
+        </div>
+      </Card>
 
- <div className="flex items-center justify-between relative z-10">
- <div className="flex items-center gap-6">
- <div className="p-5 bg-emerald-50 text-emerald-600 rounded-[30px] shadow-sm">
- <Store className="w-8 h-8" />
- </div>
- <div>
- <h3 className="text-3xl font-black text-slate-900 tracking-tight leading-none">Store Logic</h3>
- <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] mt-2">Mobile Application Distribution</p>
- </div>
- </div>
- <label className="flex items-center gap-4 cursor-pointer">
- <span className={cn(
- "text-[10px] font-black transition-colors",
- enabled ? "text-emerald-500" : "text-slate-400"
- )}>
- {enabled ? 'Active' : 'Hidden'}
- </span>
- <div
- onClick={() => setEnabled(!enabled)}
- className={cn(
- "w-14 h-7 rounded-full p-1 transition-all duration-500 flex items-center relative shadow-inner",
- enabled ? "bg-emerald-500" : "bg-slate-200"
- )}
- >
- <div className={cn(
- "w-5 h-5 bg-white rounded-full shadow-lg transition-transform duration-500 transform",
- enabled ? "translate-x-7" : "translate-x-0"
- )} />
- </div>
- </label>
- </div>
+      {/* App Download Setup Section */}
+      <Card 
+        bordered={false} 
+        className="shadow-sm" 
+        style={{ borderRadius: 12 }}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Title level={5} style={{ margin: 0 }}>App Download Setup Section</Title>
+            <Tooltip title="See how your app download setup section will look to customers.">
+              <InfoCircleOutlined style={{ color: '#8e8e8e' }} />
+            </Tooltip>
+          </div>
+        }
+      >
+        <Paragraph type="secondary" style={{ marginBottom: 24 }}>See how your app download setup section will look to customers.</Paragraph>
+        
+        <div style={{ 
+          background: isDark ? '#1a1a1a' : '#f8fafc', 
+          padding: 40, 
+          borderRadius: 20, 
+          border: `1px dashed ${isDark ? '#333' : '#e2e8f0'}`,
+          textAlign: 'center'
+        }}>
+          <Row gutter={[48, 48]} justify="center">
+            <Col span={10}>
+                <div style={{ padding: 24, background: isDark ? '#141414' : '#fff', borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <Text strong type="secondary" style={{ fontSize: 10, display: 'block', marginBottom: 12, letterSpacing: '0.1em' }}>DRIVER APP PREVIEW</Text>
+                    <Title level={4} style={{ marginBottom: 8 }}>{driverTitle || 'Ex: Ride Sharing'}</Title>
+                    <Paragraph type="secondary" style={{ fontSize: 13 }}>{driverSubtitle || 'Ex: Section Description'}</Paragraph>
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
+                        <Button icon={<AndroidOutlined />} style={{ borderRadius: 8, height: 40, display: 'flex', alignItems: 'center' }}>Google Play</Button>
+                        <Button icon={<AppleOutlined />} style={{ borderRadius: 8, height: 40, display: 'flex', alignItems: 'center' }}>App Store</Button>
+                    </div>
+                </div>
+            </Col>
+            <Col span={10}>
+                <div style={{ padding: 24, background: isDark ? '#141414' : '#fff', borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <Text strong type="secondary" style={{ fontSize: 10, display: 'block', marginBottom: 12, letterSpacing: '0.1em' }}>USER APP PREVIEW</Text>
+                    <Title level={4} style={{ marginBottom: 8 }}>{userTitle || 'Ex: Ride Sharing'}</Title>
+                    <Paragraph type="secondary" style={{ fontSize: 13 }}>{userSubtitle || 'Ex: Section Description'}</Paragraph>
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
+                        {userPlayStore && <Button icon={<AndroidOutlined />} style={{ borderRadius: 8, height: 40, display: 'flex', alignItems: 'center' }}>Google Play</Button>}
+                        {userAppleStore && <Button icon={<AppleOutlined />} style={{ borderRadius: 8, height: 40, display: 'flex', alignItems: 'center' }}>App Store</Button>}
+                    </div>
+                </div>
+            </Col>
+          </Row>
+        </div>
+      </Card>
 
- <div className="space-y-8 relative z-10">
- <div className="space-y-4">
- <label className="text-[10px] font-black text-slate-400 tracking-[0.2em] ml-4">Google Play Store URL</label>
- <div className="relative group/field">
- <div className="absolute left-6 top-1/2 -translate-y-1/2 p-2 bg-white rounded-xl text-slate-300 group-focus-within/field:text-emerald-600 transition-colors">
- <SmartphoneNfc className="w-5 h-5" />
- </div>
- <input
- type="url"
- value={playStoreUrl}
- onChange={(e) => setPlayStoreUrl(e.target.value)}
- placeholder="https://play.google.com/store/apps/..."
- className="w-full pl-16 pr-20 py-5 bg-slate-50 border border-slate-100 rounded-[32px] text-xs font-bold text-slate-600 outline-none hover:border-emerald-200 focus:ring-8 focus:ring-emerald-500/5 transition-all shadow-sm"
- />
- <button className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[10px] font-black text-[#0089D1] hover:bg-white px-3 py-1.5 rounded-full transition-all">
- <ExternalLink className="w-4 h-4" /> Visit
- </button>
- </div>
- </div>
+      {/* Download The Driver App Button section */}
+      <Card 
+        bordered={false} 
+        className="shadow-sm" 
+        style={{ borderRadius: 12 }}
+        title={<Title level={5} style={{ margin: 0 }}>Download The Driver App Button</Title>}
+      >
+        <Paragraph type="secondary">Configure the section content by setting the title and subtitle</Paragraph>
+        
+        <Row gutter={24}>
+          <Col span={12}>
+            <div style={{ marginBottom: 20 }}>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>Title *</Text>
+              <Input 
+                placeholder="Ex: Ride Sharing" 
+                maxLength={100} 
+                value={driverTitle}
+                onChange={e => setDriverTitle(e.target.value)}
+                suffix={<Text type="secondary" style={{ fontSize: 12 }}>{driverTitle.length}/100</Text>}
+              />
+            </div>
+          </Col>
+          <Col span={12}>
+            <div style={{ marginBottom: 20 }}>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>Sub Title *</Text>
+              <Input 
+                placeholder="Ex: Section Description" 
+                maxLength={200}
+                value={driverSubtitle}
+                onChange={e => setDriverSubtitle(e.target.value)}
+                suffix={<Text type="secondary" style={{ fontSize: 12 }}>{driverSubtitle.length}/200</Text>}
+              />
+            </div>
+          </Col>
+        </Row>
 
- <div className="space-y-4">
- <label className="text-[10px] font-black text-slate-400 tracking-[0.2em] ml-4">Apple App Store URL</label>
- <div className="relative group/field">
- <div className="absolute left-6 top-1/2 -translate-y-1/2 p-2 bg-white rounded-xl text-slate-300 group-focus-within/field:text-blue-600 transition-colors">
- <Monitor className="w-5 h-5" />
- </div>
- <input
- type="url"
- value={appStoreUrl}
- onChange={(e) => setAppStoreUrl(e.target.value)}
- placeholder="https://apps.apple.com/app/..."
- className="w-full pl-16 pr-20 py-5 bg-slate-50 border border-slate-100 rounded-[32px] text-xs font-bold text-slate-600 outline-none hover:border-blue-200 focus:ring-8 focus:ring-blue-500/5 transition-all shadow-sm"
- />
- <button className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[10px] font-black text-[#0089D1] hover:bg-white px-3 py-1.5 rounded-full transition-all">
- <ExternalLink className="w-4 h-4" /> Visit
- </button>
- </div>
- </div>
- </div>
+        <Title level={5} style={{ marginTop: 8, marginBottom: 16 }}>Download Buttons</Title>
+        <Paragraph type="secondary">Complete the setup of the app store download buttons you want to display to users.</Paragraph>
+        
+        <Row gutter={[24, 24]}>
+          <Col span={12}>
+            <Card size="small" style={{ borderRadius: 12, border: `1px solid ${isDark ? '#333' : '#f0f0f0'}` }}>
+              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Space>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        <AndroidOutlined />
+                    </div>
+                    <Text strong>Play Store Button</Text>
+                </Space>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: isDark ? '#1a2b25' : '#f6ffed', padding: '12px 16px', borderRadius: 8, border: `1px solid ${isDark ? '#234438' : '#b7eb8f'}` }}>
+                    <CheckCircleFilled style={{ color: '#52c41a', marginTop: 4 }} />
+                    <Text style={{ fontSize: 12 }}>App download button is connected successfully. Data is synced from App Version Setup</Text>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card size="small" style={{ borderRadius: 12, border: `1px solid ${isDark ? '#333' : '#f0f0f0'}` }}>
+              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Space>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        <AppleOutlined />
+                    </div>
+                    <Text strong>Apple Store Button</Text>
+                </Space>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: isDark ? '#1a2b25' : '#f6ffed', padding: '12px 16px', borderRadius: 8, border: `1px solid ${isDark ? '#234438' : '#b7eb8f'}` }}>
+                    <CheckCircleFilled style={{ color: '#52c41a', marginTop: 4 }} />
+                    <Text style={{ fontSize: 12 }}>App download button is connected successfully. Data is synced from App Version Setup</Text>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
+      </Card>
 
- <div className="pt-6 relative z-10 flex flex-col gap-6">
- <div className="p-8 bg-slate-50 rounded-[40px] border border-slate-100 space-y-6">
- <div className="flex items-center justify-between">
- <h4 className="text-[10px] font-black text-slate-900 ">Active Channels</h4>
- <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 italic">2 Stable Releases</span>
- </div>
- <div className="grid grid-cols-2 gap-4">
- <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 group/chan hover:border-[#0089D1] transition-all cursor-pointer">
- <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shrink-0" />
- <span className="text-[10px] font-black text-slate-600 ">Production Hub</span>
- </div>
- <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 group/chan hover:border-amber-400 transition-all cursor-pointer">
- <div className="w-3 h-3 rounded-full bg-slate-300 shrink-0" />
- <span className="text-[10px] font-black text-slate-400 italic group-hover/chan:text-amber-500 transition-colors">Staging Dev</span>
- </div>
- </div>
- </div>
- </div>
- </div>
- </div>
+      {/* Download The User App Button section */}
+      <Card 
+        bordered={false} 
+        className="shadow-sm" 
+        style={{ borderRadius: 12 }}
+        title={<Title level={5} style={{ margin: 0 }}>Download The User App Button</Title>}
+      >
+        <Paragraph type="secondary">Here you can setup the necessary information related to the app download option</Paragraph>
 
- {/* Right Panel: Content & Branding */}
- <div className="lg:w-1/2 space-y-10">
- <div className="bg-slate-900 p-12 rounded-[60px] text-white space-y-10 shadow-2xl relative overflow-hidden group">
- <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#0089D1]/10 rounded-full blur-[100px] -mr-40 -mb-40" />
+        <Row gutter={48}>
+          <Col span={14}>
+            <div style={{ marginBottom: 20 }}>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>Title *</Text>
+              <Input 
+                placeholder="Ex: Ride Sharing" 
+                maxLength={100} 
+                value={userTitle}
+                onChange={e => setUserTitle(e.target.value)}
+                suffix={<Text type="secondary" style={{ fontSize: 12 }}>{userTitle.length}/100</Text>}
+              />
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>Sub Title *</Text>
+              <Input.TextArea 
+                placeholder="Ex: Section Description" 
+                maxLength={200}
+                rows={3}
+                value={userSubtitle}
+                onChange={e => setUserSubtitle(e.target.value)}
+                style={{ borderRadius: 8 }}
+              />
+              <div style={{ textAlign: 'right', marginTop: 4 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>{userSubtitle.length}/200</Text>
+              </div>
+            </div>
+          </Col>
+          <Col span={10}>
+            <div style={{ marginBottom: 20 }}>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>Background Image</Text>
+              <Upload
+                listType="picture-card"
+                maxCount={1}
+                beforeUpload={beforeUpload}
+                showUploadList={true}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8, fontSize: 12 }}>No file chosen</div>
+                </div>
+              </Upload>
+              <Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 8 }}>
+                .png, .jpg, .jpeg, .webp, .gif, Image Size - Max 1MB (1:1)
+              </Text>
+            </div>
+          </Col>
+        </Row>
 
- <div className="flex items-center gap-6 relative z-10">
- <div className="p-5 bg-white/10 rounded-[30px] border border-white/10 text-[#0089D1]">
- <Layout className="w-8 h-8" />
- </div>
- <div>
- <h3 className="text-3xl font-black tracking-tight leading-none">Banner Content</h3>
- <p className="text-[10px] font-black text-white/40 tracking-[0.2em] mt-2 italic">Landing Page Promotion</p>
- </div>
- </div>
+        <Title level={5} style={{ marginTop: 16, marginBottom: 16 }}>Download Buttons</Title>
+        <Paragraph type="secondary">Please select the options that you would like to make visible to your users</Paragraph>
 
- <div className="space-y-8 relative z-10">
- <div className="space-y-4">
- <label className="text-[10px] font-black text-white/30 tracking-[0.2em] ml-4">Download Section Title</label>
- <input
- type="text"
- value={downloadTitle}
- onChange={(e) => setDownloadTitle(e.target.value)}
- placeholder="Enter CTA Title"
- className="w-full px-8 py-5 bg-white/5 border border-white/10 rounded-[32px] text-xs font-bold text-white outline-none hover:border-white/20 focus:ring-8 focus:ring-white/5 transition-all shadow-inner"
- />
- </div>
+        <Row gutter={[24, 24]}>
+          <Col span={12}>
+            <Card size="small" style={{ borderRadius: 12, border: `1px solid ${isDark ? '#333' : '#f0f0f0'}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Space direction="vertical" size={12} style={{ width: '80%' }}>
+                    <Space>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                            <AndroidOutlined />
+                        </div>
+                        <Text strong>Play Store Button</Text>
+                    </Space>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: isDark ? '#1a2b25' : '#f6ffed', padding: '8px 12px', borderRadius: 8, border: `1px solid ${isDark ? '#234438' : '#b7eb8f'}` }}>
+                        <CheckCircleFilled style={{ color: '#52c41a', marginTop: 2, fontSize: 12 }} />
+                        <Text style={{ fontSize: 11 }}>App download button is connected successfully. Data is synced from App Version Setup</Text>
+                    </div>
+                </Space>
+                <Switch checked={userPlayStore} onChange={setUserPlayStore} style={{ background: userPlayStore ? '#10b981' : undefined }} />
+              </div>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card size="small" style={{ borderRadius: 12, border: `1px solid ${isDark ? '#333' : '#f0f0f0'}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Space direction="vertical" size={12} style={{ width: '80%' }}>
+                    <Space>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                            <AppleOutlined />
+                        </div>
+                        <Text strong>Apple Store Button</Text>
+                    </Space>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: isDark ? '#1a2b25' : '#f6ffed', padding: '8px 12px', borderRadius: 8, border: `1px solid ${isDark ? '#234438' : '#b7eb8f'}` }}>
+                        <CheckCircleFilled style={{ color: '#52c41a', marginTop: 2, fontSize: 12 }} />
+                        <Text style={{ fontSize: 11 }}>App download button is connected successfully. Data is synced from App Version Setup. with reset and save buttons</Text>
+                    </div>
+                </Space>
+                <Switch checked={userAppleStore} onChange={setUserAppleStore} style={{ background: userAppleStore ? '#10b981' : undefined }} />
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </Card>
 
- <div className="space-y-4">
- <label className="text-[10px] font-black text-white/30 tracking-[0.2em] ml-4">Marketing Description</label>
- <textarea
- rows={4}
- value={downloadDesc}
- onChange={(e) => setDownloadDesc(e.target.value)}
- placeholder="Enter secondary marketing text..."
- className="w-full px-8 py-5 bg-white/5 border border-white/10 rounded-[40px] text-xs font-medium text-white/80 outline-none hover:border-white/20 focus:ring-8 focus:ring-white/5 transition-all shadow-inner resize-none"
- />
- </div>
- </div>
-
- <div className="pt-6 relative z-10 grid grid-cols-2 gap-6">
- <button className="flex items-center justify-center gap-3 w-full py-5 bg-white text-slate-900 rounded-[32px] text-[10px] font-black tracking-[0.2em] hover:scale-[1.03] active:scale-95 transition-all">
- <ImageIcon className="w-5 h-5" /> Change Assets
- </button>
- <button className="flex items-center justify-center gap-3 w-full py-5 bg-blue-500 text-white rounded-[32px] text-[10px] font-black tracking-[0.2em] hover:bg-blue-600 transition-all">
- <Share2 className="w-5 h-5" /> Share Report
- </button>
- </div>
- </div>
-
- <div className="p-10 bg-emerald-50/50 rounded-[50px] border border-emerald-100 flex items-start gap-6 group hover:bg-emerald-50 transition-colors duration-500">
- <div className="p-4 bg-white rounded-[24px] text-emerald-500 shadow-sm border border-emerald-50 group-hover:scale-110 transition-transform">
- <Zap className="w-6 h-6" />
- </div>
- <div className="space-y-3">
- <h4 className="text-sm font-black text-emerald-900 ">Growth Engine Active</h4>
- <p className="text-[10px] font-medium text-emerald-800/60 leading-relaxed">
- Linking your apps to the official stores directly impacts your **Organic Acquisition Rate (OAR)**.
- Ensure you've updated the **App-Ads.txt** file on your root domain for monetization compliance.
- </p>
- <button className="flex items-center gap-2 text-[10px] font-black text-emerald-600 hover:underline transition-all">
- Learn More <ArrowRight className="w-3 h-3" />
- </button>
- </div>
- </div>
- </div>
- </div>
- </div>
- );
+      {/* Footer Actions */}
+      <Divider />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, marginBottom: 40 }}>
+        <Button size="large" icon={<ReloadOutlined />} onClick={handleReset} style={{ borderRadius: 8 }}>Reset</Button>
+        <Button type="primary" size="large" icon={<SaveOutlined />} onClick={handleSave} style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, padding: '0 40px' }}>
+          Save Changes
+        </Button>
+      </div>
+    </div>
+  );
 };

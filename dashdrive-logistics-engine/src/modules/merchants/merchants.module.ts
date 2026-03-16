@@ -3,8 +3,8 @@ import { MerchantsService } from './merchants.service';
 import { MerchantsController } from './merchants.controller';
 
 @Module({
-    controllers: [MerchantsController],
-    providers: [MerchantsService],
-    exports: [MerchantsService],
+  controllers: [MerchantsController],
+  providers: [MerchantsService],
+  exports: [MerchantsService],
 })
-export class MerchantsModule { }
+export class MerchantsModule {}

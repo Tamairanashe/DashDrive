@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Card, Typography, Modal, Form, Input, InputNumber, Space, Tag, message, Row, Col } from 'antd';
-import { PlusOutlined, BankOutlined, EditOutlined } from '@ant-design/icons';
+import { Table, Button, Card, Typography, Drawer, Form, Input, InputNumber, Space, Tag, message, Row, Col } from 'antd';
+import { PlusOutlined, BankOutlined, EditOutlined, SaveOutlined } from '@ant-design/icons';
 import { adminApi } from '../../api/adminApi';
 
 const { Title } = Typography;
@@ -8,7 +8,7 @@ const { Title } = Typography;
 export const LoanProductManagement: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [form] = Form.useForm();
 
   const fetchProducts = async () => {
@@ -36,7 +36,7 @@ export const LoanProductManagement: React.FC = () => {
     try {
       await adminApi.fintech.loans.createProduct(values);
       message.success('Loan product created successfully');
-      setIsModalVisible(false);
+      setIsDrawerVisible(false);
       form.resetFields();
       fetchProducts();
     } catch (err) {
@@ -71,16 +71,16 @@ export const LoanProductManagement: React.FC = () => {
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Col>
-          <Title level={3}><BankOutlined /> Loan Product Management</Title>
+          <Title level={3} style={{ margin: 0 }}><BankOutlined /> Loan Product Management</Title>
         </Col>
         <Col>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsDrawerVisible(true)} style={{ background: '#0e172a' }}>
             Create Global Loan Product
           </Button>
         </Col>
       </Row>
 
-      <Card className="shadow-sm">
+      <Card style={{ borderRadius: 16, border: '1px solid #e2e8f0' }}>
         <Table 
           columns={columns} 
           dataSource={products} 
@@ -90,27 +90,41 @@ export const LoanProductManagement: React.FC = () => {
         />
       </Card>
 
-      <Modal
-        title="Create New Loan Product"
-        visible={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={() => form.submit()}
+      <Drawer
+        title={<Space><BankOutlined /> Create New Loan Product</Space>}
+        open={isDrawerVisible}
+        onClose={() => setIsDrawerVisible(false)}
+        width={500}
+        extra={
+          <Space>
+            <Button onClick={() => setIsDrawerVisible(false)}>Cancel</Button>
+            <Button type="primary" icon={<SaveOutlined />} onClick={() => form.submit()} style={{ background: '#0e172a' }}>
+              Create Product
+            </Button>
+          </Space>
+        }
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} style={{ marginTop: 20 }}>
           <Form.Item name="name" label="Product Name" rules={[{ required: true }]}>
             <Input placeholder="e.g. Daily Driver Loan" />
           </Form.Item>
-          <Form.Item name="interest_rate" label="Interest Rate (%)" rules={[{ required: true }]}>
-            <InputNumber min={0} max={100} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="max_amount" label="Maximum Loan Amount ($)" rules={[{ required: true }]}>
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="interest_rate" label="Interest Rate (%)" rules={[{ required: true }]}>
+                <InputNumber min={0} max={100} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="max_amount" label="Max Amount ($)" rules={[{ required: true }]}>
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item name="repayment_period_days" label="Repayment Period (Days)" rules={[{ required: true }]}>
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

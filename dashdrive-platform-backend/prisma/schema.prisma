@@ -31,7 +31,36 @@ model User {
   policies      Policy[]
   claims        Claim[]
   wallet        Wallet?
+  students      Student[]
 
+  @@schema("core")
+}
+
+model Student {
+  id           String   @id @default(uuid()) @db.Uuid
+  parent_id    String   @db.Uuid
+  name         String
+  age          Int
+  school_id    String   @db.Uuid
+  grade        String?
+  special_notes String?
+  
+  parent       User     @relation(fields: [parent_id], references: [id])
+  school       School   @relation(fields: [school_id], references: [id])
+  
+  @@schema("core")
+}
+
+model School {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  address   String
+  latitude  Float
+  longitude Float
+  phone     String?
+  
+  students  Student[]
+  
   @@schema("core")
 }
 

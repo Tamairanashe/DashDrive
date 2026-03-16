@@ -8,7 +8,6 @@ import {
   Typography, 
   Row, 
   Col, 
-  Modal,
   Form,
   Input,
   Select,
@@ -16,7 +15,8 @@ import {
   message,
   Divider,
   List,
-  Statistic
+  Statistic,
+  Drawer
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -224,14 +224,13 @@ export const CustomerLevelSetupPage: React.FC = () => {
         />
       </Card>
 
-      <Modal
+      <Drawer
         title={<span>{editingTier ? 'Configure Tier Benefits' : 'Create New Tier'}</span>}
         open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={handleSave}
-        okText="Save Configuration"
+        onClose={() => setIsModalVisible(false)}
         width={600}
         destroyOnClose
+        extra={<Button type="primary" onClick={handleSave}>Save Configuration</Button>}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 24 }}>
           <Row gutter={16}>
@@ -255,7 +254,7 @@ export const CustomerLevelSetupPage: React.FC = () => {
             </Col>
           </Row>
 
-          <Divider orientation="left">Granted Benefits</Divider>
+          <Divider>Granted Benefits</Divider>
           
           <Form.Item 
             name="benefits" 
@@ -280,7 +279,7 @@ export const CustomerLevelSetupPage: React.FC = () => {
           </Form.Item>
           <Text type="secondary">These benefits will be instantly active on the user's rider app once they reach this tier.</Text>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

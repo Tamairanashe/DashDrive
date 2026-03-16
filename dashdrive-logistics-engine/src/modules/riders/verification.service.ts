@@ -13,13 +13,19 @@ export class VerificationService {
     });
   }
 
-  async verifyRider(riderId: string, status: VerificationStatus, note?: string) {
-    const rider = await this.prisma.rider.findUnique({ where: { id: riderId } });
+  async verifyRider(
+    riderId: string,
+    status: VerificationStatus,
+    note?: string,
+  ) {
+    const rider = await this.prisma.rider.findUnique({
+      where: { id: riderId },
+    });
     if (!rider) throw new NotFoundException('Rider not found');
 
     return this.prisma.rider.update({
       where: { id: riderId },
-      data: { 
+      data: {
         verificationStatus: status,
         // In a real app, we'd log the note/adminId in a history table
       },

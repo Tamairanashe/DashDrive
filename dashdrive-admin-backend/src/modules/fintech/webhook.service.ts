@@ -2,7 +2,9 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CommissionService } from './commission.service';
 import { LeadService } from './lead.service';
-import { FintechStatus } from '@prisma/client';
+import { FintechStatus, PaymentStatus } from '@prisma/client';
+import { PaynowProvider } from './providers/paynow.provider';
+import { PaymentService } from './payment.service';
 
 @Injectable()
 export class WebhookService {
@@ -12,7 +14,42 @@ export class WebhookService {
     private prisma: PrismaService,
     private leadService: LeadService,
     private commissionService: CommissionService,
+    private paynow: PaynowProvider,
+    private paymentService: PaymentService,
   ) {}
+
+  async handlePaynowWebhook(payload: any) {
+    this.logger.log(`Received Paynow webhook for reference: ${payload.reference}`);
+
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id: payload.reference },
+    });
+
+    if (!transaction) {
+      this.logger.error(`Transaction ${payload.reference} not found for Paynow webhook`);
+      throw new BadRequestException('Transaction not found');
+    }
+
+    if (!this.paynow.verifyHash(payload, transaction.currency)) {
+      this.logger.error('Invalid Paynow webhook hash');
+      throw new BadRequestException('Security validation failed');
+    }
+
+    if (payload.status === 'Paid' || payload.status === 'Awaiting Delivery') {
+      return this.paymentService.fulfillTransaction(transaction.id, payload);
+    } else if (payload.status === 'Cancelled' || payload.status === 'Refused') {
+      return (this.prisma.transaction as any).update({
+        where: { id: transaction.id },
+        data: {
+          status: PaymentStatus.FAILED,
+          gatewayTransactionId: payload.paynowreference,
+          updatedAt: new Date(),
+        },
+      });
+    }
+
+    return transaction;
+  }
 
   async handlePostback(payload: {
     event: string;

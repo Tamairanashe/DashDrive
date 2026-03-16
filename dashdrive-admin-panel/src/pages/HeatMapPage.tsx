@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
     Typography, Row, Col, Card, Select, Button, Space, 
     Tag, Statistic, Divider, message, Alert, Switch, Skeleton,
-    Badge, List, Drawer, Progress, Tabs, Avatar, Input, Modal, Table, DatePicker, InputNumber,
+    Badge, List, Drawer, Progress, Tabs, Avatar, Input, Table, DatePicker, InputNumber,
     Calendar, Form, TimePicker, Slider, Timeline
 } from 'antd';
 import { 
@@ -240,9 +240,9 @@ export const HeatMapPage: React.FC = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isZoneListVisible, setIsZoneListVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
-    const [isLedgerVisible, setIsLedgerVisible] = useState(false);
-    const [isFlagModalVisible, setIsFlagModalVisible] = useState(false);
+    const [isProfileDrawerVisible, setIsProfileDrawerVisible] = useState(false);
+    const [isLedgerDrawerVisible, setIsLedgerDrawerVisible] = useState(false);
+    const [isFlagDrawerVisible, setIsFlagDrawerVisible] = useState(false);
     const [actionReason, setActionReason] = useState('');
     const [selectedUser, setSelectedUser] = useState<any | null>(null);
     const [mapSearchQuery, setMapSearchQuery] = useState('');
@@ -615,7 +615,7 @@ export const HeatMapPage: React.FC = () => {
                                         eventHandlers={{
                                             click: () => {
                                                 setSelectedUser(point);
-                                                setIsProfileModalVisible(true);
+                                                setIsProfileDrawerVisible(true);
                                             }
                                         }}
                                     />
@@ -1214,241 +1214,8 @@ export const HeatMapPage: React.FC = () => {
                 />
             </Drawer>
 
-            <Modal
-                title={null}
-                footer={null}
-                open={isProfileModalVisible}
-                onCancel={() => setIsProfileModalVisible(false)}
-                width={500}
-                centered
-                bodyStyle={{ padding: 0, borderRadius: 16 }}
-            >
-                {selectedUser && (
-                    <div style={{ borderRadius: 16, overflow: 'hidden' }}>
-                        <div style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', padding: '32px 24px', textAlign: 'center' }}>
-                            <Avatar size={80} icon={<UserOutlined />} style={{ border: '4px solid rgba(255,255,255,0.2)', marginBottom: 16 }} />
-                            <Title level={3} style={{ color: 'white', margin: 0 }}>{selectedUser.name}</Title>
-                            <Space style={{ marginTop: 8 }}>
-                                <Tag color="gold" icon={<StarFilled />}>{selectedUser.loyalty} Member</Tag>
-                                <Tag color="blue">{selectedUser.behavior}</Tag>
-                            </Space>
-                        </div>
-                        <div style={{ padding: 24 }}>
-                            <Row gutter={[16, 16]}>
-                                <Col span={8}>
-                                    <Card size="small" style={{ textAlign: 'center', background: '#f8fafc' }}>
-                                        <Statistic title="Rating" value={selectedUser.rating} precision={1} prefix={<StarFilled style={{ color: '#eab308' }} />} valueStyle={{ fontSize: 18 }} />
-                                    </Card>
-                                </Col>
-                                <Col span={8}>
-                                    <Card size="small" style={{ textAlign: 'center', background: '#f8fafc' }}>
-                                        <Statistic title="Trips" value={selectedUser.trips} valueStyle={{ fontSize: 18 }} />
-                                    </Card>
-                                </Col>
-                                <Col span={8}>
-                                    <Card size="small" style={{ textAlign: 'center', background: '#f8fafc' }}>
-                                        <Statistic title="Years" value={2} valueStyle={{ fontSize: 18 }} />
-                                    </Card>
-                                </Col>
-                            </Row>
-
-                            <div style={{ marginTop: 24, padding: 16, background: '#eff6ff', borderRadius: 12, border: '1px solid #dbeafe' }}>
-                                <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13, color: '#1e40af' }}>Live Request Intent</Text>
-                                <Space wrap>
-                                    {selectedUser.activeRequests.map((reqId) => {
-                                        const srv = SERVICE_TYPES.find(s => s.id === reqId);
-                                        return (
-                                            <Tag key={reqId} color={srv?.color} icon={srv?.icon} style={{ borderRadius: 6, padding: '4px 8px' }}>
-                                                {srv?.name}
-                                            </Tag>
-                                        );
-                                    })}
-                                    <Badge status="processing" text="Active" style={{ marginLeft: 8 }} />
-                                </Space>
-                            </div>
-
-                            <Divider style={{ margin: '24px 0 12px 0' }}>Engagement History</Divider>
-                            <List size="small">
-                                <List.Item>
-                                    <Text type="secondary">Member Since:</Text> <Text strong>{selectedUser.since}</Text>
-                                </List.Item>
-                                <List.Item>
-                                    <Text type="secondary">Service Affinity:</Text> <Tag color="cyan">{selectedUser.topVertical}</Tag>
-                                </List.Item>
-                                <List.Item>
-                                    <Text type="secondary">Preferred Tiers:</Text> <Text strong>DashX, Comfort</Text>
-                                </List.Item>
-                                <List.Item>
-                                    <Text type="secondary">Status:</Text> <Badge status="success" text="Trusted Account" />
-                                </List.Item>
-                            </List>
-
-                            <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
-                                <Button type="primary" block size="large" icon={<NotificationOutlined />}>Message Client</Button>
-                                <Button
-                                    block
-                                    size="large"
-                                    danger
-                                    ghost
-                                    icon={<StopOutlined />}
-                                    onClick={() => setIsFlagModalVisible(true)}
-                                >
-                                    Flag Account
-                                </Button>
-                            </div>
-                            <Button
-                                type="link"
-                                block
-                                style={{ marginTop: 12 }}
-                                onClick={() => setIsLedgerVisible(true)}
-                            >
-                                View Full Transaction Ledger
-                            </Button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
-            <Modal
-                title={
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '95%' }}>
-                        <Space><WalletOutlined style={{ color: '#3b82f6' }} /> <Text strong>Transaction Ledger: {selectedUser?.name}</Text></Space>
-                        <Space>
-                            <Input placeholder="Search TxID..." prefix={<SearchOutlined />} size="small" style={{ width: 150 }} />
-                            <Button icon={<SyncOutlined />} size="small" />
-                        </Space>
-                    </div>
-                }
-                open={isLedgerVisible}
-                onCancel={() => setIsLedgerVisible(false)}
-                footer={null}
-                width={800}
-                centered
-                bodyStyle={{ padding: '0 0 24px 0' }}
-            >
-                <div style={{ padding: '24px' }}>
-                    <Row gutter={24} style={{ marginBottom: 24 }}>
-                        <Col span={8}>
-                            <Card size="small" bordered={false} style={{ background: '#f0f9ff' }}>
-                                <Statistic title="Wallet Balance" value={425.50} precision={2} prefix="$" valueStyle={{ color: '#0369a1' }} />
-                            </Card>
-                        </Col>
-                        <Col span={8}>
-                            <Card size="small" bordered={false} style={{ background: '#f0fdf4' }}>
-                                <Statistic title="Total Top-ups" value={1200.00} precision={2} prefix="$" valueStyle={{ color: '#15803d' }} />
-                            </Card>
-                        </Col>
-                        <Col span={8}>
-                            <Card size="small" bordered={false} style={{ background: '#fffef2' }}>
-                                <Statistic title="Pending Claims" value={0.00} precision={2} prefix="$" valueStyle={{ color: '#a16207' }} />
-                            </Card>
-                        </Col>
-                    </Row>
-
-                    <Table
-                        size="small"
-                        dataSource={MOCK_TRANSACTIONS.filter(tx => tx.userId === selectedUser?.id)}
-                        rowKey="id"
-                        pagination={{ pageSize: 5 }}
-                        columns={[
-                            {
-                                title: 'TxID',
-                                dataIndex: 'id',
-                                key: 'id',
-                                render: (id) => <Text code style={{ fontSize: 11 }}>{id}</Text>
-                            },
-                            {
-                                title: 'Date',
-                                dataIndex: 'date',
-                                key: 'date',
-                                render: (date) => <Text type="secondary" style={{ fontSize: 12 }}>{date}</Text>
-                            },
-                            {
-                                title: 'Service',
-                                key: 'service',
-                                render: (_, record) => {
-                                    const srv = SERVICE_TYPES.find(s => s.id === record.service);
-                                    return (
-                                        <Space>
-                                            <Avatar size="small" icon={srv?.icon || <WalletOutlined />} style={{ background: srv ? srv.color : '#64748b' }} />
-                                            <Text style={{ fontSize: 13 }}>{srv?.name || 'Wallet'}</Text>
-                                        </Space>
-                                    );
-                                }
-                            },
-                            {
-                                title: 'Description',
-                                dataIndex: 'description',
-                                key: 'description',
-                                ellipsis: true,
-                            },
-                            {
-                                title: 'Amount',
-                                key: 'amount',
-                                align: 'right',
-                                render: (_, record) => (
-                                    <Text strong style={{ color: record.type === 'debit' ? '#ef4444' : '#22c55e' }}>
-                                        {record.type === 'debit' ? '-' : '+'} ${record.amount.toFixed(2)}
-                                    </Text>
-                                )
-                            },
-                            {
-                                title: 'Status',
-                                dataIndex: 'status',
-                                key: 'status',
-                                render: (status) => (
-                                    <Tag
-                                        color={status === 'Completed' ? 'success' : status === 'Refunded' ? 'warning' : 'error'}
-                                        icon={status === 'Completed' ? <CheckCircleOutlined /> : status === 'Refunded' ? <ClockCircleOutlined /> : <CloseCircleOutlined />}
-                                    >
-                                        {status}
-                                    </Tag>
-                                )
-                            }
-                        ]}
-                    />
-                </div>
-            </Modal>
-
-            <Modal
-                title={<Space><WarningOutlined style={{ color: '#ef4444' }} /> <Text strong>Administrative Action: Flag Account</Text></Space>}
-                open={isFlagModalVisible}
-                onCancel={() => {
-                    setIsFlagModalVisible(false);
-                    setActionReason('');
-                }}
-                footer={[
-                    <Button key="cancel" onClick={() => setIsFlagModalVisible(false)}>Cancel</Button>,
-                    <Button
-                        key="submit"
-                        type="primary"
-                        danger
-                        disabled={!actionReason.trim()}
-                        onClick={() => {
-                            message.loading('Documenting governance rationale...', 1.5).then(() => {
-                                message.error(`${selectedUser?.name} flagged for review: ${actionReason}`);
-                                setIsFlagModalVisible(false);
-                                setActionReason('');
-                            });
-                        }}
-                    >
-                        Confirm Flag
-                    </Button>
-                ]}
-                centered
-                width={400}
-            >
-                <div style={{ marginBottom: 16 }}>
-                    <Text type="secondary">You are flagging <strong>{selectedUser?.name}</strong>. This will escalate their account for manual integrity review.</Text>
-                </div>
-                <Text strong style={{ display: 'block', marginBottom: 8 }}>Reason for Action (Mandatory)</Text>
-                <Input.TextArea
-                    placeholder="e.g., Suspicious payment activity, Multiple cancellations, or Harassment report..."
-                    rows={4}
-                    value={actionReason}
-                    onChange={(e) => setActionReason(e.target.value)}
-                />
-            </Modal>
+                                                setSelectedUser(point);
+                                                setIsProfileDrawerVisible(true);
 
             {/* Demand Calendar & Event Management Drawer */}
             <Drawer

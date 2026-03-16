@@ -298,11 +298,26 @@ model Rider {
   latitude        Float?
   longitude       Float?
   rating          Float      @default(5.0)
-  totalDeliveries Int        @default(0)
-  currentLoad     Int        @default(0)
-  createdAt       DateTime   @default(now())
+  totalDeliveries Int              @default(0)
+  currentLoad     Int              @default(0)
+  createdAt       DateTime         @default(now())
   Delivery        Delivery[]
   RiderBid        RiderBid[]
+  RideBundles     RiderRideBundle[]
+}
+
+model RiderRideBundle {
+  id              String   @id @default(cuid())
+  riderId         String
+  totalRides      Int
+  remainingRides  Int
+  pricePaid       Float
+  currency        String
+  expiresAt       DateTime?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Rider           Rider    @relation(fields: [riderId], references: [id])
 }
 
 model RiderBid {
@@ -369,7 +384,7 @@ model Review {
 
 model Transaction {
   id                   String        @id
-  orderId              String
+  orderId              String?
   storeId              String
   merchantId           String
   gateway              String
@@ -378,9 +393,23 @@ model Transaction {
   amount               Float
   status               PaymentStatus @default(PENDING)
   paymentMethod        String?
+  metadata             Json?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime
-  Order                Order         @relation(fields: [orderId], references: [id])
+  Order                Order?        @relation(fields: [orderId], references: [id])
+}
+
+model Biller {
+  id          String   @id @default(uuid())
+  name        String
+  category    String   // e.g., Electricity, Water, Airtime
+  billerCode  String   @unique
+  icon        String?
+  color       String?
+  isActive    Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Wallet {

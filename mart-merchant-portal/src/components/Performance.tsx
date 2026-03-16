@@ -44,13 +44,21 @@ const categoryData = [
 
 interface PerformanceProps {
     token: string | null;
-    merchant: any;
+    merchant: {
+        stores: { id: string }[];
+    };
     portalType?: 'mart' | 'direct';
+}
+
+interface SalesTrendItem {
+    name: string;
+    revenue: number;
+    orders: number;
 }
 
 export function Performance({ token, merchant, portalType = 'mart' }: PerformanceProps) {
     const [isLoading, setIsLoading] = useState(true);
-    const [salesTrend, setSalesTrend] = useState<any[]>(salesData);
+    const [salesTrend, setSalesTrend] = useState<SalesTrendItem[]>(salesData);
 
     const storeId = merchant?.stores?.[0]?.id;
 
@@ -65,7 +73,7 @@ export function Performance({ token, merchant, portalType = 'mart' }: Performanc
     const fetchPerformanceData = async () => {
         try {
             const trendData = await api.analytics.getSales(token!, storeId);
-            setSalesTrend(trendData.map((item: any) => ({
+            setSalesTrend(trendData.map((item: { date: string; revenue: string; count: string }) => ({
                 name: new Date(item.date).toLocaleDateString('en-US', { month: 'short' }),
                 revenue: parseFloat(item.revenue) || 0,
                 orders: parseInt(item.count) || 0

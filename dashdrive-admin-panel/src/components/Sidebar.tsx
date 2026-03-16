@@ -128,24 +128,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
  label: 'Parcel Delivery',
  subItems: ['Parcel Dashboard', 'Parcel Orders', 'Parcel Categories', 'Parcel Weights', 'Parcel Attributes', 'Refund Requests']
  },
- {
- icon: CreditCard,
- label: 'Payments & Fintech',
- subItems: [
- 'Fintech Dashboard',
- 'Transactions',
- 'Customer Wallet',
- 'Driver Wallet',
- 'Withdraw Requests',
- 'Cashless Payments',
- 'Pay Bills',
- 'PayLater (BNPL)',
- 'Loans',
- 'Donations',
- 'Payment Reports',
- 'DFS (Financial Scores)'
- ]
- },
  ]
  },
  {
@@ -199,21 +181,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
  { icon: PlusSquare, label: 'Add New Vehicle' }
  ]
  },
- {
- group: 'FINANCE & REPORTS',
- items: [
- { icon: ClipboardList, label: 'Transactions' },
- { icon: BarChart3, label: 'Earnings Reports' },
- { icon: FileText, label: 'Commission Reports' },
- { icon: TrendingUp, label: 'Financial Analytics' }
- ]
- },
+  {
+  group: 'FINANCE & REPORTS',
+  items: [
+  { 
+  icon: CreditCard, 
+  label: 'Fintech Hub',
+  subItems: ['Fintech Dashboard', 'Loan Management', 'Insurance Management', 'KYC Verification', 'Product Marketplace']
+  },
+  {
+  icon: Wallet,
+  label: 'Financial Operations',
+  subItems: ['Settlements & Payouts', 'Wallet Management']
+  },
+  {
+  icon: BarChart3,
+  label: 'Financial Reports Hub',
+  subItems: ['Earnings & Revenue Ledger', 'Commission Reports', 'Transaction Audit', 'Tax & Compliance', 'Profit & Loss']
+  }
+  ]
+  },
  {
  group: 'CONTENT MANAGEMENT',
  items: [
  { icon: BookOpen, label: 'Blog Setup' },
- { icon: FileEdit, label: 'Pages' },
- { icon: ImageIcon, label: 'Media Library' }
  ]
  },
  {

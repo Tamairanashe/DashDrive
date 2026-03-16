@@ -317,7 +317,7 @@ export const DashboardPage: React.FC = () => {
         bordered={false} 
         className="shadow-sm" 
         style={{ marginTop: 24, borderRadius: 12 }}
-        extra={<Button type="link" onClick={() => navigate('/system/logs')}>Full Audit Log</Button>}
+        extra={<Button type="link" onClick={() => navigate('/ops/logs')}>Full Audit Log</Button>}
       >
         <Table 
           dataSource={recentActivity}

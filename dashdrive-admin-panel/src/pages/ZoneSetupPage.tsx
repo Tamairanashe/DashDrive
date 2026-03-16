@@ -10,12 +10,14 @@ import {
   Space, 
   Tag, 
   Table,
-  Modal,
   Form,
   Switch,
   InputNumber,
   Badge,
-  Alert
+  Alert,
+  Drawer,
+  message,
+  Select
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -26,7 +28,8 @@ import {
   GlobalOutlined,
   CompassOutlined,
   WarningOutlined,
-  SaveOutlined
+  SaveOutlined,
+  InfoCircleOutlined
 } from '@ant-design/icons';
 import { MapContainer, TileLayer, Polygon, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
@@ -59,7 +62,8 @@ export const ZoneSetupPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Setup');
   const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
   const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [form] = Form.useForm();
 
   const columns = [
@@ -69,10 +73,14 @@ export const ZoneSetupPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: () => (
+      render: (_, record: Zone) => (
         <Space>
-          <Button type="text" icon={<EditOutlined />} />
-          <Button type="text" icon={<DeleteOutlined />} danger />
+          <Button type="text" icon={<EditOutlined />} onClick={() => {
+            setEditingZone(record);
+            form.setFieldsValue(record);
+            setIsDrawerOpen(true);
+          }} />
+          <Button type="text" icon={<DeleteOutlined />} danger onClick={() => setZones(prev => prev.filter(z => z.id !== record.id))} />
         </Space>
       ),
     },
@@ -85,17 +93,24 @@ export const ZoneSetupPage: React.FC = () => {
   };
 
   const handleSaveZone = (values: any) => {
-    const newZone: Zone = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: values.name,
-      status: 'Active',
-      points: [...drawingPoints],
-      volume: 'Low',
-      extraFare: values.extraFare
-    };
-    setZones(prev => [newZone, ...prev]);
+    if (editingZone) {
+      setZones(prev => prev.map(z => z.id === editingZone.id ? { ...z, ...values } : z));
+      message.success('Zone updated');
+    } else {
+      const newZone: Zone = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: values.name,
+        status: 'Active',
+        points: [...drawingPoints],
+        volume: 'Low',
+        extraFare: values.extraFare
+      };
+      setZones(prev => [newZone, ...prev]);
+      message.success('Zone created');
+    }
     setDrawingPoints([]);
-    setIsModalOpen(false);
+    setIsDrawerOpen(false);
+    setEditingZone(null);
     form.resetFields();
   };
 
@@ -148,7 +163,10 @@ export const ZoneSetupPage: React.FC = () => {
 
             {drawingPoints.length >= 3 && (
               <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
-                <Button type="primary" size="large" icon={<SaveOutlined />} onClick={() => setIsModalOpen(true)}>
+                <Button type="primary" size="large" icon={<SaveOutlined />} onClick={() => {
+                  setEditingZone(null);
+                  setIsDrawerOpen(true);
+                }}>
                   Confirm & Define Area
                 </Button>
               </div>
@@ -163,13 +181,40 @@ export const ZoneSetupPage: React.FC = () => {
           </Card>
           
           <div style={{ marginTop: 24 }}>
-            <Alert
-              message="Drawing Instructions"
-              description="Click on the map to define the corners of your operational zone. You need at least 3 points to create a geofence. Once satisfied, click 'Confirm & Define Area' to save."
-              type="info"
-              showIcon
-              icon={<GlobalOutlined />}
-            />
+            <Card title={<Space><InfoCircleOutlined style={{ color: '#10b981' }} /> Instructions</Space>} bordered={false} className="shadow-sm" style={{ borderRadius: 12 }}>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <Text type="secondary" style={{ width: 24, height: 24, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>1</Text>
+                  <div>
+                    <Text strong>Create zone by click on map and connect the dots together</Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 13 }}>Define the service area boundaries by placing markers precisely where you want the geofence to exist.</Text>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: 4, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <CompassOutlined style={{ fontSize: 14 }} />
+                  </div>
+                  <div>
+                    <Text strong>Use this to drag map to find proper area</Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 13 }}>Navigate through different clusters and cities by panning the map with your cursor.</Text>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: 4, background: '#0e172a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <PlusOutlined style={{ fontSize: 14 }} />
+                  </div>
+                  <div>
+                    <Text strong>Click this icon to start pin points in the map and connect them to draw a zone</Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 13 }}>Minimum 3 points are required to form a closed polygon. Once complete, define the logic in the setup drawer.</Text>
+                  </div>
+                </div>
+              </Space>
+            </Card>
           </div>
         </Col>
 
@@ -189,23 +234,38 @@ export const ZoneSetupPage: React.FC = () => {
         </Col>
       </Row>
 
-      <Modal
-        title="Define New Operational Zone"
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        onOk={() => form.submit()}
-        okText="Save Zone"
+      <Drawer
+        title={editingZone ? "Edit Operational Zone" : "Define New Operational Zone"}
+        open={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setEditingZone(null);
+        }}
+        width={450}
+        extra={<Button type="primary" onClick={() => form.submit()}>Save Zone</Button>}
         destroyOnClose
       >
         <Form form={form} layout="vertical" onFinish={handleSaveZone} initialValues={{ extraFare: false }}>
           <Form.Item label="Zone Name" name="name" rules={[{ required: true, message: 'Please enter zone name' }]}>
             <Input placeholder="Ex: Downtown Harare" />
           </Form.Item>
+          {editingZone && (
+            <Form.Item label="Status" name="status">
+              <Select options={[{ value: 'Active', label: 'Active' }, { value: 'Inactive', label: 'Inactive' }]} />
+            </Form.Item>
+          )}
           <Form.Item label="Enable Surge Pricing" name="extraFare" valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Form.Item label="Surge Percentage" name="farePercent" hidden={!form.getFieldValue('extraFare')}>
-            <InputNumber min={0} max={100} formatter={value => `${value}%`} />
+          <Form.Item 
+            noStyle 
+            shouldUpdate={(prev, curr) => prev.extraFare !== curr.extraFare}
+          >
+            {({ getFieldValue }) => getFieldValue('extraFare') && (
+              <Form.Item label="Surge Percentage" name="farePercent">
+                <InputNumber min={0} max={100} formatter={value => `${value}%`} style={{ width: '100%' }} />
+              </Form.Item>
+            )}
           </Form.Item>
           <Alert
             message="Dynamic Pricing"
@@ -213,9 +273,10 @@ export const ZoneSetupPage: React.FC = () => {
             type="warning"
             showIcon
             icon={<WarningOutlined />}
+            style={{ marginTop: 16 }}
           />
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

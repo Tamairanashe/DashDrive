@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Typography, Card, Tabs, Table, Tag,
   Button, Space, Form, Input, InputNumber, Divider,
-  Empty, Badge, Row, Col, Switch, Select, message, Modal, DatePicker, TimePicker, Statistic
+  Empty, Badge, Row, Col, Switch, Select, message, DatePicker, TimePicker, Statistic, Drawer, Modal
 } from 'antd';
 import {
   EyeOutlined,
@@ -123,10 +123,10 @@ export const RideHailingPage: React.FC = () => {
   ]);
 
   // Modal States
-  const [isPeakModalOpen, setIsPeakModalOpen] = useState(false);
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isBidsModalOpen, setIsBidsModalOpen] = useState(false);
+  const [isPeakDrawerOpen, setIsPeakDrawerOpen] = useState(false);
+  const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
+  const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
+  const [isBidsDrawerOpen, setIsBidsDrawerOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   // Forms
@@ -151,7 +151,7 @@ export const RideHailingPage: React.FC = () => {
         status: 'Active'
     };
     setPeakHours([...peakHours, newPeak]);
-    setIsPeakModalOpen(false);
+    setIsPeakDrawerOpen(false);
     peakForm.resetFields();
     message.success('Peak hour block added.');
   };
@@ -166,7 +166,7 @@ export const RideHailingPage: React.FC = () => {
         status: 'Upcoming'
     };
     setEvents([...events, newEvent]);
-    setIsEventModalOpen(false);
+    setIsEventDrawerOpen(false);
     eventForm.resetFields();
     message.success('Local event surge scheduled.');
   };
@@ -180,14 +180,14 @@ export const RideHailingPage: React.FC = () => {
         status: 'Active'
     };
     setCategories([...categories, newCat]);
-    setIsCategoryModalOpen(false);
+    setIsCategoryDrawerOpen(false);
     categoryForm.resetFields();
     message.success('New vehicle category created.');
   };
 
   const handleViewBids = (record: any) => {
     setSelectedOrder(record);
-    setIsBidsModalOpen(true);
+    setIsBidsDrawerOpen(true);
   };
 
   const handleCancelRide = (record: any) => {
@@ -427,7 +427,7 @@ export const RideHailingPage: React.FC = () => {
                   <Text type="secondary">Define recurring time blocks with guaranteed multipliers.</Text>
                </Col>
                <Col>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsPeakModalOpen(true)}>Add Time Block</Button>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsPeakDrawerOpen(true)}>Add Time Block</Button>
                </Col>
             </Row>
             <Table 
@@ -457,7 +457,7 @@ export const RideHailingPage: React.FC = () => {
                   <Text type="secondary">Override standard pricing for specific dates and local events.</Text>
                </Col>
                <Col>
-                   <Button type="primary" icon={<ThunderboltOutlined />} onClick={() => setIsEventModalOpen(true)}>Add Event Surge</Button>
+                   <Button type="primary" icon={<ThunderboltOutlined />} onClick={() => setIsEventDrawerOpen(true)}>Add Event Surge</Button>
                </Col>
             </Row>
             <Table 
@@ -489,7 +489,7 @@ export const RideHailingPage: React.FC = () => {
                     <Text type="secondary">Manage passenger ride options.</Text>
                 </Col>
                 <Col>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCategoryModalOpen(true)}>Add Category</Button>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCategoryDrawerOpen(true)}>Add Category</Button>
                 </Col>
             </Row>
             <Table 
@@ -612,7 +612,13 @@ export const RideHailingPage: React.FC = () => {
       </Card>
 
       {/* Modals */}
-      <Modal title="Add Peak Hour Block" open={isPeakModalOpen} onCancel={() => setIsPeakModalOpen(false)} onOk={() => peakForm.submit()}>
+      <Drawer 
+        title="Add Peak Hour Block" 
+        open={isPeakDrawerOpen} 
+        onClose={() => setIsPeakDrawerOpen(false)} 
+        width={400}
+        extra={<Button type="primary" onClick={() => peakForm.submit()}>Add Time Block</Button>}
+      >
           <Form form={peakForm} layout="vertical" onFinish={handleAddPeakHour}>
               <Form.Item name="day" label="Active Days" rules={[{ required: true }]}>
                   <Select options={[{value: 'Monday - Friday', label: 'Monday - Friday'}, {value: 'Saturday - Sunday', label: 'Saturday - Sunday'}]} />
@@ -624,9 +630,15 @@ export const RideHailingPage: React.FC = () => {
                   <InputNumber step={0.1} min={1} addonAfter="x" style={{ width: '100%' }} />
               </Form.Item>
           </Form>
-      </Modal>
+      </Drawer>
 
-      <Modal title="Add Local Event Surge" open={isEventModalOpen} onCancel={() => setIsEventModalOpen(false)} onOk={() => eventForm.submit()}>
+      <Drawer 
+        title="Add Local Event Surge" 
+        open={isEventDrawerOpen} 
+        onClose={() => setIsEventDrawerOpen(false)} 
+        width={400}
+        extra={<Button type="primary" onClick={() => eventForm.submit()}>Add Event Surge</Button>}
+      >
           <Form form={eventForm} layout="vertical" onFinish={handleAddEvent}>
               <Form.Item name="name" label="Event Name" rules={[{ required: true }]}>
                   <Input placeholder="e.g. Afro Jazz Festival" />
@@ -641,9 +653,15 @@ export const RideHailingPage: React.FC = () => {
                   <InputNumber step={0.1} min={1} addonAfter="x" style={{ width: '100%' }} />
               </Form.Item>
           </Form>
-      </Modal>
+      </Drawer>
 
-      <Modal title="Add Vehicle Category" open={isCategoryModalOpen} onCancel={() => setIsCategoryModalOpen(false)} onOk={() => categoryForm.submit()}>
+      <Drawer 
+        title="Add Vehicle Category" 
+        open={isCategoryDrawerOpen} 
+        onClose={() => setIsCategoryDrawerOpen(false)} 
+        width={400}
+        extra={<Button type="primary" onClick={() => categoryForm.submit()}>Add Category</Button>}
+      >
           <Form form={categoryForm} layout="vertical" onFinish={handleAddCategory}>
               <Form.Item name="name" label="Category Name" rules={[{ required: true }]}>
                   <Input placeholder="e.g. DashX" />
@@ -655,13 +673,12 @@ export const RideHailingPage: React.FC = () => {
                   <InputNumber step={0.1} min={0.5} addonAfter="x" style={{ width: '100%' }} />
               </Form.Item>
           </Form>
-      </Modal>
+      </Drawer>
 
-      <Modal 
+      <Drawer 
           title={selectedOrder ? `Active Bids for ${selectedOrder.id}` : 'Active Bids'} 
-          open={isBidsModalOpen} 
-          onCancel={() => setIsBidsModalOpen(false)} 
-          footer={[<Button key="close" onClick={() => setIsBidsModalOpen(false)}>Close</Button>]}
+          open={isBidsDrawerOpen} 
+          onClose={() => setIsBidsDrawerOpen(false)} 
           width={700}
       >
           {selectedOrder && (
@@ -682,11 +699,11 @@ export const RideHailingPage: React.FC = () => {
                   { title: 'Driver Name', dataIndex: 'name', key: 'name', render: (t) => <Text strong>{t}</Text> },
                   { title: 'Vehicle', dataIndex: 'vehicle', key: 'vehicle' },
                   { title: 'ETA', dataIndex: 'eta', key: 'eta' },
-                  { title: 'Counter-Offer', dataIndex: 'bid', key: 'bid', render: (val: number) => <Text strong color="blue">${val.toFixed(2)}</Text> },
+                  { title: 'Counter-Offer', dataIndex: 'bid', key: 'bid', render: (val: number) => <Text strong style={{ color: '#1890ff' }}>${val.toFixed(2)}</Text> },
                   { title: 'Action', key: 'action', render: () => <Button type="primary" size="small" disabled={selectedOrder?.status === 'Completed' || selectedOrder?.status === 'Cancelled'}>Force Accept</Button> }
               ]}
           />
-      </Modal>
+      </Drawer>
 
     </div>
   );

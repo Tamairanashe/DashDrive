@@ -2,6 +2,6 @@ import { Module } from '@nestjs/common';
 import { MobileMerchantModule } from './merchant/merchant.module';
 
 @Module({
-    imports: [MobileMerchantModule],
+  imports: [MobileMerchantModule],
 })
-export class MobileModule { }
+export class MobileModule {}

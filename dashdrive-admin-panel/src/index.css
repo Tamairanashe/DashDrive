@@ -77,3 +77,86 @@
 .animate-sonar {
   animation: sonar-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
+/* Premium Tabs Styling */
+.premium-tabs .ant-tabs-nav {
+  margin-bottom: 0px !important;
+}
+
+.premium-tabs .ant-tabs-nav-list {
+  gap: 0px !important;
+}
+
+.premium-tabs .ant-tabs-nav::before {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.premium-tabs .ant-tabs-tab {
+  background: #fff !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 10px 24px !important;
+  margin: 0 !important;
+  margin-right: -1px !important; /* Overlap borders to eliminate gaps */
+  border: 1px solid #e2e8f0 !important;
+  border-bottom: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.premium-tabs .ant-tabs-tab:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  z-index: 2;
+}
+
+.premium-tabs .ant-tabs-tab-active {
+  background: #fff !important; /* White background for active tab */
+  border-color: #e2e8f0 !important;
+  border-bottom: 2px solid #fff !important; /* Visual flush with content */
+  margin-bottom: -1px !important;
+  z-index: 3;
+}
+
+.premium-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #10b981 !important; /* Emerald green text */
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+.premium-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+  color: #64748b;
+  font-size: 14px !important;
+}
+
+.premium-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+
+/* Dark Mode Overrides for Premium Tabs */
+body[data-theme='dark'] .premium-tabs .ant-tabs-nav::before {
+  border-bottom: 1px solid #303030 !important;
+}
+
+body[data-theme='dark'] .premium-tabs .ant-tabs-tab {
+  background: #141414 !important;
+  border-color: #303030 !important;
+}
+
+body[data-theme='dark'] .premium-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+  color: #94a3b8;
+}
+
+body[data-theme='dark'] .premium-tabs .ant-tabs-tab:hover {
+  background: #1a1a1a !important;
+  border-color: #404040 !important;
+}
+
+body[data-theme='dark'] .premium-tabs .ant-tabs-tab-active {
+  background: #141414 !important;
+  border-color: #303030 !important;
+  border-bottom: 2px solid #141414 !important;
+}
+
+body[data-theme='dark'] .premium-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #10b981 !important;
+}
+

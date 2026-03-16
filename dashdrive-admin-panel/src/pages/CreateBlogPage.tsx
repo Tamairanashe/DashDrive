@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { 
   Typography, 
   Card, 
@@ -20,6 +22,7 @@ import {
   Switch,
   Dropdown,
   Menu,
+  Modal,
   Tooltip as AntTooltip
 } from 'antd';
 import { 
@@ -84,7 +87,97 @@ export const CreateBlogPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [aiDrawerVisible, setAiDrawerVisible] = useState(false);
   const [aiStep, setAiStep] = useState<'main' | 'upload' | 'generate'>('main');
-  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [categoryDrawerVisible, setCategoryDrawerVisible] = useState(false);
+  
+  // Blog Form State
+  const [blogTitle, setBlogTitle] = useState('');
+  const [blogDescription, setBlogDescription] = useState('');
+  const [blogCategory, setBlogCategory] = useState<string | undefined>(undefined);
+  const [writerName, setWriterName] = useState('');
+  const [publishDate, setPublishDate] = useState<any>(null);
+  
+  // AI Assistant State
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiDescription, setAiDescription] = useState('');
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [helpDrawerVisible, setHelpDrawerVisible] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isCodeView, setIsCodeView] = useState(false);
+  
+  const quillRef = useRef<ReactQuill>(null);
+  const textAreaRef = useRef<any>(null);
+
+  const handleFormat = (format: string, value: any = true) => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    const range = quill.getSelection();
+    if (range) {
+      if (format === 'clean') {
+        quill.removeFormat(range.index, range.length);
+      } else {
+        // Toggle format if no value is provided and it's a boolean format
+        const currentFormat = quill.getFormat(range);
+        const newValue = (value === true && currentFormat[format]) ? false : value;
+        quill.format(format, newValue);
+      }
+    }
+  };
+
+  const handleLink = () => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+    const range = quill.getSelection();
+    if (!range) return;
+
+    const url = prompt('Enter URL:', 'https://');
+    if (url) quill.format('link', url);
+  };
+
+  const handleImage = () => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+    const range = quill.getSelection();
+    if (!range) return;
+
+    const url = prompt('Enter Image URL:', 'https://');
+    if (url) {
+      quill.insertEmbed(range.index, 'image', url);
+    }
+  };
+
+  const handleTable = () => {
+    message.info('Table insertion simplified: use the grid below to insert a basic structure.');
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+    const range = quill.getSelection();
+    if (!range) return;
+    
+    quill.insertText(range.index, "\n[Table Placeholder - Use specialized tool for complex tables]\n");
+  };
+
+  const handleColor = (color: string, type: 'text' | 'bg') => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+    if (type === 'text') quill.format('color', color);
+    else quill.format('background', color);
+  };
+
+  const handleStyleChange = (key: string) => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+    
+    if (key === 'p') quill.format('header', false);
+    else if (key.startsWith('h')) quill.format('header', parseInt(key.substring(1)));
+    else if (key === 'blockquote') quill.format('blockquote', true);
+    else if (key === 'code') quill.format('code-block', true);
+  };
+
+  const handleAlign = (align: string) => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+    quill.format('align', align === 'left' ? false : align);
+  };
   
   // Category Sample Data
   const [categories, setCategories] = useState([
@@ -123,46 +216,93 @@ export const CreateBlogPage: React.FC = () => {
 
   // AI Generation Simulation
   const handleGenerateTitle = () => {
-    message.loading({ content: 'AI is thinking...', key: 'ai_gen_title' });
+    if (!blogTitle && aiStep === 'main') {
+        message.warning('Please enter a topic or some keywords first');
+        return;
+    }
+    message.loading({ content: 'DashAI is brainstorming titles...', key: 'ai_gen_title' });
     setTimeout(() => {
-      message.success({ content: 'Title generated!', key: 'ai_gen_title' });
+      const titles = [
+        "Revolutionizing Urban Mobility: The DashDrive Story",
+        "Why Ride-Sharing is the Future of Sustainable Cities",
+        "10 Tips for Maximizing Your Fleet Efficiency",
+        "The Impact of AI on Modern Logistics and Delivery",
+        "Future of Transportation: From EVs to Autonomous Fleets"
+      ];
+      const generated = titles[Math.floor(Math.random() * titles.length)];
+      setBlogTitle(generated);
+      message.success({ content: 'Title generated by DashAI!', key: 'ai_gen_title' });
     }, 1500);
   };
 
   const handleGenerateDescription = () => {
-    message.loading({ content: 'AI is writing your blog...', key: 'ai_gen_desc' });
+    if (!blogTitle) {
+      message.warning('Please provide a title first so AI can write relevant content');
+      return;
+    }
+    message.loading({ content: 'DashAI is writing your blog post...', key: 'ai_gen_desc' });
     setTimeout(() => {
-      message.success({ content: 'Content generated!', key: 'ai_gen_desc' });
+      const content = `<h3>Introduction</h3><p>In today's fast-paced world, the landscape of <strong>${blogTitle.toLowerCase()}</strong> is changing more rapidly than ever. As urban populations grow, the need for efficient, scalable, and sustainable solutions becomes critical.</p><h3>The Challenge</h3><p>Traditional systems are often siloed and inefficient, leading to increased costs and reduced satisfaction. This is where modern technology and data-driven approaches step in.</p><h3>Our Solution</h3><p>At DashDrive, we've developed a suite of tools designed to address these exact pain points. By leveraging AI and real-time analytics, we enable our partners to:</p><ul><li>Optimize route planning</li><li>Reduce idle time</li><li>Enhance user experience</li></ul><h3>Conclusion</h3><p>The future of mobility is connected, intelligent, and user-centric. Stay tuned for more updates as we continue to innovate!</p>`;
+      setBlogDescription(content);
+      message.success({ content: 'Blog content generated successfully!', key: 'ai_gen_desc' });
     }, 2000);
+  };
+
+  const handleAIAssistantGenerate = () => {
+    setLoading(true);
+    message.loading({ content: 'Analyzing requirements and generating blog...', key: 'ai_assistant' });
+    
+    setTimeout(() => {
+        const topic = aiPrompt || aiDescription || "Our New Services";
+        setBlogTitle(`Exploring ${topic}: A Deep Dive`);
+        setBlogDescription(`<h3>Overview</h3><p>This blog post explores the intricacies of <strong>${topic}</strong>. We discuss why it matters in the current market and how DashDrive is leading the way.</p><h3>Key Takeaways</h2><ul><li>Innovation is at the core of our strategy.</li><li>Scale is achieved through smart partnerships.</li><li>User feedback drives our product roadmap.</li></ul>`);
+        setBlogCategory('business');
+        setWriterName('DashAI Assistant');
+        
+        setLoading(false);
+        setAiDrawerVisible(false);
+        setAiStep('main');
+        setAiPrompt('');
+        setAiDescription('');
+        
+        message.success({ content: 'Full blog post generated and populated!', key: 'ai_assistant' });
+    }, 2500);
   };
 
   // RTE Menus
   const styleItems = [
-    { key: 'p', label: 'Normal Text' },
-    { key: 'blockquote', label: 'Quote Text' },
-    { key: 'code', label: 'Code' },
+    { key: 'p', label: 'Normal Text', onClick: () => handleStyleChange('p') },
+    { key: 'blockquote', label: 'Quote Text', onClick: () => handleStyleChange('blockquote') },
+    { key: 'code', label: 'Code', onClick: () => handleStyleChange('code') },
     { type: 'divider' as const },
-    { key: 'h1', label: 'Header 1' },
-    { key: 'h2', label: 'Header 2' },
-    { key: 'h3', label: 'Header 3' },
-    { key: 'h4', label: 'Header 4' },
-    { key: 'h5', label: 'Header 5' },
-    { key: 'h6', label: 'Header 6' },
+    { key: 'h1', label: 'Header 1', onClick: () => handleStyleChange('h1') },
+    { key: 'h2', label: 'Header 2', onClick: () => handleStyleChange('h2') },
+    { key: 'h3', label: 'Header 3', onClick: () => handleStyleChange('h3') },
+    { key: 'h4', label: 'Header 4', onClick: () => handleStyleChange('h4') },
+    { key: 'h5', label: 'Header 5', onClick: () => handleStyleChange('h5') },
+    { key: 'h6', label: 'Header 6', onClick: () => handleStyleChange('h6') },
   ];
 
   const colorItems = [
-    { key: 'black', label: <Space><div style={{ width: 14, height: 14, background: '#000', borderRadius: 2 }} /> Black</Space> },
-    { key: 'red', label: <Space><div style={{ width: 14, height: 14, background: '#ff4d4f', borderRadius: 2 }} /> Red</Space> },
-    { key: 'green', label: <Space><div style={{ width: 14, height: 14, background: '#52c41a', borderRadius: 2 }} /> Green</Space> },
-    { key: 'blue', label: <Space><div style={{ width: 14, height: 14, background: '#1890ff', borderRadius: 2 }} /> Blue</Space> },
-    { key: 'transparent', label: 'Transparent' },
+    { key: 'black', label: <Space onClick={() => handleColor('#000', 'text')}><div style={{ width: 14, height: 14, background: '#000', borderRadius: 2 }} /> Black</Space> },
+    { key: 'red', label: <Space onClick={() => handleColor('#ff4d4f', 'text')}><div style={{ width: 14, height: 14, background: '#ff4d4f', borderRadius: 2 }} /> Red</Space> },
+    { key: 'green', label: <Space onClick={() => handleColor('#52c41a', 'text')}><div style={{ width: 14, height: 14, background: '#52c41a', borderRadius: 2 }} /> Green</Space> },
+    { key: 'blue', label: <Space onClick={() => handleColor('#1890ff', 'text')}><div style={{ width: 14, height: 14, background: '#1890ff', borderRadius: 2 }} /> Blue</Space> },
+    { key: 'transparent', label: <div onClick={() => handleColor('transparent', 'text')}>Transparent</div> },
+  ];
+
+  const bgColorItems = [
+    { key: 'white', label: <Space onClick={() => handleColor('#fff', 'bg')}><div style={{ width: 14, height: 14, background: '#fff', borderRadius: 2, border: '1px solid #ddd' }} /> White</Space> },
+    { key: 'yellow', label: <Space onClick={() => handleColor('#fffb8f', 'bg')}><div style={{ width: 14, height: 14, background: '#fffb8f', borderRadius: 2 }} /> Highlight</Space> },
+    { key: 'green', label: <Space onClick={() => handleColor('#b7eb8f', 'bg')}><div style={{ width: 14, height: 14, background: '#b7eb8f', borderRadius: 2 }} /> Light Green</Space> },
+    { key: 'blue', label: <Space onClick={() => handleColor('#91d5ff', 'bg')}><div style={{ width: 14, height: 14, background: '#91d5ff', borderRadius: 2 }} /> Light Blue</Space> },
   ];
 
   const paragraphItems = [
-    { key: 'left', label: 'Align Left', icon: <AlignLeftOutlined />, extra: 'Ctrl+Shift+L' },
-    { key: 'center', label: 'Align Center', icon: <AlignCenterOutlined />, extra: 'Ctrl+Shift+E' },
-    { key: 'right', label: 'Align Right', icon: <AlignRightOutlined />, extra: 'Ctrl+Shift+R' },
-    { key: 'justify', label: 'Justify Full', icon: <MenuFoldOutlined />, extra: 'Ctrl+Shift+J' },
+    { key: 'left', label: 'Align Left', icon: <AlignLeftOutlined />, extra: 'Ctrl+Shift+L', onClick: () => handleAlign('left') },
+    { key: 'center', label: 'Align Center', icon: <AlignCenterOutlined />, extra: 'Ctrl+Shift+E', onClick: () => handleAlign('center') },
+    { key: 'right', label: 'Align Right', icon: <AlignRightOutlined />, extra: 'Ctrl+Shift+R', onClick: () => handleAlign('right') },
+    { key: 'justify', label: 'Justify Full', icon: <MenuFoldOutlined />, extra: 'Ctrl+Shift+J', onClick: () => handleAlign('justify') },
   ];
 
   const tableMenu = (
@@ -177,25 +317,82 @@ export const CreateBlogPage: React.FC = () => {
   );
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 100 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Breadcrumb 
-          items={[
-            { title: <Link to="/content/blog">Content Management</Link> },
-            { title: 'Create New Blog' }
-          ]} 
-          style={{ marginBottom: 16 }}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate(-1)} 
-            style={{ borderRadius: 8 }}
-          />
-          <Title level={3} style={{ margin: 0 }}>Add New Blog Post</Title>
+    <div style={{ 
+      maxWidth: isFullscreen ? '100%' : 1200, 
+      margin: isFullscreen ? 0 : '0 auto', 
+      paddingBottom: 100,
+      position: isFullscreen ? 'fixed' : 'relative',
+      top: isFullscreen ? 0 : 'auto',
+      left: isFullscreen ? 0 : 'auto',
+      right: isFullscreen ? 0 : 'auto',
+      bottom: isFullscreen ? 0 : 'auto',
+      zIndex: isFullscreen ? 1000 : 1,
+      background: isDark ? '#141414' : '#f0f2f5',
+      overflow: isFullscreen ? 'auto' : 'visible',
+      padding: isFullscreen ? '24px' : '0 0 100px 0'
+    }}>
+      {/* Help Modal */}
+      <Drawer
+        title={<Space><QuestionCircleOutlined style={{ color: '#10b981' }} /> Editor Help & Shortcuts</Space>}
+        open={helpDrawerVisible}
+        onClose={() => setHelpDrawerVisible(false)}
+        extra={[
+          <Button key="close" type="primary" onClick={() => setHelpDrawerVisible(false)} style={{ background: '#10b981', borderColor: '#10b981' }}>
+            Got it!
+          </Button>
+        ]}
+        width={500}
+        styles={{
+          header: { background: isDark ? '#1a1a1a' : '#fff' },
+          body: { background: isDark ? '#1a1a1a' : '#fff', color: isDark ? '#fff' : '#000' }
+        }}
+      >
+        <div style={{ padding: '10px 0' }}>
+          <Title level={5}>Keyboard Shortcuts</Title>
+          <ul style={{ paddingLeft: 20 }}>
+            <li><Text strong>Ctrl + B</Text>: Bold</li>
+            <li><Text strong>Ctrl + U</Text>: Underline</li>
+            <li><Text strong>Ctrl + I</Text>: Italic</li>
+            <li><Text strong>Ctrl + Shift + L</Text>: Align Left</li>
+            <li><Text strong>Ctrl + Shift + E</Text>: Align Center</li>
+            <li><Text strong>Ctrl + Shift + R</Text>: Align Right</li>
+            <li><Text strong>Ctrl + Shift + J</Text>: Justify Full</li>
+          </ul>
+          
+          <Divider />
+          
+          <Title level={5}>Markdown & HTML Support</Title>
+          <Paragraph>
+            The editor supports basic markdown and HTML tags for advanced styling. Use the toolbar buttons to automatically wrap selected text.
+          </Paragraph>
+          
+          <Title level={5}>AI Assistance</Title>
+          <Paragraph>
+            Click the <GeminiStar /> icon or use the "Generate" buttons to have AI help you write titles, descriptions, and full blog posts from images.
+          </Paragraph>
         </div>
-      </div>
+      </Drawer>
+
+      {/* Header */}
+      {!isFullscreen && (
+        <div style={{ marginBottom: 24 }}>
+          <Breadcrumb 
+            items={[
+              { title: <Link to="/content/blog">Content Management</Link> },
+              { title: 'Create New Blog' }
+            ]} 
+            style={{ marginBottom: 16 }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Button 
+              icon={<ArrowLeftOutlined />} 
+              onClick={() => navigate(-1)} 
+              style={{ borderRadius: 8 }}
+            />
+            <Title level={3} style={{ margin: 0 }}>Add New Blog Post</Title>
+          </div>
+        </div>
+      )}
 
       <Row gutter={[24, 24]}>
         {/* Main Content */}
@@ -223,6 +420,8 @@ export const CreateBlogPage: React.FC = () => {
                 <Input 
                   size="large" 
                   placeholder="Enter a catchy title..." 
+                  value={blogTitle}
+                  onChange={(e) => setBlogTitle(e.target.value)}
                   style={{ borderRadius: 8, background: isDark ? '#222' : '#fff', color: isDark ? '#fff' : '#000', borderColor: isDark ? '#333' : '#d9d9d9' }}
                 />
               </div>
@@ -262,13 +461,41 @@ export const CreateBlogPage: React.FC = () => {
 
                   {/* Formatting */}
                   <AntTooltip title="Bold (Ctrl+B)">
-                    <Button size="small" type="text" icon={<BoldOutlined />} />
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<BoldOutlined />} 
+                      onClick={() => handleFormat('bold')}
+                    />
                   </AntTooltip>
                   <AntTooltip title="Underline (Ctrl+U)">
-                    <Button size="small" type="text" icon={<UnderlineOutlined />} />
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<UnderlineOutlined />} 
+                      onClick={() => handleFormat('underline')}
+                    />
                   </AntTooltip>
+                  <AntTooltip title="Italic (Ctrl+I)">
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<ItalicOutlined />} 
+                      onClick={() => handleFormat('italic')}
+                    />
+                  </AntTooltip>
+                  {/* Formatting Painter */}
                   <AntTooltip title="Remove Font Style (Ctrl+\)">
-                    <Button size="small" type="text" icon={<FormatPainterOutlined />} />
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<FormatPainterOutlined />} 
+                      onClick={() => {
+                        const newText = blogDescription.replace(/<\/?[^>]+(>|$)/g, "");
+                        setBlogDescription(newText);
+                        message.info('Styles removed');
+                      }}
+                    />
                   </AntTooltip>
                   
                   {/* Colors */}
@@ -277,7 +504,7 @@ export const CreateBlogPage: React.FC = () => {
                       <FontColorsOutlined /> <CaretDownOutlined style={{ fontSize: 10 }} />
                     </Button>
                   </Dropdown>
-                  <Dropdown menu={{ items: colorItems }} trigger={['click']}>
+                  <Dropdown menu={{ items: bgColorItems }} trigger={['click']}>
                     <Button size="small" type="text" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <BgColorsOutlined /> <CaretDownOutlined style={{ fontSize: 10 }} />
                     </Button>
@@ -285,11 +512,21 @@ export const CreateBlogPage: React.FC = () => {
                   <Divider type="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
 
                   {/* Lists */}
-                  <AntTooltip title="Unordered list (Ctrl+Shift+7)">
-                    <Button size="small" type="text" icon={<UnorderedListOutlined />} />
+                  <AntTooltip title="Unordered list">
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<UnorderedListOutlined />} 
+                      onClick={() => handleFormat('list', 'bullet')}
+                    />
                   </AntTooltip>
-                  <AntTooltip title="Ordered list (Ctrl+Shift+8)">
-                    <Button size="small" type="text" icon={<OrderedListOutlined />} />
+                  <AntTooltip title="Ordered list">
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<OrderedListOutlined />} 
+                      onClick={() => handleFormat('list', 'ordered')}
+                    />
                   </AntTooltip>
                   
                    {/* Alignment */}
@@ -301,16 +538,21 @@ export const CreateBlogPage: React.FC = () => {
                   <Divider type="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
 
                   {/* Indent / Outdent */}
-                  <AntTooltip title="Outdent (Ctrl+i)">
-                    <Button size="small" type="text" icon={<MenuFoldOutlined />} />
+                  <AntTooltip title="Outdent">
+                    <Button size="small" type="text" icon={<MenuFoldOutlined />} onClick={() => handleFormat('indent', '-1')} />
                   </AntTooltip>
-                  <AntTooltip title="Indent (Ctrl+])">
-                    <Button size="small" type="text" icon={<MenuUnfoldOutlined />} />
+                  <AntTooltip title="Indent">
+                    <Button size="small" type="text" icon={<MenuUnfoldOutlined />} onClick={() => handleFormat('indent', '+1')} />
                   </AntTooltip>
                   <Divider type="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
 
                   {/* Tables */}
-                  <Dropdown dropdownRender={() => tableMenu} trigger={['click']}>
+                  <Dropdown dropdownRender={() => (
+                    <div style={{ padding: 12, background: isDark ? '#1f1f1f' : '#fff', border: `1px solid ${isDark ? '#333' : '#f0f0f0'}`, borderRadius: 8 }}>
+                      <Text style={{ display: 'block', marginBottom: 8, fontSize: 12 }}>Insert Table</Text>
+                      <Button type="primary" size="small" onClick={handleTable} block>Insert 2x2 Grid</Button>
+                    </div>
+                  )} trigger={['click']}>
                     <Button size="small" type="text" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <TableOutlined /> <CaretDownOutlined style={{ fontSize: 10 }} />
                     </Button>
@@ -319,34 +561,81 @@ export const CreateBlogPage: React.FC = () => {
 
                   {/* Media & Tools */}
                   <AntTooltip title="Link (Ctrl+K)">
-                    <Button size="small" type="text" icon={<LinkOutlined />} />
+                    <Button size="small" type="text" icon={<LinkOutlined />} onClick={handleLink} />
                   </AntTooltip>
                   <AntTooltip title="Picture Upload">
-                    <Button size="small" type="text" icon={<PictureOutlined />} />
+                    <Button size="small" type="text" icon={<PictureOutlined />} onClick={handleImage} />
                   </AntTooltip>
                   <AntTooltip title="Full Screen">
-                    <Button size="small" type="text" icon={<FullscreenOutlined />} />
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<FullscreenOutlined />} 
+                      onClick={() => {
+                        setIsFullscreen(!isFullscreen);
+                        message.info(isFullscreen ? 'Exited fullscreen' : 'Entered fullscreen');
+                      }}
+                    />
                   </AntTooltip>
                   <AntTooltip title="Code View">
-                    <Button size="small" type="text" icon={<CodeOutlined />} />
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<CodeOutlined />} 
+                      onClick={() => setIsCodeView(!isCodeView)}
+                    />
                   </AntTooltip>
                   <AntTooltip title="Help">
-                    <Button size="small" type="text" icon={<QuestionCircleOutlined />} />
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<QuestionCircleOutlined />} 
+                      onClick={() => setHelpDrawerVisible(true)}
+                    />
                   </AntTooltip>
                 </div>
 
-                <TextArea 
-                  rows={15} 
-                  placeholder="Start writing your blog content here..." 
-                  style={{ 
+                {isCodeView ? (
+                  <TextArea 
+                    ref={textAreaRef}
+                    rows={isFullscreen ? 30 : 15} 
+                    placeholder="Start writing your blog content here..." 
+                    value={blogDescription}
+                    onChange={(e) => setBlogDescription(e.target.value)}
+                    style={{ 
+                      borderRadius: '0 0 8px 8px', 
+                      background: isDark ? '#000' : '#f5f5f5', 
+                      color: isDark ? '#0f0' : '#444', 
+                      borderColor: isDark ? '#333' : '#d9d9d9',
+                      fontSize: 13,
+                      fontFamily: 'monospace',
+                      lineHeight: '1.6'
+                    }}
+                  />
+                ) : (
+                  <div style={{ 
                     borderRadius: '0 0 8px 8px', 
-                    background: isDark ? '#1a1a1a' : '#fff', 
-                    color: isDark ? '#fff' : '#000', 
-                    borderColor: isDark ? '#333' : '#d9d9d9',
-                    fontSize: 14,
-                    lineHeight: '1.6'
-                  }}
-                />
+                    border: `1px solid ${isDark ? '#333' : '#d9d9d9'}`,
+                    borderTop: 'none',
+                    minHeight: isFullscreen ? '400px' : '300px'
+                  }}>
+                    <ReactQuill 
+                      ref={quillRef}
+                      theme="snow"
+                      value={blogDescription}
+                      onChange={setBlogDescription}
+                      placeholder="Start writing your blog content here..."
+                      style={{ 
+                        height: isFullscreen ? 'calc(100vh - 350px)' : '300px',
+                        background: isDark ? '#1a1a1a' : '#fff',
+                        color: isDark ? '#fff' : '#000'
+                      }}
+                      modules={{
+                        toolbar: false, // We use our custom toolbar
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Inner Use AI Button */}
                 <Button
@@ -433,13 +722,19 @@ export const CreateBlogPage: React.FC = () => {
                   <Button 
                     type="link" 
                     size="small" 
-                    onClick={() => setCategoryModalVisible(true)}
+                    onClick={() => setCategoryDrawerVisible(true)}
                     style={{ fontSize: 12, color: '#10b981', padding: 0, height: 'auto' }}
                   >
                     Manage Categories
                   </Button>
                 </div>
-                <Select placeholder="Select Category" style={{ width: '100%' }} size="large">
+                <Select 
+                  placeholder="Select Category" 
+                  style={{ width: '100%' }} 
+                  size="large"
+                  value={blogCategory}
+                  onChange={(val) => setBlogCategory(val)}
+                >
                   <Option value="business">Business & Growth</Option>
                   <Option value="guides">Guides & Tutorials</Option>
                   <Option value="market">Market Insights</Option>
@@ -448,7 +743,12 @@ export const CreateBlogPage: React.FC = () => {
 
               <div style={{ marginBottom: 20 }}>
                 <Text strong style={{ display: 'block', marginBottom: 8 }}>Writer Name *</Text>
-                <Input placeholder="Enter writer's name" size="large" />
+                <Input 
+                  placeholder="Enter writer's name" 
+                  size="large" 
+                  value={writerName}
+                  onChange={(e) => setWriterName(e.target.value)}
+                />
               </div>
 
               <div>
@@ -457,6 +757,8 @@ export const CreateBlogPage: React.FC = () => {
                   style={{ width: '100%' }} 
                   size="large" 
                   format="DD MMM, YYYY"
+                  value={publishDate}
+                  onChange={(date) => setPublishDate(date)}
                 />
               </div>
             </Card>
@@ -496,7 +798,22 @@ export const CreateBlogPage: React.FC = () => {
                   Publish Blog
                 </Button>
                 <Button size="large" icon={<SaveOutlined />}>Save to Draft</Button>
-                <Button size="large" danger type="text" icon={<ReloadOutlined />}>Reset Form</Button>
+                <Button 
+                  size="large" 
+                  danger 
+                  type="text" 
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    setBlogTitle('');
+                    setBlogDescription('');
+                    setBlogCategory(undefined);
+                    setWriterName('');
+                    setPublishDate(null);
+                    message.info('Form reset');
+                  }}
+                >
+                  Reset Form
+                </Button>
               </div>
             </Card>
 
@@ -621,11 +938,31 @@ export const CreateBlogPage: React.FC = () => {
 
                 <Dragger 
                   style={{ background: isDark ? '#222' : '#f8fafc', borderRadius: 16, border: `1px dashed ${isDark ? '#444' : '#e2e8f0'}`, marginBottom: 32 }}
+                  multiple={false}
+                  showUploadList={false}
+                  onChange={(info) => {
+                    const { status } = info.file;
+                    if (status === 'uploading') {
+                      setUploadLoading(true);
+                      message.loading({ content: 'Analyzing image...', key: 'ai_upload' });
+                    }
+                    if (status === 'done' || status === 'error') {
+                      // Simulate successful analysis even on error for mock purposes
+                      setUploadLoading(false);
+                      message.success({ content: 'Image analyzed! AI is ready.', key: 'ai_upload' });
+                      setAiDescription('A high-quality image of ' + info.file.name);
+                    }
+                  }}
+                  customRequest={({ onSuccess }: any) => {
+                    setTimeout(() => onSuccess("ok"), 1000);
+                  }}
                 >
                   <p className="ant-upload-drag-icon">
                     <CameraOutlined style={{ color: '#10b981' }} />
                   </p>
-                  <p className="ant-upload-text" style={{ color: isDark ? '#fff' : '#000' }}>Add Image</p>
+                  <p className="ant-upload-text" style={{ color: isDark ? '#fff' : '#000' }}>
+                    {uploadLoading ? 'Analyzing...' : 'Add Image'}
+                  </p>
                 </Dragger>
 
                 <div style={{ marginBottom: 32 }}>
@@ -633,6 +970,8 @@ export const CreateBlogPage: React.FC = () => {
                   <TextArea 
                     rows={4} 
                     placeholder="Describe about blog"
+                    value={aiDescription}
+                    onChange={(e) => setAiDescription(e.target.value)}
                     style={{ background: isDark ? '#222' : '#f8fafc', border: `1px solid ${isDark ? '#444' : '#e2e8f0'}`, color: isDark ? '#fff' : '#000', borderRadius: 12 }}
                   />
                 </div>
@@ -641,6 +980,8 @@ export const CreateBlogPage: React.FC = () => {
                   type="primary" 
                   block 
                   size="large"
+                  onClick={handleAIAssistantGenerate}
+                  loading={loading}
                   style={{ background: '#10b981', height: 48, borderRadius: 12 }}
                 >
                   Generate Blog <GeminiStar />
@@ -663,6 +1004,8 @@ export const CreateBlogPage: React.FC = () => {
                   <Text style={{ color: isDark ? '#fff' : '#000', display: 'block', marginBottom: 8 }}>Title</Text>
                   <Input 
                     placeholder="Tell me about your blog"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
                     style={{ background: isDark ? '#222' : '#f8fafc', border: `1px solid ${isDark ? '#444' : '#e2e8f0'}`, color: isDark ? '#fff' : '#000', borderRadius: 12, height: 48 }}
                   />
                 </div>
@@ -703,8 +1046,8 @@ export const CreateBlogPage: React.FC = () => {
           </div>
         }
         placement="right"
-        onClose={() => setCategoryModalVisible(false)}
-        open={categoryModalVisible}
+        onClose={() => setCategoryDrawerVisible(false)}
+        open={categoryDrawerVisible}
         width={450}
         styles={{
           header: { background: isDark ? '#1a1a1a' : '#fff', borderBottom: `1px solid ${isDark ? '#333' : '#f0f0f0'}` },

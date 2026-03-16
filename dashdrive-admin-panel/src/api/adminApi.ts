@@ -75,5 +75,9 @@ export const adminApi = {
         getNearbyStations: (lat: number, lng: number) => api.get('/fuel/stations', { params: { lat, lng } }),
         getFuelTypes: (stationId: string) => api.get(`/fuel/stations/${stationId}/fuel-types`),
         order: (data: any) => api.post('/fuel/order', data),
+    },
+    settings: {
+        get: () => api.get('/platform-config'),
+        update: (key: string, value: any, description?: string) => api.post(`/platform-config/${key}`, { value, description }),
     }
 };

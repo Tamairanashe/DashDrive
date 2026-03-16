@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Card, Typography, Space, Tag, message, Row, Col, Modal, Image } from 'antd';
+import { Table, Button, Card, Typography, Space, Tag, message, Row, Col, Drawer, Image } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined, IdcardOutlined } from '@ant-design/icons';
 import { adminApi } from '../../api/adminApi';
 
@@ -9,7 +9,7 @@ export const KycVerification: React.FC = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSub, setSelectedSub] = useState<any>(null);
-  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
   const fetchSubmissions = async () => {
     setLoading(true);
@@ -62,7 +62,7 @@ export const KycVerification: React.FC = () => {
           <Button 
             icon={<EyeOutlined />} 
             size="small" 
-            onClick={() => { setSelectedSub(record); setIsPreviewVisible(true); }}
+            onClick={() => { setSelectedSub(record); setIsDrawerVisible(true); }}
           >
             Review
           </Button>
@@ -93,12 +93,12 @@ export const KycVerification: React.FC = () => {
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Col>
-          <Title level={3}><IdcardOutlined /> KYC Compliance Dashboard</Title>
+          <Title level={3} style={{ margin: 0 }}><IdcardOutlined /> KYC Compliance Dashboard</Title>
           <Text type="secondary">Review national IDs and passports for wallet activation.</Text>
         </Col>
       </Row>
 
-      <Card className="shadow-sm">
+      <Card style={{ borderRadius: 16, border: '1px solid #e2e8f0' }}>
         <Table 
           columns={columns} 
           dataSource={submissions} 
@@ -107,25 +107,55 @@ export const KycVerification: React.FC = () => {
         />
       </Card>
 
-      <Modal
-        title={`Review Document: ${selectedSub?.user_name}`}
-        visible={isPreviewVisible}
-        onCancel={() => setIsPreviewVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setIsPreviewVisible(false)}>Close</Button>,
-          <Button key="approve" type="primary" onClick={() => { handleVerify(selectedSub.id, 'verified'); setIsPreviewVisible(false); }}>Approve</Button>
-        ]}
-        width={800}
+      <Drawer
+        title={<Space><EyeOutlined /> Review Document: {selectedSub?.user_name}</Space>}
+        open={isDrawerVisible}
+        onClose={() => setIsDrawerVisible(false)}
+        width={700}
+        extra={
+          <Space>
+            <Button onClick={() => setIsDrawerVisible(false)}>Close</Button>
+            <Button type="primary" onClick={() => { handleVerify(selectedSub.id, 'verified'); setIsDrawerVisible(false); }} style={{ background: '#0e172a' }}>
+              Approve Document
+            </Button>
+          </Space>
+        }
       >
         {selectedSub && (
-          <div style={{ textAlign: 'center' }}>
-            <Text strong>Type: {selectedSub.document_type.toUpperCase()}</Text>
-            <div style={{ marginTop: 16 }}>
+          <div style={{ padding: '8px 0' }}>
+            <div style={{ marginBottom: 24, padding: 16, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <Row gutter={24}>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>User Name</Text>
+                  <Text strong style={{ fontSize: 16 }}>{selectedSub.user_name}</Text>
+                </Col>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>Document Type</Text>
+                  <Tag color="orange" style={{ marginTop: 4 }}>{selectedSub.document_type.toUpperCase()}</Tag>
+                </Col>
+              </Row>
+            </div>
+            
+            <Text strong style={{ display: 'block', marginBottom: 12 }}>ID Document Preview</Text>
+            <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
               <Image src={selectedSub.document_url} width="100%" alt="KYC Document" />
+            </div>
+
+            <div style={{ marginTop: 32 }}>
+              <Button 
+                danger 
+                block 
+                size="large" 
+                icon={<CloseCircleOutlined />} 
+                onClick={() => { handleVerify(selectedSub.id, 'rejected'); setIsDrawerVisible(false); }}
+                style={{ height: 48, borderRadius: 12 }}
+              >
+                Reject with Reason
+              </Button>
             </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
     </div>
   );
 };

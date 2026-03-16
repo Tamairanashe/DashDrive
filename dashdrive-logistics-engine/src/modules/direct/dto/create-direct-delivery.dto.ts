@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsObject,
+} from 'class-validator';
 
 export class CreateDirectDeliveryDto {
   @IsString()

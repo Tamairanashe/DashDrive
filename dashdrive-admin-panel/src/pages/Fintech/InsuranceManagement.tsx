@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Card, Typography, Space, Tag, message, Row, Col, Modal, Form, Input, InputNumber } from 'antd';
-import { SafetyCertificateOutlined, PlusOutlined } from '@ant-design/icons';
+import { Table, Button, Card, Typography, Space, Tag, message, Row, Col, Drawer, Form, Input, InputNumber } from 'antd';
+import { SafetyCertificateOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import { adminApi } from '../../api/adminApi';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 export const InsuranceManagement: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [form] = Form.useForm();
 
   const fetchProducts = async () => {
@@ -34,7 +34,8 @@ export const InsuranceManagement: React.FC = () => {
 
   const handleCreate = (values: any) => {
       message.info('Module integrated. Connecting to backend...');
-      setIsModalVisible(false);
+      setIsDrawerVisible(false);
+      form.resetFields();
   };
 
   const columns = [
@@ -55,16 +56,17 @@ export const InsuranceManagement: React.FC = () => {
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Col>
-          <Title level={3}><SafetyCertificateOutlined /> Insurance Marketplace Management</Title>
+          <Title level={3} style={{ margin: 0 }}><SafetyCertificateOutlined /> Insurance Marketplace Management</Title>
+          <Text type="secondary">Manage third-party insurance products for drivers and merchants.</Text>
         </Col>
         <Col>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsDrawerVisible(true)} style={{ background: '#0e172a' }}>
             Add Insurance Product
           </Button>
         </Col>
       </Row>
 
-      <Card className="shadow-sm">
+      <Card style={{ borderRadius: 16, border: '1px solid #e2e8f0' }}>
         <Table 
           columns={columns} 
           dataSource={products} 
@@ -73,13 +75,21 @@ export const InsuranceManagement: React.FC = () => {
         />
       </Card>
 
-      <Modal
-        title="Add New Insurance Product"
-        visible={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={() => form.submit()}
+      <Drawer
+        title={<Space><SafetyCertificateOutlined /> Add New Insurance Product</Space>}
+        open={isDrawerVisible}
+        onClose={() => setIsDrawerVisible(false)}
+        width={500}
+        extra={
+          <Space>
+            <Button onClick={() => setIsDrawerVisible(false)}>Cancel</Button>
+            <Button type="primary" icon={<SaveOutlined />} onClick={() => form.submit()} style={{ background: '#0e172a' }}>
+              Create Product
+            </Button>
+          </Space>
+        }
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} style={{ marginTop: 24 }}>
           <Form.Item name="provider" label="Insurance Provider" rules={[{ required: true }]}>
             <Input placeholder="e.g. SafeStep Insurance" />
           </Form.Item>
@@ -89,14 +99,20 @@ export const InsuranceManagement: React.FC = () => {
           <Form.Item name="service_type" label="Service Type" rules={[{ required: true }]}>
             <Input placeholder="ride, parcel, hotel, etc." />
           </Form.Item>
-          <Form.Item name="premium_price" label="Premium Price ($)" rules={[{ required: true }]}>
-            <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="coverage_amount" label="Coverage Amount ($)" rules={[{ required: true }]}>
-             <InputNumber min={0} style={{ width: '100%' }} />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="premium_price" label="Premium Price ($)" rules={[{ required: true }]}>
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="coverage_amount" label="Coverage Amount ($)" rules={[{ required: true }]}>
+                 <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

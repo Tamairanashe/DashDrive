@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -13,7 +18,8 @@ export class ApiKeyGuard implements CanActivate {
       throw new UnauthorizedException('API Key is missing');
     }
 
-    const internalApiKey = process.env.INTERNAL_API_KEY || 'dashdrive_secret_key_2026';
+    const internalApiKey =
+      process.env.INTERNAL_API_KEY || 'dashdrive_secret_key_2026';
     if (apiKey === internalApiKey) {
       request.isInternal = true;
       return true;
@@ -21,7 +27,7 @@ export class ApiKeyGuard implements CanActivate {
 
     const keyRecord = await this.prisma.apiKey.findUnique({
       where: { key: apiKey as string },
-      include: { merchant: true }
+      include: { merchant: true },
     });
 
     if (!keyRecord || !keyRecord.isActive) {
@@ -31,7 +37,7 @@ export class ApiKeyGuard implements CanActivate {
     // Update last used at
     await this.prisma.apiKey.update({
       where: { id: keyRecord.id },
-      data: { lastUsedAt: new Date() }
+      data: { lastUsedAt: new Date() },
     });
 
     // Attach merchant info to the request for service consumption

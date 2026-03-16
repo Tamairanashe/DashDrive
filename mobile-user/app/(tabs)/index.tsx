@@ -232,21 +232,22 @@ export default function HomeScreen() {
                                     imageStyle={{ width: 80, height: 80, position: 'absolute', right: -10, top: -15 }}
                                 />
                                 <YangoCard 
-                                    label="Grocery" 
-                                    image={require("../../assets/images/grocery.png")} 
-                                    onPress={() => router.push("/mart" as any)}
+                                    label="School Run" 
+                                    image={require("../../assets/images/school_bus.png")} 
+                                    onPress={() => router.push("/school-run" as any)}
                                     containerStyle="h-[62px]" 
                                     imageStyle={{ width: 80, height: 80, position: 'absolute', right: -10, bottom: -15 }}
+                                    bgColor="#FFD70015"
                                 />
                             </View>
                         </View>
 
                         <View className="flex-row gap-4 mb-6">
                             <YangoCard 
-                                label="Shopping" 
-                                subtitle="Marketplace"
-                                image={require("../../assets/images/gifts.png")} 
-                                onPress={() => {}}
+                                label="Grocery" 
+                                subtitle="Mart"
+                                image={require("../../assets/images/grocery.png")} 
+                                onPress={() => router.push("/mart" as any)}
                                 containerStyle="flex-1 h-[100px]" 
                                 imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
                             />

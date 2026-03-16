@@ -7,14 +7,11 @@ import { WebhookProcessor } from './webhook.processor';
 const useMockRedis = process.env.USE_MOCK_REDIS === 'true';
 
 @Module({
-    imports: [
-        ...(useMockRedis ? [] : [BullModule.registerQueue({ name: 'webhooks' })]),
-    ],
-    controllers: [WebhooksController],
-    providers: [
-        WebhooksService,
-        ...(useMockRedis ? [] : [WebhookProcessor]),
-    ],
-    exports: [WebhooksService],
+  imports: [
+    ...(useMockRedis ? [] : [BullModule.registerQueue({ name: 'webhooks' })]),
+  ],
+  controllers: [WebhooksController],
+  providers: [WebhooksService, ...(useMockRedis ? [] : [WebhookProcessor])],
+  exports: [WebhooksService],
 })
-export class WebhooksModule { }
+export class WebhooksModule {}

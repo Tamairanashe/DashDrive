@@ -4,8 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 
 @Global()
 @Module({
-    imports: [ConfigModule],
-    providers: [GeoService],
-    exports: [GeoService],
+  imports: [ConfigModule],
+  providers: [GeoService],
+  exports: [GeoService],
 })
-export class GeoModule { }
+export class GeoModule {}

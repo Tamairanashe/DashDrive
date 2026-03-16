@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Row, Col, Card, Tabs, List, Button, Tag, Space, Avatar, Input, Empty } from 'antd';
-import { FileTextOutlined, PictureOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { FileTextOutlined, PictureOutlined, EditOutlined, DeleteOutlined, PlusOutlined, DownloadOutlined, ControlOutlined } from '@ant-design/icons';
 
 import { BlogSection } from '../components/BlogSection';
+import { AppDownloadSetup } from '../components/AppDownloadSetup';
+import { BlogPrioritySetup } from '../components/BlogPrioritySetup';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -12,8 +14,8 @@ export const ContentManagerPage: React.FC = () => {
         <div>
             <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
                 <Col>
-                    <Title level={4} style={{ margin: 0 }}>Content & Media Library</Title>
-                    <Text type="secondary">Manage the company blog and upload static media assets.</Text>
+                    <Title level={4} style={{ margin: 0 }}>Blog Setup</Title>
+                    <Text type="secondary">Manage the company blog and app download promotional sections.</Text>
                 </Col>
             </Row>
 
@@ -24,15 +26,14 @@ export const ContentManagerPage: React.FC = () => {
                         <BlogSection />
                     </Tabs.TabPane>
 
-                    <Tabs.TabPane tab={<span><PictureOutlined /> Media Assets</span>} key="2">
-                        <Empty 
-                            description="Cloud bucket is empty." 
-                            image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                            style={{ margin: '60px 0' }} 
-                        />
-                        <div style={{ textAlign: 'center' }}>
-                            <Button type="primary" icon={<PlusOutlined />}>Upload Files</Button>
-                        </div>
+
+
+                    <Tabs.TabPane tab={<span><DownloadOutlined /> App Download Setup</span>} key="3">
+                        <AppDownloadSetup />
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane tab={<span><ControlOutlined /> Priority Setup</span>} key="4">
+                        <BlogPrioritySetup />
                     </Tabs.TabPane>
 
                 </Tabs>

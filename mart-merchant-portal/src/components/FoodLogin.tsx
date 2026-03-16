@@ -11,11 +11,20 @@ interface FoodLoginProps {
     onForgotPassword: () => void;
 }
 
+interface LoginValues {
+    email: string;
+    password: string;
+}
+
+interface AuthError {
+    message?: string;
+}
+
 export function FoodLogin({ onLogin, onSwitchToSignup, onForgotPassword }: FoodLoginProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [form] = Form.useForm();
 
-    const handleLogin = async (values: any) => {
+    const handleLogin = async (values: LoginValues) => {
         setIsLoading(true);
         try {
             const result = await api.auth.login({
@@ -27,8 +36,9 @@ export function FoodLogin({ onLogin, onSwitchToSignup, onForgotPassword }: FoodL
                 onLogin();
             }
         } catch (error: any) {
-            console.error('Food login failed:', error);
-            message.error(error.message || 'Login failed. Please check your credentials.');
+            const err = error as AuthError;
+            console.error('Food login failed:', err);
+            message.error(err.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }

@@ -5,9 +5,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
 
 @Global()
 @Module({
-    imports: [PrismaModule],
-    providers: [FraudService],
-    controllers: [FraudController],
-    exports: [FraudService],
+  imports: [PrismaModule],
+  providers: [FraudService],
+  controllers: [FraudController],
+  exports: [FraudService],
 })
-export class FraudModule { }
+export class FraudModule {}

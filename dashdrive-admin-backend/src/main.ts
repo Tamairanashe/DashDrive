@@ -19,6 +19,7 @@ async function bootstrap() {
   });
   */
 
+  app.setGlobalPrefix('api');
   app.enableCors();
   
   // await app.startAllMicroservices();

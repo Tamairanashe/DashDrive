@@ -7,16 +7,16 @@ import { JwtStrategy } from './jwt.strategy';
 import { MerchantsModule } from '../merchants/merchants.module';
 
 @Module({
-    imports: [
-        PassportModule,
-        MerchantsModule,
-        JwtModule.register({
-            secret: process.env.JWT_SECRET || 'supersecret',
-            signOptions: { expiresIn: '60m' },
-        }),
-    ],
-    controllers: [AuthController],
-    providers: [AuthService, JwtStrategy],
-    exports: [AuthService],
+  imports: [
+    PassportModule,
+    MerchantsModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'supersecret',
+      signOptions: { expiresIn: '60m' },
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy],
+  exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

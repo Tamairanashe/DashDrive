@@ -15,21 +15,28 @@ const useMockRedis = process.env.USE_MOCK_REDIS === 'true';
 
 @Global()
 @Module({
-    imports: [
-        PrismaModule,
-        GeoModule,
-        ...(useMockRedis ? [] : [BullModule.registerQueue({ name: 'dispatch_queue' })]),
-    ],
-    controllers: [RoutingController],
-    providers: [
-        DispatchService,
-        DispatchGateway,
-        RoutingService,
-        EarningsService,
-        DispatchBrainService,
-        LocationCleanupService,
-        ...(useMockRedis ? [] : [DispatchProcessor]),
-    ],
-    exports: [DispatchService, RoutingService, EarningsService, DispatchBrainService],
+  imports: [
+    PrismaModule,
+    GeoModule,
+    ...(useMockRedis
+      ? []
+      : [BullModule.registerQueue({ name: 'dispatch_queue' })]),
+  ],
+  controllers: [RoutingController],
+  providers: [
+    DispatchService,
+    DispatchGateway,
+    RoutingService,
+    EarningsService,
+    DispatchBrainService,
+    LocationCleanupService,
+    ...(useMockRedis ? [] : [DispatchProcessor]),
+  ],
+  exports: [
+    DispatchService,
+    RoutingService,
+    EarningsService,
+    DispatchBrainService,
+  ],
 })
-export class DispatchModule { }
+export class DispatchModule {}

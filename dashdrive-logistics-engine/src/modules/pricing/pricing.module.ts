@@ -7,13 +7,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { GeoModule } from '../geo/geo.module';
 
 @Module({
-    imports: [PrismaModule, GeoModule],
-    providers: [
-        PricingService,
-        SurgeEngineService,
-        DistanceCalculatorService
-    ],
-    controllers: [PricingController],
-    exports: [PricingService, SurgeEngineService],
+  imports: [PrismaModule, GeoModule],
+  providers: [PricingService, SurgeEngineService, DistanceCalculatorService],
+  controllers: [PricingController],
+  exports: [PricingService, SurgeEngineService],
 })
-export class PricingModule { }
+export class PricingModule {}

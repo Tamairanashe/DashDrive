@@ -16,7 +16,7 @@ export class DirectService {
     // Find a default store for this merchant to associate the "order" with
     // In a real B2B app, we might have a specific "Direct" store type
     const store = await this.prisma.store.findFirst({
-      where: { merchantId, isActive: true }
+      where: { merchantId, isActive: true },
     });
 
     if (!store) {
@@ -31,7 +31,7 @@ export class DirectService {
         merchantId: merchantId,
         orderNumber: `DRC-${generateOrderNumber()}`,
         currency: store.currency,
-        subtotal: 0, 
+        subtotal: 0,
         taxAmount: 0,
         deliveryFee: 0, // Fee calculation would happen here based on distance
         totalAmount: 0,
@@ -39,7 +39,7 @@ export class DirectService {
         customerPhone: dto.customerPhone,
         deliveryAddress: dto.deliveryAddress,
         status: OrderStatus.READY, // Immediate readiness for dispatch
-      }
+      },
     });
 
     // Start dispatch flow immediately
@@ -52,8 +52,8 @@ export class DirectService {
     return this.prisma.order.findFirst({
       where: { id: deliveryId, merchantId },
       include: {
-        delivery: true
-      }
+        delivery: true,
+      },
     });
   }
 }

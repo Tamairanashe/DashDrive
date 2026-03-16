@@ -1,6 +1,20 @@
-import { Controller, Get, Post, Patch, Body, UseGuards, Param, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  UseGuards,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { StoresService } from './stores.service';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CreateStoreDto } from './dto/create-store.dto';
 
@@ -9,34 +23,38 @@ import { CreateStoreDto } from './dto/create-store.dto';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class StoresController {
-    constructor(private readonly storesService: StoresService) { }
+  constructor(private readonly storesService: StoresService) {}
 
-    @Post()
-    @ApiOperation({ summary: 'Create a new store for the merchant' })
-    @ApiResponse({ status: 201, description: 'Store successfully created' })
-    create(@Req() req: any, @Body() createStoreDto: CreateStoreDto) {
-        return this.storesService.create(req.user.sub, createStoreDto);
-    }
+  @Post()
+  @ApiOperation({ summary: 'Create a new store for the merchant' })
+  @ApiResponse({ status: 201, description: 'Store successfully created' })
+  create(@Req() req: any, @Body() createStoreDto: CreateStoreDto) {
+    return this.storesService.create(req.user.sub, createStoreDto);
+  }
 
-    @Get()
-    @ApiOperation({ summary: 'Get all stores for the current merchant' })
-    @ApiResponse({ status: 200, description: 'Return list of stores' })
-    findAll(@Req() req: any) {
-        return this.storesService.findAll(req.user.sub);
-    }
+  @Get()
+  @ApiOperation({ summary: 'Get all stores for the current merchant' })
+  @ApiResponse({ status: 200, description: 'Return list of stores' })
+  findAll(@Req() req: any) {
+    return this.storesService.findAll(req.user.sub);
+  }
 
-    @Get(':id')
-    @ApiOperation({ summary: 'Get a specific store' })
-    @ApiResponse({ status: 200, description: 'Return store details' })
-    @ApiResponse({ status: 404, description: 'Store not found' })
-    findOne(@Req() req: any, @Param('id') id: string) {
-        return this.storesService.findOne(id, req.user.sub);
-    }
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a specific store' })
+  @ApiResponse({ status: 200, description: 'Return store details' })
+  @ApiResponse({ status: 404, description: 'Store not found' })
+  findOne(@Req() req: any, @Param('id') id: string) {
+    return this.storesService.findOne(id, req.user.sub);
+  }
 
-    @Patch(':id')
-    @ApiOperation({ summary: 'Update store settings' })
-    @ApiResponse({ status: 200, description: 'Store successfully updated' })
-    updateStore(@Req() req: any, @Param('id') id: string, @Body() updateData: any) {
-        return this.storesService.update(id, req.user.sub, updateData);
-    }
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update store settings' })
+  @ApiResponse({ status: 200, description: 'Store successfully updated' })
+  updateStore(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() updateData: any,
+  ) {
+    return this.storesService.update(id, req.user.sub, updateData);
+  }
 }

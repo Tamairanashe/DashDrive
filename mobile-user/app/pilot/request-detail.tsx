@@ -23,8 +23,9 @@ const MOCK_REQUEST = {
     duration: "32 min",
     fare: "£28.50",
     bonus: "£3.00",
-    vertical: "FOOD",
+    vertical: "SCHOOL_RUN",
     instructions: "Fragile items",
+    student: { name: "Zoe Chit", school: "St. Andrews Primary" },
     expiresIn: 15
 };
 
@@ -161,13 +162,28 @@ export default function RequestDetailScreen() {
                     <View style={styles.fareSection}>
                         <Text style={[styles.fareAmount, { color: isDark ? '#fff' : '#18181b' }]}>{requestData.fare}</Text>
                         <View style={[styles.verticalBadge, { 
-                            backgroundColor: requestData.vertical === 'DIRECT' ? '#3b82f6' : '#00ff90' 
+                            backgroundColor: requestData.vertical === 'SCHOOL_RUN' ? '#FFD700' : (requestData.vertical === 'DIRECT' ? '#3b82f6' : '#00ff90')
                         }]}>
                             <Text style={styles.verticalBadgeText}>
-                                {requestData.vertical || 'FOOD'} DELIVERY
+                                {requestData.vertical === 'SCHOOL_RUN' ? 'SCHOOL RUN' : `${requestData.vertical || 'FOOD'} DELIVERY`}
                             </Text>
                         </View>
                     </View>
+
+                    {/* School Run Info (Conditional) */}
+                    {requestData.vertical === 'SCHOOL_RUN' && (
+                        <View style={[styles.infoBox, { backgroundColor: '#FFD70015', borderColor: '#FFD70030' }]}>
+                            <View style={styles.riderRow}>
+                                <View style={[styles.avatarBox, { backgroundColor: '#FFD70030' }]}>
+                                    <Ionicons name="school" size={24} color="#FFD700" />
+                                </View>
+                                <View>
+                                    <Text style={[styles.riderName, { color: isDark ? '#fff' : '#18181b' }]}>{requestData.student?.name}</Text>
+                                    <Text style={styles.ratingValue}>{requestData.student?.school}</Text>
+                                </View>
+                            </View>
+                        </View>
+                    )}
 
                     {/* Rider Info */}
                     <View style={[styles.infoBox, { backgroundColor: isDark ? '#27272a' : '#fff', borderColor: isDark ? '#3f3f46' : '#f4f4f5' }]}>

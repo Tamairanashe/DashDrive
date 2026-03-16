@@ -15,7 +15,11 @@ import {
   Tooltip,
   Progress,
   Rate,
-  Badge
+  Badge,
+  Drawer,
+  Form,
+  Select,
+  message
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -30,8 +34,7 @@ import {
   ReloadOutlined,
   ClockCircleOutlined,
   EnvironmentOutlined,
-  WarningOutlined,
-  CheckCircleOutlined
+  WarningOutlined
 } from '@ant-design/icons';
 import { DriverDetails } from '../components/DriverDetails';
 
@@ -41,6 +44,10 @@ export const DriverListPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [searchText, setSearchText] = useState('');
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [editingDriver, setEditingDriver] = useState<any>(null);
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   const stats = [
     { title: 'Total Drivers', value: '12,405', icon: <UserOutlined />, color: '#10b981' },
@@ -57,19 +64,23 @@ export const DriverListPage: React.FC = () => {
     { id: 'D-4004', name: 'Elena Petrova', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', status: 'Compliance Alert', rating: 4.9, vehicle: 'Tesla Model 3', alertType: 'Insurance Expiring', expiry: 'In 3 days' },
   ];
 
-  // If a driver is selected, show the detailed profile view
-  if (selectedDriverId) {
-    return (
-      <div className="animate-in fade-in duration-500">
-        <DriverDetails 
-          driverId={selectedDriverId} 
-          onBack={() => setSelectedDriverId(null)} 
-        />
-      </div>
-    );
-  }
+  const handleEditDriver = (record: any) => {
+    setEditingDriver(record);
+    form.setFieldsValue(record);
+    setIsDrawerVisible(true);
+  };
 
-  // Column Definitions for different tabs
+  const handleSaveDriver = (values: any) => {
+    setLoading(true);
+    message.loading(editingDriver ? 'Updating driver...' : 'Onboarding driver...', 1).then(() => {
+      message.success(`Driver ${editingDriver ? 'updated' : 'onboarded'} successfully`);
+      setIsDrawerVisible(false);
+      setEditingDriver(null);
+      form.resetFields();
+      setLoading(false);
+    });
+  };
+
   const getColumns = () => {
     const baseColumns = [
       {
@@ -146,7 +157,6 @@ export const DriverListPage: React.FC = () => {
       ];
     }
 
-    // Default All Columns
     return [
       ...baseColumns,
       {
@@ -173,7 +183,9 @@ export const DriverListPage: React.FC = () => {
             <Tooltip title="View Detailed Profile">
               <Button type="text" icon={<EyeOutlined />} onClick={() => setSelectedDriverId(record.id)} />
             </Tooltip>
-            <Button type="text" icon={<EditOutlined />} />
+            <Tooltip title="Edit Driver">
+              <Button type="text" icon={<EditOutlined style={{ color: '#faad14' }} />} onClick={() => handleEditDriver(record)} />
+            </Tooltip>
             <Button type="text" icon={<MoreOutlined />} />
           </Space>
         )
@@ -181,70 +193,127 @@ export const DriverListPage: React.FC = () => {
     ];
   };
 
-  return (
-    <div style={{ padding: '0 0 24px 0' }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Col>
-          <Title level={4} style={{ margin: 0 }}>Fleet Command Center</Title>
-          <Text type="secondary">Real-time operational overview of your network.</Text>
-        </Col>
-        <Col>
-          <Space>
-            <Button icon={<ReloadOutlined />} />
-            <Button icon={<DownloadOutlined />}>Report</Button>
-            <Button type="primary" icon={<PlusOutlined />}>Onboard Driver</Button>
-          </Space>
-        </Col>
-      </Row>
-
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        {stats.map(stat => (
-          <Col xs={24} sm={12} lg={6} key={stat.title}>
-            <Card bordered={false} bodyStyle={{ padding: 20 }} className="shadow-sm">
-              <Space size={16}>
-                <div style={{ 
-                  width: 48, height: 48, background: `${stat.color}15`, 
-                  borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color, fontSize: 24
-                }}>
-                  {stat.icon}
-                </div>
-                <Statistic title={stat.title} value={stat.value} valueStyle={{ fontWeight: 800 }} />
-              </Space>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <Card bordered={false} bodyStyle={{ padding: 0 }} className="shadow-sm">
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Tabs 
-            activeKey={activeTab} 
-            onChange={setActiveTab}
-            items={[
-              { key: 'All', label: 'All Fleet' },
-              { key: 'Active', label: 'Available Drivers' },
-              { key: 'On Trip', label: 'Live Trips' },
-              { key: 'Offline', label: 'Offline Fleet' },
-              { key: 'Compliance', label: <Badge size="small" count={2} offset={[10, 0]}>Compliance Alerts</Badge> },
-            ]}
-            style={{ marginBottom: -16 }}
-          />
-          <Input
-            prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="Quick search..."
-            style={{ width: 240, borderRadius: 8 }}
-            value={searchText}
-            onChange={e => setSearchText(e.target.value)}
+  const renderContent = () => {
+    if (selectedDriverId) {
+      return (
+        <div className="animate-in fade-in duration-500">
+          <DriverDetails 
+            driverId={selectedDriverId} 
+            onBack={() => setSelectedDriverId(null)} 
           />
         </div>
-        <Table 
-          columns={getColumns()} 
-          dataSource={activeTab === 'All' ? allDrivers : allDrivers.filter(d => (activeTab === 'Compliance' ? d.status === 'Compliance Alert' : d.status === activeTab))} 
-          rowKey="id"
-          pagination={{ pageSize: 15 }}
-        />
-      </Card>
+      );
+    }
+
+    return (
+      <>
+        <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+          <Col>
+            <Title level={4} style={{ margin: 0 }}>Fleet Command Center</Title>
+            <Text type="secondary">Real-time operational overview of your network.</Text>
+          </Col>
+          <Col>
+            <Space>
+              <Button icon={<ReloadOutlined />} />
+              <Button icon={<DownloadOutlined />}>Report</Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => {
+                setEditingDriver(null);
+                form.resetFields();
+                setIsDrawerVisible(true);
+              }}>
+                Manual Onboard
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+
+        <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+          {stats.map(stat => (
+            <Col xs={24} sm={12} lg={6} key={stat.title}>
+              <Card bordered={false} bodyStyle={{ padding: 20 }} className="shadow-sm">
+                <Space size={16}>
+                  <div style={{ 
+                    width: 48, height: 48, background: `${stat.color}15`, 
+                    borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: stat.color, fontSize: 24
+                  }}>
+                    {stat.icon}
+                  </div>
+                  <Statistic title={stat.title} value={stat.value} valueStyle={{ fontWeight: 800 }} />
+                </Space>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+
+        <Card bordered={false} bodyStyle={{ padding: 0 }} className="shadow-sm">
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Tabs 
+              activeKey={activeTab} 
+              onChange={setActiveTab}
+              items={[
+                { key: 'All', label: 'All Fleet' },
+                { key: 'Active', label: 'Available Drivers' },
+                { key: 'On Trip', label: 'Live Trips' },
+                { key: 'Offline', label: 'Offline Fleet' },
+                { key: 'Compliance', label: <Badge size="small" count={2} offset={[10, 0]}>Compliance Alerts</Badge> },
+              ]}
+              style={{ marginBottom: -16 }}
+            />
+            <Input
+              prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="Quick search..."
+              style={{ width: 240, borderRadius: 8 }}
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+            />
+          </div>
+          <Table 
+            columns={getColumns()} 
+            dataSource={activeTab === 'All' ? allDrivers : allDrivers.filter(d => (activeTab === 'Compliance' ? d.status === 'Compliance Alert' : d.status === activeTab))} 
+            rowKey="id"
+            pagination={{ pageSize: 15 }}
+          />
+        </Card>
+
+        <Drawer
+          title={editingDriver ? "Edit Driver" : "Onboard New Driver"}
+          open={isDrawerVisible}
+          onClose={() => setIsDrawerVisible(false)}
+          width={450}
+          extra={<Button type="primary" onClick={() => form.submit()} loading={loading}>Save</Button>}
+          destroyOnClose
+        >
+          <Form form={form} layout="vertical" onFinish={handleSaveDriver}>
+            <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
+              <Input placeholder="Ex: John Doe" />
+            </Form.Item>
+            <Form.Item name="vehicle" label="Vehicle" rules={[{ required: true }]}>
+              <Input placeholder="Ex: Toyota Prius" />
+            </Form.Item>
+            <Form.Item name="status" label="Status" initialValue="Active">
+              <Select>
+                <Select.Option value="Active">Active</Select.Option>
+                <Select.Option value="On Trip">On Trip</Select.Option>
+                <Select.Option value="Offline">Offline</Select.Option>
+                <Select.Option value="Compliance Alert">Compliance Alert</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="Onboarding Documents">
+              <div style={{ border: '1px dashed #d9d9d9', padding: 16, borderRadius: 8, textAlign: 'center' }}>
+                <PlusOutlined style={{ fontSize: 24, color: '#94a3b8' }} />
+                <div style={{ marginTop: 8 }}>Upload License & Insurance</div>
+              </div>
+            </Form.Item>
+          </Form>
+        </Drawer>
+      </>
+    );
+  };
+
+  return (
+    <div style={{ padding: '0 0 24px 0' }}>
+      {renderContent()}
     </div>
   );
 };

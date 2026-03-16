@@ -17,27 +17,24 @@ import { MerchantsModule } from '../../merchants/merchants.module';
 import { StoresModule } from '../../stores/stores.module';
 
 @Module({
-    imports: [
-        AuthModule,
-        AnalyticsModule,
-        OrdersModule,
-        forwardRef(() => ProductsModule),
-        WalletModule,
-        MerchantsModule,
-        StoresModule,
-    ],
-    controllers: [
-        MobileAuthController,
-        MobileDashboardController,
-        MobileOrdersController,
-        MobileProductsController,
-        MobileWalletController,
-        MobileSettingsController,
-        MobileNotificationsController,
-    ],
-    providers: [
-        BusinessHoursService,
-        MobileNotificationsService,
-    ],
+  imports: [
+    AuthModule,
+    AnalyticsModule,
+    OrdersModule,
+    forwardRef(() => ProductsModule),
+    WalletModule,
+    MerchantsModule,
+    StoresModule,
+  ],
+  controllers: [
+    MobileAuthController,
+    MobileDashboardController,
+    MobileOrdersController,
+    MobileProductsController,
+    MobileWalletController,
+    MobileSettingsController,
+    MobileNotificationsController,
+  ],
+  providers: [BusinessHoursService, MobileNotificationsService],
 })
-export class MobileMerchantModule { }
+export class MobileMerchantModule {}
