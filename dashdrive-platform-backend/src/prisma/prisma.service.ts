@@ -14,6 +14,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       if ((url.startsWith('"') && url.endsWith('"')) || (url.startsWith("'") && url.endsWith("'"))) {
         url = url.substring(1, url.length - 1);
       }
+      this.logger.log(`DATABASE_URL configured. Length: ${url.length}, Starts with: ${url.substring(0, 15)}...`);
+    } else {
+      this.logger.error('DATABASE_URL is MISSING');
     }
 
     super({
