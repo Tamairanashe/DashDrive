@@ -1,0 +1,153 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required) - User ID
+    //   - email: string (required) - User email
+    //   - displayName: string (optional) - User display name
+    //   - photoURL: string (optional) - User photo URL
+    //   - role: string (required, 'guest' | 'host') - User role
+    //   - createdAt: string (required) - Creation timestamp
+    //
+    // Collection: cars
+    // Document ID: {carId}
+    // Fields:
+    //   - hostId: string (required) - Host User ID
+    //   - make: string (required) - Car make
+    //   - model: string (required) - Car model
+    //   - year: number (required) - Car year
+    //   - type: string (required) - Car type
+    //   - pricePerDay: number (required) - Price per day
+    //   - description: string (required) - Car description
+    //   - location: string (required) - Car location
+    //   - images: list of strings (required) - Car images
+    //   - features: list of strings (optional) - Car features
+    //   - createdAt: string (required) - Creation timestamp
+    //
+    // Collection: bookings
+    // Document ID: {bookingId}
+    // Fields:
+    //   - carId: string (required) - Car ID
+    //   - guestId: string (required) - Guest User ID
+    //   - hostId: string (required) - Host User ID
+    //   - startDate: string (required) - Start date
+    //   - endDate: string (required) - End date
+    //   - totalPrice: number (required) - Total price
+    //   - status: string (required, 'pending' | 'confirmed' | 'cancelled') - Booking status
+    //   - createdAt: string (required) - Creation timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt']) &&
+             data.uid is string &&
+             data.email is string && isValidEmail(data.email) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1000)) &&
+             data.role in ['guest', 'host'] &&
+             data.createdAt is string && isValidDateString(data.createdAt);
+    }
+
+    function isValidCar(data) {
+      return hasOnlyAllowedFields(['hostId', 'make', 'model', 'year', 'type', 'pricePerDay', 'description', 'location', 'images', 'features', 'createdAt']) &&
+             data.hostId is string &&
+             data.make is string && data.make.size() > 0 && data.make.size() < 50 &&
+             data.model is string && data.model.size() > 0 && data.model.size() < 50 &&
+             data.year is number && data.year > 1900 && data.year <= 2100 &&
+             data.type is string && data.type.size() > 0 && data.type.size() < 50 &&
+             data.pricePerDay is number && data.pricePerDay >= 0 &&
+             data.description is string && data.description.size() < 2000 &&
+             data.location is string && data.location.size() < 200 &&
+             data.images is list && data.images.size() <= 20 &&
+             (!('features' in data) || (data.features is list && data.features.size() <= 50)) &&
+             data.createdAt is string && isValidDateString(data.createdAt);
+    }
+
+    function isValidBooking(data) {
+      return hasOnlyAllowedFields(['carId', 'guestId', 'hostId', 'startDate', 'endDate', 'totalPrice', 'status', 'createdAt']) &&
+             data.carId is string &&
+             data.guestId is string &&
+             data.hostId is string &&
+             data.startDate is string && isValidDateString(data.startDate) &&
+             data.endDate is string && isValidDateString(data.endDate) &&
+             data.totalPrice is number && data.totalPrice >= 0 &&
+             data.status in ['pending', 'confirmed', 'cancelled'] &&
+             data.createdAt is string && isValidDateString(data.createdAt);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || (isAuthenticated() && request.auth.uid != null); // Allow reading other users for host profiles, but only if authenticated
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && uidUnchanged();
+      allow update: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && uidNotModified() && request.resource.data.role == resource.data.role; // Cannot change role
+    }
+
+    match /cars/{carId} {
+      allow read: if true; // Anyone can view cars
+      allow create: if isAuthenticated() && request.resource.data.hostId == request.auth.uid && isValidCar(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.hostId == request.auth.uid && request.resource.data.hostId == resource.data.hostId && isValidCar(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.hostId == request.auth.uid;
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.guestId == request.auth.uid && isValidBooking(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.guestId == request.auth.uid || resource.data.hostId == request.auth.uid) && request.resource.data.guestId == resource.data.guestId && request.resource.data.hostId == resource.data.hostId && request.resource.data.carId == resource.data.carId && isValidBooking(request.resource.data);
+    }
+  }
+}

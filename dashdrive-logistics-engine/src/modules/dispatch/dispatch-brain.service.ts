@@ -52,7 +52,7 @@ export class DispatchBrainService implements OnModuleInit {
         id: true,
         deliveryAddress: true,
         storeId: true,
-        store: { select: { address: true } },
+        store: { select: { address: true, latitude: true, longitude: true } },
       },
     });
 
@@ -82,19 +82,21 @@ export class DispatchBrainService implements OnModuleInit {
       }
     }
 
-    // 2. Map Requests to H3 Cells (Simulation logic)
+    // 2. Map Requests to H3 Cells
     for (const order of pendingOrders) {
-      // In a real system, we'd have pickup_lat/lng on the order.
-      // Mocking a location near Downtown Harare for demonstration
-      const mockLat = -17.8248;
-      const mockLng = 31.053;
-      const cell = h3.latLngToCell(mockLat, mockLng, this.H3_RESOLUTION);
-      let stats = cellStats.get(cell);
-      if (!stats) {
-        stats = { drivers: [], requests: [] };
-        cellStats.set(cell, stats);
+      if (order.store.latitude && order.store.longitude) {
+        const cell = h3.latLngToCell(
+          order.store.latitude,
+          order.store.longitude,
+          this.H3_RESOLUTION,
+        );
+        let stats = cellStats.get(cell);
+        if (!stats) {
+          stats = { drivers: [], requests: [] };
+          cellStats.set(cell, stats);
+        }
+        stats.requests.push(order.id);
       }
-      stats.requests.push(order.id);
     }
 
     return cellStats;

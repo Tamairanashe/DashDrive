@@ -1,23 +1,19 @@
 import { Controller, Get, Post, Body, UseGuards, Param } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ApiKeyGuard } from '../../core/auth/api-key.guard';
+import { InsuranceService } from './insurance.service';
 
 @Controller('api/insurance/claims')
 @UseGuards(ApiKeyGuard)
 export class ClaimController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly insuranceService: InsuranceService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Post('submit')
   async submit(@Body() data: any) {
-    return this.prisma.claim.create({
-      data: {
-        policy_id: data.policyId,
-        user_id: data.userId,
-        incident_type: data.incidentType,
-        description: data.description,
-        status: 'submitted',
-      },
-    });
+    return this.insuranceService.submitClaim(data);
   }
 
   @Get('my-claims/:userId')

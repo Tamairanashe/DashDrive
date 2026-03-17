@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the platform (guest or host)",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["guest", "host"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "Car": {
+      "title": "Car",
+      "description": "A car listed by a host",
+      "type": "object",
+      "properties": {
+        "hostId": { "type": "string" },
+        "make": { "type": "string" },
+        "model": { "type": "string" },
+        "year": { "type": "number" },
+        "type": { "type": "string" },
+        "pricePerDay": { "type": "number" },
+        "description": { "type": "string" },
+        "location": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["hostId", "make", "model", "year", "type", "pricePerDay", "description", "location", "images", "createdAt"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A reservation made by a guest for a car",
+      "type": "object",
+      "properties": {
+        "carId": { "type": "string" },
+        "guestId": { "type": "string" },
+        "hostId": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "totalPrice": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["carId", "guestId", "hostId", "startDate", "endDate", "totalPrice", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "cars/{carId}": {
+      "schema": { "$ref": "#/entities/Car" },
+      "description": "Car listings"
+    },
+    "bookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/Booking" },
+      "description": "Car bookings"
+    }
+  }
+}

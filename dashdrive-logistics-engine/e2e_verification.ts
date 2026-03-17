@@ -18,6 +18,8 @@ async function verifyVerticalFlows() {
                 city: 'Harare',
                 currency: 'USD',
                 timezone: 'Africa/Harare',
+                latitude: -17.8248,
+                longitude: 31.053,
                 estimatedPrepTime: 25,
                 cuisineTypes: ['Italian', 'Fine Dining'],
             }
@@ -82,6 +84,8 @@ async function verifyVerticalFlows() {
                 city: 'Harare',
                 currency: 'USD',
                 timezone: 'Africa/Harare',
+                latitude: -17.8248,
+                longitude: 31.053,
             }
         });
         const martProduct = await prisma.product.create({
@@ -106,6 +110,8 @@ async function verifyVerticalFlows() {
                 city: 'Harare',
                 currency: 'USD',
                 timezone: 'Africa/Harare',
+                latitude: -17.8248,
+                longitude: 31.053,
             }
         });
         const shopProduct = await prisma.product.create({

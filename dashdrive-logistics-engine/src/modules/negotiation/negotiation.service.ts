@@ -85,6 +85,8 @@ export class NegotiationService {
           city: 'System',
           currency: country.currency,
           timezone: country.timezone,
+          latitude: -17.8248,
+          longitude: 31.053,
         },
       });
     }

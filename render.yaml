@@ -64,3 +64,21 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+
+  # 4. Mobility Backend (NestJS + Prisma) - PHASE 15
+  - type: web
+    name: dashdrive-mobility-backend
+    runtime: node
+    plan: starter
+    rootDir: dashdrive-mobility-backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: PORT
+        value: 3002
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false

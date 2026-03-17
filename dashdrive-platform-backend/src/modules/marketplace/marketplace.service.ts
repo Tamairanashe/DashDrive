@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class MarketplaceService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   // Listings
   async createListing(data: Prisma.ListingCreateInput) {
@@ -213,5 +213,117 @@ export class MarketplaceService {
         },
       },
     });
+  }
+
+  // Messaging
+  async createMessage(data: {
+    senderId: string;
+    receiverId: string;
+    listingId?: string;
+    messageText: string;
+  }) {
+    return this.prisma.message.create({
+      data: {
+        sender_id: data.senderId,
+        receiver_id: data.receiverId,
+        listing_id: data.listingId,
+        message_text: data.messageText,
+      },
+    });
+  }
+
+  // --- Retail & Unified Unification ---
+
+  async getStores(category?: string) {
+    return (this.prisma as any).marketplaceStore.findMany({
+      where: category ? { category } : {},
+      include: { categories: true }
+    });
+  }
+
+  async getStoreProducts(storeId: string) {
+    return (this.prisma as any).marketplaceProduct.findMany({
+      where: { storeId, isActive: true },
+      include: { category: true }
+    });
+  }
+
+  async createMarketplaceOrder(userId: string, storeId: string, items: { productId: string, quantity: number }[], instructions?: string) {
+    return (this.prisma as any).$transaction(async (tx: any) => {
+      // 1. Get products to calculate price
+      const productIds = items.map(i => i.productId);
+      const products = await tx.marketplaceProduct.findMany({
+        where: { id: { in: productIds } }
+      });
+
+      let totalAmount = 0;
+      const orderItemsData = items.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        if (!product) throw new Error(`Product ${item.productId} not found`);
+        const price = Number(product.price);
+        totalAmount += price * item.quantity;
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+          price: product.price
+        };
+      });
+
+      // 2. Create Order
+      const order = await tx.marketplaceOrder.create({
+        data: {
+          userId,
+          storeId,
+          totalAmount,
+          instructions,
+          status: 'pending',
+          items: {
+            create: orderItemsData
+          }
+        },
+        include: { items: true }
+      });
+
+      return order;
+    });
+  }
+
+  async searchMarketplace(query: string) {
+    const [listings, products, stores] = await Promise.all([
+      this.prisma.listing.findMany({
+        where: {
+          OR: [
+            { title: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } }
+          ]
+        },
+        take: 10
+      }),
+      (this.prisma as any).marketplaceProduct.findMany({
+        where: {
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } }
+          ]
+        },
+        take: 10,
+        include: { store: true }
+      }),
+      (this.prisma as any).marketplaceStore.findMany({
+        where: {
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } }
+          ]
+        },
+        take: 10
+      })
+    ]);
+
+    return {
+      listings: listings.map(l => ({ ...l, type: 'STAY' })),
+      products: products.map(p => ({ ...p, type: 'PRODUCT' })),
+      stores: stores.map(s => ({ ...s, type: 'STORE' }))
+    };
   }
 }

@@ -1,0 +1,626 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["core", "mobility"]
+}
+
+// ==========================================
+// 1. CORE MODELS
+// ==========================================
+
+model AppNotification {
+  id         String   @id @db.Uuid @default(uuid())
+  user_id    String   @db.Uuid
+  title      String
+  message    String
+  type       String
+  metadata   Json     @default("{}")
+  status     String   @default("sent")
+  created_at DateTime @default(now())
+  User       User     @relation(fields: [user_id], references: [id])
+
+  @@schema("core")
+}
+
+model Document {
+  id          String   @id @db.Uuid @default(uuid())
+  owner_id    String   @db.Uuid
+  type        String
+  file_url    String
+  uploaded_at DateTime @default(now())
+
+  @@schema("core")
+}
+
+model DriverProfile {
+  id                   String                 @id @db.Uuid @default(uuid())
+  user_id              String                 @unique @db.Uuid
+  license_number       String?
+  vehicle_type         String?
+  verification_status  String                 @default("pending")
+  is_online            Boolean                @default(false)
+  last_location_lat    Float?
+  last_location_lng    Float?
+  rating               Float                  @default(5.0)
+  User                 User                   @relation(fields: [user_id], references: [id])
+  DriverBundlePurchase DriverBundlePurchase[]
+  DriverWallet         DriverWallet?
+
+  @@schema("core")
+}
+
+model Organization {
+  id         String   @id @db.Uuid @default(uuid())
+  name       String
+  type       String
+  created_at DateTime @default(now())
+
+  @@schema("core")
+}
+
+model Permission {
+  id              String           @id @db.Uuid @default(uuid())
+  permission_name String           @unique
+  RolePermission  RolePermission[]
+
+  @@schema("core")
+}
+
+model Role {
+  id             String           @id @db.Uuid @default(uuid())
+  role_name      String           @unique
+  description    String?
+  RolePermission RolePermission[]
+  UserRole       UserRole[]
+
+  @@schema("core")
+}
+
+model RolePermission {
+  role_id       String     @db.Uuid
+  permission_id String     @db.Uuid
+  Permission    Permission @relation(fields: [permission_id], references: [id])
+  Role          Role       @relation(fields: [role_id], references: [id])
+
+  @@id([role_id, permission_id])
+  @@schema("core")
+}
+
+model School {
+  id        String    @id @db.Uuid @default(uuid())
+  name      String
+  address   String
+  latitude  Float
+  longitude Float
+  phone     String?
+  Student   Student[]
+
+  @@schema("core")
+}
+
+model Student {
+  id            String  @id @db.Uuid @default(uuid())
+  parent_id     String  @db.Uuid
+  name          String
+  age           Int
+  school_id     String  @db.Uuid
+  grade         String?
+  special_notes String?
+  User          User    @relation(fields: [parent_id], references: [id])
+  School        School  @relation(fields: [school_id], references: [id])
+
+  @@schema("core")
+}
+
+model User {
+  id              String            @id @db.Uuid @default(uuid())
+  email           String            @unique
+  phone           String?
+  password_hash   String
+  status          String            @default("active")
+  active_mode     AppMode           @default(CUSTOMER)
+  is_driver       Boolean           @default(false)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  address         String?
+  latitude        Float?
+  longitude       Float?
+
+  // Verification Info
+  license_number  String?
+  license_verified Boolean          @default(false)
+  
+  AppNotification AppNotification[]
+  DriverProfile   DriverProfile?
+  Student         Student[]
+  UserRole        UserRole[]
+  FuelOrder       FuelOrder[]
+  
+  // Car Hire Relations
+  hostProfile     HostProfile?
+  vehicles        Vehicle[]
+  tripsAsGuest    Trip[]            @relation("GuestTrips")
+  tripsAsHost     Trip[]            @relation("HostTrips")
+  reviewsSent     RentalReview[]    @relation("Reviewer")
+  reviewsRecv     RentalReview[]    @relation("Reviewee")
+  favorites       Favorite[]
+
+  @@schema("core")
+}
+
+model UserRole {
+  user_id String @db.Uuid
+  role_id String @db.Uuid
+  Role    Role   @relation(fields: [role_id], references: [id])
+  User    User   @relation(fields: [user_id], references: [id])
+
+  @@id([user_id, role_id])
+  @@schema("core")
+}
+
+// ==========================================
+// 2. MOBILITY MODELS
+// ==========================================
+
+model HostProfile {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @db.Uuid
+  licenseVerified Boolean  @default(false)
+  stripeAccountId String?
+  rating          Float    @default(5.0)
+  goals           String?
+  orientationDone Boolean  @default(false)
+  created_at      DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id])
+  earnings        HostEarning[]
+
+  @@map("host_profiles")
+  @@schema("mobility")
+}
+
+model Vehicle {
+  id              String   @id @default(uuid()) @db.Uuid
+  hostId          String   @db.Uuid
+  make            String
+  model           String
+  year            Int
+  category        String   
+  pricePerDay     Decimal  @db.Decimal(10, 2)
+  location        String
+  latitude        Float?
+  longitude       Float?
+  images          String[] @default([])
+  isActive        Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Expanded Vehicle Details
+  transmission    String   @default("automatic")
+  color           String?
+  fuelType        String?
+  description     String?
+  features        String[] @default([])
+  guestInstructions String?
+  deliveryAvailable Boolean @default(false)
+  deliveryFee     Decimal? @db.Decimal(10, 2)
+  
+  host            User     @relation(fields: [hostId], references: [id])
+  trips           Trip[]
+  availability    VehicleAvailability[]
+  pricingRules    PricingRule[]
+  favorites       Favorite[]
+
+  @@map("vehicles")
+  @@schema("mobility")
+}
+
+model VehicleAvailability {
+  id          String   @id @default(uuid()) @db.Uuid
+  vehicleId   String   @db.Uuid
+  startDate   DateTime
+  endDate     DateTime
+  isAvailable Boolean  @default(false) // false means blocked
+  reason      String?  // personal use, maintenance, etc.
+  created_at  DateTime @default(now())
+
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@schema("mobility")
+}
+
+model PricingRule {
+  id          String   @id @default(uuid()) @db.Uuid
+  vehicleId   String   @db.Uuid
+  type        String   // weekly_discount, monthly_discount, seasonal_boost
+  value       Decimal  @db.Decimal(10, 2)
+  isPercentage Boolean @default(true)
+  isActive    Boolean  @default(true)
+  created_at  DateTime @default(now())
+
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@schema("mobility")
+}
+
+model Trip {
+  id              String   @id @default(uuid()) @db.Uuid
+  vehicleId       String   @db.Uuid
+  guestId         String   @db.Uuid
+  hostId          String   @db.Uuid
+  startDate       DateTime
+  endDate         DateTime
+  totalAmount     Decimal  @db.Decimal(10, 2)
+  status          String   @default("requested")
+  damageReported  Boolean  @default(false)
+  damageNotes     String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  guest           User     @relation("GuestTrips", fields: [guestId], references: [id])
+  host            User     @relation("HostTrips", fields: [hostId], references: [id])
+  inspections     TripInspection[]
+  damageReports   DamageReport[]
+
+  @@map("trips")
+  @@schema("mobility")
+}
+
+model TripInspection {
+  id              String   @id @default(uuid()) @db.Uuid
+  tripId          String   @db.Uuid
+  type            String   // check_in, check_out
+  odometerReading Int
+  fuelLevel       Float    // percentage 0-1
+  photos          String[] @default([])
+  notes           String?
+  created_at      DateTime @default(now())
+
+  trip            Trip     @relation(fields: [tripId], references: [id])
+
+  @@schema("mobility")
+}
+
+model DamageReport {
+  id              String   @id @default(uuid()) @db.Uuid
+  tripId          String   @db.Uuid
+  reportedById    String   @db.Uuid
+  description     String
+  photos          String[] @default([])
+  status          String   @default("pending") // pending, investigating, resolved, closed
+  estimatedCost   Decimal? @db.Decimal(10, 2)
+  invoiceUrl      String?
+  created_at      DateTime @default(now())
+
+  trip            Trip     @relation(fields: [tripId], references: [id])
+
+  @@schema("mobility")
+}
+
+model HostEarning {
+  id              String   @id @default(uuid()) @db.Uuid
+  hostProfileId   String   @db.Uuid
+  tripId          String?  @db.Uuid
+  amount          Decimal  @db.Decimal(10, 2)
+  type            String   // booking, reimbursement, adjustment
+  status          String   @default("pending") // pending, paid_out
+  payoutId        String?
+  created_at      DateTime @default(now())
+
+  hostProfile     HostProfile @relation(fields: [hostProfileId], references: [id])
+
+  @@schema("mobility")
+}
+
+model RentalReview {
+  id          String   @id @default(uuid()) @db.Uuid
+  tripId      String   @db.Uuid
+  reviewerId  String   @db.Uuid
+  revieweeId  String   @db.Uuid
+  rating      Int
+  comment     String?
+  created_at  DateTime @default(now())
+
+  reviewer    User     @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewee    User     @relation("Reviewee", fields: [revieweeId], references: [id])
+
+  @@map("rental_reviews")
+  @@schema("mobility")
+}
+
+model Message {
+  id          String   @id @default(uuid()) @db.Uuid
+  senderId    String   @db.Uuid
+  receiverId  String   @db.Uuid
+  tripId      String?  @db.Uuid
+  content     String
+  isRead      Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  @@map("messages")
+  @@schema("mobility")
+}
+
+model Favorite {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  vehicleId   String   @db.Uuid
+  created_at  DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@schema("mobility")
+}
+
+// ------------------------------------------
+// SHARED MOBILITY (Rides/Transit)
+// ------------------------------------------
+
+model DriverBundlePurchase {
+  id              String        @id @db.Uuid @default(uuid())
+  driverProfileId String        @db.Uuid
+  bundleId        String        @db.Uuid
+  ridesRemaining  Int
+  ridesUsed       Int           @default(0)
+  validUntil      DateTime
+  status          String        @default("active")
+  created_at      DateTime      @default(now())
+  RideBundle      RideBundle    @relation(fields: [bundleId], references: [id])
+  DriverProfile   DriverProfile @relation(fields: [driverProfileId], references: [id])
+
+  @@schema("mobility")
+}
+
+model DriverWallet {
+  id                      String                    @id @db.Uuid @default(uuid())
+  driverProfileId         String                    @unique @db.Uuid
+  balance                 Decimal                   @default(0) @db.Decimal(10, 2)
+  currency                String                    @default("USD")
+  status                  String                    @default("active")
+  created_at              DateTime                  @default(now())
+  updated_at              DateTime                  @updatedAt
+  DriverProfile           DriverProfile             @relation(fields: [driverProfileId], references: [id])
+  DriverWalletTransaction DriverWalletTransaction[]
+
+  @@schema("mobility")
+}
+
+model DriverWalletTransaction {
+  id           String       @id @db.Uuid @default(uuid())
+  walletId     String       @db.Uuid
+  type         String
+  amount       Decimal      @db.Decimal(10, 2)
+  description  String?
+  reference    String?
+  status       String       @default("completed")
+  created_at   DateTime     @default(now())
+  DriverWallet DriverWallet @relation(fields: [walletId], references: [id])
+
+  @@schema("mobility")
+}
+
+model FuelOrder {
+  id          String      @id @db.Uuid @default(uuid())
+  userId      String      @db.Uuid
+  stationId   String      @db.Uuid
+  fuelTypeId  String      @db.Uuid
+  quantity    Decimal     @db.Decimal(10, 2)
+  totalPrice  Decimal     @db.Decimal(10, 2)
+  orderType   String
+  status      String      @default("confirmed")
+  created_at  DateTime    @default(now())
+  FuelType    FuelType    @relation(fields: [fuelTypeId], references: [id])
+  FuelStation FuelStation @relation(fields: [stationId], references: [id])
+  User        User        @relation(fields: [userId], references: [id])
+
+  @@schema("mobility")
+}
+
+model FuelStation {
+  id         String      @id @db.Uuid @default(uuid())
+  name       String
+  address    String
+  latitude   Float
+  longitude  Float
+  isActive   Boolean     @default(true)
+  created_at DateTime    @default(now())
+  FuelOrder  FuelOrder[]
+  FuelType   FuelType[]
+
+  @@schema("mobility")
+}
+
+model FuelType {
+  id           String      @id @db.Uuid @default(uuid())
+  stationId    String      @db.Uuid
+  name         String
+  pricePerUnit Decimal     @db.Decimal(10, 2)
+  unit         String      @default("litre")
+  isAvailable  Boolean     @default(true)
+  FuelOrder    FuelOrder[]
+  FuelStation  FuelStation @relation(fields: [stationId], references: [id])
+
+  @@schema("mobility")
+}
+
+model RideBundle {
+  id                   String                 @id @db.Uuid @default(uuid())
+  name                 String
+  rideCount            Int
+  price                Decimal                @db.Decimal(10, 2)
+  validityDays         Int                    @default(30)
+  isActive             Boolean                @default(true)
+  created_at           DateTime               @default(now())
+  DriverBundlePurchase DriverBundlePurchase[]
+
+  @@schema("mobility")
+}
+
+model RideRequest {
+  id                String          @id @db.Uuid @default(uuid())
+  userId            String          @db.Uuid
+  serviceTypeId     String          @db.Uuid
+  pickupLat         Float
+  pickupLng         Float
+  pickupAddress     String
+  dropoffLat        Float
+  dropoffLng        Float
+  dropoffAddress    String
+  status            RideStatus      @default(REQUESTED)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  RideServiceType   RideServiceType @relation(fields: [serviceTypeId], references: [id])
+  RideTrip          RideTrip?
+
+  @@schema("mobility")
+}
+
+model RideServiceType {
+  id            String        @id @db.Uuid @default(uuid())
+  name          String        @unique
+  description   String?
+  basePrice     Float
+  pricePerKm    Float
+  pricePerMin   Float
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  RideRequest   RideRequest[]
+
+  @@schema("mobility")
+}
+
+model RideTrip {
+  id             String      @id @db.Uuid @default(uuid())
+  rideRequestId  String      @unique @db.Uuid
+  driverId       String      @db.Uuid
+  vehicleId      String?     @db.Uuid
+  createdAt      DateTime    @default(now())
+  RideRequest    RideRequest @relation(fields: [rideRequestId], references: [id])
+
+  @@schema("mobility")
+}
+
+model RouteStop {
+  routeId      String       @db.Uuid
+  stopId       String       @db.Uuid
+  stopOrder    Int
+  TransitRoute TransitRoute @relation(fields: [routeId], references: [id])
+  TransitStop  TransitStop  @relation(fields: [stopId], references: [id])
+
+  @@id([routeId, stopId])
+  @@schema("mobility")
+}
+
+model TransitPass {
+  id             String          @id @db.Uuid @default(uuid())
+  userId         String          @db.Uuid
+  type           TransitPassType
+  validUntil     DateTime
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  productId      String?         @db.Uuid
+  TransitProduct TransitProduct? @relation(fields: [productId], references: [id])
+  TransitTrip    TransitTrip[]
+
+  @@schema("mobility")
+}
+
+model TransitProduct {
+  id           String          @id @db.Uuid @default(uuid())
+  type         TransitPassType
+  name         String
+  price        Decimal         @db.Decimal(10, 2)
+  durationDays Int
+  isActive     Boolean         @default(true)
+  created_at   DateTime        @default(now())
+  TransitPass  TransitPass[]
+
+  @@schema("mobility")
+}
+
+model TransitRoute {
+  id          String        @id @db.Uuid @default(uuid())
+  name        String
+  routeNumber String        @unique
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  RouteStop   RouteStop[]
+  TransitTrip TransitTrip[]
+
+  @@schema("mobility")
+}
+
+model TransitStop {
+  id                                                String        @id @db.Uuid @default(uuid())
+  name                                              String
+  latitude                                          Float
+  longitude                                         Float
+  createdAt                                         DateTime      @default(now())
+  RouteStop                                         RouteStop[]
+  TransitTrip_TransitTrip_alightStopIdToTransitStop TransitTrip[] @relation("TransitTrip_alightStopIdToTransitStop")
+  TransitTrip_TransitTrip_boardStopIdToTransitStop  TransitTrip[] @relation("TransitTrip_boardStopIdToTransitStop")
+
+  @@schema("mobility")
+}
+
+model TransitTrip {
+  id                                                String       @id @db.Uuid @default(uuid())
+  userId                                            String       @db.Uuid
+  routeId                                           String       @db.Uuid
+  boardStopId                                       String       @db.Uuid
+  alightStopId                                      String?      @db.Uuid
+  passId                                            String?      @db.Uuid
+  createdAt                                         DateTime     @default(now())
+  TransitStop_TransitTrip_alightStopIdToTransitStop TransitStop? @relation("TransitTrip_alightStopIdToTransitStop", fields: [alightStopId], references: [id])
+  TransitStop_TransitTrip_boardStopIdToTransitStop  TransitStop  @relation("TransitTrip_boardStopIdToTransitStop", fields: [boardStopId], references: [id])
+  TransitPass                                       TransitPass? @relation(fields: [passId], references: [id])
+  TransitRoute                                      TransitRoute @relation(fields: [routeId], references: [id])
+
+  @@schema("mobility")
+}
+
+enum AppMode {
+  CUSTOMER
+  DRIVER
+
+  @@schema("core")
+}
+
+enum RideStatus {
+  REQUESTED
+  SEARCHING
+  DRIVER_ASSIGNED
+  DRIVER_ARRIVING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_DRIVERS
+
+  @@schema("mobility")
+}
+
+enum TransitPassType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  STUDENT
+
+  @@schema("mobility")
+}
+
+enum TransitType {
+  BUS
+  TRAIN
+  METRO
+  FERRY
+  MINIBUS
+
+  @@schema("mobility")
+}

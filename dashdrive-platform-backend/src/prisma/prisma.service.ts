@@ -6,7 +6,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger(PrismaService.name);
   
   async onModuleInit() {
-    this.logger.warn('MOCK MODE: Skipping actual PostgreSQL database connection.');
-    // await this.$connect();
+    await this.$connect();
   }
 }

@@ -15,13 +15,13 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { SystemAuthGuard } from '../../common/guards/system-auth.guard';
 import { VerificationStatus } from '@prisma/client';
 
 @ApiTags('riders')
 @Controller('riders')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(SystemAuthGuard)
 export class RidersController {
   constructor(
     private readonly ridersService: RidersService,

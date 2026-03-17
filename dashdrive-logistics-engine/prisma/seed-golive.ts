@@ -42,6 +42,35 @@ async function main() {
         create: { countryCode: 'KE', baseFee: 150, distanceFeeKm: 50, timeFeeMin: 10, serviceFee: 80 }
     });
     console.log('✅ Pricing rules seeded');
+    const systemApiKey = 'dashdrive_platform_secret_2026';
+
+    // ==========================================
+    // 2.5 SEED SYSTEM MERCHANT (Internal)
+    // ==========================================
+    const systemMerchant = await prisma.merchant.upsert({
+        where: { email: 'system@dashdrive.com' },
+        update: {},
+        create: {
+            email: 'system@dashdrive.com',
+            passwordHash: 'INTERNAL_ONLY',
+            storeName: 'DashDrive Platform System',
+            type: BusinessType.DIRECT,
+            countryId: zw.id,
+            isVerified: true,
+        },
+    });
+
+    await prisma.apiKey.upsert({
+        where: { key: systemApiKey },
+        update: { isActive: true },
+        create: {
+            key: systemApiKey,
+            name: 'Platform Backend System Key',
+            merchantId: systemMerchant.id,
+            isActive: true,
+        },
+    });
+    console.log(`✅ System Merchant & API Key Created`);
 
     // ==========================================
     // 3. SEED MART MERCHANT (Zimbabwe)
@@ -72,6 +101,8 @@ async function main() {
             city: 'Harare',
             currency: 'USD',
             timezone: 'Africa/Harare',
+            latitude: -17.8248,
+            longitude: 31.053,
             taxRate: 0.15,
             commissionRate: 0.10,
             isActive: true,
@@ -81,11 +112,15 @@ async function main() {
     console.log(`  📍 Store created: ${martStore.name}`);
 
     // Mart Categories + Products
-    const martGrocery = await prisma.category.create({
-        data: { storeId: martStore.id, merchantId: martMerchant.id, name: 'Groceries' },
+    const martGrocery = await prisma.category.upsert({
+        where: { id: martStore.id + '-cat-grocery' },
+        update: {},
+        create: { id: martStore.id + '-cat-grocery', storeId: martStore.id, merchantId: martMerchant.id, name: 'Groceries' },
     });
-    const martDrinks = await prisma.category.create({
-        data: { storeId: martStore.id, merchantId: martMerchant.id, name: 'Drinks' },
+    const martDrinks = await prisma.category.upsert({
+        where: { id: martStore.id + '-cat-drinks' },
+        update: {},
+        create: { id: martStore.id + '-cat-drinks', storeId: martStore.id, merchantId: martMerchant.id, name: 'Drinks' },
     });
 
     const martProducts = [
@@ -107,8 +142,10 @@ async function main() {
 
     // Business Hours for Mart
     for (let day = 0; day < 7; day++) {
-        await prisma.businessHours.create({
-            data: {
+        await prisma.businessHours.upsert({
+            where: { storeId_dayOfWeek: { storeId: martStore.id, dayOfWeek: day } },
+            update: {},
+            create: {
                 storeId: martStore.id,
                 dayOfWeek: day,
                 openTime: day === 0 ? '09:00' : '07:00',
@@ -148,6 +185,8 @@ async function main() {
             city: 'Harare',
             currency: 'USD',
             timezone: 'Africa/Harare',
+            latitude: -17.8248,
+            longitude: 31.053,
             taxRate: 0.15,
             commissionRate: 0.15,
             isActive: true,
@@ -162,14 +201,20 @@ async function main() {
     console.log(`  📍 Store created: ${foodStore.name}`);
 
     // Food Categories + Products
-    const burgers = await prisma.category.create({
-        data: { storeId: foodStore.id, merchantId: foodMerchant.id, name: 'Burgers' },
+    const burgers = await prisma.category.upsert({
+        where: { id: foodStore.id + '-cat-burgers' },
+        update: {},
+        create: { id: foodStore.id + '-cat-burgers', storeId: foodStore.id, merchantId: foodMerchant.id, name: 'Burgers' },
     });
-    const sides = await prisma.category.create({
-        data: { storeId: foodStore.id, merchantId: foodMerchant.id, name: 'Sides' },
+    const sides = await prisma.category.upsert({
+        where: { id: foodStore.id + '-cat-sides' },
+        update: {},
+        create: { id: foodStore.id + '-cat-sides', storeId: foodStore.id, merchantId: foodMerchant.id, name: 'Sides' },
     });
-    const beverages = await prisma.category.create({
-        data: { storeId: foodStore.id, merchantId: foodMerchant.id, name: 'Beverages' },
+    const beverages = await prisma.category.upsert({
+        where: { id: foodStore.id + '-cat-beverages' },
+        update: {},
+        create: { id: foodStore.id + '-cat-beverages', storeId: foodStore.id, merchantId: foodMerchant.id, name: 'Beverages' },
     });
 
     const foodProducts = [
@@ -185,8 +230,10 @@ async function main() {
     ];
 
     for (const p of foodProducts) {
-        await prisma.product.create({
-            data: { storeId: foodStore.id, merchantId: foodMerchant.id, ...p },
+        await prisma.product.upsert({
+            where: { sku: `${foodStore.id}-${p.name.replace(/\s+/g, '-').toLowerCase()}` },
+            update: { ...p },
+            create: { id: `${foodStore.id}-${p.name.replace(/\s+/g, '-').toLowerCase()}`, sku: `${foodStore.id}-${p.name.replace(/\s+/g, '-').toLowerCase()}`, storeId: foodStore.id, merchantId: foodMerchant.id, ...p },
         });
     }
     console.log(`  🍔 ${foodProducts.length} Food products created`);
@@ -232,8 +279,10 @@ async function main() {
 
     // Business Hours for Food
     for (let day = 0; day < 7; day++) {
-        await prisma.businessHours.create({
-            data: {
+        await prisma.businessHours.upsert({
+            where: { storeId_dayOfWeek: { storeId: foodStore.id, dayOfWeek: day } },
+            update: {},
+            create: {
                 storeId: foodStore.id,
                 dayOfWeek: day,
                 openTime: '10:00',
@@ -273,6 +322,8 @@ async function main() {
             city: 'Nairobi',
             currency: 'KES',
             timezone: 'Africa/Nairobi',
+            latitude: -1.27,
+            longitude: 36.81,
             taxRate: 0.16,
             commissionRate: 0.12,
             isActive: true,
@@ -280,8 +331,10 @@ async function main() {
         },
     });
 
-    const keGrill = await prisma.category.create({
-        data: { storeId: keStore.id, merchantId: keFoodMerchant.id, name: 'Grilled Meats' },
+    const keGrill = await prisma.category.upsert({
+        where: { id: keStore.id + '-cat-grill' },
+        update: {},
+        create: { id: keStore.id + '-cat-grill', storeId: keStore.id, merchantId: keFoodMerchant.id, name: 'Grilled Meats' },
     });
 
     const keProducts = [
@@ -290,7 +343,11 @@ async function main() {
         { name: 'Ugali & Sukuma', description: 'Traditional side dish', basePrice: 200, stock: 999, categoryId: keGrill.id },
     ];
     for (const p of keProducts) {
-        await prisma.product.create({ data: { storeId: keStore.id, merchantId: keFoodMerchant.id, ...p } });
+        await prisma.product.upsert({
+            where: { sku: `${keStore.id}-${p.name.replace(/\s+/g, '-').toLowerCase()}` },
+            update: { ...p },
+            create: { id: `${keStore.id}-${p.name.replace(/\s+/g, '-').toLowerCase()}`, sku: `${keStore.id}-${p.name.replace(/\s+/g, '-').toLowerCase()}`, storeId: keStore.id, merchantId: keFoodMerchant.id, ...p },
+        });
     }
     console.log(`  🔥 ${keProducts.length} Kenya products created`);
 
@@ -298,10 +355,10 @@ async function main() {
     // 6. SEED RIDERS
     // ==========================================
     const riders = [
-        { name: 'Tinashe Moyo', phone: '+263771000001', vehicleType: 'bike', countryCode: 'ZW', latitude: -17.8292, longitude: 31.0522 },
-        { name: 'Brian Mutasa', phone: '+263771000002', vehicleType: 'scooter', countryCode: 'ZW', latitude: -17.8100, longitude: 31.0455, isOnline: true },
-        { name: 'Gift Ndlovu', phone: '+263771000003', vehicleType: 'car', countryCode: 'ZW', latitude: -17.7900, longitude: 31.0600, isOnline: true },
-        { name: 'James Wanjiku', phone: '+254722000001', vehicleType: 'bike', countryCode: 'KE', latitude: -1.2921, longitude: 36.8219, isOnline: true },
+        { name: 'Tinashe Moyo', phone: '+263771000001', vehicleType: 'bike', countryCode: 'ZW', latitude: -17.8292, longitude: 31.0522, userId: '00000000-0000-0000-0000-000000000101' },
+        { name: 'Brian Mutasa', phone: '+263771000002', vehicleType: 'scooter', countryCode: 'ZW', latitude: -17.8100, longitude: 31.0455, isOnline: true, userId: '00000000-0000-0000-0000-000000000102' },
+        { name: 'Gift Ndlovu', phone: '+263771000003', vehicleType: 'car', countryCode: 'ZW', latitude: -17.7900, longitude: 31.0600, isOnline: true, userId: '00000000-0000-0000-0000-000000000103' },
+        { name: 'James Wanjiku', phone: '+254722000001', vehicleType: 'bike', countryCode: 'KE', latitude: -1.2921, longitude: 36.8219, isOnline: true, userId: '00000000-0000-0000-0000-000000000104' },
     ];
 
     for (const r of riders) {
@@ -316,14 +373,20 @@ async function main() {
     // ==========================================
     // 7. SEED ZONES
     // ==========================================
-    await prisma.zone.create({
-        data: { name: 'Harare CBD', countryCode: 'ZW', minLat: -17.85, maxLat: -17.80, minLng: 31.03, maxLng: 31.07, surgeMultiplier: 1.0 },
+    await prisma.zone.upsert({
+        where: { id: 'zone-harare-cbd' },
+        update: {},
+        create: { id: 'zone-harare-cbd', name: 'Harare CBD', countryCode: 'ZW', minLat: -17.85, maxLat: -17.80, minLng: 31.03, maxLng: 31.07, surgeMultiplier: 1.0 },
     });
-    await prisma.zone.create({
-        data: { name: 'Borrowdale', countryCode: 'ZW', minLat: -17.78, maxLat: -17.74, minLng: 31.05, maxLng: 31.10, surgeMultiplier: 1.2 },
+    await prisma.zone.upsert({
+        where: { id: 'zone-borrowdale' },
+        update: {},
+        create: { id: 'zone-borrowdale', name: 'Borrowdale', countryCode: 'ZW', minLat: -17.78, maxLat: -17.74, minLng: 31.05, maxLng: 31.10, surgeMultiplier: 1.2 },
     });
-    await prisma.zone.create({
-        data: { name: 'Nairobi Westlands', countryCode: 'KE', minLat: -1.27, maxLat: -1.26, minLng: 36.80, maxLng: 36.82, surgeMultiplier: 1.0 },
+    await prisma.zone.upsert({
+        where: { id: 'zone-nairobi-westlands' },
+        update: {},
+        create: { id: 'zone-nairobi-westlands', name: 'Nairobi Westlands', countryCode: 'KE', minLat: -1.27, maxLat: -1.26, minLng: 36.80, maxLng: 36.82, surgeMultiplier: 1.0 },
     });
     console.log('✅ Delivery zones seeded');
 

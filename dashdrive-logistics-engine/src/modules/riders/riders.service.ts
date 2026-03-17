@@ -14,10 +14,13 @@ export class RidersService {
     phone: string;
     vehicleType: string;
     countryCode: string;
+    userId: string;
     email?: string;
   }) {
-    return this.prisma.rider.create({
-      data,
+    return this.prisma.rider.upsert({
+      where: { userId: data.userId },
+      update: data,
+      create: data,
     });
   }
 
@@ -47,6 +50,12 @@ export class RidersService {
   async findOne(id: string) {
     return this.prisma.rider.findUnique({
       where: { id },
+    });
+  }
+
+  async findByUserId(userId: string) {
+    return this.prisma.rider.findUnique({
+      where: { userId },
     });
   }
 

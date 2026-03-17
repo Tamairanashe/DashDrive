@@ -5,6 +5,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { MerchantsModule } from '../merchants/merchants.module';
+import { ApiKeyAuthGuard } from './api-key-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { SystemAuthGuard } from '../../common/guards/system-auth.guard';
 
 @Module({
   imports: [
@@ -16,7 +19,7 @@ import { MerchantsModule } from '../merchants/merchants.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, ApiKeyAuthGuard, SystemAuthGuard],
+  exports: [AuthService, SystemAuthGuard],
 })
 export class AuthModule {}

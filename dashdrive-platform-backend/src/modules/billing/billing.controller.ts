@@ -1,29 +1,38 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { BillingService } from './billing.service';
 import { ApiKeyGuard } from '../core/auth/api-key.guard';
 
 @Controller('api/billing')
 @UseGuards(ApiKeyGuard)
 export class BillingController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private billingService: BillingService) {}
 
-  @Get('transactions')
-  async getTransactions() {
-    return this.prisma.transaction.findMany({
-      orderBy: { created_at: 'desc' },
-    });
+  @Get('summary')
+  async getRevenueSummary(@Query('cycle') cycle?: string) {
+    return this.billingService.getRevenueSummary(cycle);
+  }
+
+  @Get('rates')
+  async getCommissionRates() {
+    return {
+      ride: await this.billingService.getCommissionRate('ride'),
+      delivery: await this.billingService.getCommissionRate('delivery'),
+      hotel: await this.billingService.getCommissionRate('hotel'),
+      fuel: await this.billingService.getCommissionRate('fuel'),
+      transit: await this.billingService.getCommissionRate('transit'),
+      marketplace: await this.billingService.getCommissionRate('marketplace'),
+      insurance: await this.billingService.getCommissionRate('insurance'),
+      rental: await this.billingService.getCommissionRate('rental'),
+    };
   }
 
   @Post('process-payment')
-  async processPayment(@Body() data: any) {
-    return this.prisma.transaction.create({
-      data: {
-        reference_id: data.referenceId,
-        type: data.type,
-        amount: data.amount,
-        status: 'completed',
-        created_at: new Date(),
-      },
-    });
+  async processPayment(@Body() data: { referenceId: string; type: string; amount: number; vertical?: string }) {
+    return this.billingService.recordTransaction(data);
+  }
+
+  @Post('settle')
+  async settlePayouts(@Body() data: { billingCycle?: string }) {
+    return this.billingService.settlePayouts(data.billingCycle);
   }
 }

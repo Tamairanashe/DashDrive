@@ -37,4 +37,13 @@ export class DeliveriesController {
   async getDeliveryStatus(@Req() req: any, @Param('id') id: string) {
     return this.deliveriesService.getDeliveryStatus(req.merchant, id);
   }
+
+  @Post(':id/verify-pin')
+  @UseGuards(ApiKeyAuthGuard)
+  async verifyPin(
+    @Param('id') id: string,
+    @Body() body: { riderId: string; pin: string },
+  ) {
+    return this.deliveriesService.verifyPin(id, body.riderId, body.pin);
+  }
 }

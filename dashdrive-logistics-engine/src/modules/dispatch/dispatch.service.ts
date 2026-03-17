@@ -38,6 +38,11 @@ export class DispatchService {
     });
     if (!order) throw new NotFoundException('Order not found');
 
+    // For DIRECT vertical, we try to batch
+    if (order.pickupLat && order.pickupLng) {
+      return this.batchAndDispatch(orderId);
+    }
+
     let delivery = await this.prisma.delivery.findUnique({
       where: { orderId },
     });
@@ -61,10 +66,82 @@ export class DispatchService {
     );
   }
 
+  async batchAndDispatch(orderId: string) {
+    // 1. Try to find nearby orders to batch with
+    const candidateOrders = await this.prisma.order.findMany({
+      where: {
+        status: OrderStatus.READY,
+        id: { not: orderId },
+        delivery: null,
+      },
+    });
+
+    const referenceOrder = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!referenceOrder || referenceOrder.pickupLat === null || referenceOrder.pickupLng === null) {
+      return;
+    }
+
+    const nearby = candidateOrders.filter(o => {
+      if (o.pickupLat === null || o.pickupLng === null) return false;
+      const dist = this.haversineDistance(referenceOrder.pickupLat as number, referenceOrder.pickupLng as number, o.pickupLat, o.pickupLng);
+      return dist <= 2; // 2km radius
+    });
+
+    if (nearby.length > 0) {
+      const allOrderIds = [orderId, ...nearby.map(o => o.id)].slice(0, 3); // Max 3 in a batch
+      this.logger.log(`📦 Batching ${allOrderIds.length} orders together.`);
+
+      const batch = await (this.prisma as any).deliveryBatch.create({
+        data: { status: 'PENDING' }
+      });
+
+      const deliveries = await Promise.all(allOrderIds.map(async (oid, idx) => {
+        return this.prisma.delivery.create({
+          data: {
+            orderId: oid,
+            status: DeliveryStatus.PENDING,
+            batchId: batch.id,
+            sequence: idx + 1,
+            vertical: 'DIRECT'
+          }
+        });
+      }));
+
+      // Start dispatch for the first delivery in the batch (logic handles the whole batch)
+      if (this.dispatchQueue) {
+        await this.dispatchQueue.add('process_dispatch', { deliveryId: deliveries[0].id });
+      }
+      return;
+    }
+
+    // No batch possible, just start normal flow
+    let delivery = await this.prisma.delivery.findUnique({ where: { orderId } });
+    if (!delivery) {
+      delivery = await this.prisma.delivery.create({
+        data: { orderId, status: DeliveryStatus.PENDING, vertical: 'DIRECT' },
+      });
+    }
+    if (this.dispatchQueue) {
+      await this.dispatchQueue.add('process_dispatch', { deliveryId: delivery.id });
+    }
+  }
+
+  private haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLng = (lng2 - lng1) * (Math.PI / 180);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
   async processDispatch(deliveryId: string, radius: number = 5) {
-    const delivery = await this.prisma.delivery.findUnique({
+    const delivery = await (this.prisma.delivery as any).findUnique({
       where: { id: deliveryId },
-      include: { dispatchAttempts: true, order: { include: { store: true } } },
+      include: { 
+        dispatchAttempts: true, 
+        order: { include: { store: true } }, 
+        batch: { include: { deliveries: { include: { order: true } } } } 
+      },
     });
 
     if (!delivery || delivery.status !== DeliveryStatus.PENDING) return;
@@ -110,15 +187,32 @@ export class DispatchService {
       const distanceKm = 2.4;
       const earnings = delivery.order.deliveryFee || 2.5;
 
-      this.dispatchGateway.emitDeliveryRequest(rider.id, {
+      const deliveryData = delivery.batchId ? {
         attemptId: attempt.id,
-        pickup: delivery.order.store.name,
+        batchId: delivery.batchId,
+        stops: (delivery as any).batch.deliveries.sort((a: any, b: any) => (a.sequence || 0) - (b.sequence || 0)).map((d: any) => ({
+          orderId: d.orderId,
+          pickup: d.order.pickupAddress || d.order.store?.address,
+          dropoff: d.order.deliveryAddress
+        })),
+        totalFee: (delivery as any).batch.deliveries.reduce((sum: number, d: any) => sum + (d.order.deliveryFee || 0), 0),
+        distance: `${distanceKm} km`,
+        vertical: 'DIRECT',
+        instructions: 'Priority Broadcast (Batch)',
+      } : {
+        attemptId: attempt.id,
+        deliveryId: delivery.id,
+        orderId: delivery.orderId,
+        pickup: (delivery.order as any).pickupAddress || delivery.order.store?.address,
         dropoff: delivery.order.deliveryAddress,
+        fee: delivery.order.deliveryFee,
         distance: `${distanceKm} km`,
         estimatedEarnings: earnings,
         vertical: 'DIRECT',
         instructions: 'Priority Broadcast',
-      });
+      };
+
+      this.dispatchGateway.emitDeliveryRequest(rider.id, deliveryData);
     }
 
     // 10 seconds timeout for this BATCH
@@ -184,37 +278,79 @@ export class DispatchService {
       // Generate a 4-digit PIN for Step 14
       const pin = Math.floor(1000 + Math.random() * 9000).toString();
 
-      await this.prisma.$transaction([
-        this.prisma.dispatchAttempt.update({
-          where: { id: attempt.id },
-          data: { status: DispatchAttemptStatus.ACCEPTED },
-        }),
-        (this.prisma.delivery as any).update({
-          where: { id: attempt.deliveryId },
-          data: {
-            riderId,
-            status: DeliveryStatus.ASSIGNED,
-            verificationPin: pin,
-          },
-        }),
-        (this.prisma.rider as any).update({
-          where: { id: riderId },
-          data: {
-            currentLoad: { increment: 1 },
-            rideCredits: { decrement: 1 },
-            reservedCredits: { increment: 1 },
-          },
-        }),
-      ]);
+      if (attempt.delivery.batchId) {
+        // Handle Batch Assignment
+        const batch = await (this.prisma as any).deliveryBatch.findUnique({
+          where: { id: attempt.delivery.batchId },
+          include: { deliveries: true }
+        });
 
-      // Notify other potential riders that the job is taken
-      this.dispatchGateway.emitBroadcast('job_taken', {
-        deliveryId: attempt.deliveryId,
-      });
+        await this.prisma.$transaction([
+          this.prisma.dispatchAttempt.update({
+            where: { id: attempt.id },
+            data: { status: DispatchAttemptStatus.ACCEPTED },
+          }),
+          (this.prisma as any).deliveryBatch.update({
+            where: { id: attempt.delivery.batchId },
+            data: {
+              riderId,
+              status: DeliveryStatus.ASSIGNED,
+            }
+          }),
+          this.prisma.delivery.updateMany({
+            where: { batchId: attempt.delivery.batchId },
+            data: {
+              riderId,
+              status: DeliveryStatus.ASSIGNED,
+              verificationPin: pin,
+            }
+          }),
+          this.prisma.rider.update({
+            where: { id: riderId },
+            data: {
+              currentLoad: { increment: batch.deliveries.length },
+              rideCredits: { decrement: batch.deliveries.length },
+              reservedCredits: { increment: batch.deliveries.length },
+            },
+          }),
+        ]);
 
-      this.logger.log(
-        `Delivery ${attempt.deliveryId} accepted by rider ${riderId}`,
-      );
+        this.dispatchGateway.emitBroadcast('job_taken', {
+          batchId: attempt.delivery.batchId,
+        });
+
+        this.logger.log(`Batch ${attempt.delivery.batchId} accepted by rider ${riderId}`);
+      } else {
+        // Normal Single Assignment
+        await this.prisma.$transaction([
+          this.prisma.dispatchAttempt.update({
+            where: { id: attempt.id },
+            data: { status: DispatchAttemptStatus.ACCEPTED },
+          }),
+          (this.prisma.delivery as any).update({
+            where: { id: attempt.deliveryId },
+            data: {
+              riderId,
+              status: DeliveryStatus.ASSIGNED,
+              verificationPin: pin,
+            },
+          }),
+          (this.prisma.rider as any).update({
+            where: { id: riderId },
+            data: {
+              currentLoad: { increment: 1 },
+              rideCredits: { decrement: 1 },
+              reservedCredits: { increment: 1 },
+            },
+          }),
+        ]);
+
+        this.dispatchGateway.emitBroadcast('job_taken', {
+          deliveryId: attempt.deliveryId,
+        });
+
+        this.logger.log(`Delivery ${attempt.deliveryId} accepted by rider ${riderId}`);
+      }
     } else {
       await this.prisma.dispatchAttempt.update({
         where: { id: attempt.id },
@@ -236,28 +372,28 @@ export class DispatchService {
     excludedRiderIds: string[] = [],
     radius: number = 5,
   ): Promise<Rider[]> {
-    const order = (await this.prisma.order.findUnique({
+    const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: {
         store: { include: { merchant: { include: { country: true } } } },
       },
-    })) as any;
+    });
 
     if (!order) throw new NotFoundException('Order not found');
 
     const countryCode = order.store.merchant.country.code;
 
-    const storeLat = order.store.latitude || -17.8248;
-    const storeLng = order.store.longitude || 31.053;
+    const pickupLat = (order as any).pickupLat ?? order.store.latitude;
+    const pickupLng = (order as any).pickupLng ?? order.store.longitude;
 
     // 1. Check for Launch Mode in this Zone
     const activeZones = await this.prisma.zone.findMany({
       where: {
         isActive: true,
-        minLat: { lte: storeLat },
-        maxLat: { gte: storeLat },
-        minLng: { lte: storeLng },
-        maxLng: { gte: storeLng },
+        minLat: { lte: pickupLat },
+        maxLat: { gte: pickupLat },
+        minLng: { lte: pickupLng },
+        maxLng: { gte: pickupLng },
       },
     });
 
@@ -271,12 +407,12 @@ export class DispatchService {
 
     // 2. Radius search using Redis GEO
     const nearbyRiderIds = await this.geoService.findNearbyRiders(
-      storeLat,
-      storeLng,
+      pickupLat,
+      pickupLng,
       effectiveRadius,
     );
 
-    const availableRiders = await (this.prisma.rider as any).findMany({
+    const availableRiders = await this.prisma.rider.findMany({
       where: {
         id: { in: nearbyRiderIds, notIn: excludedRiderIds },
         isOnline: true,
@@ -295,8 +431,8 @@ export class DispatchService {
         const distance = this.geoService.calculateDistance(
           rider.latitude || 0,
           rider.longitude || 0,
-          storeLat,
-          storeLng,
+          pickupLat,
+          pickupLng,
         );
 
         // Distance Score (Inverse of distance, max 10 points)

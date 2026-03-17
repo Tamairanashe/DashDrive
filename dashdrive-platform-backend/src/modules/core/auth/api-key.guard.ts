@@ -1,14 +1,33 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
-  constructor(private prisma: PrismaService) {}
+  constructor(private configService: ConfigService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // MOCK: Automatically bypass API Key auth for local E2E sync testing
     const request = context.switchToHttp().getRequest();
-    request['organization'] = { id: 'mock-org-123', name: 'Local Tester' };
+    const authHeader = request.headers['authorization'];
+
+    if (!authHeader) {
+      throw new UnauthorizedException('No authorization header found');
+    }
+
+    const [type, key] = authHeader.split(' ');
+
+    if (type !== 'Bearer' || !key) {
+      throw new UnauthorizedException('Invalid authorization format');
+    }
+
+    const systemApiKey = this.configService.get<string>('SYSTEM_API_KEY');
+
+    if (key !== systemApiKey) {
+      throw new UnauthorizedException('Invalid API Key');
+    }
+
+    // Mock organization for request scope
+    request['organization'] = { id: 'dashdrive-logistics-engine', name: 'Logistics Engine' };
+    
     return true;
   }
 }

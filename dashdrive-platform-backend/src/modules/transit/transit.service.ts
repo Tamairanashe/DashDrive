@@ -1,55 +1,124 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+// import { TransitPassType } from '@prisma/client';
+type TransitPassType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'STUDENT';
 
 @Injectable()
 export class TransitService {
   constructor(private prisma: PrismaService) {}
 
   async getRoutes() {
-    return [
-      { id: 'tr-1', name: 'CBD Express', routeNumber: 'R01', type: 'bus', startPoint: 'Downtown', endPoint: 'Airport', fare: 1.50 },
-      { id: 'tr-2', name: 'Metro Line 1', routeNumber: 'M01', type: 'train', startPoint: 'Central Station', endPoint: 'Eastlands', fare: 2.00 },
-      { id: 'tr-3', name: 'Lakeside Commuter', routeNumber: 'R05', type: 'minibus', startPoint: 'Lake Avenue', endPoint: 'Industrial Zone', fare: 0.80 },
-    ];
+    return (this.prisma as any).transitRoute.findMany({
+      where: { isActive: true },
+      include: { stops: { include: { stop: true }, orderBy: { stopOrder: 'asc' } } },
+    });
   }
 
   async getRouteStops(routeId: string) {
-    return [
-      { id: 's-1', routeId, name: 'Central Station', stopOrder: 1, latitude: -17.8292, longitude: 31.0522 },
-      { id: 's-2', routeId, name: 'Market Square', stopOrder: 2, latitude: -17.8312, longitude: 31.0480 },
-      { id: 's-3', routeId, name: 'University', stopOrder: 3, latitude: -17.7840, longitude: 31.0530 },
-      { id: 's-4', routeId, name: 'Airport Terminal', stopOrder: 4, latitude: -17.9180, longitude: 31.0920 },
-    ];
+    const routeStops = await (this.prisma as any).routeStop.findMany({
+      where: { routeId },
+      include: { stop: true },
+      orderBy: { stopOrder: 'asc' },
+    });
+    return routeStops.map((rs) => rs.stop);
   }
 
-  async purchasePass(data: { userId: string; passType: string; routeIds?: string[] }) {
-    const pricing: Record<string, { price: number; days: number }> = {
-      daily: { price: 3, days: 1 },
-      weekly: { price: 15, days: 7 },
-      monthly: { price: 50, days: 30 },
-    };
-    const plan = pricing[data.passType] || pricing.daily;
-    const now = new Date();
-    return {
-      id: `pass-${Date.now()}`,
-      userId: data.userId,
-      passType: data.passType,
-      routeIds: data.routeIds || [],
-      validFrom: now,
-      validUntil: new Date(now.getTime() + plan.days * 86400000),
-      price: plan.price,
-      qrCode: `PASS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-      status: 'active',
-    };
+  async purchasePass(data: { userId: string; productId: string }) {
+    return (this.prisma as any).$transaction(async (tx: any) => {
+      // 1. Get product for pricing and duration
+      const product = await tx.transitProduct.findUnique({
+        where: { id: data.productId, isActive: true }
+      });
+      if (!product) throw new NotFoundException('Transit product not found or inactive');
+
+      const price = Number(product.price);
+      const now = new Date();
+      const validUntil = new Date(now.getTime() + product.durationDays * 86400000);
+
+      // 2. Verify user and wallet
+      const user = await tx.user.findUnique({
+        where: { id: data.userId },
+        include: { wallet: true },
+      });
+
+      if (!user) throw new NotFoundException('User not found');
+      if (!user.wallet) throw new Error('User does not have a wallet');
+      
+      if (Number(user.wallet.balance) < price) {
+        throw new Error('Insufficient wallet balance');
+      }
+
+      // 3. Deduct balance
+      const wallet = await tx.wallet.update({
+        where: { id: user.wallet.id },
+        data: { balance: { decrement: price } },
+      });
+
+      // 4. Record Transaction
+      await tx.walletTransaction.create({
+        data: {
+          wallet_id: wallet.id,
+          type: 'payment',
+          amount: price,
+          description: `Transit Pass: ${product.name}`,
+          reference: `TP-${Date.now()}-${data.userId.substring(0, 4)}`,
+          status: 'completed'
+        },
+      });
+
+      // 5. Create pass with secure QR
+      const secureCode = `DASH-${product.type}-${Math.random().toString(36).substring(2, 10).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+
+      return tx.transitPass.create({
+        data: {
+          userId: data.userId,
+          productId: product.id,
+          type: product.type,
+          validUntil,
+          qrCode: secureCode,
+          isActive: true
+        },
+        include: { product: true }
+      });
+    }, { timeout: 15000 });
+  }
+
+  async getProducts() {
+    return (this.prisma as any).transitProduct.findMany({
+      where: { isActive: true }
+    });
   }
 
   async recordTrip(data: { userId: string; routeId: string; boardStop: string; alightStop?: string; passId?: string }) {
-    return {
-      id: `trip-${Date.now()}`,
-      ...data,
-      fare: data.passId ? 0 : 1.50,
-      paymentMethod: data.passId ? 'pass' : 'wallet',
-      createdAt: new Date(),
-    };
+    const route = await (this.prisma as any).transitRoute.findUnique({ where: { id: data.routeId } });
+    if (!route) throw new NotFoundException('Route not found');
+
+    let fare = route.baseFare;
+    if (data.passId) {
+      const pass = await (this.prisma as any).transitPass.findUnique({ 
+        where: { id: data.passId },
+        include: { product: true }
+      });
+      if (pass && pass.isActive && pass.validUntil > new Date()) {
+        fare = 0; // Covered by pass
+      }
+    }
+
+    return (this.prisma as any).transitTrip.create({
+      data: {
+        userId: data.userId,
+        routeId: data.routeId,
+        boardStopId: data.boardStop,
+        alightStopId: data.alightStop,
+        passId: data.passId,
+        fare,
+      },
+      include: {
+        route: true,
+        boardStop: true,
+        alightStop: true,
+        pass: { include: { product: true } }
+      },
+    });
   }
 }

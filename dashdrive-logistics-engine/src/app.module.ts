@@ -35,6 +35,8 @@ import { FinanceModule } from './modules/finance/finance.module';
 import { EnterpriseModule } from './modules/enterprise/enterprise.module';
 import { CmsModule } from './modules/cms/cms.module';
 import { NegotiationModule } from './modules/negotiation/negotiation.module';
+import { SchoolRunModule } from './modules/school-run/school-run.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from '@nestjs/bullmq';
@@ -122,6 +124,8 @@ const appModules = [
   EnterpriseModule,
   CmsModule,
   NegotiationModule,
+  SchoolRunModule,
+  IntegrationsModule,
 ];
 
 if (useMockRedis) {

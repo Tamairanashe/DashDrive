@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ cartCount, onLogoClick, onCartClick }) 
         {/* Left: Brand */}
         <div className="header-left-section" onClick={onLogoClick} style={{ cursor: 'pointer' }}>
           <div className="brand-logo-wrapper">
-            <span className="logo-text">dash</span>
+            <span className="logo-text">dash.stays</span>
           </div>
         </div>
 

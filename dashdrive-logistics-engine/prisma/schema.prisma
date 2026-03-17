@@ -74,8 +74,8 @@ model Store {
   currency   String
   timezone   String
   logoUrl        String?
-  latitude       Float?
-  longitude      Float?
+  latitude       Float
+  longitude      Float
   taxRate        Float    @default(0)
   commissionRate Float    @default(0.10)
   deliveryEnabled   Boolean  @default(true)
@@ -225,6 +225,12 @@ model Order {
   customerName    String?
   customerPhone   String?
   deliveryAddress String?
+  deliveryLat     Float?
+  deliveryLng     Float?
+
+  pickupAddress   String?
+  pickupLat       Float?
+  pickupLng       Float?
   
   // Marketing & Discounts
   couponId        String?
@@ -390,6 +396,7 @@ model Rider {
   isOnline     Boolean @default(false)
   isActive     Boolean @default(true)
   countryCode  String
+  vehicleType  String?
 
   // Relationships
   vehicles    Vehicle[]
@@ -407,6 +414,7 @@ model Rider {
   cancellationRate Float @default(0) // Step 14: Abuse tracking
   lastActiveAt    DateTime @default(now())
 
+  userId       String @unique @db.Uuid
   createdAt DateTime @default(now())
 
   verificationStatus VerificationStatus @default(PENDING)
@@ -469,6 +477,7 @@ model Delivery {
   orderId     String         @unique
   riderId     String?
   status      DeliveryStatus @default(PENDING)
+  vertical    String?        // FOOD, MART, SCHOOL_RUN, DIRECT
   pickupTime  DateTime?
   deliveredAt DateTime?
   verificationPin String?       // Step 14: Passenger confirmation
@@ -501,14 +510,14 @@ model DispatchAttempt {
 
 model DeliveryBatch {
   id              String         @id @default(uuid())
-  riderId         String
+  riderId         String?
   status          DeliveryStatus @default(PENDING) // Represents overall batch status
   totalDistanceKm Float?
   totalFee        Float?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  rider Rider @relation(fields: [riderId], references: [id])
+  rider Rider? @relation(fields: [riderId], references: [id])
   deliveries Delivery[]
 }
 

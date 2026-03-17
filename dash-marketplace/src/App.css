@@ -1,14 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --brand-coral: #ff385c;
-  --text-main: #222222;
-  --text-light: #717171;
-  --bg-white: #ffffff;
-  --border-gray: #dddddd;
-  --shadow-soft: 0 6px 16px rgba(0,0,0,0.12);
-  --shadow-hover: 0 12px 24px rgba(0,0,0,0.15);
-  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --brand-navy: #003366;
+  --brand-teal: #008080;
+  --text-main: #1a1a1a;
+  --text-light: #6c757d;
+  --bg-coastal: #fdfdfd;
+  --bg-mist: #f8f9fa;
+  --border-calm: #e9ecef;
+  --shadow-reliable: 0 4px 12px rgba(0, 51, 102, 0.08);
+  --shadow-hover: 0 8px 24px rgba(0, 51, 102, 0.12);
+  --font-main: 'Lexend', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 * {
@@ -17,7 +19,7 @@
 
 body {
   margin: 0;
-  background: var(--bg-white);
+  background: var(--bg-coastal);
   color: var(--text-main);
   font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
@@ -26,12 +28,12 @@ body {
 /* Header & Layout */
 .marketplace-layout {
   min-height: 100vh;
-  background: var(--bg-white);
+  background: var(--bg-coastal);
 }
 .premium-header {
   height: 80px;
-  background: #fff;
-  border-bottom: 1px solid #ebebeb;
+  background: var(--bg-coastal);
+  border-bottom: 1px solid var(--border-calm);
   display: flex;
   align-items: center;
   position: sticky;
@@ -54,7 +56,7 @@ body {
 }
 
 .brand-logo-wrapper {
-  color: var(--brand-coral);
+  color: var(--brand-navy);
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -1.5px;
@@ -105,7 +107,7 @@ body {
 .dot-new {
   width: 4px;
   height: 4px;
-  background: var(--brand-coral);
+  background: var(--brand-teal);
   border-radius: 50%;
   margin-top: -8px;
 }
@@ -128,15 +130,15 @@ body {
   align-items: center;
   gap: 12px;
   padding: 5px 5px 5px 12px;
-  border: 1px solid #dddddd;
+  border: 1px solid var(--border-calm);
   border-radius: 21px;
   cursor: pointer;
-  transition: box-shadow 0.2s ease;
-  background: #fff;
+  transition: all 0.2s ease;
+  background: var(--bg-coastal);
 }
 
 .user-menu-pill:hover {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+  box-shadow: var(--shadow-reliable);
 }
 
 .cart-btn-premium {
@@ -152,13 +154,13 @@ body {
   position: absolute;
   top: -2px;
   right: -2px;
-  background: var(--brand-coral);
+  background: var(--brand-navy);
   color: #fff;
   font-size: 10px;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 10px;
-  border: 2px solid #fff;
+  border: 2px solid var(--bg-coastal);
 }
 
 .cart-trigger-btn {
@@ -174,19 +176,19 @@ body {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--brand-coral);
+  background: var(--brand-navy);
   color: #fff;
   font-size: 10px;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 10px;
-  border: 2px solid #fff;
+  border: 2px solid var(--bg-coastal);
 }
 
 /* Floating Search Hub */
 .hero-container {
   padding: 24px 80px 48px;
-  background: #fff;
+  background: var(--brand-navy);
 }
 
 .floating-search-hub {
@@ -194,16 +196,16 @@ body {
   align-items: center;
   max-width: 850px;
   margin: 0 auto;
-  background: #f7f7f7;
-  border: 1px solid var(--border-gray);
+  background: var(--bg-coastal);
+  border: 1px solid var(--border-calm);
   border-radius: 40px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-reliable);
   transition: all 0.2s ease;
   padding: 0;
 }
 
 .floating-search-hub:hover {
-  background: #ebebeb;
+  background: var(--bg-mist);
 }
 
 .search-section {
@@ -217,12 +219,12 @@ body {
 }
 
 .search-section:hover {
-  background: #ddd !important;
+  background: var(--bg-mist) !important;
 }
 
 .search-section.active {
-  background: #fff !important;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  background: var(--bg-coastal) !important;
+  box-shadow: var(--shadow-hover);
 }
 
 .section-label {
@@ -244,7 +246,7 @@ body {
   height: 48px !important;
   padding: 0 24px !important;
   border-radius: 24px !important;
-  background: var(--brand-coral) !important;
+  background: var(--brand-teal) !important;
   border: none !important;
   display: flex !important;
   align-items: center;
@@ -252,6 +254,10 @@ body {
   color: #fff !important;
   font-weight: 700 !important;
   margin: 8px;
+}
+
+.search-trigger-btn:hover {
+  background: var(--brand-navy) !important;
 }
 
 /* Popover Styling */
@@ -322,7 +328,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid #ebebeb;
+  border-bottom: 1px solid var(--border-calm);
 }
 
 .guest-row:last-child {
@@ -366,7 +372,7 @@ body {
 
 .when-mode-pills {
   display: flex;
-  background: #ebebeb;
+  background: var(--bg-mist);
   padding: 4px;
   border-radius: 32px;
   gap: 4px;
@@ -382,8 +388,8 @@ body {
 }
 
 .mode-pill.active {
-  background: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: var(--bg-coastal);
+  box-shadow: var(--shadow-reliable);
 }
 
 .calendar-view {
@@ -449,11 +455,11 @@ body {
 }
 
 .other-config-panel {
-  background: #f7f7f7;
+  background: var(--bg-mist);
   border-radius: 16px;
   padding: 16px 24px;
   margin-bottom: 24px;
-  border: 1px solid #ebebeb;
+  border: 1px solid var(--border-calm);
 }
 
 .config-row {
@@ -479,11 +485,12 @@ body {
 
 .premium-select .ant-select-selector {
   border-radius: 8px !important;
-  border-color: #ddd !important;
+  border-color: var(--border-calm) !important;
+  background: var(--bg-coastal) !important;
 }
 
 .premium-select:hover .ant-select-selector {
-  border-color: #222 !important;
+  border-color: var(--brand-teal) !important;
 }
 
 .stay-pill {
@@ -500,9 +507,9 @@ body {
 }
 
 .stay-pill.active {
-  background: var(--brand-coral);
+  background: var(--brand-navy);
   color: #fff;
-  border-color: var(--brand-coral);
+  border-color: var(--brand-navy);
 }
 
 .month-cards-wrapper {
@@ -526,9 +533,9 @@ body {
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  border: 1px solid #ddd !important;
-  background: #fff !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  border: 1px solid var(--border-calm) !important;
+  background: var(--bg-coastal) !important;
+  box-shadow: var(--shadow-reliable) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -563,19 +570,20 @@ body {
 
 .month-cards-wrapper::before {
   left: 0;
-  background: linear-gradient(to right, #fff 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(to right, var(--bg-coastal) 0%, rgba(253, 253, 253, 0) 100%);
 }
 
 .month-cards-wrapper::after {
   right: 0;
-  background: linear-gradient(to left, #fff 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(to left, var(--bg-coastal) 0%, rgba(253, 253, 253, 0) 100%);
 }
 
 .month-card {
   flex: 0 0 110px;
   height: 120px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-calm);
   border-radius: 16px;
+  background: var(--bg-coastal);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -585,8 +593,9 @@ body {
 }
 
 .month-card:hover {
-  border-color: #222;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-color: var(--brand-teal);
+  box-shadow: var(--shadow-reliable);
+  background: var(--bg-mist);
 }
 
 .month-icon {
@@ -619,7 +628,8 @@ body {
   align-items: center;
   gap: 56px;
   padding: 20px 40px;
-  border-bottom: 1px solid #ebebeb;
+  border-bottom: 1px solid var(--border-calm);
+  background: var(--bg-coastal);
   overflow-x: auto;
   scrollbar-width: none;
   flex: 1;
@@ -633,9 +643,9 @@ body {
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  border: 1px solid #ddd !important;
-  background: #fff !important;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important;
+  border: 1px solid var(--border-calm) !important;
+  background: var(--bg-coastal) !important;
+  box-shadow: var(--shadow-reliable) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -648,7 +658,7 @@ body {
   padding: 0 !important;
   font-size: 12px !important;
   transition: all 0.25s cubic-bezier(0.2, 0, 0, 1) !important;
-  color: #222 !important;
+  color: var(--text-main) !important;
 }
 
 .slider-nav-btn:hover {
@@ -674,12 +684,12 @@ body {
 
 .category-slider-wrapper::before {
   left: 0;
-  background: linear-gradient(to right, #fff 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(to right, var(--bg-coastal) 0%, rgba(253, 253, 253, 0) 100%);
 }
 
 .category-slider-wrapper::after {
   right: 0;
-  background: linear-gradient(to left, #fff 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(to left, var(--bg-coastal) 0%, rgba(253, 253, 253, 0) 100%);
 }
 
 .category-item {
@@ -697,12 +707,13 @@ body {
 
 .category-item:hover {
   opacity: 1;
-  border-bottom: 2px solid #ddd;
+  border-bottom: 2px solid var(--border-calm);
 }
 
 .category-item.active {
   opacity: 1;
-  border-bottom: 2px solid var(--text-main);
+  color: var(--brand-teal);
+  border-bottom: 2px solid var(--brand-teal);
 }
 
 .category-icon { font-size: 24px; }
@@ -754,19 +765,20 @@ body {
 
 .heart-action:hover {
   transform: scale(1.1);
-  color: var(--brand-coral);
+  color: var(--brand-navy);
 }
 
 .guest-favorite-badge {
   position: absolute;
   top: 12px;
   left: 12px;
-  background: #fff;
+  background: var(--brand-teal);
+  color: #fff;
   padding: 4px 12px;
   border-radius: 16px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-reliable);
 }
 
 .card-info {
@@ -845,16 +857,16 @@ body {
 .booking-widget-v2 {
   position: sticky;
   top: 112px;
-  border: 1px solid var(--border-gray);
+  border: 1px solid var(--border-calm);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: var(--shadow-soft);
-  background: #fff;
+  box-shadow: var(--shadow-reliable);
+  background: var(--bg-coastal);
 }
 
 .premium-footer {
-  background: #f7f7f7;
-  border-top: 1px solid var(--border-gray);
+  background: var(--bg-mist);
+  border-top: 1px solid var(--border-calm);
   padding: 48px 80px;
 }
 

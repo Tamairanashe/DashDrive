@@ -422,7 +422,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ onStoreSelect }) => {
                   <div className="card-image-wrapper">
                     <img src={property.image} alt={property.name} className="card-image" />
                     <div className="heart-action">
-                      {property.isFavorite ? <HeartFilled style={{ color: '#ff385c' }} /> : <HeartOutlined />}
+                      {property.isFavorite ? <HeartFilled style={{ color: '#003366' }} /> : <HeartOutlined />}
                     </div>
                     {property.badges && property.badges.includes('Superhost') && (
                       <div className="guest-favorite-badge">Guest favorite</div>

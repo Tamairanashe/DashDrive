@@ -34,6 +34,16 @@ export class CreateStoreDto {
   @IsString()
   timezone: string;
 
+  @ApiProperty({ example: -17.8248 })
+  @IsNotEmpty()
+  @IsNumber()
+  latitude: number;
+
+  @ApiProperty({ example: 31.053 })
+  @IsNotEmpty()
+  @IsNumber()
+  longitude: number;
+
   @ApiProperty({ example: 0.15, required: false })
   @IsOptional()
   @IsNumber()

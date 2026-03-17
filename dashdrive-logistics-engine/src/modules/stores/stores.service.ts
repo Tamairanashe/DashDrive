@@ -13,6 +13,8 @@ export class StoresService {
       city: string;
       currency: string;
       timezone: string;
+      latitude: number;
+      longitude: number;
       taxRate?: number;
       estimatedPrepTime?: number;
       cuisineTypes?: string[];

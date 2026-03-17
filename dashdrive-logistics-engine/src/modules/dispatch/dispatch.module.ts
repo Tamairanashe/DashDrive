@@ -37,6 +37,7 @@ const useMockRedis = process.env.USE_MOCK_REDIS === 'true';
     RoutingService,
     EarningsService,
     DispatchBrainService,
+    DispatchGateway,
   ],
 })
 export class DispatchModule {}

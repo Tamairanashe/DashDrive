@@ -97,6 +97,83 @@ export class DeliveriesService {
     };
   }
 
+  async findNearbyOrdersForBatching(orderId: string, radiusKm: number = 2) {
+    const referenceOrder = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!referenceOrder || !referenceOrder.pickupLat || !referenceOrder.pickupLng) {
+      return [];
+    }
+
+    // Find other READY orders without a delivery yet
+    const candidateOrders = await this.prisma.order.findMany({
+      where: {
+        status: OrderStatus.READY,
+        id: { not: orderId },
+        delivery: null,
+      },
+    });
+
+    return candidateOrders.filter((order) => {
+      if (!order.pickupLat || !order.pickupLng) return false;
+      const distance = this.haversineDistance(
+        referenceOrder.pickupLat,
+        referenceOrder.pickupLng,
+        order.pickupLat,
+        order.pickupLng,
+      );
+      return distance <= radiusKm;
+    });
+  }
+
+  async createBatch(orderIds: string[]) {
+    if (orderIds.length < 2) throw new Error('A batch must contain at least 2 orders');
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Create the Batch record (riderId is null initially)
+      const batch = await (tx as any).deliveryBatch.create({
+        data: {
+          status: 'PENDING',
+        },
+      });
+
+      // 2. Create Deliveries for each order and link them to the batch
+      const deliveries = await Promise.all(
+        orderIds.map(async (orderId, index) => {
+          return tx.delivery.create({
+            data: {
+              orderId,
+              status: 'PENDING',
+              vertical: 'DIRECT',
+              sequence: index + 1,
+              batchId: batch.id,
+            },
+          });
+        }),
+      );
+
+      // 3. Mark orders as having a delivery (optional depending on how status flow works)
+      // Actually, usually the presence of a Delivery record marks it.
+
+      return { batch, deliveries };
+    });
+  }
+
+  private haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLng = (lng2 - lng1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
   async getPublicStatus(orderId: string) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
@@ -150,5 +227,44 @@ export class DeliveriesService {
           }
         : null,
     };
+  }
+
+  async verifyPin(deliveryId: string, riderId: string, pin: string) {
+    const delivery = await this.prisma.delivery.findFirst({
+      where: { id: deliveryId, riderId },
+    });
+
+    if (!delivery) {
+      throw new NotFoundException('Delivery not assigned to this rider.');
+    }
+
+    if (delivery.verificationPin !== pin) {
+      this.logger.warn(`Incorrect PIN attempt for delivery ${deliveryId} by rider ${riderId}`);
+      return { success: false, message: 'Invalid verification PIN' };
+    }
+
+    const nextStatus = 
+      delivery.status === 'ASSIGNED' ? 'PICKED_UP' : 
+      delivery.status === 'PICKED_UP' ? 'DELIVERED' : 
+      delivery.status;
+
+    await this.prisma.$transaction([
+      this.prisma.delivery.update({
+        where: { id: deliveryId },
+        data: { 
+          status: nextStatus as any,
+          deliveredAt: nextStatus === 'DELIVERED' ? new Date() : undefined,
+        },
+      }),
+      this.prisma.order.update({
+        where: { id: delivery.orderId },
+        data: { 
+          status: nextStatus === 'DELIVERED' ? 'COMPLETED' : 'ON_THE_WAY' as any
+        },
+      }),
+    ]);
+
+    this.logger.log(`Delivery ${deliveryId} verified and moved to ${nextStatus}`);
+    return { success: true, nextStatus };
   }
 }

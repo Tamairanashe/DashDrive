@@ -15,8 +15,13 @@ export class TransitController {
     return this.transitService.getRouteStops(id);
   }
 
+  @Get('products')
+  getProducts() {
+    return this.transitService.getProducts();
+  }
+
   @Post('pass/purchase')
-  purchasePass(@Body() data: { userId: string; passType: string; routeIds?: string[] }) {
+  purchasePass(@Body() data: { userId: string; productId: string }) {
     return this.transitService.purchasePass(data);
   }
 

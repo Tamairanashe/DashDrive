@@ -61,6 +61,33 @@ export class MarketplaceController {
     return this.marketplaceService.checkAvailability(id, new Date(checkIn), new Date(checkOut));
   }
 
+  @Post('messages')
+  createMessage(@Body() data: { senderId: string; receiverId: string; listingId?: string; messageText: string }) {
+    return this.marketplaceService.createMessage(data);
+  }
+
+  // --- Retail & Search ---
+
+  @Get('stores')
+  getStores(@Body('category') category?: string) {
+    return this.marketplaceService.getStores(category);
+  }
+
+  @Get('stores/:id/products')
+  getStoreProducts(@Param('id') id: string) {
+    return this.marketplaceService.getStoreProducts(id);
+  }
+
+  @Get('search')
+  search(@Body('q') query: string) {
+    return this.marketplaceService.searchMarketplace(query);
+  }
+
+  @Post('orders')
+  createOrder(@Body() data: { userId: string; storeId: string; items: { productId: string; quantity: number }[]; instructions?: string }) {
+    return this.marketplaceService.createMarketplaceOrder(data.userId, data.storeId, data.items, data.instructions);
+  }
+
   @Post('bookings')
   createBooking(@Body() data: { listing_id: string; guest_id: string; check_in: string; check_out: string }) {
     return this.marketplaceService.createBooking(data);

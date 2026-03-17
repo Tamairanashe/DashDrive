@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/core/auth/auth.module';
 import { UserModule } from './modules/core/users/user.module';
 import { DocumentModule } from './modules/core/documents/document.module';
 import { NotificationModule } from './modules/core/notifications/notification.module';
+import { HealthModule } from './modules/core/health/health.module';
 import { LoanModule } from './modules/finance/loans/loan.module';
 import { BnplModule } from './modules/finance/bnpl/bnpl.module';
 import { VehicleModule } from './modules/finance/vehicles/vehicle.module';
@@ -32,6 +34,7 @@ import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
     EventBusModule,
     PartnerGatewayModule,
@@ -40,8 +43,9 @@ import { MarketplaceModule } from './modules/marketplace/marketplace.module';
     FintechModule,
     SchoolModule,
     StudentModule,
+    HealthModule,
 
-    // Core & Finance (Adding missing modules)
+    // Core & Finance
     AuthModule,
     UserModule,
     DocumentModule,

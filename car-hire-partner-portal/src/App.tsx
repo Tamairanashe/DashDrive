@@ -34,6 +34,7 @@ import Settings from './pages/Settings';
 import Claims from './pages/Claims';
 import MarketplaceListings from './pages/MarketplaceListings';
 import HostCalendar from './pages/HostCalendar';
+import HostVehicleRegistration from './pages/HostVehicleRegistration';
 
 // Renter Pages
 import Home from './pages/Home';
@@ -41,6 +42,42 @@ import Search from './pages/Search';
 import VehicleDetails from './pages/VehicleDetails';
 
 const { Header, Sider, Content } = Layout;
+
+// Define custom design tokens for a more premium look
+const themeConfig = {
+  token: {
+    colorPrimary: '#6366f1', // Indigo 500
+    colorInfo: '#6366f1',
+    borderRadius: 16,
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    colorBgContainer: '#ffffff',
+    colorBgLayout: '#f9fafb',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
+  },
+  components: {
+    Button: {
+      borderRadius: 12,
+      controlHeight: 44,
+      fontWeight: 600,
+      paddingContentHorizontal: 24,
+      boxShadow: 'none',
+    },
+    Card: {
+      borderRadius: 24,
+      boxShadowSecondary: '0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02)',
+    },
+    Menu: {
+      itemBorderRadius: 10,
+      itemMarginInline: 12,
+      itemSelectedBg: '#eff6ff',
+      itemSelectedColor: '#2563eb',
+    },
+    Layout: {
+      headerBg: 'rgba(255, 255, 255, 0.8)',
+      headerHeight: 80,
+    }
+  }
+};
 
 const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -77,68 +114,77 @@ const AppLayout = () => {
           collapsed={collapsed} 
           onCollapse={(value) => setCollapsed(value)} 
           theme="light"
-          className="border-r border-gray-100 shadow-xl"
-          width={260}
+          className="border-r border-gray-100 shadow-sm"
+          width={280}
         >
-          <div className="h-16 flex items-center px-6 font-black text-2xl text-indigo-600 border-b border-gray-50 uppercase tracking-tighter">
-            {collapsed ? 'D' : 'DashDrive'}
+          <div className="h-20 flex items-center px-8 border-b border-gray-50">
+            <Link to="/" className="font-black text-2xl text-indigo-600 uppercase tracking-tighter">
+              {collapsed ? 'D' : 'DashDrive'}
+            </Link>
           </div>
           <Menu 
             theme="light" 
             selectedKeys={[location.pathname]} 
             mode="inline" 
             items={hostMenuItems}
-            className="mt-4 border-none"
+            className="mt-6 border-none px-2"
           />
         </Sider>
       )}
       <Layout style={{ background: 'transparent' }}>
-        <Header className={`${isHostMode ? 'bg-white/80' : 'bg-white'} backdrop-blur-md px-8 flex justify-between items-center border-b border-gray-100 sticky top-0 z-50 h-20`}>
+        <Header className={`${isHostMode ? 'bg-white/80' : 'bg-white/90'} backdrop-blur-xl px-12 flex justify-between items-center border-b border-gray-100/50 sticky top-0 z-[1000] h-20 shadow-sm transition-all duration-300`}>
           <div className="flex items-center space-x-12">
             {!isHostMode && (
-              <div className="font-black text-2xl text-indigo-600 uppercase tracking-tighter">
+              <Link to="/" className="font-black text-2xl text-indigo-600 uppercase tracking-tighter hover:text-indigo-500 transition-colors">
                 DashDrive
-              </div>
+              </Link>
             )}
             {isHostMode ? (
-              <div className="font-bold text-xl text-gray-800">{currentTitle}</div>
+              <div className="font-bold text-lg text-gray-800 tracking-tight">{currentTitle}</div>
             ) : (
-              <nav className="hidden md:flex items-center space-x-8">
-                <Link to="/" className="text-gray-600 hover:text-indigo-600 font-semibold transition-colors">Find a car</Link>
-                <Link to="/search" className="text-gray-600 hover:text-indigo-600 font-semibold transition-colors">Browse Marketplace</Link>
+              <nav className="hidden md:flex items-center space-x-10">
+                <Link to="/" className="text-gray-500 hover:text-indigo-600 font-bold transition-all hover:translate-y-[-1px]">Find a car</Link>
+                <Link to="/search" className="text-gray-500 hover:text-indigo-600 font-bold transition-all hover:translate-y-[-1px]">Marketplace</Link>
               </nav>
             )}
           </div>
 
-          <Space size="large">
+          <Space size="middle">
             <Button 
               onClick={toggleMode}
-              className="rounded-full border-indigo-100 text-indigo-600 font-bold hover:bg-indigo-50"
+              type="text"
+              className="rounded-xl text-indigo-600 font-black hover:bg-indigo-50 px-6 h-11"
             >
               {isHostMode ? 'Switch to Renting' : 'Switch to Hosting'}
             </Button>
             
             {isHostMode && (
-              <Badge count={5} size="small" offset={[2, 2]}>
-                <div className="p-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
-                  <BellOutlined className="text-xl text-gray-600" />
-                </div>
+              <Badge count={5} size="small" offset={[-2, 10]} color="#6366f1">
+                <Button 
+                  type="text" 
+                  icon={<BellOutlined className="text-xl text-gray-400 group-hover:text-indigo-500" />} 
+                  className="rounded-xl w-11 h-11 flex items-center justify-center hover:bg-gray-50 group"
+                />
               </Badge>
             )}
             
-            <Dropdown menu={{ items: [{ key: '1', label: 'Profile' }, { key: '2', label: 'Logout' }] }} placement="bottomRight">
-              <Avatar size="large" icon={<UserOutlined />} className="cursor-pointer bg-indigo-100 text-indigo-600 border-2 border-white shadow-sm" />
+            <Dropdown menu={{ items: [{ key: '1', label: 'Profile' }, { key: '2', label: 'Logout' }] }} placement="bottomRight" arrow>
+              <Avatar 
+                size={44} 
+                icon={<UserOutlined />} 
+                className="cursor-pointer bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm hover:border-indigo-300 transition-all" 
+              />
             </Dropdown>
           </Space>
         </Header>
-        <Content className={`${isHostMode ? 'm-8' : 'm-0'} overflow-auto`}>
+        <Content className={`${isHostMode ? 'p-10' : 'p-0'} transition-all duration-300`}>
           <AnimatePresence mode="wait">
             <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
+              key={location.pathname + isHostMode}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3, ease: [0.19, 1, 0.22, 1] }}
             >
               <Routes location={location}>
                 {/* Renter Routes */}
@@ -149,6 +195,7 @@ const AppLayout = () => {
                 {/* Host Routes */}
                 <Route path="/host" element={<Dashboard />} />
                 <Route path="/host/listings" element={<Listings />} />
+                <Route path="/host/listings/new" element={<HostVehicleRegistration />} />
                 <Route path="/host/marketplace" element={<MarketplaceListings />} />
                 <Route path="/host/calendar" element={<CalendarView />} />
                 <Route path="/host/calendar/properties" element={<HostCalendar />} />
@@ -170,29 +217,7 @@ const AppLayout = () => {
 
 export default function App() {
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: '#4f46e5',
-          borderRadius: 16,
-          fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-        },
-        components: {
-          Button: {
-            borderRadius: 12,
-            controlHeight: 40,
-            fontWeight: 600,
-          },
-          Card: {
-            borderRadius: 24,
-          },
-          Menu: {
-            itemBorderRadius: 12,
-            itemMarginInline: 12,
-          }
-        }
-      }}
-    >
+    <ConfigProvider theme={themeConfig}>
       <Router>
         <AppLayout />
       </Router>

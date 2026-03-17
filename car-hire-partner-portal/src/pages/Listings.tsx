@@ -17,12 +17,14 @@ import {
   SafetyOutlined
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
 export default function Listings() {
+  const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [smartPricingEnabled, setSmartPricingEnabled] = useState(true);
   const [editingVehicle, setEditingVehicle] = useState<any>(null);
@@ -207,7 +209,7 @@ export default function Listings() {
             type="primary" 
             size="large" 
             icon={<PlusOutlined />} 
-            onClick={() => openEditModal()}
+            onClick={() => navigate('/host/listings/new')}
             className="bg-indigo-600 hover:bg-indigo-700 h-12 rounded-2xl px-8 shadow-lg shadow-indigo-200"
           >
             Add New Vehicle

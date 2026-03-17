@@ -1,5 +1,6 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class WalletService {
@@ -8,13 +9,13 @@ export class WalletService {
   constructor(private prisma: PrismaService) {}
 
   async getWallet(userId: string) {
-    let wallet = await (this.prisma as any).wallet.findUnique({
+    let wallet = await this.prisma.wallet.findUnique({
       where: { user_id: userId },
       include: { transactions: { orderBy: { created_at: 'desc' }, take: 10 } }
     });
 
     if (!wallet) {
-      wallet = await (this.prisma as any).wallet.create({
+      wallet = await this.prisma.wallet.create({
         data: {
           user_id: userId,
           balance: 0,
@@ -51,14 +52,14 @@ export class WalletService {
       });
 
       return updatedWallet;
-    });
+    }, { timeout: 15000 });
   }
 
   async debitWallet(userId: string, amount: number, description: string, reference?: string) {
     return (this.prisma as any).$transaction(async (tx: any) => {
       const wallet = await this.getWallet(userId);
       
-      if (Number(wallet.balance) < amount) {
+      if (wallet.balance.lessThan(amount)) {
         throw new BadRequestException('Insufficient wallet balance');
       }
 
@@ -81,28 +82,27 @@ export class WalletService {
       });
 
       return updatedWallet;
-    });
+    }, { timeout: 15000 });
   }
 
   async transfer(senderId: string, receiverId: string, amount: number) {
     return (this.prisma as any).$transaction(async (tx: any) => {
-      // Use any for tx to bypass lint errors if standard TransactionClient isn't inferred correctly
       const senderWallet = await this.getWallet(senderId);
       const receiverWallet = await this.getWallet(receiverId);
 
-      if (Number(senderWallet.balance) < amount) {
+      if (senderWallet.balance.lessThan(amount)) {
         throw new BadRequestException('Insufficient balance for transfer');
       }
 
       const reference = `TRF-${Date.now()}`;
 
       // Debit Sender
-      await (tx as any).wallet.update({
+      await tx.wallet.update({
         where: { id: senderWallet.id },
         data: { balance: { decrement: amount } }
       });
 
-      await (tx as any).walletTransaction.create({
+      await tx.walletTransaction.create({
         data: {
           wallet_id: senderWallet.id,
           type: 'transfer',
@@ -114,12 +114,12 @@ export class WalletService {
       });
 
       // Credit Receiver
-      await (tx as any).wallet.update({
+      await tx.wallet.update({
         where: { id: receiverWallet.id },
         data: { balance: { increment: amount } }
       });
 
-      await (tx as any).walletTransaction.create({
+      await tx.walletTransaction.create({
         data: {
           wallet_id: receiverWallet.id,
           type: 'transfer',
@@ -130,7 +130,7 @@ export class WalletService {
         }
       });
 
-      return (tx as any).transfer.create({
+      return tx.transfer.create({
         data: {
           sender_id: senderId,
           receiver_id: receiverId,
@@ -139,6 +139,6 @@ export class WalletService {
           status: 'completed'
         }
       });
-    });
+    }, { timeout: 15000 });
   }
 }

@@ -43,6 +43,8 @@ export class MerchantsService {
           city: 'Pending Setup',
           currency: country.currency,
           timezone: country.timezone,
+          latitude: -17.8248, // Default to Harare Center until onboarded
+          longitude: 31.053,
           isActive: false, // Inactive until onboarding is complete
         },
       });
@@ -87,6 +89,8 @@ export class MerchantsService {
         address: data.address || store.address,
         city: data.city || store.city,
         logoUrl: data.logoUrl || store.logoUrl,
+        latitude: data.latitude || store.latitude,
+        longitude: data.longitude || store.longitude,
         // Keep isActive false until admin approves
       },
     });

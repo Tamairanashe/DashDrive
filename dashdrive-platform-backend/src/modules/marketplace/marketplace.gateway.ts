@@ -59,13 +59,11 @@ export class MarketplaceGateway
     },
     @ConnectedSocket() client: Socket,
   ) {
-    const newMessage = await this.marketplaceService.prisma.message.create({
-      data: {
-        sender_id: data.senderId,
-        receiver_id: data.receiverId,
-        listing_id: data.listingId,
-        message_text: data.message,
-      },
+    const newMessage = await this.marketplaceService.createMessage({
+      senderId: data.senderId,
+      receiverId: data.receiverId,
+      listingId: data.listingId,
+      messageText: data.message,
     });
 
     this.server.to(data.conversationId).emit('new_message', newMessage);
