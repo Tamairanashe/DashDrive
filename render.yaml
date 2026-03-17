@@ -24,6 +24,8 @@ services:
         sync: false
       - key: BACKEND_API_KEY
         sync: false
+      - key: SYSTEM_API_KEY
+        sync: false
       - key: FRONTEND_URL
         sync: false
       - key: RESEND_API_KEY
