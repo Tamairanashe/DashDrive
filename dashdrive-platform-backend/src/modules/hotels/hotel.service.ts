@@ -25,9 +25,9 @@ export class HotelService {
     });
 
     // Filter hotels with available rooms for the requested dates
-    const results = [];
+    const results: any[] = [];
     for (const hotel of hotels) {
-      const availableRooms = [];
+      const availableRooms: any[] = [];
       for (const rt of hotel.roomTypes) {
         const overlapping = await (this.prisma as any).hotelBooking.count({
           where: {

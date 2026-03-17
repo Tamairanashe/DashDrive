@@ -76,18 +76,18 @@ async function verify() {
   console.log('⏳ Waiting for ride status to reach SEARCHING...');
   let updatedRide = await prisma.rideRequest.findUnique({ where: { id: ride.id } });
   let retries = 5;
-  while (updatedRide.status === RideStatus.REQUESTED && retries > 0) {
+  while (updatedRide && updatedRide.status === RideStatus.REQUESTED && retries > 0) {
     await new Promise(resolve => setTimeout(resolve, 500));
     updatedRide = await prisma.rideRequest.findUnique({ where: { id: ride.id } });
     retries--;
   }
-  console.log(`📊 Final ride status before acceptance: ${updatedRide.status}`);
+  console.log(`📊 Final ride status before acceptance: ${updatedRide?.status}`);
 
   const nearest = nearby.find(d => d.id === drivers[0]);
-  if (nearby.length >= 1 && nearest && updatedRide.status === RideStatus.SEARCHING) {
+  if (nearby.length >= 1 && nearest && updatedRide && updatedRide.status === RideStatus.SEARCHING) {
     console.log('✨ SUCCESS: Discovery and status verified!');
   } else {
-    console.error(`❌ FAILURE: Discovery results or status incorrect. Status: ${updatedRide.status}, Found: ${nearby.length}`);
+    console.error(`❌ FAILURE: Discovery results or status incorrect. Status: ${updatedRide?.status}, Found: ${nearby.length}`);
     process.exit(1);
   }
 
@@ -98,10 +98,10 @@ async function verify() {
 
   // Verify final status
   updatedRide = await prisma.rideRequest.findUnique({ where: { id: ride.id } });
-  if (updatedRide.status === RideStatus.DRIVER_ASSIGNED) {
+  if (updatedRide && updatedRide.status === RideStatus.DRIVER_ASSIGNED) {
     console.log('✨ SUCCESS: Ride status updated to DRIVER_ASSIGNED!');
   } else {
-    console.error(`❌ FAILURE: Ride status is ${updatedRide.status}`);
+    console.error(`❌ FAILURE: Ride status is ${updatedRide?.status}`);
     process.exit(1);
   }
 

@@ -11,10 +11,23 @@ export class UserService {
   ) {}
 
   async findOne(id: string) {
-    return this.prisma.user.findUnique({
-      where: { id },
+    });
+  }
+
+  async syncUser(firebaseUser: any) {
+    const email = firebaseUser.email || `${firebaseUser.uid}@example.com`;
+    return this.prisma.user.upsert({
+      where: { id: firebaseUser.uid },
+      update: {
+        email,
+      },
+      create: {
+        id: firebaseUser.uid,
+        email,
+        password_hash: '',
+        active_mode: AppMode.CUSTOMER,
+      },
       include: {
-        driver_profile: true,
         wallet: true,
       },
     });
