@@ -11,7 +11,7 @@ import { DeliveriesService } from './deliveries.service';
 import { ApiKeyAuthGuard } from '../auth/api-key-auth.guard';
 import { PricingQuoteDto } from '../pricing/pricing.service';
 
-@Controller('api/v1/deliveries')
+@Controller('deliveries')
 export class DeliveriesController {
   constructor(private deliveriesService: DeliveriesService) {}
 

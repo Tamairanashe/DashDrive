@@ -20,6 +20,8 @@ import { ApplicationsModule } from './modules/core/applications/applications.mod
 import { FintechModule } from './modules/fintech/fintech.module';
 import { SchoolModule } from './modules/core/schools/school.module';
 import { StudentModule } from './modules/core/students/student.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 // Super-App Service Modules
 import { RideModule } from './modules/rides/ride.module';
@@ -66,7 +68,7 @@ import { MarketplaceModule } from './modules/marketplace/marketplace.module';
     FuelModule,
     MarketplaceModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -11,7 +11,7 @@ import { DirectService } from './direct.service';
 import { CreateDirectDeliveryDto } from './dto/create-direct-delivery.dto';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
-@Controller('api/v1/direct')
+@Controller('direct')
 @UseGuards(ApiKeyGuard)
 export class DirectController {
   constructor(private readonly directService: DirectService) {}
