@@ -134,11 +134,12 @@ services:
         value: https://dashdrive-logistics-engine.onrender.com/api/v1
 
   # 6. Frontends (Static Sites)
-  - type: static
+  - type: web
     name: dashdrive-admin-panel
+    runtime: static
     rootDir: dashdrive-admin-panel
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_ADMIN_API_URL
         value: https://dashdrive-admin-backend.onrender.com/api
@@ -149,20 +150,22 @@ services:
       - key: VITE_PLATFORM_API_URL
         value: https://dashdrive-platform-backend.onrender.com/api/v1
 
-  - type: static
+  - type: web
     name: mart-merchant-portal
+    runtime: static
     rootDir: mart-merchant-portal
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         value: https://dashdrive-logistics-engine.onrender.com/api/v1
 
-  - type: static
+  - type: web
     name: dash-marketplace
+    runtime: static
     rootDir: dash-marketplace
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         value: https://dashdrive-platform-backend.onrender.com/api/v1
