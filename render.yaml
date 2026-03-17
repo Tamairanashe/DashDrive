@@ -96,33 +96,43 @@ services:
         sync: false
       - key: PAYNOW_KEY_ZIG
         sync: false
+      - key: SYSTEM_API_KEY
+        sync: false
 
-  # 4. Mobility Backend (NestJS + Prisma)
+  # 4. Mobility Backend (Firebase + Prisma)
   - type: web
     name: dashdrive-mobility-backend
     runtime: node
-    plan: starter
+    repo: https://github.com/Tamairanashe/DashDrive
     rootDir: dashdrive-mobility-backend
+    plan: free
+    region: ohio
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
       - key: PORT
-        value: 3002
+        value: 3003
       - key: NODE_VERSION
         value: 22
       - key: DATABASE_URL
         sync: false
-      - key: FIREBASE_PROJECT_ID
-        sync: false
       - key: JWT_SECRET
         sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
 
-  # 5. Platform Backend (NestJS + Prisma) - Port 3004
+  # 5. Platform Backend (Super-App Engine)
   - type: web
     name: dashdrive-platform-backend
     runtime: node
-    plan: starter
+    repo: https://github.com/Tamairanashe/DashDrive
     rootDir: dashdrive-platform-backend
+    plan: free
+    region: ohio
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
@@ -132,7 +142,7 @@ services:
         value: 22
       - key: DATABASE_URL
         sync: false
-      - key: FIREBASE_PROJECT_ID
+      - key: DashdriveMart_DATABASE_URL
         sync: false
       - key: JWT_SECRET
         sync: false
