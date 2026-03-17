@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
 import { FirebaseService } from './firebase.service';
 import { UserService } from '../users/user.service';
 
@@ -6,6 +6,7 @@ import { UserService } from '../users/user.service';
 export class AuthController {
   constructor(
     private readonly firebaseService: FirebaseService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
   ) {}
 
