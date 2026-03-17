@@ -12,7 +12,7 @@ export class AuthController {
   @UseGuards(FirebaseAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Sync Firebase user with Prisma database' })
-  async syncUser(@Request() req) {
+  async syncUser(@Request() req: any) {
     return this.authService.syncUser(req.user);
   }
 }

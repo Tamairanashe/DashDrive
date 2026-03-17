@@ -130,6 +130,7 @@ model User {
   address         String?
   latitude        Float?
   longitude       Float?
+  full_name       String?
 
   // Verification Info
   license_number  String?
@@ -314,6 +315,7 @@ model HostEarning {
   created_at      DateTime @default(now())
 
   hostProfile     HostProfile @relation(fields: [hostProfileId], references: [id])
+  trip            Trip?       @relation(fields: [tripId], references: [id])
 
   @@schema("mobility")
 }
