@@ -93,14 +93,14 @@ export class FintechController {
     reason?: string;
     currency?: string;
   }) {
-    const { wallet: toWallet } = await this.walletService.findWalletByIdentifier(
+    const recipient = await this.walletService.findWalletByIdentifier(
         data.recipient_identifier, 
         data.currency || 'USD'
     );
     
     return this.walletService.transfer(
         data.from_wallet_id, 
-        toWallet.id, 
+        recipient.walletId, 
         data.amount, 
         data.reason || 'P2P Transfer'
     );

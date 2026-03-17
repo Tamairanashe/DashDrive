@@ -249,6 +249,13 @@ export class PaymentService {
     externalRef: string;
     metadata?: any;
   }) {
+    const store = await this.prisma.store.findUnique({
+      where: { id: data.storeId },
+      select: { merchantId: true }
+    });
+
+    if (!store) throw new BadRequestException('Store not found');
+
     return this.prisma.transaction.create({
       data: {
         id: `POS-${Date.now()}`,
@@ -259,6 +266,7 @@ export class PaymentService {
         gatewayTransactionId: data.externalRef,
         status: PaymentStatus.SUCCESS, // POS transactions are usually pre-authorized/cleared
         storeId: data.storeId,
+        merchantId: store.merchantId,
         metadata: {
           terminalId: data.terminalId,
           type: 'POS_TERMINAL_SYNC',
