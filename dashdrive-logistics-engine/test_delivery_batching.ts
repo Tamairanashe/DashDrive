@@ -14,13 +14,20 @@ async function verify() {
   const prisma = app.get(PrismaService);
   const dispatchService = app.get(DispatchService);
 
-  // 1. Setup Base Data (Country, Merchant, Store)
   const country = await prisma.country.findFirst() || await prisma.country.create({
-    data: { name: 'Zimbabwe', code: 'ZW', currency: 'USD', phoneCode: '263' }
+    data: { name: 'Zimbabwe', code: 'ZW', currency: 'USD', timezone: 'Africa/Harare' }
   });
 
+  const mId = uuidv4();
   const merchant = await prisma.merchant.findFirst() || await prisma.merchant.create({
-    data: { name: 'Batch Test Merchant', countryId: country.id, category: 'RESTAURANT' }
+    data: { 
+      id: mId,
+      storeName: 'Batch Test Merchant', 
+      email: `batch-test-${Date.now()}@example.com`,
+      passwordHash: 'hashed',
+      countryId: country.id, 
+      type: 'MART' 
+    }
   });
 
   const store = await prisma.store.findFirst({ where: { merchantId: merchant.id } }) || await prisma.store.create({
@@ -28,6 +35,9 @@ async function verify() {
       name: 'Main Street Store',
       merchantId: merchant.id,
       address: '123 Main St',
+      city: 'Harare',
+      currency: 'USD',
+      timezone: 'Africa/Harare',
       latitude: -17.8252,
       longitude: 31.0335,
     }
@@ -70,14 +80,16 @@ async function verify() {
     include: { batch: { include: { deliveries: true } } }
   });
 
-  if (firstDelivery?.batchId) {
+  if (firstDelivery?.batch && firstDelivery.batchId === firstDelivery.batch.id) {
     console.log(`✅ SUCCESS: DeliveryBatch created (${firstDelivery.batchId})`);
-    console.log(`✅ Deliveries in batch: ${firstDelivery.batch.deliveries.length}`);
-    
-    if (firstDelivery.batch.deliveries.length >= 2) {
-      console.log('✨ SUCCESS: Multi-stop batching verified!');
-    } else {
-      console.error('❌ FAILURE: Batch exists but contains too few deliveries.');
+    if (firstDelivery.batch) {
+      console.log(`✅ Deliveries in batch: ${firstDelivery.batch.deliveries.length}`);
+      
+      if (firstDelivery.batch.deliveries.length >= 2) {
+        console.log('✨ SUCCESS: Multi-stop batching verified!');
+      } else {
+        console.error('❌ FAILURE: Batch exists but contains too few deliveries.');
+      }
     }
   } else {
     console.error('❌ FAILURE: No DeliveryBatch created.');

@@ -9,8 +9,8 @@ export class PlatformBridgeService {
   private readonly apiKey: string;
 
   constructor(private configService: ConfigService) {
-    this.baseUrl = this.configService.get<string>('PLATFORM_BACKEND_URL');
-    this.apiKey = this.configService.get<string>('SYSTEM_API_KEY');
+    this.baseUrl = this.configService.get<string>('PLATFORM_BACKEND_URL') || 'http://localhost:3004';
+    this.apiKey = this.configService.get<string>('SYSTEM_API_KEY') || 'mock-key';
   }
 
   async getStudentDetails(studentId: string) {

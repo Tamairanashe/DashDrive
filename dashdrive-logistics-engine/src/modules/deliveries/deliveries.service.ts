@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PricingService, PricingQuoteDto } from '../pricing/pricing.service';
 import { DispatchService } from '../dispatch/dispatch.service';
@@ -7,12 +8,18 @@ import { Merchant, OrderStatus } from '@prisma/client';
 @Injectable()
 export class DeliveriesService {
   private readonly logger = new Logger(DeliveriesService.name);
+  private readonly baseUrl: string;
+  private readonly apiKey: string;
 
   constructor(
     private prisma: PrismaService,
     private pricingService: PricingService,
     private dispatchService: DispatchService,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    this.baseUrl = this.configService.get<string>('PLATFORM_BACKEND_URL') || 'http://localhost:3004';
+    this.apiKey = this.configService.get<string>('SYSTEM_API_KEY') || 'mock-key';
+  }
 
   async getQuote(dto: PricingQuoteDto) {
     return this.pricingService.getDeliveryQuote(dto);
@@ -118,8 +125,8 @@ export class DeliveriesService {
     return candidateOrders.filter((order) => {
       if (!order.pickupLat || !order.pickupLng) return false;
       const distance = this.haversineDistance(
-        referenceOrder.pickupLat,
-        referenceOrder.pickupLng,
+        referenceOrder.pickupLat as number,
+        referenceOrder.pickupLng as number,
         order.pickupLat,
         order.pickupLng,
       );
