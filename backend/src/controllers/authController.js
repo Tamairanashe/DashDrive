@@ -261,22 +261,26 @@ const recoverEmail = async (req, res) => {
 
         // 2. Send the "Found Your Email" message via Resend
         // Since we only have the registered email, we send it THERE (in case they forgot which one they used)
-        await resend.emails.send({
-            from: 'DashDrive Auth <auth@updates.dashdrive.co.zw>',
-            to: merchant.email,
-            subject: 'DashDrive Account Recovery',
-            html: `
-                <div style="font-family: sans-serif; padding: 20px;">
-                    <h2>Account Recovery Details</h2>
-                    <p>Hello <strong>${merchant.store_name || 'Merchant'}</strong>,</p>
-                    <p>A request was made to recover the email associated with your DashDrive account.</p>
-                    <p>Your registered email is: <strong>${merchant.email}</strong></p>
-                    <p>If you did not request this, please secure your account immediately.</p>
-                    <br/>
-                    <p>Regards,<br/>DashDrive Security Team</p>
-                </div>
-            `
-        });
+        if (resend) {
+            await resend.emails.send({
+                from: 'DashDrive Auth <auth@updates.dashdrive.co.zw>',
+                to: merchant.email,
+                subject: 'DashDrive Account Recovery',
+                html: `
+                    <div style="font-family: sans-serif; padding: 20px;">
+                        <h2>Account Recovery Details</h2>
+                        <p>Hello <strong>${merchant.store_name || 'Merchant'}</strong>,</p>
+                        <p>A request was made to recover the email associated with your DashDrive account.</p>
+                        <p>Your registered email is: <strong>${merchant.email}</strong></p>
+                        <p>If you did not request this, please secure your account immediately.</p>
+                        <br/>
+                        <p>Regards,<br/>DashDrive Security Team</p>
+                    </div>
+                `
+            });
+        } else {
+            console.warn('[Auth] Email recovery skipped: RESEND_API_KEY not configured.');
+        }
 
         // 3. For UX, return a masked version of the email in the response
         const [user, domain] = merchant.email.split('@');

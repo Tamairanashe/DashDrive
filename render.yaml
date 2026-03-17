@@ -26,6 +26,12 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: LOGISTICS_API_URL
+        value: https://dashdrive-logistics-engine.onrender.com/api/v1
+      - key: LOGISTICS_API_KEY
+        sync: false
 
   # 2. Logistics Engine (NestJS + Prisma)
   - type: web

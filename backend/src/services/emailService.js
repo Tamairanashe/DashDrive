@@ -1,6 +1,4 @@
-const { Resend } = require('resend');
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = require('../config/resend');
 
 /**
  * Centralized Email Service
@@ -10,6 +8,10 @@ const emailService = {
      * Send basic email using Resend
      */
     async sendEmail({ to, subject, html, from = 'DashDrive <onboarding@resend.dev>' }) {
+        if (!resend) {
+            console.warn('[EmailService] Skipping email send: RESEND_API_KEY not configured.');
+            return { success: false, error: 'Email service not configured' };
+        }
         try {
             console.log(`[EmailService] Sending email to ${to}...`);
             const { data, error } = await resend.emails.send({
