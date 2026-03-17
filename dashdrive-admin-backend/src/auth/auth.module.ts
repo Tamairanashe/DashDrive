@@ -7,7 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import 'dotenv/config';
 import { SupabaseService } from './supabase.service';
-import { RolesGuard } from './roles.guard.js';
+import { RolesGuard } from './roles.guard';
 
 @Module({
     imports: [

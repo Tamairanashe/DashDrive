@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { RealTimeGateway } from './real-time.gateway.js';
-import { EventConsumer } from './event-consumer.controller.js';
+import { RealTimeGateway } from './real-time.gateway';
+import { EventConsumer } from './event-consumer.controller';
 
 @Module({
   providers: [RealTimeGateway],

@@ -1,6 +1,6 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { PlatformEvent } from '../../common/events/platform-events.js';
+import { PlatformEvent } from '../../common/events/platform-events';
 
 @Injectable()
 export class EventBusService {

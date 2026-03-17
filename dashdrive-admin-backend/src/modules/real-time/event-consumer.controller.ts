@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import { PlatformEvent } from '../../common/events/platform-events.js';
-import { RealTimeGateway } from './real-time.gateway.js';
+import { PlatformEvent } from '../../common/events/platform-events';
+import { RealTimeGateway } from './real-time.gateway';
 
 @Controller()
 export class EventConsumer {
