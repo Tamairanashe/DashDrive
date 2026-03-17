@@ -10,6 +10,8 @@ import Marketplace from './pages/Marketplace';
 import ListingDetailsPage from './pages/ListingDetailsPage';
 import Checkout from './pages/Checkout';
 import MyTripsPage from './pages/MyTripsPage';
+import api from './api/client';
+import { message } from 'antd';
 
 const { Content } = Layout;
 
@@ -22,12 +24,33 @@ function App() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    if (!selectedProperty) return;
+    
     setIsPlacingOrder(true);
-    setTimeout(() => {
-      setIsPlacingOrder(false);
+    try {
+      // 1. Create Booking
+      const response = await api.post('/marketplace/bookings', {
+        listing_id: selectedProperty.id,
+        guest_id: 'default-user-id', // TODO: Get from Auth
+        check_in: new Date().toISOString(),
+        check_out: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+
+      // 2. Process Payment
+      await api.post(`/marketplace/bookings/${response.data.id}/confirm`, {
+        userId: 'default-user-id',
+        paymentMethod: 'wallet',
+      });
+
+      message.success('Booking confirmed successfully!');
       setCurrentView('MY_TRIPS');
-    }, 2000);
+    } catch (error) {
+      console.error("Booking error:", error);
+      message.error('Failed to confirm booking. Please try again.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   return (

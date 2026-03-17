@@ -27,8 +27,9 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { Popover, Button as AntButton, Divider, Select } from 'antd';
-import { sections, propertyCategories } from '../constants';
+import { sections as defaultSections, propertyCategories } from '../constants';
 import MainFooter from '../components/layout/MainFooter';
+import api from '../api/client';
 
 interface MarketplaceProps {
   onStoreSelect: (store: any) => void;
@@ -60,6 +61,8 @@ const suggestedDestinations = [
 ];
 
 const Marketplace: React.FC<MarketplaceProps> = ({ onStoreSelect }) => {
+  const [sections, setSections] = useState(defaultSections);
+  const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All Stays');
   const [activeSearchSection, setActiveSearchSection] = useState<string | null>(null);
   const [guestCount, setGuestCount] = useState({ adults: 0, children: 0, infants: 0, pets: 0 });
@@ -85,7 +88,42 @@ const Marketplace: React.FC<MarketplaceProps> = ({ onStoreSelect }) => {
   };
 
   useEffect(() => {
-    // Initial checks
+    const fetchListings = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get('/marketplace/listings');
+        if (response.data && response.data.length > 0) {
+          // Group by category if needed, or just update trending
+          const newListings = response.data.map((item: any) => ({
+            id: item.id,
+            name: item.title,
+            logo: item.title.substring(0, 2).toUpperCase(),
+            time: item.location?.city || 'Worldwide',
+            rating: 4.8, // Mock if not in DB
+            textColor: '#ffffff',
+            bg: '#1e1e1e',
+            image: item.photos?.[0]?.url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=600',
+            price: Number(item.price_per_night),
+            badges: [item.property_type],
+            isFavorite: false
+          }));
+
+          setSections([{
+            id: 'trending',
+            title: 'Available Stays',
+            items: newListings
+          }]);
+        }
+      } catch (error) {
+        console.error("Error fetching listings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListings();
+    
+    // Initial checks for arrows
     checkArrowVisibility(sliderRef, setShowCatLeft, setShowCatRight);
     
     const catSlider = sliderRef.current;

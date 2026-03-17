@@ -115,4 +115,56 @@ export class MarketplaceController {
   getListingReviews(@Param('id') id: string) {
     return this.marketplaceService.getListingReviews(id);
   }
+
+  // --- Merchant Admin Endpoints ---
+
+  @Post('merchant/stores')
+  createStore(@Body() data: any) {
+    return this.marketplaceService.createStore(data);
+  }
+
+  @Put('merchant/stores/:id')
+  updateStore(@Param('id') id: string, @Body() data: any) {
+    return this.marketplaceService.updateStore(id, data);
+  }
+
+  @Get('merchant/stores/me')
+  getOwnStore(@Query('merchantId') merchantId: string) {
+    return this.marketplaceService.getStoreByMerchant(merchantId);
+  }
+
+  @Post('merchant/categories')
+  createCategory(@Body() data: { storeId: string; name: string }) {
+    return this.marketplaceService.createCategory(data.storeId, data.name);
+  }
+
+  @Delete('merchant/categories/:id')
+  deleteCategory(@Param('id') id: string) {
+    return this.marketplaceService.deleteCategory(id);
+  }
+
+  @Post('merchant/products')
+  createProduct(@Body() data: any) {
+    return this.marketplaceService.createProduct(data);
+  }
+
+  @Put('merchant/products/:id')
+  updateProduct(@Param('id') id: string, @Body() data: any) {
+    return this.marketplaceService.updateProduct(id, data);
+  }
+
+  @Delete('merchant/products/:id')
+  deleteProduct(@Param('id') id: string) {
+    return this.marketplaceService.deleteProduct(id);
+  }
+
+  @Get('merchant/orders')
+  getMerchantOrders(@Query('storeId') storeId: string) {
+    return this.marketplaceService.getStoreOrders(storeId);
+  }
+
+  @Put('merchant/orders/:id/status')
+  updateOrderStatus(@Param('id') id: string, @Body('status') status: string) {
+    return this.marketplaceService.updateOrderStatus(id, status);
+  }
 }

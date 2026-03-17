@@ -1,83 +1,85 @@
-import api from './client';
+import { adminApiInstance, logisticsApiInstance, mobilityApiInstance, platformApiInstance } from './client';
 
 export const adminApi = {
     stores: {
-        list: (params?: any) => api.get('/admin/stores/list', { params }),
-        details: (id: string) => api.get(`/admin/stores/details/${id}`),
-        toggleStatus: (id: string, is_active: boolean) => api.patch(`/admin/stores/toggle-status/${id}`, { is_active }),
+        list: (params?: any) => adminApiInstance.get('/admin/stores/list', { params }),
+        details: (id: string) => adminApiInstance.get(`/admin/stores/details/${id}`),
+        toggleStatus: (id: string, is_active: boolean) => adminApiInstance.patch(`/admin/stores/toggle-status/${id}`, { is_active }),
     },
     merchants: {
-        list: (params?: any) => api.get('/admin/merchants/list', { params }),
+        list: (params?: any) => adminApiInstance.get('/admin/merchants/list', { params }),
     },
     onboarding: {
-        listPending: () => api.get('/admin/stores/list', { params: { status: 'PENDING' } }),
+        listPending: () => adminApiInstance.get('/admin/stores/list', { params: { status: 'PENDING' } }),
     },
     users: {
-        roles: () => api.get('/users/roles'),
-        getDrivers: () => api.get('/riders'),
-        getPendingRiders: () => api.get('/riders/pending'),
-        verifyRider: (id: string, status: string, note?: string) => api.patch(`/riders/${id}/verify`, { status, note }),
+        roles: () => adminApiInstance.get('/users/roles'),
+        getDrivers: () => logisticsApiInstance.get('/riders'),
+        getPendingRiders: () => logisticsApiInstance.get('/riders/pending'),
+        verifyRider: (id: string, status: string, note?: string) => logisticsApiInstance.patch(`/riders/${id}/verify`, { status, note }),
     },
     // Support
     support: {
-        getSupportTickets: (status?: string) => api.get('/support/tickets', { params: { status } }),
-        updateTicketStatus: (id: string, status: string) => api.patch(`/support/tickets/${id}/status`, { status }),
+        getSupportTickets: (status?: string) => adminApiInstance.get('/support/tickets', { params: { status } }),
+        updateTicketStatus: (id: string, status: string) => adminApiInstance.patch(`/support/tickets/${id}/status`, { status }),
     },
     // Fintech & Finance
     fintech: {
+    fintech: {
         wallets: {
-            list: (params?: any) => api.get('/fintech/wallets', { params }),
-            getDetails: (id: string) => api.get(`/fintech/wallets/${id}`),
+            list: (params?: any) => adminApiInstance.get('/fintech/wallets', { params }),
+            getDetails: (id: string) => adminApiInstance.get(`/fintech/wallets/${id}`),
         },
         kyc: {
-            listSubmissions: (status?: string) => api.get('/fintech/kyc/submissions', { params: { status } }),
-            verify: (id: string, status: string) => api.post(`/fintech/kyc/submissions/${id}/verify`, { status }),
+            listSubmissions: (status?: string) => adminApiInstance.get('/fintech/kyc/submissions', { params: { status } }),
+            verify: (id: string, status: string) => adminApiInstance.post(`/fintech/kyc/submissions/${id}/verify`, { status }),
         },
         loans: {
-            listProducts: () => api.get('/fintech/loans/products'),
-            createProduct: (data: any) => api.post('/fintech/loans/products', data),
-            updateProduct: (id: string, data: any) => api.put(`/fintech/loans/products/${id}`, data),
-            listApplications: (status?: string) => api.get('/fintech/loans/applications', { params: { status } }),
-            processApplication: (id: string, action: 'approve' | 'reject') => api.post(`/fintech/loans/applications/${id}/${action}`),
+            listProducts: () => adminApiInstance.get('/fintech/loans/products'),
+            createProduct: (data: any) => adminApiInstance.post('/fintech/loans/products', data),
+            updateProduct: (id: string, data: any) => adminApiInstance.put(`/fintech/loans/products/${id}`, data),
+            listApplications: (status?: string) => adminApiInstance.get('/fintech/loans/applications', { params: { status } }),
+            processApplication: (id: string, action: 'approve' | 'reject') => adminApiInstance.post(`/fintech/loans/applications/${id}/${action}`),
         },
         insurance: {
-            listProviders: () => api.get('/fintech/insurance/providers'),
-            listProducts: () => api.get('/fintech/insurance/products'),
-            createProduct: (data: any) => api.post('/fintech/insurance/products', data),
-            listClaims: (status?: string) => api.get('/fintech/insurance/claims', { params: { status } }),
+            listProviders: () => adminApiInstance.get('/fintech/insurance/providers'),
+            listProducts: () => adminApiInstance.get('/fintech/insurance/products'),
+            createProduct: (data: any) => adminApiInstance.post('/fintech/insurance/products', data),
+            listClaims: (status?: string) => adminApiInstance.get('/fintech/insurance/claims', { params: { status } }),
         }
+    },
     },
     // Super-App Services
     rides: {
-        getServiceTypes: () => api.get('/rides/service-types'),
-        estimateFare: (data: any) => api.post('/rides/estimate', data),
+        getServiceTypes: () => platformApiInstance.get('/rides/service-types'),
+        estimateFare: (data: any) => platformApiInstance.post('/rides/estimate', data),
     },
     hotels: {
-        search: (params: any) => api.get('/hotels/search', { params }),
-        getRoomTypes: (hotelId: string) => api.get(`/hotels/${hotelId}/rooms`),
-        book: (data: any) => api.post('/hotels/book', data),
+        search: (params: any) => platformApiInstance.get('/hotels/search', { params }),
+        getRoomTypes: (hotelId: string) => platformApiInstance.get(`/hotels/${hotelId}/rooms`),
+        book: (data: any) => platformApiInstance.post('/hotels/book', data),
     },
     events: {
-        list: (category?: string) => api.get('/events', { params: { category } }),
-        getTicketTypes: (eventId: string) => api.get(`/events/${eventId}/tickets`),
-        purchaseTicket: (data: any) => api.post('/events/purchase', data),
+        list: (category?: string) => platformApiInstance.get('/events', { params: { category } }),
+        getTicketTypes: (eventId: string) => platformApiInstance.get(`/events/${eventId}/tickets`),
+        purchaseTicket: (data: any) => platformApiInstance.post('/events/purchase', data),
     },
     rentals: {
-        searchVehicles: (params: any) => api.get('/rentals/search', { params }),
-        book: (data: any) => api.post('/rentals/book', data),
+        searchVehicles: (params: any) => platformApiInstance.get('/rentals/search', { params }),
+        book: (data: any) => platformApiInstance.post('/rentals/book', data),
     },
     transit: {
-        getRoutes: () => api.get('/transit/routes'),
-        getStops: (routeId: string) => api.get(`/transit/routes/${routeId}/stops`),
-        purchasePass: (data: any) => api.post('/transit/pass/purchase', data),
+        getRoutes: () => platformApiInstance.get('/transit/routes'),
+        getStops: (routeId: string) => platformApiInstance.get(`/transit/routes/${routeId}/stops`),
+        purchasePass: (data: any) => platformApiInstance.post('/transit/pass/purchase', data),
     },
     fuel: {
-        getNearbyStations: (lat: number, lng: number) => api.get('/fuel/stations', { params: { lat, lng } }),
-        getFuelTypes: (stationId: string) => api.get(`/fuel/stations/${stationId}/fuel-types`),
-        order: (data: any) => api.post('/fuel/order', data),
+        getNearbyStations: (lat: number, lng: number) => platformApiInstance.get('/fuel/stations', { params: { lat, lng } }),
+        getFuelTypes: (stationId: string) => platformApiInstance.get(`/fuel/stations/${stationId}/fuel-types`),
+        order: (data: any) => platformApiInstance.post('/fuel/order', data),
     },
     settings: {
-        get: () => api.get('/platform-config'),
-        update: (key: string, value: any, description?: string) => api.post(`/platform-config/${key}`, { value, description }),
+        get: () => adminApiInstance.get('/platform-config'),
+        update: (key: string, value: any, description?: string) => adminApiInstance.post(`/platform-config/${key}`, { value, description }),
     }
 };

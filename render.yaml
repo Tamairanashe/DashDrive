@@ -65,7 +65,7 @@ services:
       - key: JWT_SECRET
         sync: false
 
-  # 4. Mobility Backend (NestJS + Prisma) - PHASE 15
+  # 4. Mobility Backend (NestJS + Prisma)
   - type: web
     name: dashdrive-mobility-backend
     runtime: node
@@ -80,5 +80,63 @@ services:
         value: 22
       - key: DATABASE_URL
         sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
       - key: JWT_SECRET
         sync: false
+
+  # 5. Platform Backend (NestJS + Prisma) - Port 3004
+  - type: web
+    name: dashdrive-platform-backend
+    runtime: node
+    plan: starter
+    rootDir: dashdrive-platform-backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: PORT
+        value: 3004
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: LOGISTICS_ENGINE_URL
+        value: https://dashdrive-logistics-engine.onrender.com/api/v1
+
+  # 6. Frontends (Static Sites)
+  - type: static
+    name: dashdrive-admin-panel
+    rootDir: dashdrive-admin-panel
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_ADMIN_API_URL
+        value: https://dashdrive-admin-backend.onrender.com/api
+      - key: VITE_MOBILITY_API_URL
+        value: https://dashdrive-mobility-backend.onrender.com/api
+      - key: VITE_LOGISTICS_API_URL
+        value: https://dashdrive-logistics-engine.onrender.com/api/v1
+      - key: VITE_PLATFORM_API_URL
+        value: https://dashdrive-platform-backend.onrender.com/api/v1
+
+  - type: static
+    name: mart-merchant-portal
+    rootDir: mart-merchant-portal
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://dashdrive-logistics-engine.onrender.com/api/v1
+
+  - type: static
+    name: dash-marketplace
+    rootDir: dash-marketplace
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://dashdrive-platform-backend.onrender.com/api/v1

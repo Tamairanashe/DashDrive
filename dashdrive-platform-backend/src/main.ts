@@ -8,6 +8,9 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Global Prefix
+  app.setGlobalPrefix('api/v1');
+
   // Security
   app.use(helmet());
   app.enableCors();
@@ -28,7 +31,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  const port = process.env.PORT ?? 3001;
+  const port = process.env.PORT ?? 3004;
   await app.listen(port);
   console.log(`🚀 DashDrive Platform Backend running on: http://localhost:${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/docs`);

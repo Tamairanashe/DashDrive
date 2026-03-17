@@ -241,6 +241,34 @@ export class PaymentService {
     });
   }
 
+  async createPOSTransaction(data: {
+    terminalId: string;
+    storeId: string;
+    amount: number;
+    currency: string;
+    externalRef: string;
+    metadata?: any;
+  }) {
+    return this.prisma.transaction.create({
+      data: {
+        id: `POS-${Date.now()}`,
+        amount: data.amount,
+        currency: data.currency,
+        paymentMethod: 'pos_terminal',
+        gateway: 'physical_terminal',
+        gatewayTransactionId: data.externalRef,
+        status: PaymentStatus.SUCCESS, // POS transactions are usually pre-authorized/cleared
+        storeId: data.storeId,
+        metadata: {
+          terminalId: data.terminalId,
+          type: 'POS_TERMINAL_SYNC',
+          ...data.metadata,
+        },
+        updatedAt: new Date(),
+      },
+    });
+  }
+
   async getAllTransactions() {
     return this.prisma.transaction.findMany({
       include: {

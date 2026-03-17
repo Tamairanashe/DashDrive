@@ -326,4 +326,80 @@ export class MarketplaceService {
       stores: stores.map(s => ({ ...s, type: 'STORE' }))
     };
   }
+
+  // --- Merchant Management ---
+
+  async createStore(data: { merchantId: string, name: string, description?: string, imageUrl?: string, category: string, address?: string, latitude?: number, longitude?: number }) {
+    return (this.prisma as any).marketplaceStore.create({
+      data
+    });
+  }
+
+  async updateStore(id: string, data: any) {
+    return (this.prisma as any).marketplaceStore.update({
+      where: { id },
+      data
+    });
+  }
+
+  async getStoreByMerchant(merchantId: string) {
+    return (this.prisma as any).marketplaceStore.findFirst({
+      where: { merchantId },
+      include: { categories: true }
+    });
+  }
+
+  async createCategory(storeId: string, name: string) {
+    return (this.prisma as any).marketplaceCategory.create({
+      data: { storeId, name }
+    });
+  }
+
+  async deleteCategory(id: string) {
+    return (this.prisma as any).marketplaceCategory.delete({
+      where: { id }
+    });
+  }
+
+  async createProduct(data: { storeId: string, categoryId?: string, name: string, description?: string, price: number, imageUrl?: string, stock: number }) {
+    return (this.prisma as any).marketplaceProduct.create({
+      data: {
+        ...data,
+        price: new Prisma.Decimal(data.price)
+      }
+    });
+  }
+
+  async updateProduct(id: string, data: any) {
+    if (data.price) data.price = new Prisma.Decimal(data.price);
+    return (this.prisma as any).marketplaceProduct.update({
+      where: { id },
+      data
+    });
+  }
+
+  async deleteProduct(id: string) {
+    return (this.prisma as any).marketplaceProduct.update({
+      where: { id },
+      data: { isActive: false }
+    });
+  }
+
+  async getStoreOrders(storeId: string) {
+    return (this.prisma as any).marketplaceOrder.findMany({
+      where: { storeId },
+      include: {
+        items: { include: { product: true } },
+        user: { select: { id: true, email: true } }
+      },
+      orderBy: { created_at: 'desc' }
+    });
+  }
+
+  async updateOrderStatus(orderId: string, status: string) {
+    return (this.prisma as any).marketplaceOrder.update({
+      where: { id: orderId },
+      data: { status }
+    });
+  }
 }

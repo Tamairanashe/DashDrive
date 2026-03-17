@@ -7,6 +7,7 @@ import {
   EnvironmentOutlined,
   RightOutlined
 } from '@ant-design/icons';
+import api from '../api/client';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -16,29 +17,36 @@ interface TrackingProps {
 }
 
 const Tracking: React.FC<TrackingProps> = ({ onBackHome }) => {
-  const upcomingTrips = [
-    {
-      id: 'T-1024',
-      name: 'Zambezi Sunset Villa',
-      location: 'Victoria Falls',
-      dates: 'Oct 15 – 20, 2026',
-      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=400',
-      status: 'confirmed',
-      host: 'Sarah'
-    }
-  ];
+  const [upcomingTrips, setUpcomingTrips] = React.useState<any[]>([]);
+  const [pastTrips, setPastTrips] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(false);
 
-  const pastTrips = [
-    {
-      id: 'T-0982',
-      name: 'Emerald Lake Cabin',
-      location: 'Nyanga',
-      dates: 'Aug 12 – 15, 2025',
-      image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=400',
-      status: 'completed',
-      host: 'John'
-    }
-  ];
+  React.useEffect(() => {
+    const fetchTrips = async () => {
+      setLoading(true);
+      try {
+        const userId = 'default-user-id'; // TODO: Auth
+        const response = await api.get(`/marketplace/users/${userId}/bookings`);
+        const allTrips = response.data.map((b: any) => ({
+          id: b.id,
+          name: b.listing?.title || 'Property',
+          location: b.listing?.location?.city || 'Location',
+          dates: `${new Date(b.check_in).toLocaleDateString()} – ${new Date(b.check_out).toLocaleDateString()}`,
+          image: b.listing?.photos?.[0]?.url || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=400',
+          status: b.status || 'confirmed',
+          host: b.listing?.host?.email || 'Host'
+        }));
+        
+        setUpcomingTrips(allTrips.filter((t: any) => t.status !== 'completed'));
+        setPastTrips(allTrips.filter((t: any) => t.status === 'completed'));
+      } catch (error) {
+        console.error("Error fetching trips:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrips();
+  }, []);
 
   const TripCard = ({ trip }: { trip: any }) => (
     <Card 

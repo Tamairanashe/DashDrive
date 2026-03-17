@@ -207,6 +207,11 @@ export class FintechController {
     return this.webhookService.handlePaynowWebhook(payload);
   }
 
+  @Post('webhooks/pos-sync')
+  async posWebhook(@Body() payload: any) {
+    return this.webhookService.handlePOSTerminalWebhook(payload);
+  }
+
   @Post('bundles/purchase')
   async purchaseBundle(@Body() data: {
     riderId: string;

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_FINTECH_API_URL || 'http://localhost:3001/api';
 
 const client = axios.create({
   baseURL: API_BASE_URL,
@@ -114,6 +114,7 @@ export const fintechHubApi = {
   admin: {
     getTransactions: () => client.get('/fintech/admin/transactions'),
     getWalletLedger: () => client.get('/fintech/admin/wallet-ledger'),
+    getPosSyncStatus: () => client.get('/fintech/admin/pos-sync'), // Added for POS monitoring
   },
 
   // 12. Driver Bundles API

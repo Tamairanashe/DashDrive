@@ -123,4 +123,25 @@ export class WebhookService {
       return { leadId: lead.id, status };
     });
   }
+
+  async handlePOSTerminalWebhook(payload: {
+    terminal_id: string;
+    store_id: string;
+    amount: number;
+    currency: string;
+    external_reference: string;
+    timestamp: string;
+    metadata?: any;
+  }) {
+    this.logger.log(`POS Sync: Terminal ${payload.terminal_id} | Amount: ${payload.amount}`);
+    
+    return this.paymentService.createPOSTransaction({
+      terminalId: payload.terminal_id,
+      storeId: payload.store_id,
+      amount: payload.amount,
+      currency: payload.currency,
+      externalRef: payload.external_reference,
+      metadata: payload.metadata
+    });
+  }
 }
