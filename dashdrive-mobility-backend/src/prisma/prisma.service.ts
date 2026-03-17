@@ -1,20 +1,14 @@
+```typescript
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
-  // Triggering type refresh after schema expansion
-  async onModuleInit() {
+  constructor() {
     let url = process.env.DATABASE_URL;
     
     if (url) {
       url = url.trim();
-      
-      // Strip DATABASE_URL= prefix
-      if (url.startsWith('DATABASE_URL=')) {
-        url = url.replace('DATABASE_URL=', '');
-      }
-
       // Remove surrounding quotes
       if ((url.startsWith('"') && url.endsWith('"')) || (url.startsWith("'") && url.endsWith("'"))) {
         url = url.substring(1, url.length - 1);
