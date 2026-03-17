@@ -1,19 +1,23 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["admin"]
 }
 
 enum BusinessType {
+  @@schema("admin")
   FOOD
   MART
   SHOPPING
 }
 
 model Category {
+  @@schema("admin")
   id         String    @id
   storeId    String
   merchantId String
@@ -25,6 +29,7 @@ model Category {
 }
 
 model Country {
+  @@schema("admin")
   id        String     @id
   name      String
   code      String     @unique
@@ -36,6 +41,7 @@ model Country {
 }
 
 model Coupon {
+  @@schema("admin")
   id                String       @id
   storeId           String
   merchantId        String
@@ -56,6 +62,7 @@ model Coupon {
 }
 
 model Campaign {
+  @@schema("admin")
   id          String   @id @default(uuid())
   merchantId  String
   name        String
@@ -64,15 +71,14 @@ model Campaign {
   endDate     DateTime
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
-
   promotions Promotion[]
   coupons    Coupon[]
   merchant   Merchant    @relation(fields: [merchantId], references: [id])
-
   @@index([merchantId])
 }
 
 model Delivery {
+  @@schema("admin")
   id          String         @id
   orderId     String         @unique
   riderId     String?
@@ -88,6 +94,7 @@ model Delivery {
 }
 
 model DeliveryOffer {
+  @@schema("admin")
   id          String      @id
   orderId     String      @unique
   proposedFee Float
@@ -100,6 +107,7 @@ model DeliveryOffer {
 }
 
 model FeaturedItem {
+  @@schema("admin")
   id         String   @id
   storeId    String
   merchantId String
@@ -114,6 +122,7 @@ model FeaturedItem {
 }
 
 model InventoryLog {
+  @@schema("admin")
   id         String   @id
   productId  String
   variantId  String?
@@ -124,6 +133,7 @@ model InventoryLog {
 }
 
 model LedgerEntry {
+  @@schema("admin")
   id          String     @id
   walletId    String
   amount      Float
@@ -135,6 +145,7 @@ model LedgerEntry {
 }
 
 model Merchant {
+  @@schema("admin")
   id           String       @id
   countryId    String
   email        String       @unique
@@ -150,6 +161,7 @@ model Merchant {
 }
 
 model Modifier {
+  @@schema("admin")
   id              String        @id
   modifierGroupId String
   name            String
@@ -160,6 +172,7 @@ model Modifier {
 }
 
 model ModifierGroup {
+  @@schema("admin")
   id        String     @id
   productId String
   name      String
@@ -171,6 +184,7 @@ model ModifierGroup {
 }
 
 model Order {
+  @@schema("admin")
   id              String      @id
   storeId         String
   merchantId      String
@@ -184,11 +198,9 @@ model Order {
   customerName    String?
   customerPhone   String?
   deliveryAddress String?
-
   // Marketing & Discounts
   couponId       String?
   discountAmount Float   @default(0)
-
   createdAt          DateTime             @default(now())
   updatedAt          DateTime
   Delivery           Delivery?
@@ -197,7 +209,6 @@ model Order {
   OrderItem          OrderItem[]
   OrderStatusHistory OrderStatusHistory[]
   Transaction        Transaction[]
-
   @@index([createdAt])
   @@index([merchantId])
   @@index([status])
@@ -205,6 +216,7 @@ model Order {
 }
 
 model OrderItem {
+  @@schema("admin")
   id         String @id
   orderId    String
   productId  String
@@ -213,12 +225,12 @@ model OrderItem {
   unitPrice  Float
   totalPrice Float
   Order      Order  @relation(fields: [orderId], references: [id])
-
   @@index([orderId])
   @@index([productId])
 }
 
 model OrderStatusHistory {
+  @@schema("admin")
   id        String      @id
   orderId   String
   status    OrderStatus
@@ -228,6 +240,7 @@ model OrderStatusHistory {
 }
 
 model Product {
+  @@schema("admin")
   id                String   @id
   storeId           String
   merchantId        String
@@ -240,7 +253,6 @@ model Product {
   lowStockThreshold Int      @default(5)
   images            String[]
   isActive          Boolean  @default(true)
-
   // Vertical-specific attributes
   barcode      String? @unique
   weightUnit   String?
@@ -248,7 +260,6 @@ model Product {
   isVegan      Boolean @default(false)
   isVegetarian Boolean @default(false)
   attributes   Json?
-
   createdAt      DateTime         @default(now())
   updatedAt      DateTime
   FeaturedItem   FeaturedItem[]
@@ -259,6 +270,7 @@ model Product {
 }
 
 model ProductVariant {
+  @@schema("admin")
   id        String   @id
   productId String
   name      String
@@ -270,6 +282,7 @@ model ProductVariant {
 }
 
 model Promotion {
+  @@schema("admin")
   id          String    @id
   storeId     String
   merchantId  String
@@ -286,6 +299,7 @@ model Promotion {
 }
 
 model Rider {
+  @@schema("admin")
   id              String     @id
   name            String
   phone           String     @unique
@@ -307,6 +321,7 @@ model Rider {
 }
 
 model RiderRideBundle {
+  @@schema("admin")
   id              String   @id @default(cuid())
   riderId         String
   totalRides      Int
@@ -321,6 +336,7 @@ model RiderRideBundle {
 }
 
 model RiderBid {
+  @@schema("admin")
   id            String        @id
   offerId       String
   riderId       String
@@ -331,6 +347,7 @@ model RiderBid {
 }
 
 model RiskEvent {
+  @@schema("admin")
   id          String        @id
   eventType   RiskEventType
   referenceId String
@@ -343,6 +360,7 @@ model RiskEvent {
 }
 
 model Store {
+  @@schema("admin")
   id             String  @id
   merchantId     String
   name           String
@@ -353,14 +371,12 @@ model Store {
   taxRate        Float   @default(0)
   commissionRate Float   @default(0.10)
   isActive       Boolean @default(true)
-
   // Vertical-specific attributes
   rating            Float    @default(0)
   reviewCount       Int      @default(0)
   estimatedPrepTime Int      @default(20)
   cuisineTypes      String[] @default([])
   isPromoted        Boolean  @default(false)
-
   createdAt    DateTime       @default(now())
   Category     Category[]
   Coupon       Coupon[]
@@ -373,6 +389,7 @@ model Store {
 }
 
 model Review {
+  @@schema("admin")
   id         String   @id
   storeId    String
   customerId String?
@@ -383,6 +400,7 @@ model Review {
 }
 
 model Transaction {
+  @@schema("admin")
   id                   String        @id
   orderId              String?
   storeId              String
@@ -400,6 +418,7 @@ model Transaction {
 }
 
 model Biller {
+  @@schema("admin")
   id          String   @id @default(uuid())
   name        String
   category    String   // e.g., Electricity, Water, Airtime
@@ -413,6 +432,7 @@ model Biller {
 }
 
 model Wallet {
+  @@schema("admin")
   id                String              @id
   ownerType         WalletOwnerType
   ownerId           String
@@ -422,11 +442,11 @@ model Wallet {
   createdAt         DateTime            @default(now())
   LedgerEntry       LedgerEntry[]
   WithdrawalRequest WithdrawalRequest[]
-
   @@unique([ownerType, ownerId, currency])
 }
 
 model WithdrawalRequest {
+  @@schema("admin")
   id        String           @id
   walletId  String
   amount    Float
@@ -436,6 +456,7 @@ model WithdrawalRequest {
 }
 
 model Zone {
+  @@schema("admin")
   id              String   @id
   name            String
   countryCode     String
@@ -449,6 +470,7 @@ model Zone {
 }
 
 enum DeliveryStatus {
+  @@schema("admin")
   PENDING
   ASSIGNED
   ACCEPTED
@@ -460,16 +482,19 @@ enum DeliveryStatus {
 }
 
 enum DiscountType {
+  @@schema("admin")
   PERCENTAGE
   FIXED_AMOUNT
 }
 
 enum LedgerType {
+  @@schema("admin")
   CREDIT
   DEBIT
 }
 
 enum OfferStatus {
+  @@schema("admin")
   OPEN
   ACCEPTED
   EXPIRED
@@ -477,6 +502,7 @@ enum OfferStatus {
 }
 
 enum OrderStatus {
+  @@schema("admin")
   PENDING
   CONFIRMED
   PREPARING
@@ -488,6 +514,7 @@ enum OrderStatus {
 }
 
 enum PaymentStatus {
+  @@schema("admin")
   PENDING
   SUCCESS
   FAILED
@@ -495,18 +522,21 @@ enum PaymentStatus {
 }
 
 enum RiskActorType {
+  @@schema("admin")
   CUSTOMER
   MERCHANT
   RIDER
 }
 
 enum RiskDecision {
+  @@schema("admin")
   APPROVED
   REVIEW
   BLOCKED
 }
 
 enum RiskEventType {
+  @@schema("admin")
   ORDER
   PAYMENT
   WITHDRAWAL
@@ -515,6 +545,7 @@ enum RiskEventType {
 }
 
 enum WalletOwnerType {
+  @@schema("admin")
   CUSTOMER
   MERCHANT
   RIDER
@@ -522,6 +553,7 @@ enum WalletOwnerType {
 }
 
 enum WithdrawalStatus {
+  @@schema("admin")
   PENDING
   APPROVED
   REJECTED
@@ -529,12 +561,14 @@ enum WithdrawalStatus {
 }
 
 enum AdminRole {
+  @@schema("admin")
   SUPER_ADMIN
   FLEET_MANAGER
   SUPPORT_AGENT
 }
 
 model AdminUser {
+  @@schema("admin")
   id        String    @id @default(cuid())
   email     String    @unique
   password  String
@@ -544,11 +578,11 @@ model AdminUser {
   lastLogin DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
   auditLogs AdminAuditEntry[]
 }
 
 model AdminGlobalConfig {
+  @@schema("admin")
   id          String   @id @default(cuid())
   key         String   @unique
   value       Json
@@ -557,6 +591,7 @@ model AdminGlobalConfig {
 }
 
 model AdminAuditEntry {
+  @@schema("admin")
   id        String    @id @default(cuid())
   adminId   String
   action    String
@@ -568,6 +603,7 @@ model AdminAuditEntry {
 }
 
 model AdminSystemLog {
+  @@schema("admin")
   id        String   @id @default(cuid())
   level     String   @default("info")
   message   String
@@ -579,6 +615,7 @@ model AdminSystemLog {
 // Fintech Distribution Platform Models
 
 enum FintechProductType {
+  @@schema("admin")
   LOAN
   INSURANCE
   CREDIT
@@ -586,6 +623,7 @@ enum FintechProductType {
 }
 
 enum FintechStatus {
+  @@schema("admin")
   LEAD_CREATED
   APPLICATION_STARTED
   APPLICATION_COMPLETED
@@ -600,6 +638,7 @@ enum FintechStatus {
 }
 
 model FintechLead {
+  @@schema("admin")
   id             String             @id @default(uuid())
   leadUuid       String             @unique // External UUID from partner
   userId         String
@@ -613,16 +652,15 @@ model FintechLead {
   metadata       Json?              // Additional criteria used for the lead
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
-  
-  applications   FintechApplication[]
+    applications   FintechApplication[]
   payouts        FintechPayout[]
-
   @@index([userId])
   @@index([leadUuid])
   @@index([status])
 }
 
 model FintechApplication {
+  @@schema("admin")
   id             String        @id @default(uuid())
   leadId         String
   externalAppId  String?       @unique
@@ -631,13 +669,12 @@ model FintechApplication {
   lastUpdate     DateTime      @default(now())
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-
   lead           FintechLead   @relation(fields: [leadId], references: [id])
-
   @@index([leadId])
 }
 
 model FintechPayout {
+  @@schema("admin")
   id             String        @id @default(uuid())
   transactionId  String        @unique // external transaction id
   leadId         String
@@ -647,15 +684,14 @@ model FintechPayout {
   status         FintechStatus @default(CONVERTED)
   processedAt    DateTime      @default(now())
   metadata       Json?
-
   lead           FintechLead   @relation(fields: [leadId], references: [id])
   commission     FintechCommission?
-
   @@index([leadId])
   @@index([transactionId])
 }
 
 model FintechCommission {
+  @@schema("admin")
   id               String   @id @default(uuid())
   payoutId         String   @unique
   provider         String
@@ -664,8 +700,6 @@ model FintechCommission {
   status           String   @default("PENDING") // PENDING, INVOICED, PAID, REVERSED
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-
   payout           FintechPayout @relation(fields: [payoutId], references: [id])
-
   @@index([provider])
 }

@@ -1,13 +1,16 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["logistics"]
 }
 
 model Country {
+  @@schema("logistics")
   id        String   @id @default(uuid())
   name      String
   code      String   @unique // ZW, KE, NG
@@ -20,6 +23,7 @@ model Country {
 }
 
 enum BusinessType {
+  @@schema("logistics")
   FOOD
   MART
   DIRECT
@@ -27,6 +31,7 @@ enum BusinessType {
 }
 
 model Enterprise {
+  @@schema("logistics")
   id          String     @id @default(uuid())
   name        String
   adminEmail  String     @unique
@@ -38,11 +43,13 @@ model Enterprise {
 }
 
 enum AcceptanceMode {
+  @@schema("logistics")
   MANUAL
   AUTO
 }
 
 model Merchant {
+  @@schema("logistics")
   id           String   @id @default(uuid())
   countryId    String
   email        String   @unique
@@ -66,6 +73,7 @@ model Merchant {
 }
 
 model Store {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   merchantId String
   name       String
@@ -111,6 +119,7 @@ model Store {
 }
 
 model Review {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   storeId    String
   customerId String?
@@ -122,6 +131,7 @@ model Review {
 }
 
 model Category {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   storeId    String
   merchantId String
@@ -134,6 +144,7 @@ model Category {
 }
 
 model Product {
+  @@schema("logistics")
   id                String   @id @default(uuid())
   storeId           String
   merchantId        String // Denormalized for efficient multi-tenant queries
@@ -167,6 +178,7 @@ model Product {
 }
 
 model ProductVariant {
+  @@schema("logistics")
   id        String   @id @default(uuid())
   productId String
   name      String // e.g., Large, Small, Red, Blue
@@ -179,6 +191,7 @@ model ProductVariant {
 }
 
 model ModifierGroup {
+  @@schema("logistics")
   id        String   @id @default(uuid())
   productId String
   name      String // e.g., Choose your crust, Extra toppings
@@ -191,6 +204,7 @@ model ModifierGroup {
 }
 
 model Modifier {
+  @@schema("logistics")
   id              String   @id @default(uuid())
   modifierGroupId String
   name            String // e.g., Pepperoni, Thin Crust
@@ -202,6 +216,7 @@ model Modifier {
 }
 
 model InventoryLog {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   productId  String
   variantId  String?
@@ -212,6 +227,7 @@ model InventoryLog {
 }
 
 model Order {
+  @@schema("logistics")
   id              String      @id @default(uuid())
   storeId         String
   merchantId      String // Denormalized for efficient multi-tenant queries
@@ -254,6 +270,7 @@ model Order {
 }
 
 model Promotion {
+  @@schema("logistics")
   id          String   @id @default(uuid())
   storeId     String
   merchantId  String
@@ -271,6 +288,7 @@ model Promotion {
 }
 
 model Campaign {
+  @@schema("logistics")
   id          String   @id @default(uuid())
   merchantId  String
   name        String
@@ -288,6 +306,7 @@ model Campaign {
 }
 
 model Coupon {
+  @@schema("logistics")
   id                String       @id @default(uuid())
   storeId           String
   merchantId        String
@@ -309,11 +328,13 @@ model Coupon {
 }
 
 enum DiscountType {
+  @@schema("logistics")
   PERCENTAGE
   FIXED_AMOUNT
 }
 
 model FeaturedItem {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   storeId    String
   merchantId String
@@ -329,6 +350,7 @@ model FeaturedItem {
 }
 
 model OrderItem {
+  @@schema("logistics")
   id         String @id @default(uuid())
   orderId    String
   productId  String
@@ -344,6 +366,7 @@ model OrderItem {
 }
 
 model OrderStatusHistory {
+  @@schema("logistics")
   id        String      @id @default(uuid())
   orderId   String
   status    OrderStatus
@@ -354,6 +377,7 @@ model OrderStatusHistory {
 }
 
 model Transaction {
+  @@schema("logistics")
   id                   String        @id @default(uuid())
   orderId              String
   storeId              String
@@ -371,6 +395,7 @@ model Transaction {
 }
 
 enum PaymentStatus {
+  @@schema("logistics")
   PENDING
   SUCCESS
   FAILED
@@ -378,6 +403,7 @@ enum PaymentStatus {
 }
 
 enum OrderStatus {
+  @@schema("logistics")
   PENDING
   CONFIRMED
   PREPARING
@@ -389,6 +415,7 @@ enum OrderStatus {
 }
 
 model Rider {
+  @@schema("logistics")
   id           String  @id @default(uuid())
   name         String
   phone        String  @unique
@@ -432,6 +459,7 @@ model Rider {
 }
 
 model Vehicle {
+  @@schema("logistics")
   id           String   @id @default(uuid())
   riderId      String
   type         VehicleType
@@ -447,6 +475,7 @@ model Vehicle {
 }
 
 enum VehicleType {
+  @@schema("logistics")
   BIKE
   CAR
   SCOOTER
@@ -455,12 +484,14 @@ enum VehicleType {
 }
 
 enum VehicleStatus {
+  @@schema("logistics")
   ACTIVE
   INACTIVE
   MAINTENANCE
 }
 
 model RiderLocationHistory {
+  @@schema("logistics")
   id        String   @id @default(uuid())
   riderId   String
   latitude  Float
@@ -473,6 +504,7 @@ model RiderLocationHistory {
 }
 
 model Delivery {
+  @@schema("logistics")
   id          String         @id @default(uuid())
   orderId     String         @unique
   riderId     String?
@@ -495,6 +527,7 @@ model Delivery {
 }
 
 model DispatchAttempt {
+  @@schema("logistics")
   id          String   @id @default(uuid())
   deliveryId  String
   riderId     String
@@ -509,6 +542,7 @@ model DispatchAttempt {
 }
 
 model DeliveryBatch {
+  @@schema("logistics")
   id              String         @id @default(uuid())
   riderId         String?
   status          DeliveryStatus @default(PENDING) // Represents overall batch status
@@ -522,6 +556,7 @@ model DeliveryBatch {
 }
 
 enum DispatchAttemptStatus {
+  @@schema("logistics")
   PENDING
   ACCEPTED
   REJECTED
@@ -529,6 +564,7 @@ enum DispatchAttemptStatus {
 }
 
 model DeliveryOffer {
+  @@schema("logistics")
   id          String      @id @default(uuid())
   orderId     String      @unique
   proposedFee Float
@@ -542,6 +578,7 @@ model DeliveryOffer {
 }
 
 model RiderBid {
+  @@schema("logistics")
   id        String   @id @default(uuid())
   offerId   String
   riderId   String
@@ -554,11 +591,13 @@ model RiderBid {
 }
 
 enum BidType {
+  @@schema("logistics")
   ACCEPT
   COUNTER
 }
 
 enum OfferStatus {
+  @@schema("logistics")
   OPEN
   ACCEPTED
   EXPIRED
@@ -566,6 +605,7 @@ enum OfferStatus {
 }
 
 model Zone {
+  @@schema("logistics")
   id              String   @id @default(uuid())
   name            String
   countryCode     String
@@ -581,6 +621,7 @@ model Zone {
 }
 
 enum LaunchPhase {
+  @@schema("logistics")
   PRE_LAUNCH
   SOFT_LAUNCH
   GROWTH
@@ -588,6 +629,7 @@ enum LaunchPhase {
 }
 
 enum DeliveryStatus {
+  @@schema("logistics")
   PENDING
   ASSIGNED
   ACCEPTED
@@ -599,6 +641,7 @@ enum DeliveryStatus {
 }
 
 model Wallet {
+  @@schema("logistics")
   id        String          @id @default(uuid())
   ownerType WalletOwnerType
   ownerId   String
@@ -614,6 +657,7 @@ model Wallet {
 }
 
 enum WalletOwnerType {
+  @@schema("logistics")
   CUSTOMER
   MERCHANT
   RIDER
@@ -621,6 +665,7 @@ enum WalletOwnerType {
 }
 
 model LedgerEntry {
+  @@schema("logistics")
   id          String     @id @default(uuid())
   walletId    String
   amount      Float
@@ -633,11 +678,13 @@ model LedgerEntry {
 }
 
 enum LedgerType {
+  @@schema("logistics")
   CREDIT
   DEBIT
 }
 
 model WithdrawalRequest {
+  @@schema("logistics")
   id        String           @id @default(uuid())
   walletId  String
   amount    Float
@@ -648,6 +695,7 @@ model WithdrawalRequest {
 }
 
 enum WithdrawalStatus {
+  @@schema("logistics")
   PENDING
   APPROVED
   REJECTED
@@ -655,6 +703,7 @@ enum WithdrawalStatus {
 }
 
 model RiskEvent {
+  @@schema("logistics")
   id          String        @id @default(uuid())
   eventType   RiskEventType
   referenceId String
@@ -667,6 +716,7 @@ model RiskEvent {
 }
 
 enum RiskEventType {
+  @@schema("logistics")
   ORDER
   PAYMENT
   WITHDRAWAL
@@ -675,18 +725,21 @@ enum RiskEventType {
 }
 
 enum RiskActorType {
+  @@schema("logistics")
   CUSTOMER
   MERCHANT
   RIDER
 }
 
 enum RiskDecision {
+  @@schema("logistics")
   APPROVED
   REVIEW
   BLOCKED
 }
 
 model SupportTicket {
+  @@schema("logistics")
   id          String       @id @default(uuid())
   customerId  String?
   riderId     String?
@@ -703,6 +756,7 @@ model SupportTicket {
 }
 
 enum TicketStatus {
+  @@schema("logistics")
   OPEN
   IN_PROGRESS
   RESOLVED
@@ -710,12 +764,14 @@ enum TicketStatus {
 }
 
 enum VerificationStatus {
+  @@schema("logistics")
   PENDING
   APPROVED
   REJECTED
 }
 
 model MerchantNotification {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   merchantId String
   title      String
@@ -731,6 +787,7 @@ model MerchantNotification {
 }
 
 model BusinessHours {
+  @@schema("logistics")
   id        String   @id @default(uuid())
   storeId   String
   dayOfWeek Int // 0-6 (Sunday-Saturday)
@@ -745,6 +802,7 @@ model BusinessHours {
 }
 
 model MerchantDevice {
+  @@schema("logistics")
   id          String   @id @default(uuid())
   merchantId  String
   deviceId    String
@@ -759,6 +817,7 @@ model MerchantDevice {
 }
 
 model InventoryAlert {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   merchantId String
   storeId    String
@@ -773,6 +832,7 @@ model InventoryAlert {
 }
 
 model MerchantDailyStats {
+  @@schema("logistics")
   id            String   @id @default(uuid())
   merchantId    String
   storeId       String
@@ -792,6 +852,7 @@ model MerchantDailyStats {
 // ==========================================
 
 model PricingRule {
+  @@schema("logistics")
   id            String   @id @default(uuid())
   countryCode   String   @unique
   baseFee       Float    @default(2.00)
@@ -803,6 +864,7 @@ model PricingRule {
 }
 
 model SurgeZone {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   name       String
   centerLat  Float
@@ -813,12 +875,14 @@ model SurgeZone {
 }
 
 model PackagePricing {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   name       String   @unique // SMALL, MEDIUM, LARGE
   multiplier Float    @default(1.0) // 1.0, 1.2, 1.4
 }
 
 model ApiKey {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   merchantId String
   key        String   @unique
@@ -834,6 +898,7 @@ model ApiKey {
 }
 
 model WebhookConfig {
+  @@schema("logistics")
   id         String   @id @default(uuid())
   merchantId String
   url        String
@@ -853,6 +918,7 @@ model WebhookConfig {
 // ==========================================
 
 model AppBanner {
+  @@schema("logistics")
   id           String   @id @default(uuid())
   title        String
   imageUrl     String
@@ -865,6 +931,7 @@ model AppBanner {
 }
 
 model ContentBlock {
+  @@schema("logistics")
   id           String   @id @default(uuid())
   title        String   // e.g., "Trending Near You", "Featured Restaurants"
   type         String   // CAROUSEL, GRID, LIST
@@ -877,6 +944,7 @@ model ContentBlock {
 }
 
 model CreditPackage {
+  @@schema("logistics")
   id        String   @id @default(uuid())
   name      String   @unique // STARTER, BASIC, etc.
   price     Float
@@ -887,6 +955,7 @@ model CreditPackage {
 }
 
 model CreditTransaction {
+  @@schema("logistics")
   id        String                @id @default(uuid())
   riderId   String
   amount    Float
@@ -899,6 +968,7 @@ model CreditTransaction {
 }
 
 enum CreditTransactionType {
+  @@schema("logistics")
   PURCHASE
   CONSUMPTION
   BONUS
@@ -906,6 +976,7 @@ enum CreditTransactionType {
 }
 
 model SchoolRunSubscription {
+  @@schema("logistics")
   id           String   @id @default(uuid())
   studentId    String   @db.Uuid
   parentId     String   @db.Uuid
@@ -916,6 +987,5 @@ model SchoolRunSubscription {
   status       String   @default("ACTIVE") // ACTIVE, PAUSED, CANCELLED
   startDate    DateTime @default(now())
   endDate      DateTime?
-  
-  createdAt    DateTime @default(now())
+    createdAt    DateTime @default(now())
 }
