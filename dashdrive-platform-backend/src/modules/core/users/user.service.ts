@@ -11,6 +11,12 @@ export class UserService {
   ) {}
 
   async findOne(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        driver_profile: true,
+        wallet: true,
+      },
     });
   }
 
