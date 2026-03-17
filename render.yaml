@@ -1,5 +1,5 @@
 # Render Blueprint for DashDrive Backend Stack
-# This file defines the infrastructure for all three backend services.
+# This file defines the infrastructure for all backend services.
 # Render should automatically detect this file at the repository root.
 
 services:
@@ -68,7 +68,25 @@ services:
         value: 22
       - key: DATABASE_URL
         sync: false
+      - key: DashdriveMart_DATABASE_URL
+        sync: false
       - key: JWT_SECRET
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: INTERNAL_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: PAYNOW_ID_USD
+        sync: false
+      - key: PAYNOW_KEY_USD
+        sync: false
+      - key: PAYNOW_ID_ZIG
+        sync: false
+      - key: PAYNOW_KEY_ZIG
         sync: false
 
   # 4. Mobility Backend (NestJS + Prisma)
@@ -109,6 +127,8 @@ services:
       - key: FIREBASE_PROJECT_ID
         sync: false
       - key: JWT_SECRET
+        sync: false
+      - key: SYSTEM_API_KEY
         sync: false
       - key: LOGISTICS_ENGINE_URL
         value: https://dashdrive-logistics-engine.onrender.com/api/v1
