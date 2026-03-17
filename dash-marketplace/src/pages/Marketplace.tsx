@@ -88,7 +88,6 @@ const Marketplace: React.FC<MarketplaceProps> = ({ onStoreSelect }) => {
 
   useEffect(() => {
     const fetchListings = async () => {
-      setLoading(true);
       try {
         const response = await api.get('/marketplace/listings');
         if (response.data && response.data.length > 0) {
@@ -116,7 +115,6 @@ const Marketplace: React.FC<MarketplaceProps> = ({ onStoreSelect }) => {
       } catch (error) {
         console.error("Error fetching listings:", error);
       } finally {
-        setLoading(false);
       }
     };
 

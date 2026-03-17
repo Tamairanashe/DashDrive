@@ -20,7 +20,6 @@ const Tracking: React.FC<TrackingProps> = ({ onBackHome }) => {
 
   React.useEffect(() => {
     const fetchTrips = async () => {
-      setLoading(true);
       try {
         const userId = 'default-user-id'; // TODO: Auth
         const response = await api.get(`/marketplace/users/${userId}/bookings`);
@@ -39,7 +38,6 @@ const Tracking: React.FC<TrackingProps> = ({ onBackHome }) => {
       } catch (error) {
         console.error("Error fetching trips:", error);
       } finally {
-        setLoading(false);
       }
     };
     fetchTrips();
