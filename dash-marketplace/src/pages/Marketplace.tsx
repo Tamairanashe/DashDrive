@@ -62,7 +62,6 @@ const suggestedDestinations = [
 
 const Marketplace: React.FC<MarketplaceProps> = ({ onStoreSelect }) => {
   const [sections, setSections] = useState(defaultSections);
-  const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All Stays');
   const [activeSearchSection, setActiveSearchSection] = useState<string | null>(null);
   const [guestCount, setGuestCount] = useState({ adults: 0, children: 0, infants: 0, pets: 0 });

@@ -1,10 +1,8 @@
 import React from 'react';
 import { Row, Col, Card, Typography, Space, Avatar, Button, Tabs, Tag } from 'antd';
 import { 
-  CheckCircleFilled, 
   MessageOutlined, 
   CalendarOutlined, 
-  EnvironmentOutlined,
   RightOutlined
 } from '@ant-design/icons';
 import api from '../api/client';
@@ -19,7 +17,6 @@ interface TrackingProps {
 const Tracking: React.FC<TrackingProps> = ({ onBackHome }) => {
   const [upcomingTrips, setUpcomingTrips] = React.useState<any[]>([]);
   const [pastTrips, setPastTrips] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     const fetchTrips = async () => {
