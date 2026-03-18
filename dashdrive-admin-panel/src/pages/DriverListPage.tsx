@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Table, 
   Tag, 
@@ -37,6 +37,7 @@ import {
   WarningOutlined
 } from '@ant-design/icons';
 import { DriverDetails } from '../components/DriverDetails';
+import { StateWrapper } from '../components/common/StateWrapper';
 
 const { Title, Text } = Typography;
 
@@ -48,6 +49,7 @@ export const DriverListPage: React.FC = () => {
   const [editingDriver, setEditingDriver] = useState<any>(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const stats = [
     { title: 'Total Drivers', value: '12,405', icon: <UserOutlined />, color: '#10b981' },
@@ -56,12 +58,12 @@ export const DriverListPage: React.FC = () => {
     { title: 'Offline', value: '7,445', icon: <UserOutlined />, color: '#94a3b8' },
   ];
 
-  // Mock Data
+  // Mock Data with Timestamps
   const allDrivers = [
-    { id: 'D-4001', name: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', status: 'On Trip', rating: 4.9, vehicle: 'Toyota Prius', tripProgress: 65, eta: '12 mins', destination: 'Central Park' },
-    { id: 'D-4002', name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', status: 'Active', rating: 4.8, vehicle: 'Honda Civic', shiftTime: '4h 20m', zone: 'Downtown' },
-    { id: 'D-4003', name: 'Marco Rossi', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', status: 'Offline', rating: 4.7, vehicle: 'Motorcycle', lastSeen: '2h ago', preferredZone: 'North End' },
-    { id: 'D-4004', name: 'Elena Petrova', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', status: 'Compliance Alert', rating: 4.9, vehicle: 'Tesla Model 3', alertType: 'Insurance Expiring', expiry: 'In 3 days' },
+    { id: 'D-4001', name: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', status: 'On Trip', rating: 4.9, vehicle: 'Toyota Prius', tripProgress: 65, eta: '12 mins', destination: 'Central Park', createdAt: '2025-10-12T14:30:00Z', updatedAt: '2026-03-18T08:22:15Z' },
+    { id: 'D-4002', name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', status: 'Active', rating: 4.8, vehicle: 'Honda Civic', shiftTime: '4h 20m', zone: 'Downtown', createdAt: '2025-11-05T09:12:00Z', updatedAt: '2026-03-17T11:45:00Z' },
+    { id: 'D-4003', name: 'Marco Rossi', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', status: 'Offline', rating: 4.7, vehicle: 'Motorcycle', lastSeen: '2h ago', preferredZone: 'North End', createdAt: '2025-12-01T20:10:00Z', updatedAt: '2026-03-18T06:30:00Z' },
+    { id: 'D-4004', name: 'Elena Petrova', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', status: 'Compliance Alert', rating: 4.9, vehicle: 'Tesla Model 3', alertType: 'Insurance Expiring', expiry: 'In 3 days', createdAt: '2026-01-15T10:00:00Z', updatedAt: '2026-03-18T09:45:00Z' },
   ];
 
   const handleEditDriver = (record: any) => {
@@ -91,7 +93,7 @@ export const DriverListPage: React.FC = () => {
             <Avatar src={record.avatar} icon={<UserOutlined />} />
             <div>
               <Text strong style={{ fontSize: 13 }}>{record.name}</Text>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>ID: {record.id} â€¢ {record.vehicle}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>ID: {record.id} • {record.vehicle}</div>
             </div>
           </Space>
         ),
@@ -176,6 +178,16 @@ export const DriverListPage: React.FC = () => {
         )
       },
       {
+         title: 'Governance',
+         key: 'governance',
+         render: (_: any, record: any) => (
+           <Space direction="vertical" size={0}>
+             <Text style={{ fontSize: 10, color: '#64748b' }}>Added: {new Date(record.createdAt).toLocaleDateString()}</Text>
+             <Text style={{ fontSize: 10, color: '#64748b' }}>Sync: {new Date(record.updatedAt).toLocaleTimeString()}</Text>
+           </Space>
+         )
+      },
+      {
         title: 'Actions',
         key: 'actions',
         render: (_: any, record: any) => (
@@ -205,16 +217,18 @@ export const DriverListPage: React.FC = () => {
       );
     }
 
+    const currentData = activeTab === 'All' ? allDrivers : allDrivers.filter(d => (activeTab === 'Compliance' ? d.status === 'Compliance Alert' : d.status === activeTab));
+
     return (
       <>
         <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
           <Col>
-            <Title level={4} style={{ margin: 0 }}>Fleet Command Center</Title>
+            <Title level={4} style={{ margin: 0, letterSpacing: -0.5 }}>Fleet Command Center</Title>
             <Text type="secondary">Real-time operational overview of your network.</Text>
           </Col>
           <Col>
             <Space>
-              <Button icon={<ReloadOutlined />} />
+              <Button icon={<ReloadOutlined />} onClick={() => { setLoading(true); setTimeout(() => setLoading(false), 500); }} />
               <Button icon={<DownloadOutlined />}>Report</Button>
               <Button type="primary" icon={<PlusOutlined />} onClick={() => {
                 setEditingDriver(null);
@@ -268,12 +282,23 @@ export const DriverListPage: React.FC = () => {
               onChange={e => setSearchText(e.target.value)}
             />
           </div>
-          <Table 
-            columns={getColumns()} 
-            dataSource={activeTab === 'All' ? allDrivers : allDrivers.filter(d => (activeTab === 'Compliance' ? d.status === 'Compliance Alert' : d.status === activeTab))} 
-            rowKey="id"
-            pagination={{ pageSize: 15 }}
-          />
+          <StateWrapper 
+            loading={loading} 
+            error={error} 
+            isEmpty={currentData.length === 0}
+            onRetry={() => { setLoading(true); setTimeout(() => setLoading(false), 500); }}
+          >
+            <Table 
+              columns={getColumns()} 
+              dataSource={currentData} 
+              rowKey="id"
+              pagination={{ 
+                pageSize: 15,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} Drivers`
+              }}
+            />
+          </StateWrapper>
         </Card>
 
         <Drawer

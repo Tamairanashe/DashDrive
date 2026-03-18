@@ -249,6 +249,13 @@ export const EnterpriseSetupPage: React.FC = () => {
     enableServiceReturns: true,
     serviceReturnValidity: 7,
 
+    // School Run Monitor Settings
+    schoolRunGuardianPinRequired: true,
+    schoolRunVerificationMode: 'Photo & PIN',
+    schoolRunRecurringGracePeriod: 3,
+    schoolRunBackgroundCheckFrequency: 3, // months
+    schoolRunAutoRenewMonthly: true,
+
     // Safety & Emergency Settings
     enableSafetyAlert: true,
     safetyMinDelayTime: 15,
@@ -1958,9 +1965,9 @@ export const EnterpriseSetupPage: React.FC = () => {
           </Tabs.TabPane>
 
           {/* ============================================================ */}
-          {/* TAB 9: LIFESTYLE & TRAVEL                                   */}
+          {/* TAB 9: MARKETPLACE & STAYS                                  */}
           {/* ============================================================ */}
-          <Tabs.TabPane tab={<Space><HomeOutlined /> Lifestyle & Travel</Space>} key="lifestyle">
+          <Tabs.TabPane tab={<Space><HomeOutlined /> Marketplace & Stays</Space>} key="lifestyle">
             <div style={{ padding: '16px 0' }}>
               <Row gutter={[24, 24]}>
                 <Col xs={24} lg={12}>
@@ -2728,6 +2735,91 @@ export const EnterpriseSetupPage: React.FC = () => {
                         />
                       </Tabs.TabPane>
                     </Tabs>
+                  </Card>
+                </Col>
+              </Row>
+            </div>
+          </Tabs.TabPane>
+
+          {/* ============================================================ */}
+          {/* TAB 16: SCHOOL RUN MONITOR                                  */}
+          {/* ============================================================ */}
+          <Tabs.TabPane tab={<Space><SafetyOutlined /> School Run</Space>} key="schoolrun">
+            <div style={{ padding: '16px 0' }}>
+              <Row gutter={[24, 24]}>
+                <Col xs={24} lg={12}>
+                  {/* GUARDIAN VERIFICATION */}
+                  <Card
+                    title={<Space><SafetyOutlined /> Guardian & Student Verification</Space>}
+                    style={{ borderRadius: 12, marginBottom: 24 }}
+                    styles={{ header: { background: '#fafafa', borderRadius: '12px 12px 0 0', fontWeight: 600 } }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                      <div style={{ paddingRight: 24 }}>
+                        <Typography.Text strong>Mandatory Guardian PIN</Typography.Text><br/>
+                        <Typography.Text type="secondary" style={{ fontSize: 13 }}>Require the guardian to provide a secure PIN to the driver for every pickup/dropoff.</Typography.Text>
+                      </div>
+                      <Form.Item name="schoolRunGuardianPinRequired" valuePropName="checked" style={{ marginBottom: 0 }}>
+                        <Switch />
+                      </Form.Item>
+                    </div>
+
+                    <Form.Item label="Identity Verification Mode" name="schoolRunVerificationMode">
+                      <Select>
+                        <Option value="PIN Only">PIN Only</Option>
+                        <Option value="Photo Only">Photo Verification Only</Option>
+                        <Option value="Photo & PIN">Advanced (Photo & PIN)</Option>
+                        <Option value="Biometric">Biometric (Thumbprint)</Option>
+                      </Select>
+                    </Form.Item>
+                  </Card>
+
+                  {/* SUBSCRIPTION & RENEWAL */}
+                  <Card
+                    title={<Space><CalendarOutlined /> Recurring Booking Logic</Space>}
+                    style={{ borderRadius: 12 }}
+                    styles={{ header: { background: '#fafafa', borderRadius: '12px 12px 0 0', fontWeight: 600 } }}
+                  >
+                    <Form.Item label="Payment Grace Period (Days)" name="schoolRunRecurringGracePeriod" tooltip="Number of days to keep the booking active if payment fails.">
+                      <InputNumber addonAfter="Days" min={0} style={{ width: '100%' }} />
+                    </Form.Item>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+                      <div style={{ paddingRight: 24 }}>
+                        <Typography.Text strong>Automated Monthly Renewal</Typography.Text><br/>
+                        <Typography.Text type="secondary" style={{ fontSize: 13 }}>Automatically generate a new invoice 7 days before the current month ends.</Typography.Text>
+                      </div>
+                      <Form.Item name="schoolRunAutoRenewMonthly" valuePropName="checked" style={{ marginBottom: 0 }}>
+                        <Switch />
+                      </Form.Item>
+                    </div>
+                  </Card>
+                </Col>
+
+                <Col xs={24} lg={12}>
+                  {/* DRIVER COMPLIANCE */}
+                  <Card
+                    title={<Space><AuditOutlined /> Driver Compliance for School Runs</Space>}
+                    style={{ borderRadius: 12 }}
+                    styles={{ header: { background: '#fafafa', borderRadius: '12px 12px 0 0', fontWeight: 600 } }}
+                  >
+                    <Form.Item label="Background Check Frequency" name="schoolRunBackgroundCheckFrequency" tooltip="How often drivers assigned to school runs must undergo criminal record checks.">
+                      <Select>
+                        <Option value={1}>Every Month</Option>
+                        <Option value={3}>Quarterly (3 Months)</Option>
+                        <Option value={6}>Bi-Annually (6 Months)</Option>
+                        <Option value={12}>Annually (12 Months)</Option>
+                      </Select>
+                    </Form.Item>
+
+                    <Divider />
+
+                    <Alert 
+                      type="warning" 
+                      message="Enhanced Safeguarding" 
+                      description="School run drivers are restricted from accepting standard ride requests while children are on board (Live Telemetry Enforcement)."
+                      style={{ borderRadius: 8 }}
+                    />
                   </Card>
                 </Col>
               </Row>

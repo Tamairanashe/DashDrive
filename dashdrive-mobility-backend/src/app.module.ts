@@ -15,15 +15,17 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { CityToCityModule } from './modules/city-to-city/city-to-city.module';
 import { LocalRidesModule } from './modules/local-rides/local-rides.module';
 import { TrustModule } from './modules/trust/trust.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { DispatchModule } from './modules/dispatch/dispatch.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     FirebaseModule,
+    AuthModule,
     VehiclesModule,
     TripsModule,
-    AuthModule,
     HostingModule,
     InspectionsModule,
     FinancialsModule,
@@ -32,6 +34,8 @@ import { TrustModule } from './modules/trust/trust.module';
     CityToCityModule,
     LocalRidesModule,
     TrustModule,
+    OrdersModule,
+    DispatchModule,
   ],
 
   controllers: [AppController],

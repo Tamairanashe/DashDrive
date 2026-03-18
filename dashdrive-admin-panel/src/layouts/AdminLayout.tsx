@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdminSocketStore } from '../lib/adminSocketStore';
-import { Layout, Menu, Button, Input, Badge, Avatar, Space, Typography, ConfigProvider, theme, Segmented } from 'antd';
+import { Layout, Menu, Button, Input, Badge, Avatar, Space, Typography, ConfigProvider, theme, Segmented, Tooltip, Divider } from 'antd';
 import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
@@ -58,6 +58,7 @@ import {
   DesktopOutlined,
   CommentOutlined,
   SafetyOutlined,
+  HistoryOutlined,
   LineChartOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -106,7 +107,6 @@ export const AdminLayout: React.FC = () => {
         { key: '/services/rental', icon: <KeyOutlined />, label: 'Car Rental' },
         { key: '/services/transport', icon: <CompassOutlined />, label: 'City to City' },
         { key: '/services/school-run', icon: <SafetyOutlined />, label: 'School Run Monitor' },
-        { key: '/services/config', icon: <AppstoreOutlined />, label: 'Master Config' },
       ],
     },
     {
@@ -161,9 +161,7 @@ export const AdminLayout: React.FC = () => {
       label: 'USER MANAGEMENT',
       type: 'group',
       children: [
-        { key: '/users/customers', icon: <TeamOutlined />, label: 'Customers' },
-        { key: '/users/tier-setup', icon: <SolutionOutlined />, label: 'Customer Level Setup' },
-        { key: '/users/employees', icon: <UserOutlined />, label: 'Employees' },
+        { key: '/users/management', icon: <TeamOutlined />, label: 'User Management' },
       ],
     },
     {
@@ -249,6 +247,7 @@ export const AdminLayout: React.FC = () => {
       children: [
         { key: '/enterprise/setup', icon: <BankOutlined />, label: 'Enterprise Business Setup' },
         { key: '/enterprise/config', icon: <ControlOutlined />, label: 'Configuration' },
+        { key: '/enterprise/audit-logs', icon: <HistoryOutlined />, label: 'Audit Logs' },
         { key: '/enterprise/roles', icon: <LockOutlined />, label: 'Access & Governance' },
         { key: '/enterprise/api', icon: <ApiOutlined />, label: 'API Management' },
         { key: '/enterprise/settings', icon: <SettingOutlined />, label: 'System Settings' },
@@ -354,18 +353,25 @@ export const AdminLayout: React.FC = () => {
                 onClick={() => setCollapsed(!collapsed)}
                 style={{ fontSize: '16px', width: 40, height: 40, color: isDark ? '#e3e3e3' : 'inherit' }}
               />
-              <Input
-                prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
-                placeholder="Search orders, drivers, customers..."
-                variant="filled"
-                style={{ 
-                  width: '100%', 
-                  maxWidth: 400, 
-                  background: isDark ? '#2d2d2d' : '#f8fafc', 
-                  border: 'none',
-                  color: isDark ? '#e3e3e3' : 'inherit'
-                }}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                 <Tooltip title="System Health: Optimal (Latency < 45ms)">
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isDark ? '#2d2d2d' : '#f0fdf4', padding: '4px 10px', borderRadius: 20, border: `1px solid ${isDark ? '#333' : '#dcfce7'}` }}>
+                     <Badge status="processing" color="#10b981" />
+                     <Text style={{ fontSize: 12, fontWeight: 600, color: '#10b981' }}>SYNX ACTIVE</Text>
+                   </div>
+                 </Tooltip>
+                 <Divider type="vertical" style={{ height: 20 }} />
+                 <Input
+                    prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                    placeholder="Global Search..."
+                    variant="filled"
+                    style={{ 
+                      width: 300, 
+                      background: isDark ? '#2d2d2d' : '#f8fafc', 
+                      border: 'none',
+                    }}
+                  />
+              </div>
             </Space>
 
             <Space size="middle">

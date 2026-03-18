@@ -1,8 +1,8 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Row, Col, Card, Statistic, Table, Tag, Typography, 
   Button, Space, message, Select, Badge, Divider, Skeleton,
-  Tooltip, Avatar
+  Tooltip, Avatar, notification
 } from 'antd';
 import { 
   ArrowUpOutlined, 
@@ -16,12 +16,23 @@ import {
   CheckCircleOutlined,
   WarningOutlined,
   CloseCircleOutlined,
-  SyncOutlined
+  SyncOutlined,
+  RocketOutlined,
+  CoffeeOutlined,
+  ShopOutlined,
+  PushpinOutlined,
+  KeyOutlined,
+  SafetyOutlined,
+  CompassOutlined,
+  ThunderboltOutlined,
+  RiseOutlined,
+  InfoCircleOutlined,
+  HistoryOutlined
 } from '@ant-design/icons';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip as RechartsTooltip, ResponsiveContainer,
-  LineChart, Line
+  LineChart, Line, Cell
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { analyticsApi } from '../api/analyticsApi';
@@ -30,6 +41,18 @@ import { Marker, Popup } from 'react-leaflet';
 
 const { Title, Text } = Typography;
 
+const SERVICES_STATS = [
+  { id: 'ride', label: 'Ride Hailing', icon: <CarOutlined />, color: '#3b82f6', value: 842, trend: '+12%', status: 'Optimal', info: 'Current active rides including those in matching phase.' },
+  { id: 'food', label: 'Food Delivery', icon: <CoffeeOutlined />, color: '#f59e0b', value: 312, trend: '+5%', status: 'High Demand', info: 'Food orders currently being prepared or out for delivery.' },
+  { id: 'mart', label: 'Mart Delivery', icon: <ShopOutlined />, color: '#10b981', value: 156, trend: '-2%', status: 'Optimal', info: 'Grocery and essential items orders across all participating stores.' },
+  { id: 'shopping', label: 'Shopping', icon: <ShoppingCartOutlined />, color: '#8b5cf6', value: 89, trend: '+18%', status: 'Optimal', info: 'Active personal shopping requests and concierge services.' },
+  { id: 'parcel', label: 'Parcel Delivery', icon: <PushpinOutlined />, color: '#ef4444', value: 245, trend: '+7%', status: 'Delayed', info: 'Package deliveries, currently experiencing slight delays due to weather/traffic.' },
+  { id: 'hotels', label: 'Marketplace & Stays', icon: <ShopOutlined />, color: '#06b6d4', value: 42, trend: '+15%', status: 'Optimal', info: 'Active room bookings and marketplace transactions.' },
+  { id: 'events', label: 'Events Booking', icon: <CalendarOutlined />, color: '#f43f5e', value: 18, trend: 'stable', status: 'Optimal', info: 'Confirmed tickets for upcoming events and experiences.' },
+  { id: 'rental', label: 'Car Rental', icon: <KeyOutlined />, color: '#6366f1', value: 12, trend: '+3%', status: 'Optimal', info: 'Vehicles currently out on rental or reserved for immediate pickup.' },
+  { id: 'transport', label: 'City to City', icon: <CompassOutlined />, color: '#14b8a6', value: 27, trend: '+9%', status: 'Optimal', info: 'Confirmed inter-city transport bookings for today.' },
+  { id: 'school', label: 'School Run', icon: <SafetyOutlined />, color: '#f97316', value: 65, trend: '+4%', status: 'Optimal', info: 'Active school shuttle monitoring for the current session.' },
+];
 
 const LOCATION_DATA: any = {
   'Zimbabwe': { regions: { 'Mashonaland': ['Harare', 'Chitungwiza'], 'Matabeleland': ['Bulawayo'] } },
@@ -48,65 +71,69 @@ export const DashboardPage: React.FC = () => {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Simulate API call delay for skeleton demonstration
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const mockStats = [
-          { 
-              title: 'Total Revenue', 
-              value: '$48,291', 
-              trend: '+12.5%', 
-              icon: <DollarOutlined />, 
-              color: '#10b981',
-              link: '/finance/analytics'
-          },
-          { 
-              title: 'Active Orders', 
-              value: '142', 
-              trend: '+8.2%', 
-              icon: <ShoppingCartOutlined />, 
-              color: '#3b82f6',
-              link: '/verticals/ride-hailing'
-          },
-          { 
-              title: 'Pending Verify', 
-              value: '12', 
-              trend: 'Action Req', 
-              icon: <UserOutlined />, 
-              color: '#f59e0b',
-              badge: 'ðŸŸ ',
-              link: '/management/drivers'
-          },
-          { 
-              title: 'Failed Payments', 
-              value: '3', 
-              trend: '-2.1%', 
-              icon: <CloseCircleOutlined />, 
-              color: '#ef4444',
-              badge: 'ðŸ”´',
-              link: '/finance/settlements'
-          }
-        ];
-        
-        setStats(mockStats);
-        setRecentActivity([
-          { id: 'ORD-8821', service: 'Ride', amount: '$12.50', status: 'In Transit', city: 'Harare', time: '2m ago' },
-          { id: 'ORD-8822', service: 'Food', amount: '$24.00', status: 'Completed', city: 'London', time: '5m ago' },
-          { id: 'ORD-8823', service: 'Mart', amount: '$89.20', status: 'Delayed', city: 'Lagos', time: '12m ago' },
-          { id: 'ORD-8824', service: 'Ride', amount: '$15.00', status: 'Completed', city: 'Harare', time: '15m ago' },
-        ]);
-      } catch (err) {
-        message.error('Unable to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, [selectedCity, timeRange]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // Simulate API call delay for skeleton demonstration
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const mockStats = [
+        { 
+            title: 'Total Revenue (GMV)', 
+            value: '$48,291', 
+            trend: '+12.5%', 
+            icon: <DollarOutlined />, 
+            color: '#10b981',
+            info: 'Total transaction value before any deductions.',
+            link: '/finance/analytics'
+        },
+        { 
+            title: 'Active Orders', 
+            value: '142', 
+            trend: '+8.2%', 
+            icon: <ShoppingCartOutlined />, 
+            color: '#3b82f6',
+            info: 'Number of orders currently in progress across all services.',
+            link: '/services/ride'
+        },
+        { 
+            title: 'Pending Verify', 
+            value: '12', 
+            trend: 'Action Req', 
+            icon: <UserOutlined />, 
+            color: '#f59e0b',
+            badge: '🟠',
+            info: 'Partners awaiting document verification or KYC checks.',
+            link: '/drivers/list'
+        },
+        { 
+            title: 'Failed Payments', 
+            value: '3', 
+            trend: '-2.1%', 
+            icon: <CloseCircleOutlined />, 
+            color: '#ef4444',
+            badge: '🔴',
+            info: 'Transactions that failed due to gateway or user errors.',
+            link: '/finance/settlements'
+        }
+      ];
+      
+      setStats(mockStats);
+      setRecentActivity([
+        { id: 'ORD-8821', service: 'Ride', amount: '$12.50', status: 'In Transit', city: 'Harare', time: '2m ago' },
+        { id: 'ORD-8822', service: 'Food', amount: '$24.00', status: 'Completed', city: 'London', time: '5m ago' },
+        { id: 'ORD-8823', service: 'Mart', amount: '$89.20', status: 'Delayed', city: 'Lagos', time: '12m ago' },
+        { id: 'ORD-8824', service: 'Ride', amount: '$15.00', status: 'Completed', city: 'Harare', time: '15m ago' },
+      ]);
+    } catch (err) {
+      message.error('Unable to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const chartData = [
     { name: '08:00', revenue: 4000, orders: 120 },
@@ -131,7 +158,7 @@ export const DashboardPage: React.FC = () => {
                 <Select 
                   value={selectedCountry} 
                   style={{ width: 140 }} 
-                  bordered={false}
+                  variant="borderless"
                   onChange={(val) => {
                     setSelectedCountry(val);
                     const firstRegion = Object.keys(LOCATION_DATA[val].regions)[0];
@@ -144,7 +171,7 @@ export const DashboardPage: React.FC = () => {
                 <Select 
                   value={selectedRegion} 
                   style={{ width: 140 }} 
-                  bordered={false}
+                  variant="borderless"
                   onChange={(val) => {
                     setSelectedRegion(val);
                     setSelectedCity(LOCATION_DATA[selectedCountry].regions[val][0]);
@@ -155,7 +182,7 @@ export const DashboardPage: React.FC = () => {
                 <Select 
                   value={selectedCity} 
                   style={{ width: 120 }} 
-                  bordered={false}
+                  variant="borderless"
                   onChange={setSelectedCity}
                   suffixIcon={<EnvironmentOutlined />}
                 >
@@ -176,7 +203,8 @@ export const DashboardPage: React.FC = () => {
                 <Select.Option value="7D">Last 7 Days</Select.Option>
                 <Select.Option value="30D">Last 30 Days</Select.Option>
               </Select>
-              <Button icon={<SyncOutlined spin={loading} />} onClick={() => window.location.reload()} />
+              <Button icon={<SyncOutlined spin={loading} />} onClick={fetchData} />
+              <Button icon={<HistoryOutlined />} onClick={() => navigate('/enterprise/audit-logs')}>View Global Logs</Button>
             </Space>
           </Col>
         </Row>
@@ -199,18 +227,84 @@ export const DashboardPage: React.FC = () => {
                 style={{ borderRadius: 12 }}
               >
                 <Statistic
-                  title={<Text type="secondary" strong>{stat.title}</Text>}
+                  title={
+                    <Space size="small">
+                      <Text type="secondary" strong>{stat.title}</Text>
+                      <Tooltip title={stat.info}><InfoCircleOutlined style={{ fontSize: 12, color: '#ccd5e1' }} /></Tooltip>
+                    </Space>
+                  }
                   value={stat.value}
                   prefix={React.cloneElement(stat.icon as any, { style: { color: stat.color, marginRight: 8 } })}
                   valueStyle={{ fontWeight: 800, fontSize: 24 }}
                 />
                 <div style={{ marginTop: 8 }}>
-                  <Tag color={stat.trend.startsWith('+') ? 'success' : 'warning'} icon={stat.trend.startsWith('+') ? <ArrowUpOutlined /> : <WarningOutlined />}>
+                  <Tag color={stat.trend.startsWith('+') ? 'success' : 'warning'} icon={stat.trend.startsWith('+') ? <ArrowUpOutlined /> : <WarningOutlined />} style={{ borderRadius: 4, border: 'none' }}>
                     {stat.trend}
                   </Tag>
+                  <Text type="secondary" style={{ fontSize: 11, marginLeft: 8 }}>vs {timeRange === 'Today' ? 'Yesterday' : 'Prev Period'}</Text>
                 </div>
               </Card>
             </Badge.Ribbon>
+          </Col>
+        ))}
+      </Row>
+
+      {/* Service Performance Grid */}
+      <div style={{ marginTop: 32, marginBottom: 12 }}>
+        <Title level={5} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <RocketOutlined style={{ color: '#10b981' }} />
+          Service Performance Analytics
+          <Tooltip title="This grid shows the real-time activity and health status of all platform services. Optimal means systems are running normally.">
+            <InfoCircleOutlined style={{ fontSize: 14, color: '#94a3b8', cursor: 'pointer' }} />
+          </Tooltip>
+        </Title>
+        <Text type="secondary">Real-time monitoring across all active service verticals.</Text>
+      </div>
+
+      <Row gutter={[16, 16]}>
+        {SERVICES_STATS.map((service) => (
+          <Col xs={24} sm={12} md={8} lg={4.8} key={service.id} style={{ flex: '0 0 20%', maxWidth: '20%' }}>
+            <Card 
+              className="service-stat-card shadow-sm"
+              bodyStyle={{ padding: '16px 12px' }}
+              hoverable
+              style={{ borderRadius: 12, border: '1px solid #f1f5f9' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ 
+                  width: 32, height: 32, borderRadius: 8, background: `${service.color}15`, 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: service.color 
+                }}>
+                  {service.icon}
+                </div>
+                <Tooltip title={service.info}>
+                   <Tag 
+                    color={service.status === 'Optimal' ? 'success' : service.status === 'Delayed' ? 'error' : 'warning'}
+                    style={{ fontSize: 10, margin: 0, borderRadius: 4, padding: '0 4px', border: 'none', cursor: 'help' }}
+                  >
+                    {service.status}
+                  </Tag>
+                </Tooltip>
+              </div>
+              
+              <div style={{ marginBottom: 4 }}>
+                <Text type="secondary" style={{ fontSize: 11, display: 'block', fontWeight: 600 }}>{service.label}</Text>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                  <Text style={{ fontSize: 18, fontWeight: 800 }}>{service.value.toLocaleString()}</Text>
+                  <Text style={{ 
+                    fontSize: 11, 
+                    color: service.trend.startsWith('+') ? '#10b981' : service.trend === 'stable' ? '#94a3b8' : '#ef4444', 
+                    fontWeight: 600 
+                  }}>
+                    {service.trend === 'stable' ? 'Stable' : service.trend}
+                  </Text>
+                </div>
+              </div>
+              
+              <div style={{ fontSize: 10, color: '#94a3b8' }}>
+                Active Volume
+              </div>
+            </Card>
           </Col>
         ))}
       </Row>
@@ -231,6 +325,7 @@ export const DashboardPage: React.FC = () => {
             className="shadow-sm"
             style={{ borderRadius: 12, overflow: 'hidden' }}
             bodyStyle={{ padding: 0 }}
+            extra={<Button type="link" onClick={() => navigate('/dashboard/fleet')}>Expand View</Button>}
           >
             <BaseMap center={[-17.8248, 31.0530]} zoom={13} height={450}>
                 <Marker position={[-17.8248, 31.0530]}>
@@ -256,6 +351,11 @@ export const DashboardPage: React.FC = () => {
             bordered={false} 
             className="shadow-sm"
             style={{ borderRadius: 12, marginBottom: 24 }}
+            extra={
+              <Tooltip title="Platform revenue growth over the last 24 hours. Peak hourly volume highlighted below.">
+                <InfoCircleOutlined style={{ color: '#cbd5e1' }} />
+              </Tooltip>
+            }
           >
             <div style={{ height: 180 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -268,7 +368,7 @@ export const DashboardPage: React.FC = () => {
                   </defs>
                   <XAxis dataKey="name" hide />
                   <YAxis hide />
-                  <Tooltip />
+                  <RechartsTooltip />
                   <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRev)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -284,13 +384,18 @@ export const DashboardPage: React.FC = () => {
             bordered={false} 
             className="shadow-sm"
             style={{ borderRadius: 12 }}
+            extra={
+              <Tooltip title="The rate at which new orders are being placed across all cities.">
+                <InfoCircleOutlined style={{ color: '#cbd5e1' }} />
+              </Tooltip>
+            }
           >
             <div style={{ height: 156 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <XAxis dataKey="name" hide />
                   <YAxis hide />
-                  <Tooltip />
+                  <RechartsTooltip />
                   <Line type="monotone" dataKey="orders" stroke="#3b82f6" strokeWidth={3} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
@@ -305,7 +410,7 @@ export const DashboardPage: React.FC = () => {
         bordered={false} 
         className="shadow-sm" 
         style={{ marginTop: 24, borderRadius: 12 }}
-        extra={<Button type="link" onClick={() => navigate('/ops/logs')}>Full Audit Log</Button>}
+        extra={<Button type="link" onClick={() => navigate('/ops/logs')}>View Detailed Logs</Button>}
       >
         <Table 
           dataSource={recentActivity}
@@ -324,13 +429,13 @@ export const DashboardPage: React.FC = () => {
               title: 'Service',
               dataIndex: 'service',
               key: 'service',
-              render: (s) => <Tag color={s === 'Ride' ? 'blue' : 'orange'}>{s}</Tag>
+              render: (s) => <Tag color={s === 'Ride' ? 'blue' : 'orange'} style={{ border: 'none', borderRadius: 4 }}>{s}</Tag>
             },
             {
                 title: 'Market',
                 dataIndex: 'city',
                 key: 'city',
-                render: (c) => <Space><EnvironmentOutlined style={{ fontSize: 12 }} />{c}</Space>
+                render: (c) => <Space><EnvironmentOutlined style={{ fontSize: 12, color: '#94a3b8' }} />{c}</Space>
             },
             {
               title: 'Status',
@@ -338,6 +443,7 @@ export const DashboardPage: React.FC = () => {
               key: 'status',
               render: (status) => (
                 <Tag 
+                    style={{ border: 'none', borderRadius: 4 }}
                     color={status === 'Completed' ? 'success' : status === 'Delayed' ? 'error' : 'processing'}
                     icon={status === 'Completed' ? <CheckCircleOutlined /> : <SyncOutlined spin={status === 'In Transit'} />}
                 >
@@ -349,7 +455,7 @@ export const DashboardPage: React.FC = () => {
               title: 'Value',
               dataIndex: 'amount',
               key: 'amount',
-              render: (v) => <Text strong>{v}</Text>
+              render: (v) => <Text strong style={{ color: '#0e172a' }}>{v}</Text>
             }
           ]}
         />

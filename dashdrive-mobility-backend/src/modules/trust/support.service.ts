@@ -12,9 +12,10 @@ export class SupportService {
     subject: string;
     description: string;
     category: string;
+    padding?: string;
     priority?: string;
   }) {
-    return this.prisma.supportTicket.create({
+    return (this.prisma as any).supportTicket.create({
       data: {
         user_id: userId,
         ride_id: dto.rideId,
@@ -27,7 +28,7 @@ export class SupportService {
   }
 
   async getTickets(userId: string) {
-    return this.prisma.supportTicket.findMany({
+    return (this.prisma as any).supportTicket.findMany({
       where: { user_id: userId },
       orderBy: { created_at: 'desc' },
     });

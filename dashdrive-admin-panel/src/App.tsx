@@ -48,6 +48,7 @@ import { KycVerification } from './pages/Fintech/KycVerification';
 import { CreateBlogPage } from './pages/CreateBlogPage';
 import { SystemSettingsPage } from './pages/SystemSettingsPage';
 import { ConfigurationPage } from './pages/ConfigurationPage';
+import { AuditLogPage } from './pages/AuditLogPage';
 import { ApiManagementPage } from './pages/ApiManagementPage';
 import { ThemeProvider } from './context/ThemeContext';
 import { FinancialReportsHub } from './pages/FinancialReportsHub';
@@ -124,10 +125,11 @@ export default function App() {
             <Route path="partners/fleets/earnings" element={<FleetOperatorHub initialTab="5" />} />
 
             {/* User Management */}
-            <Route path="users/customers" element={<CustomerListPage />} />
-            <Route path="users/tier-setup" element={<CustomerLevelSetupPage />} />
-            <Route path="users/employees" element={<UserManagementPage />} />
-            <Route path="users/wallet" element={<UserManagementPage />} />
+            <Route path="users/management" element={<UserManagementPage />} />
+            <Route path="users/customers" element={<Navigate to="/users/management" replace />} />
+            <Route path="users/tier-setup" element={<Navigate to="/users/management" replace />} />
+            <Route path="users/employees" element={<Navigate to="/users/management" replace />} />
+            <Route path="users/wallet" element={<Navigate to="/users/management" replace />} />
             
             {/* Operations */}
             <Route path="ops/hub" element={<OperationsHubPage initialTab="1" />} />
@@ -186,6 +188,7 @@ export default function App() {
             <Route path="enterprise/roles" element={<EnterpriseSettingsPage />} />
             <Route path="enterprise/settings" element={<SystemSettingsPage />} />
             <Route path="enterprise/api" element={<ApiManagementPage />} />
+            <Route path="enterprise/audit-logs" element={<AuditLogPage />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

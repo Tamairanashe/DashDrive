@@ -43,6 +43,7 @@ model DriverProfile {
   license_number       String?
   vehicle_type         String?
   verification_status  String                 @default("pending")
+  current_mode         CourierMode            @default(MIXED)
   is_online            Boolean                @default(false)
   last_location_lat    Float?
   last_location_lng    Float?
@@ -135,6 +136,9 @@ model User {
   // Verification Info
   license_number  String?
   license_verified Boolean          @default(false)
+  
+  referral_code String?  @unique
+  referred_by   String?  @db.Uuid
   
   AppNotification AppNotification[]
   DriverProfile   DriverProfile?
@@ -589,6 +593,14 @@ model TransitTrip {
   @@schema("mobility")
 }
 
+enum CourierMode {
+  RIDE
+  DELIVERY
+  MIXED
+
+  @@schema("mobility")
+}
+
 enum AppMode {
   CUSTOMER
   DRIVER
@@ -838,6 +850,103 @@ model SupportTicket {
   assigned_to String?  @db.Uuid
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+
+  @@schema("mobility")
+}
+
+// ==========================================
+// 6. SCALING & REGIONAL MODELS
+// ==========================================
+
+model MarketRegion {
+  id            String   @id @db.Uuid @default(uuid())
+  name          String   @unique // e.g., Zimbabwe, South Africa
+  countryCode   String   @db.VarChar(2)
+  currency      String   @default("USD")
+  timezone      String   @default("UTC")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  
+  cities        City[]
+
+  @@schema("mobility")
+}
+
+model City {
+  id            String       @id @db.Uuid @default(uuid())
+  regionId      String       @db.Uuid
+  name          String
+  slug          String       @unique
+  latitude      Float
+  longitude     Float
+  radius        Float        @default(20.0) // Service radius in km
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+
+  region        MarketRegion @relation(fields: [regionId], references: [id])
+  
+  @@schema("mobility")
+}
+
+// ==========================================
+// 7. SUPER-APP (FOOD, GROCERY, PARCEL)
+// ==========================================
+
+enum ServiceType {
+  RIDE
+  PARCEL
+  FOOD
+  GROCERY
+  SHOPPING
+
+  @@schema("mobility")
+}
+
+model Order {
+  id              String      @id @db.Uuid @default(uuid())
+  user_id         String      @db.Uuid
+  type            ServiceType @default(FOOD)
+  status          String      @default("pending") // pending, accepted, preparing, ready, delivery_assigned, completed
+  total_price     Decimal     @db.Decimal(10, 2)
+  delivery_fee    Decimal     @default(0) @db.Decimal(10, 2)
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  restaurant_id   String?     @db.Uuid
+  created_at      DateTime    @default(now())
+  
+  items           OrderItem[]
+  delivery        Delivery?
+
+  @@schema("mobility")
+}
+
+model OrderItem {
+  id          String   @id @db.Uuid @default(uuid())
+  order_id    String   @db.Uuid
+  product_id  String?  @db.Uuid
+  name        String
+  quantity    Int      @default(1)
+  price       Decimal  @db.Decimal(10, 2)
+  
+  order       Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@schema("mobility")
+}
+
+model Delivery {
+  id              String   @id @db.Uuid @default(uuid())
+  order_id        String   @unique @db.Uuid
+  courier_id      String?  @db.Uuid
+  status          String   @default("searching") // searching, assigned, picked_up, completed, failed
+  pickup_lat      Float?
+  pickup_lng      Float?
+  dropoff_lat     Float?
+  dropoff_lng     Float?
+  estimated_eta   Int?     // minutes
+  created_at      DateTime @default(now())
+  
+  order           Order    @relation(fields: [order_id], references: [id])
 
   @@schema("mobility")
 }

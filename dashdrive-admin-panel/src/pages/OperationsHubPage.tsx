@@ -1,10 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, Row, Col, Card, Space, Statistic, Tabs, 
   Table, Tag, Button, Badge, Divider, List, Avatar,
   Progress, Segmented, Select, Input, DatePicker,
   message, Empty, Alert, Tooltip, Dropdown, MenuProps,
-  Form, Drawer, Switch, InputNumber, Descriptions
+  Form, Drawer, Switch, InputNumber, Descriptions, Modal, notification
 } from 'antd';
 import { 
   RocketOutlined, EnvironmentOutlined, ThunderboltOutlined, 
@@ -16,7 +16,8 @@ import {
   PlayCircleOutlined, PauseCircleOutlined, PlusOutlined,
   DeleteOutlined, EditOutlined, PhoneOutlined, SearchOutlined,
   CloudDownloadOutlined, RestOutlined, DeleteFilled, RollbackOutlined,
-  InfoCircleOutlined, CompassOutlined, BorderOutlined, ApartmentOutlined
+  InfoCircleOutlined, CompassOutlined, BorderOutlined, ApartmentOutlined,
+  CopyOutlined
 } from '@ant-design/icons';
 import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import { 
@@ -29,6 +30,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 // --- Interfaces ---
 
@@ -48,10 +50,23 @@ interface ZoneLog {
   id: string;
   zoneId: string;
   zoneName: string;
-  action: 'Created' | 'Updated' | 'Status Toggled' | 'Deleted';
+  action: 'Created' | 'Updated' | 'Status Toggled' | 'Deleted' | 'Broadcast';
   details: string;
   timestamp: string;
   user: string;
+}
+
+interface Broadcast {
+  id: string;
+  title: string;
+  content: string;
+  target: 'All' | 'Drivers' | 'Customers' | 'Zone';
+  targetDetail?: string;
+  priority: 'Emergency' | 'High' | 'Normal';
+  status: 'Sent' | 'Scheduled' | 'Failed';
+  timestamp: string;
+  sender: string;
+  reason: string;
 }
 
 // --- Mock Data & Constants ---
@@ -109,10 +124,10 @@ const INITIAL_LOGS: ZoneLog[] = [
 ];
 
 const KpiData = [
-  { title: 'Active Trips', value: 1245, suffix: '', priority: 'success', icon: <RocketOutlined /> },
-  { title: 'Active Deliveries', value: 890, suffix: '', priority: 'processing', icon: <ShopOutlined /> },
-  { title: 'Waiting for Driver', value: 45, suffix: 'orders', priority: 'warning', icon: <ClockCircleOutlined /> },
-  { title: 'Available Drivers', value: 620, suffix: '', priority: 'success', icon: <CarOutlined /> },
+  { title: 'Active Trips', value: 1245, suffix: '', priority: 'success', icon: <RocketOutlined />, description: 'Active transport orders currently in progress.' },
+  { title: 'Active Deliveries', value: 890, suffix: '', priority: 'processing', icon: <ShopOutlined />, description: 'Combined food and grocery orders currently being delivered.' },
+  { title: 'Waiting for Driver', value: 45, suffix: 'orders', priority: 'warning', icon: <ClockCircleOutlined />, description: 'Orders in the queue awaiting driver matching.' },
+  { title: 'Available Drivers', value: 620, suffix: '', priority: 'success', icon: <CarOutlined />, description: 'Verified drivers online and available for matching.' },
 ];
 
 const secondaryKpiData = [
@@ -121,9 +136,9 @@ const secondaryKpiData = [
   { title: 'Delayed Orders', value: 12, suffix: '', trend: 'down', trendValue: '4' },
 ];
 
-const MOCK_ALERTS = [
-  { id: 'AL-001', type: 'Dispatch Failure', service: 'Ride', severity: 'High', status: 'Open', time: '2 mins ago', info: 'No drivers accepted order ORD-991' },
-  { id: 'AL-002', type: 'Trip Delayed', service: 'Food', severity: 'Medium', status: 'Open', time: '5 mins ago', info: 'Courier Stationary for 10 mins near CBD' },
+const MOCK_BROADCASTS: Broadcast[] = [
+  { id: 'BC-001', title: 'Severe Weather Warning', content: 'Heavy rain expected in CBD South. Reduced speed limits in effect.', target: 'All', priority: 'High', status: 'Sent', timestamp: '2024-03-18 14:00', sender: 'Operations Lead', reason: 'Safety precaution for forecast storm' },
+  { id: 'BC-002', title: 'System Maintenance', content: 'In-app wallet services will be briefly unavailable between 02:00 and 02:30 AM.', target: 'Customers', priority: 'Normal', status: 'Sent', timestamp: '2024-03-17 22:00', sender: 'DevOps Team', reason: 'Scheduled database optimization' }
 ];
 
 const MapEvents = ({ onMapClick }: { onMapClick: (latlng: [number, number]) => void }) => {
@@ -220,7 +235,13 @@ const OperationsDashboard: React.FC<{
                 <Col key={idx} xs={24} sm={12} lg={6}>
                   <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 12 }}>
                     <Statistic 
-                      title={<Space><span style={{ color: '#64748b' }}>{kpi.icon}</span> {kpi.title}</Space>}
+                      title={
+                        <Space>
+                            <span style={{ color: '#64748b' }}>{kpi.icon}</span> 
+                            {kpi.title}
+                            <Tooltip title={kpi.description}><InfoCircleOutlined style={{ fontSize: 11, cursor: 'help' }} /></Tooltip>
+                        </Space>
+                      }
                       value={kpi.value}
                       styles={{ content: { color: kpi.priority === 'warning' ? '#f59e0b' : '#0f172a', fontWeight: 700 } }}
                       suffix={<span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8', marginLeft: 4 }}>{kpi.suffix}</span>}
@@ -239,13 +260,18 @@ const OperationsDashboard: React.FC<{
               title={<Space><GlobalOutlined /> Real-time Platform Mobility Map</Space>}
               extra={
                 <Space>
+                  <Badge status="processing" text={<Text type="secondary" style={{ fontSize: 12 }}>Live Sync</Text>} />
+                  <Tooltip title="Real-time mobility stream active. Data refreshed every 5 seconds.">
+                    <InfoCircleOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+                  </Tooltip>
+                  <Button size="small" icon={<HistoryOutlined />} onClick={() => message.info('Opening mobility audit logs...')}>Logs</Button>
                   <Segmented 
                     options={['All', 'Rides', 'Deliveries', 'Customers']} 
                     size="small" 
                     value={filter}
                     onChange={(val) => onFilterChange(val as string)}
                   />
-                  <Button icon={<SyncOutlined spin={isRefreshing} />} size="small" onClick={handleLiveSync}>Live</Button>
+                  <Button icon={<SyncOutlined spin={isRefreshing} />} size="small" onClick={handleLiveSync}>Pulse</Button>
                 </Space>
               }
               styles={{ body: { padding: 0, height: 450, position: 'relative' } }}
@@ -377,6 +403,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
     const [editingZone, setEditingZone] = useState<Zone | null>(null);
     const [form] = Form.useForm();
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [drawingMode, setDrawingMode] = useState<'Polygon' | 'Circle' | 'Triangle'>('Polygon');
 
     const addLog = (zone: Zone | { name: string, id: string }, action: ZoneLog['action'], details: string) => {
@@ -403,11 +430,22 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
         }));
     };
 
-    const handleDeleteZone = (zone: Zone) => {
-        setZones(prev => prev.filter(z => z.id !== zone.id));
-        setTrashedZones(prev => [zone, ...prev]);
-        addLog(zone, 'Deleted', 'Zone moved to Recycle Bin');
-        message.success(`Zone ${zone.name} moved to Trash`);
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [selectedDeleteZone, setSelectedDeleteZone] = useState<Zone | null>(null);
+    const [deleteForm] = Form.useForm();
+
+    const handleDeleteZone = (values: any) => {
+        if (!selectedDeleteZone) return;
+        setZones(prev => prev.filter(z => z.id !== selectedDeleteZone.id));
+        setTrashedZones(prev => [{ ...selectedDeleteZone, deleteReason: values.reason } as any, ...prev]);
+        addLog(selectedDeleteZone, 'Deleted', `Zone moved to Trash. Reason: ${values.reason}`);
+        notification.warning({
+            message: 'Zone Trashed',
+            description: `${selectedDeleteZone.name} has been moved to the recycle bin.`,
+            placement: 'topRight'
+        });
+        setDeleteModalVisible(false);
+        deleteForm.resetFields();
     };
 
     const handleRestoreZone = (zone: Zone) => {
@@ -447,11 +485,21 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
 
     const columns = [
       { 
-        title: 'Zone Name', 
+        title: 'Zone Identity', 
         dataIndex: 'name', 
         key: 'name', 
         ellipsis: true,
-        render: (text: string) => <Text strong>{text}</Text> 
+        render: (text: string, record: Zone) => (
+            <div>
+                <Text strong style={{ display: 'block' }}>{text}</Text>
+                <Space size={4}>
+                    <Text type="secondary" style={{ fontSize: 10 }}>ID: {record.id}</Text>
+                    <Tooltip title="Copy ID">
+                        <Button type="text" size="small" icon={<CopyOutlined style={{ fontSize: 10 }} />} onClick={() => { navigator.clipboard.writeText(record.id); message.success('ID Copied'); }} />
+                    </Tooltip>
+                </Space>
+            </div>
+        )
       },
       {
         title: 'Type',
@@ -502,7 +550,12 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
             }} />
             <Dropdown
               menu={{
-                items: [{ key: 'delete', label: 'Delete', danger: true, onClick: () => handleDeleteZone(record) }]
+                items: [{ 
+                    key: 'delete', 
+                    label: 'Move to Trash', 
+                    danger: true, 
+                    onClick: () => { setSelectedDeleteZone(record); setDeleteModalVisible(true); } 
+                }]
               }}
               trigger={['click']}
             >
@@ -698,7 +751,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
                   <Title level={5} style={{ margin: 0 }}>Boundaries</Title>
                   <Badge count={displayedZones.length} style={{ backgroundColor: '#00b894' }} />
                 </div>
-                <Space direction="vertical" style={{ width: '100%' }} size="small">
+                 <Space direction="vertical" style={{ width: '100%' }} size="small">
                     <Input 
                         placeholder="Search zones..." 
                         prefix={<SearchOutlined />} 
@@ -821,7 +874,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
           title={<Space><RestOutlined style={{ color: '#ef4444' }} /> Manage Trashed Zones</Space>}
           open={isTrashModalOpen}
           onClose={() => setIsTrashModalOpen(false)}
-          width={500}
+          width={550}
           className="premium-drawer"
         >
           {trashedZones.length === 0 ? (
@@ -829,7 +882,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
           ) : (
             <List
               dataSource={trashedZones}
-              renderItem={z => (
+              renderItem={(z: any) => (
                 <List.Item
                   actions={[
                     <Button type="link" icon={<RollbackOutlined />} onClick={() => handleRestoreZone(z)}>Restore</Button>,
@@ -838,13 +891,45 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
                 >
                   <List.Item.Meta
                     title={<Text strong>{z.name}</Text>}
-                    description={<Text type="secondary" style={{ fontSize: 11 }}>ID: {z.id} â€¢ Points: {z.points.length}</Text>}
+                    description={
+                        <Space direction="vertical" size={2}>
+                            <Text type="secondary" style={{ fontSize: 11 }}>ID: {z.id} • Reason: <Text type="danger" style={{ fontSize: 11 }}>{z.deleteReason || 'No reason provided'}</Text></Text>
+                        </Space>
+                    }
                   />
                 </List.Item>
               )}
             />
           )}
         </Drawer>
+
+        <Modal
+            title={<span><WarningOutlined style={{ color: '#ef4444' }} /> Mandatory Zone Deletion Protocol</span>}
+            open={deleteModalVisible}
+            onCancel={() => { setDeleteModalVisible(false); deleteForm.resetFields(); }}
+            onOk={() => deleteForm.submit()}
+            confirmLoading={loading}
+            okText="Move to Trash"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+        >
+            <Form form={deleteForm} layout="vertical" onFinish={handleDeleteZone}>
+                <Alert
+                    message="Service Disruption Warning"
+                    description={`Deleting "${selectedDeleteZone?.name}" will disable all services and geofences tied to this area. Drivers will no longer receive orders from this zone.`}
+                    type="error"
+                    showIcon
+                    style={{ marginBottom: 20 }}
+                />
+                <Form.Item 
+                    name="reason" 
+                    label="Required: Deletion/Archival Insight" 
+                    rules={[{ required: true, message: 'Please provide a justification for this operational change.' }]}
+                >
+                    <TextArea placeholder="Ex: Zone merged with CBD North Hub or temporary operational suspension..." rows={4} />
+                </Form.Item>
+            </Form>
+        </Modal>
       </div>
     );
 };
@@ -857,16 +942,21 @@ const RenderDispatchManagement: React.FC = () => {
     ]);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isEnabled, setIsEnabled] = useState(true);
+    const [loading, setLoading] = useState(false);
+
 
     const queueColumns = [
       { 
-        title: 'Order ID', 
+        title: 'Order Tracking', 
         dataIndex: 'id', 
         key: 'id', 
         render: (text: string, record: any) => (
-          <Space>
-              <Text strong>{text}</Text>
-              {record.priority === 'VIP' && <Tag color="gold" style={{ margin: 0 }}>VIP</Tag>}
+          <Space size={4}>
+              <Text strong code style={{ fontSize: 12 }}>{text}</Text>
+              <Tooltip title="Copy Order ID">
+                <Button type="text" size="small" icon={<CopyOutlined style={{ fontSize: 10 }} />} onClick={() => { navigator.clipboard.writeText(text); message.success('Order ID copied'); }} />
+              </Tooltip>
+              {record.priority === 'VIP' && <Tag color="gold" style={{ margin: 0, fontSize: 10 }}>VIP</Tag>}
           </Space>
         )
       },
@@ -926,7 +1016,10 @@ const RenderDispatchManagement: React.FC = () => {
                 <Row gutter={40}>
                     <Col span={12}>
                       <div style={{ marginBottom: 16 }}>
-                        <Text type="secondary" style={{ fontSize: 13 }}>Initial Search Radius</Text>
+                        <Space>
+                            <Text type="secondary" style={{ fontSize: 13 }}>Initial Search Radius</Text>
+                            <Tooltip title="The maximum distance (in kilometers) the engine searches for available drivers starting from the pickup/merchant location."><InfoCircleOutlined style={{ fontSize: 12, color: '#94a3b8' }} /></Tooltip>
+                        </Space>
                         <Progress percent={60} strokeColor="#00b894" />
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                           <Text style={{ fontSize: 12 }}>Current: 5km</Text>
@@ -936,7 +1029,10 @@ const RenderDispatchManagement: React.FC = () => {
                     </Col>
                     <Col span={12}>
                       <div>
-                        <Text type="secondary" style={{ fontSize: 13 }}>Response Timeout</Text>
+                        <Space>
+                             <Text type="secondary" style={{ fontSize: 13 }}>Response Timeout</Text>
+                             <Tooltip title="The time (in seconds) a driver has to accept an order before it is automatically re-offered to the next candidate."><InfoCircleOutlined style={{ fontSize: 12, color: '#94a3b8' }} /></Tooltip>
+                        </Space>
                         <Progress percent={45} strokeColor="#3b82f6" />
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                           <Text style={{ fontSize: 12 }}>Current: 15s</Text>
@@ -976,10 +1072,37 @@ const RenderDispatchManagement: React.FC = () => {
                        />
                     </Card>
                     
-                    <Button block type="primary" style={{ background: '#00b894', border: 'none' }}>
+                    <Button block type="primary" style={{ background: '#00b894', border: 'none' }} onClick={() => {
+                        Modal.confirm({
+                            title: 'Initiate Manual Assignment',
+                            content: (
+                                <div>
+                                    <Text>You are overriding the autonomous dispatch engine for <strong>{selectedOrder.id}</strong>.</Text>
+                                    <div style={{ marginTop: 16 }}>
+                                        <Text strong>Required justification:</Text>
+                                        <TextArea rows={3} placeholder="Ex: Direct request from VIP customer or specific driver request..." style={{ marginTop: 8 }} />
+                                    </div>
+                                </div>
+                            ),
+                            okText: 'Confirm Assignment',
+                            onOk: () => {
+                                message.success('Order manually dispatched and logged.');
+                            }
+                        });
+                    }}>
                       Force Manual Assign
                     </Button>
-                    <Button block danger type="dashed">Cancel Assignment</Button>
+                    <Button block danger type="dashed" onClick={() => {
+                        Modal.confirm({
+                            title: 'Cancel Order Assignment',
+                            content: 'Are you sure you want to stop the assignment process for this order? This will move it back to the pending queue.',
+                            okText: 'Yes, Stop Assignment',
+                            okButtonProps: { danger: true },
+                            onOk: () => {
+                                message.warning('Assignment terminated.');
+                            }
+                        });
+                    }}>Cancel Assignment</Button>
                   </Space>
                 )
               }
@@ -1112,14 +1235,25 @@ const RenderLiveTracking: React.FC = () => {
                           }))}
                        />
                     </Card>
+                     <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
+                        <Space>
+                            <Title level={5} style={{ margin: 0 }}>Intervention Terminal</Title>
+                            <Tooltip title="Emergency overrides for active trips. Every action here is logged and requires administrative clearance."><InfoCircleOutlined style={{ fontSize: 12, color: '#94a3b8' }} /></Tooltip>
+                        </Space>
+                        <Space direction="vertical" style={{ width: '100%', marginTop: 12 }}>
+                           <Button block icon={<PhoneOutlined />} onClick={() => message.info('Connecting to regional operator...')}>Call Operator</Button>
+                           <Button block type="primary" danger style={{ background: '#ef4444', border: 'none' }} onClick={() => {
+                               Modal.confirm({
+                                   title: 'Force Trip Reassignment',
+                                   content: 'This will decouple the current driver and return the trip to the dispatch queue. Use only in case of driver emergency or vehicle failure.',
+                                   okText: 'Reassign Now',
+                                   okButtonProps: { danger: true },
+                                   onOk: () => message.success('Reassignment initiated.')
+                               });
+                           }}>Reassign Driver</Button>
+                        </Space>
+                     </Card>
 
-                    <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
-                       <Title level={5}>Intervention</Title>
-                       <Space direction="vertical" style={{ width: '100%' }}>
-                          <Button block icon={<PhoneOutlined />}>Call Operator</Button>
-                          <Button block type="primary" danger style={{ background: '#ef4444', border: 'none' }}>Reassign Driver</Button>
-                       </Space>
-                    </Card>
                  </Space>
               </Col>
             )}
@@ -1162,8 +1296,12 @@ const RenderActiveAlerts: React.FC<{ alerts: any[], onFix: (id: string) => void 
       <div style={{ marginTop: 16 }}>
         <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }} styles={{ body: { padding: 0 } }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
-             <Title level={5} style={{ margin: 0 }}>Active Operational Alerts</Title>
              <Space>
+                <Title level={5} style={{ margin: 0 }}>Active Operational Alerts</Title>
+                <Tooltip title="Real-time incidents requiring immediate administrative attention."><InfoCircleOutlined style={{ fontSize: 12, color: '#94a3b8' }} /></Tooltip>
+             </Space>
+             <Space>
+                <Button size="small" icon={<HistoryOutlined />} onClick={() => message.info('Navigating to resolution history...')}>Resolution History</Button>
                 <Select defaultValue="all" size="small" options={[{value: 'all', label: 'All Severities'}]} />
                 <Button size="small" icon={<FilterOutlined />}>Filter</Button>
              </Space>
@@ -1172,6 +1310,7 @@ const RenderActiveAlerts: React.FC<{ alerts: any[], onFix: (id: string) => void 
             columns={columns} 
             dataSource={alerts} 
             rowKey="id"
+            pagination={{ pageSize: 15 }}
           />
         </Card>
       </div>
@@ -1207,9 +1346,14 @@ const RenderSolvedAlerts: React.FC = () => {
 
 const RenderSurgeAndDemand: React.FC<{ 
     zones: any[], 
-    onOverride: (id: string) => void,
+    onOverride: (id: string, val: number, reason: string) => void,
     onApplyRec: () => void 
 }> = ({ zones, onOverride, onApplyRec }) => {
+    const [selectedZone, setSelectedZone] = useState<any>(null);
+    const [overrideValue, setOverrideValue] = useState(1.0);
+    const [loading, setLoading] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [form] = Form.useForm();
     return (
       <div style={{ marginTop: 16 }}>
         <Row gutter={24}>
@@ -1277,10 +1421,23 @@ const RenderSurgeAndDemand: React.FC<{
                               </div>
                               <Text type="secondary" style={{ fontSize: 11 }}>Calculated based on live platform demand pings</Text>
                               <div style={{ marginTop: 8 }}>
-                                 <Button block size="small" onClick={() => onOverride(item.id)}>Override Multiplier</Button>
-                              </div>
-                           </div>
-                        </List.Item>
+                                 <Button 
+                                    size="small" 
+                                    type="primary" 
+                                    ghost 
+                                    icon={<ThunderboltOutlined />}
+                                    onClick={() => {
+                                        setSelectedZone(item);
+                                        setOverrideValue(item.currentMulti);
+                                        setIsModalVisible(true);
+                                        form.setFieldsValue({ multiplier: item.currentMulti, reason: '' });
+                                    }}
+                                  >
+                                    Override Multiplier
+                                  </Button>
+                               </div>
+                            </div>
+                         </List.Item>
                       )}
                     />
                  </Card>
@@ -1293,9 +1450,221 @@ const RenderSurgeAndDemand: React.FC<{
                     <Button type="primary" size="small" onClick={onApplyRec} style={{ background: '#00b894', border: 'none' }}>Apply Now</Button>
                  </Card>
               </Space>
+              <Modal
+            title={<Space><ThunderboltOutlined style={{ color: '#f59e0b' }} /> Tactical Surge Override</Space>}
+            open={isModalVisible}
+            onCancel={() => setIsModalVisible(false)}
+            onOk={() => form.submit()}
+            confirmLoading={loading}
+            okText="Apply Override"
+        >
+            <Form form={form} layout="vertical" onFinish={(values) => {
+                setLoading(true);
+                setTimeout(() => {
+                    onOverride(selectedZone.id, values.multiplier, values.reason);
+                    setLoading(false);
+                    setIsModalVisible(false);
+                }, 800);
+            }}>
+                <Text type="secondary" style={{ marginBottom: 16, display: 'block' }}>
+                    You are manually adjusting the multiplier for <b>{selectedZone?.name}</b>. This will override the autonomous demand engine for 2 hours.
+                </Text>
+                <Form.Item name="multiplier" label="Override Multiplier" rules={[{ required: true }]}>
+                    <InputNumber min={1.0} max={5.0} step={0.1} style={{ width: '100%' }} />
+                </Form.Item>
+                <Form.Item 
+                    name="reason" 
+                    label="Override Justification" 
+                    rules={[{ required: true, message: 'Please provide a reason for this tactical override' }]}
+                >
+                    <TextArea rows={3} placeholder="Supply shortage, local event, weather disruption..." />
+                </Form.Item>
+            </Form>
+        </Modal>
            </Col>
         </Row>
       </div>
+    );
+};
+
+const RenderBroadcastCommand: React.FC = () => {
+    const [broadcasts, setBroadcasts] = useState<Broadcast[]>(MOCK_BROADCASTS);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [form] = Form.useForm();
+    const [previewContent, setPreviewContent] = useState('');
+
+    const handleSendBroadcast = (values: any) => {
+        setLoading(true);
+        setTimeout(() => {
+            const newBC: Broadcast = {
+                id: `BC-${Date.now()}`,
+                ...values,
+                status: 'Sent',
+                timestamp: new Date().toLocaleString(),
+                sender: 'Current Admin'
+            };
+            setBroadcasts(prev => [newBC, ...prev]);
+            setLoading(false);
+            setIsModalOpen(false);
+            form.resetFields();
+            notification.success({
+                message: 'Broadcast Dispatched',
+                description: `Successfully sent "${values.title}" to target audience.`
+            });
+        }, 1500);
+    };
+
+    const columns = [
+        { 
+          title: 'Broadcast Identity', 
+          dataIndex: 'title', 
+          key: 'title',
+          render: (text: string, record: Broadcast) => (
+            <div>
+                <Text strong>{text}</Text>
+                <div style={{ fontSize: 11, color: '#64748b' }}>{record.id} • {record.timestamp}</div>
+            </div>
+          )
+        },
+        { 
+          title: 'Audience', 
+          dataIndex: 'target', 
+          key: 'target',
+          render: (target: string, record: Broadcast) => (
+            <Space size={4}>
+                <Tag color="blue">{target}</Tag>
+                {record.targetDetail && <Text type="secondary" style={{ fontSize: 11 }}>[{record.targetDetail}]</Text>}
+            </Space>
+          )
+        },
+        { 
+          title: 'Priority', 
+          dataIndex: 'priority', 
+          key: 'priority',
+          render: (p: string) => (
+            <Tag color={p === 'Emergency' ? 'red' : p === 'High' ? 'orange' : 'blue'}>{p}</Tag>
+          )
+        },
+        { 
+          title: 'Reason/Insight', 
+          dataIndex: 'reason', 
+          key: 'reason',
+          ellipsis: true,
+          render: (text: string) => <Text type="secondary" style={{ fontSize: 12 }}>{text}</Text>
+        },
+        {
+          title: 'Status',
+          dataIndex: 'status',
+          key: 'status',
+          render: (s: string) => <Badge status={s === 'Sent' ? 'success' : 'processing'} text={s} />
+        }
+    ];
+
+    return (
+        <div style={{ marginTop: 16 }}>
+            <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                   <Title level={4} style={{ margin: 0 }}>Operations Broadcast Terminal</Title>
+                   <Text type="secondary">High-priority platform-wide announcements and mobility alerts</Text>
+                </div>
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>Create New Broadcast</Button>
+            </div>
+
+            <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }} styles={{ body: { padding: 0 } }}>
+                <Table 
+                    columns={columns} 
+                    dataSource={broadcasts} 
+                    rowKey="id" 
+                    pagination={{ pageSize: 10 }}
+                    expandable={{
+                        expandedRowRender: record => (
+                            <div style={{ padding: '8px 24px' }}>
+                                <Text strong>Message Content:</Text>
+                                <Paragraph style={{ background: '#f8fafc', padding: 12, borderRadius: 8, marginTop: 8 }}>
+                                    {record.content}
+                                </Paragraph>
+                            </div>
+                        )
+                    }}
+                />
+            </Card>
+
+            <Modal
+                title={<Space><BellOutlined style={{ color: '#3b82f6' }} /> Compose Operational Broadcast</Space>}
+                open={isModalOpen}
+                onCancel={() => setIsModalOpen(false)}
+                onOk={() => form.submit()}
+                confirmLoading={loading}
+                width={600}
+                okText="Dispatch Broadcast"
+            >
+                <Form form={form} layout="vertical" onFinish={handleSendBroadcast} initialValues={{ priority: 'Normal', target: 'All' }}>
+                    <Row gutter={16}>
+                        <Col span={16}>
+                            <Form.Item name="title" label="Broadcast Heading" rules={[{ required: true }]}>
+                                <Input placeholder="Brief, urgent headline..." />
+                            </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                            <Form.Item name="priority" label="Priority Level">
+                                <Select options={[{ value: 'Normal', label: 'Normal' }, { value: 'High', label: 'Tactical High' }, { value: 'Emergency', label: 'Operational Emergency' }]} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Form.Item name="target" label="Target Audience Group">
+                        <Segmented 
+                            block 
+                            options={[
+                                { label: 'Global (All)', value: 'All', icon: <GlobalOutlined /> },
+                                { label: 'Drivers', value: 'Drivers', icon: <CarOutlined /> },
+                                { label: 'Customers', value: 'Customers', icon: <UserOutlined /> },
+                                { label: 'Zone Only', value: 'Zone', icon: <EnvironmentOutlined /> }
+                            ]} 
+                        />
+                    </Form.Item>
+
+                    <Form.Item 
+                        noStyle 
+                        shouldUpdate={(prev, curr) => prev.target !== curr.target}
+                    >
+                        {({ getFieldValue }) => getFieldValue('target') === 'Zone' && (
+                            <Form.Item name="targetDetail" label="Target Zone" rules={[{ required: true }]}>
+                                <Select placeholder="Select geographical zone..." options={INITIAL_ZONES.map(z => ({ value: z.name, label: z.name }))} />
+                            </Form.Item>
+                        )}
+                    </Form.Item>
+
+                    <Form.Item name="content" label="Notification Content" rules={[{ required: true }]}>
+                        <TextArea 
+                            rows={4} 
+                            placeholder="Detailed operational update..." 
+                            onChange={(e) => setPreviewContent(e.target.value)}
+                        />
+                    </Form.Item>
+
+                    <Card size="small" style={{ background: '#f8fafc', marginBottom: 20 }}>
+                        <Text strong style={{ fontSize: 12 }}>Device Preview:</Text>
+                        <div style={{ marginTop: 8, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
+                            <Badge dot status="processing" style={{ marginRight: 8 }} />
+                            <Text strong style={{ fontSize: 13 }}>{form.getFieldValue('title') || 'Heading'}</Text>
+                            <Paragraph style={{ fontSize: 12, margin: '4px 0 0 0', color: '#64748b' }}>
+                                {previewContent || 'Message preview will appear here...'}
+                            </Paragraph>
+                        </div>
+                    </Card>
+
+                    <Form.Item 
+                        name="reason" 
+                        label="Operational Justification (Audit Log)" 
+                        rules={[{ required: true }]}
+                    >
+                        <TextArea placeholder="Why is this broadcast necessary? (e.g. Traffic disruption reported in Zone A)" rows={2} />
+                    </Form.Item>
+                </Form>
+            </Modal>
+        </div>
     );
 };
 
@@ -1369,6 +1738,26 @@ const RenderOperationsAnalytics: React.FC = () => {
            </Col>
 
            <Col span={8}>
+              <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+               <Title level={4} style={{ margin: 0 }}>Operational Performance Analytics</Title>
+               <Text type="secondary">Real-time throughput, efficiency metrics, and service-level distribution</Text>
+            </div>
+            <Space>
+               <Button icon={<SyncOutlined />} onClick={() => message.success('Analytics data refreshed')}>Refresh Stats</Button>
+               <Dropdown 
+                  menu={{ 
+                    items: [
+                        { key: 'pdf', label: 'Export as PDF (Ops Summary)', icon: <CloudDownloadOutlined /> },
+                        { key: 'excel', label: 'Export as Excel (Raw Data)', icon: <CloudDownloadOutlined /> }
+                    ],
+                    onClick: () => message.success('Generating operational report...')
+                  }}
+               >
+                  <Button type="primary" icon={<CloudDownloadOutlined />}>Generate Report</Button>
+               </Dropdown>
+            </Space>
+          </div>
               <Card title="Service Mix Distribution" variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
                  <div style={{ height: 300 }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -1444,11 +1833,12 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
         message.success('Operational incident resolved and logged.');
     };
 
-    const handleOverrideSurge = (id: string) => {
+    const handleOverrideSurge = (id: string, val: number, reason: string) => {
         setDemandZones(prev => prev.map(z => 
-            z.id === id ? { ...z, currentMulti: parseFloat((z.currentMulti + 0.1).toFixed(1)) } : z
+            z.id === id ? { ...z, currentMulti: val } : z
         ));
-        message.info('Surge multiplier adjusted for tactical zone.');
+        console.log(`[Surge Override] ID: ${id}, New Multiplier: ${val}, Reason: ${reason}`);
+        message.info(`Surge adjusted to ${val}x. Change logged.`);
     };
 
     const handleApplyRecommendation = () => {
@@ -1526,6 +1916,11 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
         key: '8',
         label: <Space><LineChartOutlined /> Analytics</Space>,
         children: <RenderOperationsAnalytics />
+      },
+      {
+        key: '9',
+        label: <Space><BellOutlined /> Broadcast Command</Space>,
+        children: <RenderBroadcastCommand />
       }
     ];
 
