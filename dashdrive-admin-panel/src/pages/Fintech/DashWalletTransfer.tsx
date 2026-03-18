@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Card, 
   Typography, 
@@ -323,7 +323,7 @@ export const DashWalletTransfer: React.FC = () => {
             <Result
               status="success"
               title="Transfer Successful"
-              subTitle={`Reference: ${resultData?.referenceId}`}
+              subTitle={resultData?.referenceId ? `Reference: ${resultData.referenceId}` : 'Transfer completed successfully'}
               extra={[
                 <Button type="primary" key="new" onClick={() => window.location.reload()}>
                   New Transfer
@@ -349,15 +349,15 @@ export const DashWalletTransfer: React.FC = () => {
                 <Divider style={{ margin: '12px 0' }} />
                 <div>
                     <Tag color="red">AML CHECK</Tag>
-                    <Text size="small">Automated screening active</Text>
+                    <Text style={{ fontSize: '12px' }}>Automated screening active</Text>
                 </div>
                 <div>
                    <Tag color="gold">IDEMPOTENCY</Tag>
-                   <Text size="small">Duplicate prevention enabled</Text>
+                   <Text style={{ fontSize: '12px' }}>Duplicate prevention enabled</Text>
                 </div>
                 <div>
                    <Tag color="green">LEDGER</Tag>
-                   <Text size="small">Double-entry verified</Text>
+                   <Text style={{ fontSize: '12px' }}>Double-entry verified</Text>
                 </div>
              </Space>
           </Card>

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Table, Tag, Space, Button, Input, Card, Typography, Tabs, 
   Row, Col, Statistic, Avatar, Tooltip, Badge, Dropdown, 
   Drawer, Form, Select, DatePicker, List, Rate, Empty, Divider,
-  Modal, InputNumber, Radio, message as antdMessage, Descriptions, Switch, Popconfirm
+  Modal, InputNumber, Radio, message as antdMessage, Descriptions, Switch, Segmented
 } from 'antd';
 import { 
   SearchOutlined, PlusOutlined, UserOutlined, FileTextOutlined,
@@ -14,10 +14,15 @@ import {
   CloudUploadOutlined, MessageOutlined, BellOutlined, SafetyOutlined,
   AuditOutlined, SwapOutlined, ThunderboltOutlined, RocketOutlined,
   DollarOutlined, LockOutlined, UnlockOutlined, ArrowUpOutlined, ArrowDownOutlined,
-  CrownOutlined, TrophyOutlined, RiseOutlined
+  CrownOutlined, TrophyOutlined, RiseOutlined, FilterOutlined,
+  CheckOutlined, CloseOutlined, SyncOutlined, FileSearchOutlined
 } from '@ant-design/icons';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
+  ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie 
+} from 'recharts';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 export const DriverManagementHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState('1');
@@ -30,7 +35,9 @@ export const DriverManagementHub: React.FC = () => {
   const [walletForm] = Form.useForm();
   const [deleteForm] = Form.useForm();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<any>(null);
+  const [incidentForm] = Form.useForm();
 
   // Mock Data for Driver List
   const [drivers, setDrivers] = useState([
@@ -339,44 +346,81 @@ export const DriverManagementHub: React.FC = () => {
     </div>
   );
 
-  const DocumentsTab = () => (
-    <div style={{ marginTop: 20 }}>
-      <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
-        <Table 
-          dataSource={[
-            { driver: 'John M', doc: 'Driver License', expiry: '2027', status: 'Valid' },
-            { driver: 'Sarah C', doc: 'Police Clearance', expiry: '2024', status: 'Expiring' },
-            { driver: 'Mike N', doc: 'Insurance', expiry: '2023', status: 'Expired' },
-          ]}
-          columns={[
-            { title: 'Driver', dataIndex: 'driver', key: 'driver', width: 150 },
-            { title: 'Document', dataIndex: 'doc', key: 'doc', width: 180 },
-            { title: 'Expiry Date', dataIndex: 'expiry', key: 'expiry', width: 120 },
-            { 
-              title: 'Status', 
-              dataIndex: 'status', 
-              key: 'status',
-              width: 120,
-              render: (s) => <Tag color={s === 'Valid' ? 'success' : s === 'Expiring' ? 'warning' : 'error'}>{s}</Tag>
-            },
-            {
-              title: 'Actions',
-              key: 'actions',
-              width: 160,
-              fixed: 'right',
-              render: () => (
-                <Space>
-                  <Button size="small" icon={<FileTextOutlined />}>View</Button>
-                  <Button size="small" type="primary">Verify</Button>
-                </Space>
-              )
-            }
-          ]}
-          scroll={{ x: 800 }}
-        />
-      </Card>
-    </div>
-  );
+  const DocumentsTab = () => {
+    const [docFilter, setDocFilter] = useState('All');
+    const [docData, setDocData] = useState([
+      { id: 'DOC-101', driver: 'John M', doc: 'Driver License', expiry: '2027-12-15', status: 'Verified', type: 'Identity' },
+      { id: 'DOC-102', driver: 'Sarah C', doc: 'Police Clearance', expiry: '2024-05-20', status: 'Pending', type: 'Legal' },
+      { id: 'DOC-103', driver: 'Mike N', doc: 'Insurance', expiry: '2023-11-01', status: 'Rejected', type: 'Vehicle' },
+      { id: 'DOC-104', driver: 'Elena R', doc: 'Vehicle Registration', expiry: '2025-08-10', status: 'Verified', type: 'Vehicle' },
+    ]);
+
+    const filteredDocs = docFilter === 'All' ? docData : docData.filter(d => d.status === docFilter);
+
+    const handleVerify = (id: string, status: string) => {
+      setDocData(prev => prev.map(d => d.id === id ? { ...d, status } : d));
+      antdMessage.success(`Document marked as ${status}`);
+    };
+
+    return (
+      <div style={{ marginTop: 20 }}>
+        <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
+          <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Space>
+              <Text strong>Filter by Status:</Text>
+              <Radio.Group value={docFilter} onChange={e => setDocFilter(e.target.value)} buttonStyle="solid">
+                <Radio.Button value="All">All</Radio.Button>
+                <Radio.Button value="Verified">Verified</Radio.Button>
+                <Radio.Button value="Pending">Pending</Radio.Button>
+                <Radio.Button value="Rejected">Rejected</Radio.Button>
+              </Radio.Group>
+            </Space>
+            <Button icon={<AuditOutlined />}>Bulk Verification</Button>
+          </div>
+          <Table 
+            dataSource={filteredDocs}
+            rowKey="id"
+            columns={[
+              { title: 'Doc ID', dataIndex: 'id', key: 'id', width: 100 },
+              { title: 'Driver', dataIndex: 'driver', key: 'driver', width: 150, render: (t) => <Text strong>{t}</Text> },
+              { title: 'Document Type', dataIndex: 'doc', key: 'doc', width: 180 },
+              { title: 'Category', dataIndex: 'type', key: 'type', width: 120, render: (t) => <Tag>{t}</Tag> },
+              { title: 'Expiry Date', dataIndex: 'expiry', key: 'expiry', width: 120 },
+              { 
+                title: 'Status', 
+                dataIndex: 'status', 
+                key: 'status',
+                width: 120,
+                render: (s) => (
+                  <Tag color={s === 'Verified' ? 'success' : s === 'Pending' ? 'warning' : 'error'} icon={s === 'Verified' ? <CheckCircleOutlined /> : s === 'Pending' ? <SyncOutlined spin /> : <CloseCircleOutlined />}>
+                    {s}
+                  </Tag>
+                )
+              },
+              {
+                title: 'Actions',
+                key: 'actions',
+                width: 200,
+                fixed: 'right',
+                render: (_, record) => (
+                  <Space>
+                    <Button size="small" icon={<FileSearchOutlined />}>View</Button>
+                    {record.status === 'Pending' && (
+                      <>
+                        <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleVerify(record.id, 'Verified')} />
+                        <Button size="small" danger icon={<CloseOutlined />} onClick={() => handleVerify(record.id, 'Rejected')} />
+                      </>
+                    )}
+                  </Space>
+                )
+              }
+            ]}
+            scroll={{ x: 1000 }}
+          />
+        </Card>
+      </div>
+    );
+  };
 
   const FinancialTab = () => (
     <div style={{ marginTop: 20 }}>
@@ -525,7 +569,13 @@ export const DriverManagementHub: React.FC = () => {
 
   const IncidentsTab = () => (
     <div style={{ marginTop: 20 }}>
-      <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
+      <Card 
+        variant="borderless" 
+        className="shadow-sm" 
+        style={{ borderRadius: 16 }}
+        title={<Space><WarningOutlined style={{ color: '#ef4444' }} /> Critical Safety Incidents</Space>}
+        extra={<Button type="primary" danger icon={<PlusOutlined />} onClick={() => setIsIncidentModalOpen(true)}>Report Incident</Button>}
+      >
         <Table 
           dataSource={[
             { id: 'INC-101', driver: 'John M.', type: 'Accident', severity: 'High', status: 'Under Investigation', date: '14 Mar' },
@@ -645,22 +695,100 @@ export const DriverManagementHub: React.FC = () => {
     </div>
   );
 
-  const PerformanceTab = () => (
-    <div style={{ marginTop: 20 }}>
-      <Row gutter={[24, 24]}>
-        <Col span={6}><Card className="shadow-sm"><Statistic title="Driver Utilization" value={78} suffix="%" valueStyle={{ color: '#3b82f6' }} /></Card></Col>
-        <Col span={6}><Card className="shadow-sm"><Statistic title="Avg Trips/Day" value={14.5} /></Card></Col>
-        <Col span={6}><Card className="shadow-sm"><Statistic title="Cancellation Rate" value={3.2} suffix="%" valueStyle={{ color: '#ff4d4f' }} /></Card></Col>
-        <Col span={6}><Card className="shadow-sm"><Statistic title="Acceptance Rate" value={98} suffix="%" valueStyle={{ color: '#10b981' }} /></Card></Col>
-      </Row>
-      <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16, marginTop: 24, padding: 24 }}>
-        <Title level={5}><BarChartOutlined /> Weekly Trip Volume Performance</Title>
-        <div style={{ height: 300, background: '#f8fafc', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Text type="secondary">Performance Visualization Layer (KPI Engine) Loading...</Text>
-        </div>
-      </Card>
-    </div>
-  );
+  const PerformanceTab = () => {
+    const weeklyData = [
+      { name: 'Mon', trips: 120, earnings: 450, cancellations: 2 },
+      { name: 'Tue', trips: 150, earnings: 520, cancellations: 5 },
+      { name: 'Wed', trips: 180, earnings: 680, cancellations: 3 },
+      { name: 'Thu', trips: 140, earnings: 490, cancellations: 8 },
+      { name: 'Fri', trips: 220, earnings: 850, cancellations: 4 },
+      { name: 'Sat', trips: 280, earnings: 1100, cancellations: 10 },
+      { name: 'Sun', trips: 210, earnings: 780, cancellations: 6 },
+    ];
+
+    const ratingData = [
+      { name: '5 Stars', value: 85, fill: '#10b981' },
+      { name: '4 Stars', value: 10, fill: '#3b82f6' },
+      { name: '3 Stars', value: 3, fill: '#faad14' },
+      { name: '2 Stars', value: 1, fill: '#f59e0b' },
+      { name: '1 Star', value: 1, fill: '#ff4d4f' },
+    ];
+
+    return (
+      <div style={{ marginTop: 20 }}>
+        <Row gutter={[24, 24]}>
+          <Col span={6}><Card className="shadow-sm"><Statistic title="Driver Utilization" value={78} suffix="%" valueStyle={{ color: '#3b82f6' }} /></Card></Col>
+          <Col span={6}><Card className="shadow-sm"><Statistic title="Avg Trips/Day" value={14.5} /></Card></Col>
+          <Col span={6}><Card className="shadow-sm"><Statistic title="Cancellation Rate" value={3.2} suffix="%" valueStyle={{ color: '#ff4d4f' }} /></Card></Col>
+          <Col span={6}><Card className="shadow-sm"><Statistic title="Acceptance Rate" value={98} suffix="%" valueStyle={{ color: '#10b981' }} /></Card></Col>
+        </Row>
+        
+        <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+          <Col span={16}>
+            <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16, height: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+                <Title level={5}><BarChartOutlined /> Weekly Volume & Earnings</Title>
+                <Segmented options={['Trips', 'Earnings']} />
+              </div>
+              <div style={{ height: 350 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weeklyData}>
+                    <defs>
+                      <linearGradient id="colorTrips" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                    <Area type="monotone" dataKey="trips" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorTrips)" />
+                    <Area type="monotone" dataKey="earnings" stroke="#10b981" strokeWidth={3} fillOpacity={0} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16, height: '100%' }}>
+              <Title level={5}>Rating Mix</Title>
+              <div style={{ height: 250 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={ratingData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {ratingData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ marginTop: 20 }}>
+                {ratingData.map(item => (
+                  <div key={item.name} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Space><div style={{ width: 10, height: 10, borderRadius: 2, background: item.fill }} /> <Text style={{ fontSize: 12 }}>{item.name}</Text></Space>
+                    <Text strong>{item.value}%</Text>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    );
+  };
 
   const items = [
     { key: '1', label: <Space><UserOutlined /> Driver List</Space>, children: <ListTab /> },
@@ -884,7 +1012,7 @@ export const DriverManagementHub: React.FC = () => {
                           { title: 'Pickup - Dropoff', key: 'route', render: (_, r) => (
                             <div style={{ maxWidth: 250 }}>
                               <Text style={{ fontSize: 13 }}>{r.pickup}</Text><br/>
-                              <Text type="secondary" style={{ fontSize: 11 }}>→ {r.dropoff}</Text>
+                              <Text type="secondary" style={{ fontSize: 11 }}>â†’ {r.dropoff}</Text>
                             </div>
                           )},
                           { title: 'Details', key: 'details', render: (_, r) => (
@@ -1008,7 +1136,7 @@ export const DriverManagementHub: React.FC = () => {
               </Col>
               <Col span={12}>
                 <Form.Item name="lastName" label="Last name *" rules={[{ required: true }]}>
-                  <Input placeholder="Ex: Schwarzmüller" />
+                  <Input placeholder="Ex: SchwarzmÃ¼ller" />
                 </Form.Item>
               </Col>
             </Row>
@@ -1181,6 +1309,69 @@ export const DriverManagementHub: React.FC = () => {
             rules={[{ required: true, message: 'Please provide a reason for deletion' }]}
           >
             <Input.TextArea placeholder="Provide a reason for deleting this driver profile..." rows={4} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={<Space><WarningOutlined style={{ color: '#ff4d4f' }} /> Report New Safety Incident</Space>}
+        open={isIncidentModalOpen}
+        onCancel={() => { setIsIncidentModalOpen(false); incidentForm.resetFields(); }}
+        onOk={() => incidentForm.submit()}
+        okText="Log Incident"
+        okButtonProps={{ danger: true }}
+        centered
+        width={600}
+      >
+        <Form form={incidentForm} layout="vertical" onFinish={(values) => {
+          antdMessage.success(`Incident ${values.type} reported for ${values.driverName}`);
+          setIsIncidentModalOpen(false);
+          incidentForm.resetFields();
+        }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="driverName" label="Driver Name / ID" rules={[{ required: true }]}>
+                <Input placeholder="Enter driver identification" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="type" label="Incident Type" rules={[{ required: true }]}>
+                <Select placeholder="Select type">
+                  <Select.Option value="Accident">Accident</Select.Option>
+                  <Select.Option value="Verbal Abuse">Verbal Abuse</Select.Option>
+                  <Select.Option value="Fraud">Fraud</Select.Option>
+                  <Select.Option value="Reckless Driving">Reckless Driving</Select.Option>
+                  <Select.Option value="Other">Other</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="severity" label="Severity" rules={[{ required: true }]} initialValue="Low">
+                <Select>
+                  <Select.Option value="Critical">Critical</Select.Option>
+                  <Select.Option value="High">High</Select.Option>
+                  <Select.Option value="Medium">Medium</Select.Option>
+                  <Select.Option value="Low">Low</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="date" label="Incident Date" rules={[{ required: true }]}>
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="description" label="Detailed Description" rules={[{ required: true }]}>
+            <Input.TextArea rows={4} placeholder="Describe exactly what happened..." />
+          </Form.Item>
+          <Form.Item label="Evidence / Photos">
+            <div style={{ border: '1px dashed #d9d9d9', padding: '20px', textAlign: 'center', borderRadius: 8 }}>
+              <CloudUploadOutlined style={{ fontSize: 24, color: '#94a3b8', marginBottom: 8 }} />
+              <br />
+              <Button size="small">Upload Files</Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>

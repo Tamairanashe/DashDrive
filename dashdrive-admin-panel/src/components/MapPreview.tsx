@@ -1,21 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Polygon, Marker, useMap, Circle, Polyline, Popup } from 'react-leaflet';
-import { Maximize2, X, Navigation, MapPin, Car, Bike, User, Layers } from 'lucide-react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { Polygon, Marker, useMap, Circle, Polyline, Popup } from 'react-leaflet';
+import { BaseMap } from '../components/BaseMap';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../utils';
 
-// Fix for default marker icons
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
- iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
- iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
- shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { Maximize2, X, Navigation, MapPin, Car, Bike, User, Layers } from 'lucide-react';
+import L from 'leaflet';
 
-// 🔄 Map Synchronization & Resize Helper
+// ðŸ”„ Map Synchronization & Resize Helper
 const MapAutoResizer = ({ isFullscreen }: { isFullscreen: boolean }) => {
  const map = useMap();
  useEffect(() => {
@@ -51,7 +43,7 @@ const createLabeledIcon = (name: string, color: string = '#00C4B4') => {
 };
 
 interface MapPreviewProps {
- type: 'point' | 'polygon' | 'circle' | 'order-route';
+ type: 'point' | 'polygon' | 'circle' | 'order-route' | 'heat-map';
  data: any;
  status?: string;
  label?: string;
@@ -122,68 +114,53 @@ export const MapPreview: React.FC<MapPreviewProps> = ({
  isFullscreen ? "w-full h-full rounded-none border-none fixed inset-0 z-[9999]" : "w-16 h-12 cursor-pointer hover:border-primary/50 hover:shadow-md"
  )}
  >
- <MapContainer
- center={center}
- zoom={14}
- style={{ height: '100%', width: '100%' }}
- zoomControl={isFullscreen}
- dragging={isFullscreen}
- touchZoom={isFullscreen}
- doubleClickZoom={isFullscreen}
- scrollWheelZoom={isFullscreen}
- boxZoom={isFullscreen}
- keyboard={isFullscreen}
- attributionControl={isFullscreen}
- >
- <TileLayer
- url={mapType === 'satellite'
- ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
- : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
- }
- />
+  <BaseMap
+  center={center}
+  zoom={14}
+  height="100%"
+  >
+  <MapAutoResizer isFullscreen={isFullscreen} />
 
- <MapAutoResizer isFullscreen={isFullscreen} />
+  {type === 'point' && <Marker position={data} />}
 
- {type === 'point' && <Marker position={data} />}
+  {type === 'order-route' && (
+  <>
+  <Marker
+  position={data.restaurant}
+  icon={L.divIcon({
+  className: 'origin-icon',
+  html: '<div class="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg animate-pulse"></div>',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8]
+  })}
+  />
+  <Marker position={data.customer} />
+  <Polyline
+  positions={[data.restaurant, data.customer]}
+  pathOptions={{
+  color: '#3b82f6',
+  weight: 2,
+  dashArray: '5, 10',
+  opacity: 0.4
+  }}
+  />
+  </>
+  )}
 
- {type === 'order-route' && (
- <>
- <Marker
- position={data.restaurant}
- icon={L.divIcon({
- className: 'origin-icon',
- html: '<div class="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg animate-pulse"></div>',
- iconSize: [16, 16],
- iconAnchor: [8, 8]
- })}
- />
- <Marker position={data.customer} />
- <Polyline
- positions={[data.restaurant, data.customer]}
- pathOptions={{
- color: '#3b82f6',
- weight: 2,
- dashArray: '5, 10',
- opacity: 0.4
- }}
- />
- </>
- )}
+  {type === 'polygon' && (
+  <Polygon
+  positions={data}
+  pathOptions={{
+  fillColor: status === 'Active' ? '#00C4B4' : '#64748b',
+  fillOpacity: 0.3,
+  color: status === 'Active' ? '#00C4B4' : '#64748b',
+  weight: isFullscreen ? 3 : 1
+  }}
+  />
+  )}
 
- {type === 'polygon' && (
- <Polygon
- positions={data}
- pathOptions={{
- fillColor: status === 'Active' ? '#00C4B4' : '#64748b',
- fillOpacity: 0.3,
- color: status === 'Active' ? '#00C4B4' : '#64748b',
- weight: isFullscreen ? 3 : 1
- }}
- />
- )}
-
- <FitBounds points={getPointsForBounds()} />
- </MapContainer>
+  <FitBounds points={getPointsForBounds()} />
+  </BaseMap>
 
  {/* UI Overlays */}
  {!isFullscreen ? (

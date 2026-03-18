@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
     Table, 
     Tag, 
@@ -111,13 +111,13 @@ export const ParcelOrders: React.FC = () => {
     const getStatusBadge = (status: ParcelOrder['status']) => {
         switch (status) {
             case 'Picked Up':
-                return <Tag icon={<InboxOutlined />} color="blue">📦 Picked Up</Tag>;
+                return <Tag icon={<InboxOutlined />} color="blue">ðŸ“¦ Picked Up</Tag>;
             case 'In Transit':
-                return <Tag icon={<SyncOutlined spin />} color="processing">🚚 In Transit</Tag>;
+                return <Tag icon={<SyncOutlined spin />} color="processing">ðŸšš In Transit</Tag>;
             case 'Delivered':
-                return <Tag icon={<CheckCircleOutlined />} color="success">✅ Delivered</Tag>;
+                return <Tag icon={<CheckCircleOutlined />} color="success">âœ… Delivered</Tag>;
             case 'Bidding':
-                return <Tag color="blue">🤝 Bidding</Tag>;
+                return <Tag color="blue">ðŸ¤ Bidding</Tag>;
             case 'Pending':
                 return <Badge status="warning" text="Pending" />;
             case 'Assigned':

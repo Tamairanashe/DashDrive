@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Typography, Tabs, Card, Row, Col, Statistic } from 'antd';
 import { ShopOutlined, UnorderedListOutlined, TagOutlined, DollarOutlined, ClockCircleOutlined, GlobalOutlined, SettingOutlined } from '@ant-design/icons';
 import { RestaurantManagement } from '../components/RestaurantManagement';

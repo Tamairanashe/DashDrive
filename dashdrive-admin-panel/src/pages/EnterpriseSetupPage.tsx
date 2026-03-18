@@ -55,7 +55,7 @@ export const EnterpriseSetupPage: React.FC = () => {
     currencyPosition: 'left',
     decimalPoints: 2,
     tradeLicense: 'DL-2024-987654',
-    copyright: '© 2024 DashDrive. All rights reserved.',
+    copyright: 'Â© 2024 DashDrive. All rights reserved.',
     primaryColor: '#0e172a',
     secondaryColor: '#3b82f6',
     textDark: '#1e293b',
@@ -168,10 +168,10 @@ export const EnterpriseSetupPage: React.FC = () => {
     increaseFareForScheduled: true,
     scheduledFareIncreasePercent: 50,
     cancellationReasons: [
-      { key: '1', reason: 'Couldn’t find or contact customer', type: 'Before Pickup', user: 'Driver', status: true },
+      { key: '1', reason: 'Couldnâ€™t find or contact customer', type: 'Before Pickup', user: 'Driver', status: true },
       { key: '2', reason: 'Customer asked to cancel', type: 'Ongoing Ride', user: 'Driver', status: true },
-      { key: '3', reason: 'Couldn’t reach to the customer for heavy jam', type: 'Before Pickup', user: 'Driver', status: true },
-      { key: '4', reason: 'Customer didn’t arrived at pickup point', type: 'Before Pickup', user: 'Driver', status: true },
+      { key: '3', reason: 'Couldnâ€™t reach to the customer for heavy jam', type: 'Before Pickup', user: 'Driver', status: true },
+      { key: '4', reason: 'Customer didnâ€™t arrived at pickup point', type: 'Before Pickup', user: 'Driver', status: true },
       { key: '5', reason: 'Vehicle problem', type: 'Ongoing Ride', user: 'Driver', status: true },
       { key: '6', reason: 'Driver asked me to cancel', type: 'Ongoing Ride', user: 'Customer', status: true },
       { key: '7', reason: 'Driver want extra fare', type: 'Ongoing Ride', user: 'Customer', status: true },
@@ -190,12 +190,12 @@ export const EnterpriseSetupPage: React.FC = () => {
     enableParcelWeightLimit: true,
     maxParcelWeightLimit: 100,
     parcelCancellationReasons: [
-      { key: '1', reason: 'Couldn’t reach to the destination for heavy jam', type: 'Ongoing Ride', user: 'Customer', status: true },
+      { key: '1', reason: 'Couldnâ€™t reach to the destination for heavy jam', type: 'Ongoing Ride', user: 'Customer', status: true },
       { key: '2', reason: 'Driver want extra fare', type: 'Before Pickup', user: 'Customer', status: true },
       { key: '3', reason: 'Driver asked me to cancel', type: 'Before Pickup', user: 'Customer', status: true },
-      { key: '4', reason: 'Couldn’t reach to the customer for heavy jam', type: 'Ongoing Ride', user: 'Driver', status: true },
+      { key: '4', reason: 'Couldnâ€™t reach to the customer for heavy jam', type: 'Ongoing Ride', user: 'Driver', status: true },
       { key: '5', reason: 'Customer asked to cancel', type: 'Ongoing Ride', user: 'Driver', status: true },
-      { key: '6', reason: 'Couldn’t find or contact customer', type: 'Before Pickup', user: 'Driver', status: true },
+      { key: '6', reason: 'Couldnâ€™t find or contact customer', type: 'Before Pickup', user: 'Driver', status: true },
     ],
 
     // Ecommerce Settings
@@ -274,9 +274,9 @@ export const EnterpriseSetupPage: React.FC = () => {
       { key: '10', reason: "The driver strayed significantly from the assigned route", user: 'Customer', status: true },
     ],
     safetyPrecautions: [
-      { key: '1', user: 'Driver', title: 'Check Trip Route Regularly', description: 'Keep an eye on the route within the app to ensure you’re heading in the right direction.', status: true },
+      { key: '1', user: 'Driver', title: 'Check Trip Route Regularly', description: 'Keep an eye on the route within the app to ensure youâ€™re heading in the right direction.', status: true },
       { key: '2', user: 'Customer, Driver', title: 'Trust Your Instincts', description: 'Safety is priority. If you feel unsafe, cancel the trip and alert the admin.', status: true },
-      { key: '3', user: 'Customer', title: 'Verify Driver and Vehicle Details', description: 'Double-check the driver’s name, vehicle model, and license plate before starting.', status: true },
+      { key: '3', user: 'Customer', title: 'Verify Driver and Vehicle Details', description: 'Double-check the driverâ€™s name, vehicle model, and license plate before starting.', status: true },
     ],
 
     // Referral Settings
@@ -462,10 +462,10 @@ export const EnterpriseSetupPage: React.FC = () => {
                           <Tooltip title="Zoom In"><Button size="small" icon={<PlusOutlined />} /></Tooltip>
                           <Tooltip title="Zoom Out"><Button size="small">-</Button></Tooltip>
                           <Divider type="vertical" />
-                          <Tooltip title="Move Up"><Button size="small">↑</Button></Tooltip>
-                          <Tooltip title="Move Down"><Button size="small">↓</Button></Tooltip>
-                          <Tooltip title="Move Left"><Button size="small">←</Button></Tooltip>
-                          <Tooltip title="Move Right"><Button size="small">→</Button></Tooltip>
+                          <Tooltip title="Move Up"><Button size="small">â†‘</Button></Tooltip>
+                          <Tooltip title="Move Down"><Button size="small">â†“</Button></Tooltip>
+                          <Tooltip title="Move Left"><Button size="small">â†</Button></Tooltip>
+                          <Tooltip title="Move Right"><Button size="small">â†’</Button></Tooltip>
                           <Divider type="vertical" />
                           <Tooltip title="Expand Map"><Button size="small" icon={<GlobalOutlined />} /></Tooltip>
                         </Space>
@@ -2052,15 +2052,15 @@ export const EnterpriseSetupPage: React.FC = () => {
           </Tabs.TabPane>
 
           {/* ============================================================ */}
-          {/* TAB 10: URBAN HUB                                           */}
+          {/* TAB 10: CITY TO CITY                                        */}
           {/* ============================================================ */}
-          <Tabs.TabPane tab={<Space><NodeIndexOutlined /> Urban Hub</Space>} key="urban">
+          <Tabs.TabPane tab={<Space><NodeIndexOutlined /> City to City</Space>} key="urban">
             <div style={{ padding: '16px 0' }}>
               <Row gutter={[24, 24]}>
-                <Col xs={24} lg={12}>
-                  {/* PUBLIC TRANSPORT */}
+                <Col xs={24} lg={24}>
+                  {/* CITY TO CITY */}
                   <Card
-                    title={<Space><NodeIndexOutlined /> Public Transport Infrastructure</Space>}
+                    title={<Space><NodeIndexOutlined /> City to City Logistics</Space>}
                     style={{ borderRadius: 12, marginBottom: 24 }}
                     styles={{ header: { background: '#fafafa', borderRadius: '12px 12px 0 0', fontWeight: 600 } }}
                   >
@@ -2084,36 +2084,6 @@ export const EnterpriseSetupPage: React.FC = () => {
                       description="Ensure GTFS feeds are configured in System Settings for live schedule sync."
                       style={{ marginTop: 16, borderRadius: 8 }}
                     />
-                  </Card>
-                </Col>
-
-                <Col xs={24} lg={12}>
-                  {/* FUEL SERVICES */}
-                  <Card
-                    title={<Space><ThunderboltOutlined /> Fuel & Energy Services</Space>}
-                    style={{ borderRadius: 12 }}
-                    styles={{ header: { background: '#fafafa', borderRadius: '12px 12px 0 0', fontWeight: 600 } }}
-                  >
-                    <Form.Item label="Unit Price Update Mode" name="fuelUnitPriceMode" tooltip="Auto: Sync with global oil price index; Manual: Admin sets price per liter/kWh.">
-                      <Select>
-                        <Option value="Auto">Automatic (API Sync)</Option>
-                        <Option value="Manual">Manual Entry</Option>
-                      </Select>
-                    </Form.Item>
-
-                    <Form.Item label="Super Loyalty Multiplier" name="fuelLoyaltyMultiplier" tooltip="Extra points awarded for fuel purchases paid via DashWallet.">
-                      <InputNumber prefix="x" step={0.1} min={1} style={{ width: '100%' }} />
-                    </Form.Item>
-
-                    <Divider />
-                    
-                    <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Energy Category Controls</Typography.Text>
-                    <Space wrap>
-                      <Tag color="orange">Petrol</Tag>
-                      <Tag color="blue">Diesel</Tag>
-                      <Tag color="green">EV Charging</Tag>
-                      <Tag color="red">Gas (LPG)</Tag>
-                    </Space>
                   </Card>
                 </Col>
               </Row>

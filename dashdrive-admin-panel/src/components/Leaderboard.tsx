@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Trophy, Medal } from 'lucide-react';
 import { cn } from '../utils';
 import { Tabs } from 'antd';
@@ -22,7 +22,7 @@ export const Leaderboard = () => {
  <h3 className="text-lg font-bold text-slate-800">Leader Board</h3>
  </div>
 
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab.id || tab.name || tab, label: tab.name || tab.label || tab.title || tab.id || tab }))} className="mb-6 font-bold" />
+ <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
 
  <div className="flex justify-between items-end mb-8 px-4">
  {/* 2nd Place */}
@@ -73,7 +73,7 @@ export const Leaderboard = () => {
  </div>
  <div className="flex items-center gap-1">
  <span className="text-xs font-bold text-slate-700">{user.rating}</span>
- <span className="text-yellow-400 text-xs">★</span>
+ <span className="text-yellow-400 text-xs">â˜…</span>
  </div>
  </div>
  ))}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -370,7 +370,7 @@ export const FleetView = ({
                                         <div>
                                             <h4 className="text-sm font-bold text-slate-800">{activeTab === 'Drivers' ? (selectedEntity as any).driver : (selectedEntity as any).name}</h4>
                                             <p className="text-[10px] text-slate-500 font-medium ">
-                                                {activeTab === 'Drivers' ? `${(selectedEntity as any).level} • ${(selectedEntity as any).id}` : `Customer • ${(selectedEntity as any).id}`}
+                                                {activeTab === 'Drivers' ? `${(selectedEntity as any).level} â€¢ ${(selectedEntity as any).id}` : `Customer â€¢ ${(selectedEntity as any).id}`}
                                             </p>
                                         </div>
                                     </div>
@@ -392,7 +392,7 @@ export const FleetView = ({
                                         <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
                                             <p className="text-[10px] text-slate-400 font-bold mb-1">Rating</p>
                                             <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                                                {activeTab === 'Drivers' ? (selectedEntity as any).rating : '4.5'} <span className="text-yellow-400">★</span>
+                                                {activeTab === 'Drivers' ? (selectedEntity as any).rating : '4.5'} <span className="text-yellow-400">â˜…</span>
                                             </span>
                                         </div>
                                     </div>

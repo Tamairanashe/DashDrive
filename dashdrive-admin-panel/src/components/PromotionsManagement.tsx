@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Ticket,
  Percent,
@@ -101,7 +101,7 @@ export const PromotionsManagement: React.FC = () => {
  </div>
 
  <div className="bg-white p-6 rounded-[32px] shadow-soft border border-slate-100/50 flex flex-col md:flex-row items-center justify-between gap-6">
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab.id || tab.name || tab, label: tab.name || tab.label || tab.title || tab.id || tab }))} className="mb-6 font-bold" />
+ <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
  <div className="relative w-full md:w-72 group">
  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
  <input
@@ -222,7 +222,7 @@ const HighlightCard: React.FC<{ title: string; value: string; sub: string; icon:
  color === 'emerald' ? "bg-emerald-50 text-emerald-500 shadow-emerald-500/5" :
  "bg-purple-50 text-purple-500 shadow-purple-500/5"
  )}>
- {React.cloneElement(icon as React.ReactElement, { className: "w-5 h-5" })}
+ <span className="w-5 h-5">{icon}</span>
  </div>
  <div>
  <p className="text-[10px] font-bold text-slate-400 font-small-caps tracking-[0.2em]">{title}</p>

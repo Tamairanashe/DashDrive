@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
- User, Phone, Mail, CheckCircle2, XCircle,
- TrendingUp, Star, Download, FileText,
- Search, Filter, ChevronRight, ArrowLeft,
- CreditCard, History, ShieldCheck, AlertCircle,
- Eye, MoreVertical, Zap, Car, Utensils,
- ShoppingBag, Box, MessageSquare, ShieldAlert,
- Wallet, Award, Clock
+  User, Phone, Mail, CheckCircle2, XCircle,
+  TrendingUp, Star, Download, FileText,
+  Search, Filter, ChevronRight, ArrowLeft,
+  CreditCard, History, ShieldCheck, AlertCircle,
+  Eye, MoreVertical, Zap, Car, Utensils,
+  ShoppingBag, Box, MessageSquare, ShieldAlert,
+  Wallet, Award, Clock, Edit, Activity, Plus,
+  ArrowUpRight
 } from 'lucide-react';
 import { cn } from '../utils';
 import { Tabs } from 'antd';

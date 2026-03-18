@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { DriverVerification } from '../components/DriverVerification';
 
 export const DriverVerificationPage: React.FC = () => {

@@ -46,7 +46,7 @@ import { OfferMatchingEngine, FinancialProduct, UserProfile, MatchingResult, Eng
 
 const { Title, Text } = Typography;
 
-export const GrowthEnginePage: React.FC = () => {
+export const MarketingGrowthEngine: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [engineConfig, setEngineConfig] = useState<EngineConfig>(DEFAULT_ENGINE_CONFIG);
   const [simulationResults, setSimulationResults] = useState<MatchingResult[]>([]);
@@ -374,9 +374,9 @@ export const GrowthEnginePage: React.FC = () => {
                         <List 
                           itemLayout="horizontal"
                           dataSource={[
-                            { title: '100 trips → $50 bonus', description: 'Progress: 42 drivers qualified' },
-                            { title: 'Weekend bonus → $40', description: 'Starting Friday 6PM' },
-                            { title: 'Peak hour incentive → $3 per ride', description: 'Active in CBD zones' },
+                            { title: '100 trips â†’ $50 bonus', description: 'Progress: 42 drivers qualified' },
+                            { title: 'Weekend bonus â†’ $40', description: 'Starting Friday 6PM' },
+                            { title: 'Peak hour incentive â†’ $3 per ride', description: 'Active in CBD zones' },
                           ]}
                           renderItem={(item) => (
                             <List.Item actions={[<Button type="link">Edit</Button>]}>

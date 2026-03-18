@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Table, 
   Tag, 
@@ -91,7 +91,7 @@ export const DriverListPage: React.FC = () => {
             <Avatar src={record.avatar} icon={<UserOutlined />} />
             <div>
               <Text strong style={{ fontSize: 13 }}>{record.name}</Text>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>ID: {record.id} • {record.vehicle}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>ID: {record.id} â€¢ {record.vehicle}</div>
             </div>
           </Space>
         ),

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
  Landmark,
  HandCoins,
@@ -134,7 +134,7 @@ export const Loans: React.FC = () => {
  loan.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : loan.status === 'Pending' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-rose-50 text-rose-600 border-rose-100'
  )}>
  {loan.status === 'Default' ? <AlertCircle className="w-3 h-3" /> : (loan.status === 'Active' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />)}
- {loan.status} • {loan.risk}
+ {loan.status} â€¢ {loan.risk}
  </div>
  </td>
  <td className="px-8 py-6 text-right">

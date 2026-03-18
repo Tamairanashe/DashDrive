@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Rocket, Mail, Lock, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
@@ -129,7 +129,7 @@ export const LoginPage = () => {
                             <button className="text-xs font-bold text-zinc-400 hover:text-black transition-colors">Privacy</button>
                             <button className="text-xs font-bold text-zinc-400 hover:text-black transition-colors">Terms</button>
                         </div>
-                        <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest">© 2026 DashDrive</p>
+                        <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest">Â© 2026 DashDrive</p>
                     </div>
                 </motion.div>
             </div>

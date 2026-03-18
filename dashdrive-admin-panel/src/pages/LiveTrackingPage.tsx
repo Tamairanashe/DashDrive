@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Typography, Row, Col, Card, Space, Input, Button, Timeline, 
   Descriptions, Tag, Avatar, Badge, message, Divider, Alert, Tooltip, List, Statistic
@@ -9,19 +9,12 @@ import {
   CompassOutlined, SyncOutlined, SwapOutlined, WarningOutlined,
   PlayCircleOutlined, PauseCircleOutlined, ExpandOutlined
 } from '@ant-design/icons';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { BaseMap } from '../components/BaseMap';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
 const { Title, Text } = Typography;
 
-// Fix Leaflet icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
 
 const driverIcon = new L.DivIcon({
     className: 'driver-marker',
@@ -208,9 +201,7 @@ export const LiveTrackingPage: React.FC = () => {
                     {/* Map View - ALWAYS SHOWING */}
                     <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 0, height: '100%', minHeight: 400, position: 'relative', overflow: 'hidden', flex: 1 }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
-                            <MapContainer center={[-17.824858, 31.053028]} zoom={13} zoomControl={false} style={{ height: '100%', width: '100%' }}>
-                                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
-                                
+                            <BaseMap center={[-17.824858, 31.053028]} zoom={13}>
                                 <MapFitter bounds={bounds} />
 
                                 {activeTrip ? (
@@ -245,7 +236,7 @@ export const LiveTrackingPage: React.FC = () => {
                                         </Marker>
                                     ))
                                 )}
-                            </MapContainer>
+                            </BaseMap>
                         </div>
 
                         {/* Top Left Tooltip */}

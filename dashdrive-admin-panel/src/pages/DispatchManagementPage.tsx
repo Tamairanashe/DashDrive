@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Typography, Row, Col, Card, Space, Switch, Slider, 
   Table, Tag, Button, Statistic, Divider, message, 
@@ -399,7 +399,7 @@ export const DispatchManagementPage: React.FC = () => {
                     <List.Item.Meta 
                       avatar={<Avatar icon={<UserOutlined />} />}
                       title={<Space><Text strong>{item.name}</Text> <Tag color="green">{item.score}% Match</Tag></Space>}
-                      description={`${item.distance} away • ETA ${item.eta}`}
+                      description={`${item.distance} away â€¢ ETA ${item.eta}`}
                     />
                   </List.Item>
                 )}

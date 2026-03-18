@@ -12,6 +12,9 @@ import { InspectionsModule } from './modules/inspections/inspections.module';
 import { FinancialsModule } from './modules/financials/financials.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { CityToCityModule } from './modules/city-to-city/city-to-city.module';
+import { LocalRidesModule } from './modules/local-rides/local-rides.module';
+import { TrustModule } from './modules/trust/trust.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { MessagesModule } from './modules/messages/messages.module';
     FinancialsModule,
     FavoritesModule,
     MessagesModule,
+    CityToCityModule,
+    LocalRidesModule,
+    TrustModule,
   ],
 
   controllers: [AppController],

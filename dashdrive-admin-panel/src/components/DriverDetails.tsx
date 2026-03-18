@@ -344,7 +344,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
           <div>
             <Title level={4} style={{ margin: 0 }}>Driver Profile: {driverData.name}</Title>
             <Space>
-              <Text type="secondary">ID: {driverData.id} • Joined {driverData.joinDate}</Text>
+              <Text type="secondary">ID: {driverData.id} â€¢ Joined {driverData.joinDate}</Text>
               <Badge status={status === 'Active' ? 'success' : 'error'} text={status} />
             </Space>
           </div>
@@ -477,7 +477,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
           <Card bordered={false} className="shadow-sm" style={{ marginTop: 24 }}>
             <Tabs 
               activeKey={activeTab} 
-              onChange={setActiveTab}
+              onChange={(k) => setActiveTab(k as any)}
               items={[
                 {
                   key: 'Overview',
@@ -586,10 +586,10 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                   children: (
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Text strong style={{ fontSize: 13 }}>Trip Completed — ORD-991</Text>
+                        <Text strong style={{ fontSize: 13 }}>Trip Completed â€” ORD-991</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>Today, 02:15 PM</Text>
                       </div>
-                      <Text type="secondary" style={{ fontSize: 12 }}>Samora Machel Ave → Borrowdale Rd • $25.00 • 4.2 km</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Samora Machel Ave â†’ Borrowdale Rd â€¢ $25.00 â€¢ 4.2 km</Text>
                     </div>
                   ),
                 },
@@ -601,7 +601,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                         <Text strong style={{ fontSize: 13 }}>Payout Processed</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>Today, 11:30 AM</Text>
                       </div>
-                      <Text type="secondary" style={{ fontSize: 12 }}>$450.75 disbursed to Steward Bank ••3445</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>$450.75 disbursed to Steward Bank â€¢â€¢3445</Text>
                     </div>
                   ),
                 },
@@ -610,10 +610,10 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                   children: (
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Text strong style={{ fontSize: 13 }}>Trip Completed — ORD-992</Text>
+                        <Text strong style={{ fontSize: 13 }}>Trip Completed â€” ORD-992</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>Today, 10:48 AM</Text>
                       </div>
-                      <Text type="secondary" style={{ fontSize: 12 }}>Churchill Ave → Second St • $18.50 • 2.8 km</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Churchill Ave â†’ Second St â€¢ $18.50 â€¢ 2.8 km</Text>
                     </div>
                   ),
                 },
@@ -625,7 +625,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                         <Text strong style={{ fontSize: 13 }}>Document Expiry Warning</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>Yesterday, 09:00 AM</Text>
                       </div>
-                      <Text type="secondary" style={{ fontSize: 12 }}>Motor Insurance expires on 2024-04-20 — renewal required</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Motor Insurance expires on 2024-04-20 â€” renewal required</Text>
                     </div>
                   ),
                 },
@@ -634,10 +634,10 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                   children: (
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Text strong style={{ fontSize: 13 }}>Trip Cancelled — ORD-993</Text>
+                        <Text strong style={{ fontSize: 13 }}>Trip Cancelled â€” ORD-993</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>Yesterday, 05:50 PM</Text>
                       </div>
-                      <Text type="secondary" style={{ fontSize: 12 }}>Cancelled by Customer • Leopold Takawira → King George Rd</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Cancelled by Customer â€¢ Leopold Takawira â†’ King George Rd</Text>
                     </div>
                   ),
                 },
@@ -887,7 +887,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
       >
         <Tabs
           activeKey={docTab}
-          onChange={setDocTab}
+          onChange={(k) => setDocTab(k as any)}
           items={[
             {
               key: 'Personal',
@@ -923,7 +923,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                                 <Tag color={doc.status === 'Verified' ? 'success' : doc.status === 'Rejected' ? 'error' : 'warning'}>
                                   {doc.status}
                                 </Tag>
-                                {doc.status === 'Rejected' && <Tag color="error" style={{ fontSize: 10 }}>REASON: {doc.rejectionReason || 'Invalid image'}</Tag>}
+                                {doc.status === 'Rejected' && <Tag color="error" style={{ fontSize: 10 }}>REASON: {(doc as any).rejectionReason || 'Invalid image'}</Tag>}
                                 {doc.expiry !== 'N/A' && <Text type="secondary" style={{ fontSize: 12 }}>Expires: {doc.expiry}</Text>}
                               </Space>
                             </div>
@@ -994,7 +994,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                                   <Tag color={doc.status === 'Verified' ? 'success' : doc.status === 'Rejected' ? 'error' : 'warning'}>
                                     {doc.status}
                                   </Tag>
-                                  {doc.status === 'Rejected' && <Tag color="error" style={{ fontSize: 10 }}>REASON: {doc.rejectionReason || 'Invalid image'}</Tag>}
+                                  {doc.status === 'Rejected' && <Tag color="error" style={{ fontSize: 10 }}>REASON: {(doc as any).rejectionReason || 'Invalid image'}</Tag>}
                                   <Text type="secondary" style={{ fontSize: 12 }}>
                                     {doc.status === 'Expiring Soon' ? <Text type="danger">Expires: {doc.expiry}</Text> : `Expires: ${doc.expiry}`}
                                   </Text>

@@ -37,9 +37,9 @@ import { ParcelDeliveryPage } from './pages/ParcelDeliveryPage';
 import { FintechPage } from './pages/FintechPage';
 import { DriverLeaderboardPage } from './pages/DriverLeaderboardPage';
 import { DriverLevelSetupPage } from './pages/DriverLevelSetupPage';
-import { GrowthEnginePage } from './pages/GrowthEnginePage';
-import { FuelServicesPage } from './pages/FuelServicesPage';
-import { PublicTransportPage } from './pages/PublicTransportPage';
+import { CityToCityPage } from './pages/CityToCityPage';
+import { EventsBookingPage } from './pages/EventsBookingPage';
+import { CarRentalManagementPage } from './pages/CarRentalManagementPage';
 import { MarketplaceConfigPage } from './pages/MarketplaceConfigPage';
 import { MarketplaceManagementPage } from './pages/MarketplaceManagementPage';
 import { LoanProductManagement } from './pages/Fintech/LoanProductManagement';
@@ -58,6 +58,7 @@ import FareManagementHub from './pages/FareManagementHub';
 import { DriverBundleHub } from './pages/Fintech/DriverBundleHub';
 import { UtilityPaymentHub } from './pages/Fintech/UtilityPaymentHub';
 import { DashWalletTransfer } from './pages/Fintech/DashWalletTransfer';
+import { MarketingGrowthEngine } from './pages/GrowthEnginePage';
 import { OperationsHubPage } from './pages/OperationsHubPage';
 import { DriverManagementHub } from './pages/DriverManagementHub';
 import { DriverRetentionHub } from './pages/DriverRetentionHub';
@@ -92,12 +93,11 @@ export default function App() {
             <Route path="services/mart" element={<MartDeliveryPage />} />
             <Route path="services/shopping" element={<ShoppingPage />} />
             <Route path="services/parcel" element={<ParcelDeliveryPage />} />
-            <Route path="services/hotels" element={<ServiceConfigPage />} />
-            <Route path="services/events" element={<ServiceConfigPage />} />
-            <Route path="services/rental" element={<ServiceConfigPage />} />
+            <Route path="services/hotels" element={<MarketplaceManagementPage />} />
+            <Route path="services/events" element={<EventsBookingPage />} />
+            <Route path="services/rental" element={<CarRentalManagementPage />} />
             <Route path="services/marketplace" element={<MarketplaceManagementPage />} />
-            <Route path="services/transport" element={<PublicTransportPage />} />
-            <Route path="services/fuel" element={<FuelServicesPage />} />
+            <Route path="services/transport" element={<CityToCityPage />} />
             <Route path="services/payments" element={<FintechPage />} />
             <Route path="services/school-run" element={<SchoolRunMonitoring />} />
             <Route path="services/payments/loans" element={<LoanProductManagement />} />
@@ -151,7 +151,7 @@ export default function App() {
             <Route path="marketing/discounts" element={<MarketingHubPage />} />
             <Route path="marketing/notifications" element={<MarketingHubPage />} />
             <Route path="marketing/newsletter" element={<MarketingHubPage />} />
-            <Route path="marketing/growth-engine" element={<GrowthEnginePage />} />
+            <Route path="marketing/growth-engine" element={<MarketingGrowthEngine />} />
 
             {/* Finance */}
             <Route path="finance/fares" element={<FareManagementHub />} />

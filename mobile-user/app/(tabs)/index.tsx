@@ -263,13 +263,13 @@ export default function HomeScreen() {
 
                     <View className="flex-row gap-4 mb-4">
                         <YangoCard 
-                            label="Airbnb" 
-                            subtitle="Homes"
-                            image={require("../../assets/images/airbnb_home.png")} 
-                            onPress={() => router.push("/airbnb" as any)}
+                            label="C2C" 
+                            subtitle="Inter-City"
+                            image={require("../../assets/images/citytocity.png")} 
+                            onPress={() => router.push("/city-to-city" as any)}
                             containerStyle="flex-1 h-[100px]" 
                             imageStyle={{ width: 110, height: 110, position: 'absolute', right: -20, bottom: -10 }}
-                            bgColor="#FFEBEE"
+                            bgColor="#F1F8E9"
                         />
                         <YangoCard 
                             label="Car Rental" 

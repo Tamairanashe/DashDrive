@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Settings2,
  ToggleLeft,
@@ -114,7 +114,7 @@ export const GeneralConfig: React.FC<GeneralConfigProps> = ({ activeTab: externa
  { label: 'Booking Distance Limit', value: '15.0 km', icon: Flag },
  { label: 'Merchant Comm. Rate', value: '15.0%', icon: CreditCard },
  { label: 'Order Auto-Cancel (min)', value: '10 min', icon: Clock },
- { label: 'Min Wallet Balance', value: '₦ 500.00', icon: Package },
+ { label: 'Min Wallet Balance', value: 'â‚¦ 500.00', icon: Package },
  { label: 'Max Driver Search Radius', value: '5.0 km', icon: Globe },
  { label: 'Idle Timeout', value: '300s', icon: Activity }
  ].map((logic, i) => (

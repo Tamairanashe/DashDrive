@@ -132,7 +132,7 @@ export const MartCategories: React.FC = () => {
  cat.color === 'purple' ? "bg-purple-100 text-purple-600 shadow-purple-100/30" :
  "bg-rose-100 text-rose-600 shadow-rose-100/30"
  )}>
- {React.cloneElement(cat.icon as React.ReactElement, { className: "w-8 h-8" })}
+ <span className="w-8 h-8 flex items-center justify-center">{cat.icon}</span>
  </div>
 
  <div>

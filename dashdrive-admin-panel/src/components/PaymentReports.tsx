@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  FileText,
  Download,
@@ -172,7 +172,7 @@ export const PaymentReports: React.FC = () => {
  </div>
  <div className="flex-1">
  <p className="text-sm font-black text-slate-900 leading-tight">{rep.name}</p>
- <p className="text-[10px] font-bold text-slate-400 ">{rep.freq} • Next: {rep.date}</p>
+ <p className="text-[10px] font-bold text-slate-400 ">{rep.freq} â€¢ Next: {rep.date}</p>
  </div>
  <ChevronDown className="w-4 h-4 text-slate-300 group-hover:text-slate-900 transition-colors" />
  </div>

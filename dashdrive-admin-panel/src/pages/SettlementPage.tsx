@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Typography, 
   Card, 
@@ -253,7 +253,7 @@ export const SettlementPage: React.FC = () => {
 // Internal Helper Components
 const EmptyState = ({ title, description, onAction, loading }: any) => (
   <div style={{ maxWidth: 400, margin: '0 auto' }}>
-    <div style={{ fontSize: 48, marginBottom: 16 }}>📂</div>
+    <div style={{ fontSize: 48, marginBottom: 16 }}>ðŸ“‚</div>
     <Title level={5}>{title}</Title>
     <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>{description}</Text>
     <Button type="primary" size="large" onClick={onAction} loading={loading}>Start Generation</Button>

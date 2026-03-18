@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Table, 
   Card, 
@@ -147,7 +147,7 @@ export const Transactions: React.FC = () => {
             <Text strong style={{ display: 'block' }}>{u}</Text>
             <Space size={4}>
               <Text type="secondary" style={{ fontSize: 11 }}>{tx.id}</Text>
-              <Text type="secondary" style={{ fontSize: 11 }}>•</Text>
+              <Text type="secondary" style={{ fontSize: 11 }}>â€¢</Text>
               <Tag color="blue" bordered={false} style={{ fontSize: 10, lineHeight: '14px', margin: 0 }}>{tx.userType}</Tag>
             </Space>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Card, Typography, Row, Col, Button, Tag, Space, 
   Table, Modal, message, Empty, Progress, Statistic, 
@@ -482,7 +482,7 @@ const MasterOversightTab: React.FC<{ driverBalances: any[] }> = ({ driverBalance
                   <List.Item.Meta
                     avatar={<Avatar icon={<CarOutlined />} style={{ backgroundColor: '#f1f5f9', color: '#64748b' }} />}
                     title={bundle.name}
-                    description={`${bundle.rides} Rides • $${bundle.price}`}
+                    description={`${bundle.rides} Rides â€¢ $${bundle.price}`}
                   />
                 </List.Item>
               )}

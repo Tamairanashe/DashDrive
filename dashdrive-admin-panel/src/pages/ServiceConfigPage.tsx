@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Typography, Row, Col, Card, Tabs, Switch, Form, InputNumber, Button, Divider, message } from 'antd';
 import { CarOutlined, CoffeeOutlined, ShopOutlined, ShoppingOutlined, PushpinOutlined, WalletOutlined, SaveOutlined, BankOutlined, CalendarOutlined, KeyOutlined, ThunderboltOutlined, GlobalOutlined } from '@ant-design/icons';
 
@@ -69,9 +69,9 @@ export const ServiceConfigPage: React.FC = () => {
                         {renderConfigForm('Parcel Delivery', 20, 5.00)}
                     </Tabs.TabPane>
 
-                    <Tabs.TabPane tab={<span><BankOutlined /> Hotels</span>} key="hotels">
-                        <Title level={5}>Hotels Configuration</Title>
-                        {renderConfigForm('Hotels', 10, 0)}
+                    <Tabs.TabPane tab={<span><ShopOutlined /> Marketplace & Stays</span>} key="marketplace">
+                        <Title level={5}>Marketplace & Stays Configuration</Title>
+                        {renderConfigForm('Marketplace & Stays', 10, 0)}
                     </Tabs.TabPane>
 
                     <Tabs.TabPane tab={<span><CalendarOutlined /> Events Booking</span>} key="events">

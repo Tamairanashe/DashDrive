@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Typography, Card, Table, Button, Space, Tag, Input, Modal, Form, InputNumber, Select, Switch, Divider, List } from 'antd';
 import { Trophy, Plus, Edit, Trash2, Award, Star, Zap, Search, HelpCircle } from 'lucide-react';
 

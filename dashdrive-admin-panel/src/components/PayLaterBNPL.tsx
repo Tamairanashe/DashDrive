@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
  CreditCard,
  Zap,
@@ -133,7 +133,7 @@ export const PayLaterBNPL: React.FC = () => {
  acc.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
  )}>
  {acc.status === 'Overdue' ? <AlertTriangle className="w-3 h-3" /> : (acc.risk === 'Low' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />)}
- {acc.status} • {acc.risk} Risk
+ {acc.status} â€¢ {acc.risk} Risk
  </div>
  </td>
  <td className="px-8 py-6 text-right">

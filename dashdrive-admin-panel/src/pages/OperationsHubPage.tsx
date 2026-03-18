@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Typography, Row, Col, Card, Space, Statistic, Tabs, 
   Table, Tag, Button, Badge, Divider, List, Avatar,
@@ -20,9 +20,11 @@ import {
 } from '@ant-design/icons';
 import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
-  ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell, LineChart, Line
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
+  ResponsiveContainer, AreaChart, Area, Cell, PieChart, Pie, LineChart, Line,
+  Legend
 } from 'recharts';
+import { BaseMap } from '../components/BaseMap';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -141,13 +143,6 @@ const MapFitter = ({ bounds }: { bounds: L.LatLngBoundsExpression | null }) => {
     return null;
 };
 
-// Leaflet Icon Fix
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
 
 const driverIcon = new L.DivIcon({
   className: 'driver-marker',
@@ -256,9 +251,7 @@ const OperationsDashboard: React.FC<{
               styles={{ body: { padding: 0, height: 450, position: 'relative' } }}
               style={{ borderRadius: 16, overflow: 'hidden' }}
             >
-               <MapContainer center={[-17.824858, 31.053028]} zoom={13} zoomControl={false} style={{ height: '100%', width: '100%' }}>
-                  <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
-                  
+               <BaseMap center={[-17.824858, 31.053028]} zoom={13} height="100%">
                   {(filter === 'All' || filter === 'Rides') && (
                     <>
                         <Marker position={[-17.824858, 31.053028]} icon={driverIcon} />
@@ -278,7 +271,7 @@ const OperationsDashboard: React.FC<{
                   )}
 
                   <Circle center={[-17.824858, 31.053028]} radius={500} pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.1 }} />
-               </MapContainer>
+               </BaseMap>
                
                {/* Map Overlays */}
                <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 1000 }}>
@@ -600,13 +593,11 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
                 </Space>
               }
             >
-              <MapContainer
+              <BaseMap
                 center={[-17.8248, 31.0530]}
                 zoom={13}
-                style={{ height: '100%', width: '100%' }}
-                zoomControl={false}
+                height="100%"
               >
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
                 <MapEvents onMapClick={handleMapClick} />
                 <MapFitter bounds={mapBounds} />
                 
@@ -655,7 +646,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
                     />
                   )
                 )}
-              </MapContainer>
+              </BaseMap>
 
               {(drawingMode === 'Polygon' ? drawingPoints.length >= 3 : 
                 drawingMode === 'Circle' ? drawingPoints.length >= 2 : 
@@ -847,7 +838,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
                 >
                   <List.Item.Meta
                     title={<Text strong>{z.name}</Text>}
-                    description={<Text type="secondary" style={{ fontSize: 11 }}>ID: {z.id} • Points: {z.points.length}</Text>}
+                    description={<Text type="secondary" style={{ fontSize: 11 }}>ID: {z.id} â€¢ Points: {z.points.length}</Text>}
                   />
                 </List.Item>
               )}

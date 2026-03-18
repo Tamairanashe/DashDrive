@@ -85,7 +85,7 @@ export const Donations: React.FC = () => {
  </div>
 
  {/* Navigation Tabs */}
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={['Donation Ledger', 'Ad-hoc Initiation', 'Analytics'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
+  <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k as DonationTab)} items={['Donation Ledger', 'Ad-hoc Initiation', 'Analytics'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
 
  {/* Main Management Area */}
  <div className="bg-white rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden min-h-[500px]">

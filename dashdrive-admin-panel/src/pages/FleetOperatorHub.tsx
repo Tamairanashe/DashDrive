@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Table, Tag, Space, Button, Input, Card, Typography, Tabs, 
   Row, Col, Statistic, Avatar, Tooltip, Badge, Dropdown, 
@@ -163,11 +163,78 @@ export const FleetOperatorHub: React.FC<FleetOperatorHubProps> = ({ initialTab =
     </div>
   );
 
+  const FleetVehiclesTab = () => (
+    <div style={{ marginTop: 20 }}>
+      <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <Space>
+            <Input placeholder="Search vehicles..." prefix={<SearchOutlined />} style={{ width: 250 }} />
+            <Select defaultValue="All" style={{ width: 120 }}>
+              <Select.Option value="All">All Status</Select.Option>
+              <Select.Option value="Active">Active</Select.Option>
+              <Select.Option value="Maintenance">Maintenance</Select.Option>
+            </Select>
+          </Space>
+          <Button type="primary" icon={<PlusOutlined />}>Add Vehicle</Button>
+        </div>
+        <Table 
+          dataSource={[
+            { id: 'V-8821', plate: 'HA-2023', model: 'Toyota Prius', status: 'Active', driver: 'John Makoni', fleet: 'City Taxi Co.' },
+            { id: 'V-8825', plate: 'HA-4451', model: 'Honda Fit', status: 'Maintenance', driver: 'N/A', fleet: 'City Taxi Co.' },
+            { id: 'V-8830', plate: 'BU-1122', model: 'Nissan Leaf', status: 'Active', driver: 'Sarah Chipo', fleet: 'Express Logistics' },
+          ]}
+          columns={[
+            { title: 'Vehicle ID', dataIndex: 'id', key: 'id' },
+            { title: 'Plate Number', dataIndex: 'plate', key: 'plate', render: (t) => <Text strong>{t}</Text> },
+            { title: 'Model', dataIndex: 'model', key: 'model' },
+            { title: 'Current Driver', dataIndex: 'driver', key: 'driver' },
+            { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => <Tag color={s === 'Active' ? 'success' : 'warning'}>{s}</Tag> },
+            { title: 'Fleet', dataIndex: 'fleet', key: 'fleet' },
+            { title: 'Actions', key: 'actions', render: () => <Button size="small">Manage</Button> }
+          ]}
+        />
+      </Card>
+    </div>
+  );
+
+  const FleetDriversTab = () => (
+    <div style={{ marginTop: 20 }}>
+      <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <Space>
+            <Input placeholder="Search drivers..." prefix={<SearchOutlined />} style={{ width: 250 }} />
+            <Select defaultValue="All" style={{ width: 120 }}>
+              <Select.Option value="All">All Tiers</Select.Option>
+              <Select.Option value="Gold">Gold</Select.Option>
+              <Select.Option value="Silver">Silver</Select.Option>
+            </Select>
+          </Space>
+          <Button type="primary" icon={<PlusOutlined />}>Onboard Driver</Button>
+        </div>
+        <Table 
+          dataSource={[
+            { id: 'DR-5001', name: 'John Makoni', rating: 4.8, trips: 1200, status: 'Online', fleet: 'City Taxi Co.' },
+            { id: 'DR-5005', name: 'Sarah Chipo', rating: 4.9, trips: 850, status: 'Offline', fleet: 'Express Logistics' },
+          ]}
+          columns={[
+            { title: 'Driver ID', dataIndex: 'id', key: 'id' },
+            { title: 'Name', dataIndex: 'name', key: 'name', render: (t) => <Text strong>{t}</Text> },
+            { title: 'Rating', dataIndex: 'rating', key: 'rating', render: (r) => <Rate disabled defaultValue={r} style={{ fontSize: 12 }} /> },
+            { title: 'Trips', dataIndex: 'trips', key: 'trips' },
+            { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => <Badge status={s === 'Online' ? 'success' : 'default'} text={s} /> },
+            { title: 'Fleet', dataIndex: 'fleet', key: 'fleet' },
+            { title: 'Actions', key: 'actions', render: () => <Button size="small">Profile</Button> }
+          ]}
+        />
+      </Card>
+    </div>
+  );
+
   const items = [
     { key: '1', label: <Space><TeamOutlined /> Fleet List</Space>, children: <ListTab /> },
     { key: '2', label: <Space><PlusOutlined /> Requests</Space>, children: <RequestsTab /> },
-    { key: '3', label: <Space><CarOutlined /> Fleet Vehicles</Space>, children: <div style={{ padding: 20 }}>Centralized Fleet Vehicles List...</div> },
-    { key: '4', label: <Space><UserOutlined /> Fleet Drivers</Space>, children: <div style={{ padding: 20 }}>Centralized Fleet Drivers List...</div> },
+    { key: '3', label: <Space><CarOutlined /> Fleet Vehicles</Space>, children: <FleetVehiclesTab /> },
+    { key: '4', label: <Space><UserOutlined /> Fleet Drivers</Space>, children: <FleetDriversTab /> },
     { key: '5', label: <Space><WalletOutlined /> Fleet Earnings</Space>, children: <FinancialsTab /> },
     { key: '6', label: <Space><BarChartOutlined /> Analytics</Space>, children: <AnalyticsTab /> },
   ];
@@ -193,7 +260,7 @@ export const FleetOperatorHub: React.FC<FleetOperatorHubProps> = ({ initialTab =
       />
 
       <Drawer
-        title="Fleet 360° Profile"
+        title="Fleet 360Â° Profile"
         width={800}
         onClose={() => setIsDetailDrawerOpen(false)}
         open={isDetailDrawerOpen}

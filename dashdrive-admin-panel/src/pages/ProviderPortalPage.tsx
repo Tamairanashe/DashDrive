@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ProviderDashboard } from '../components/ProviderPortal/ProviderDashboard';
 
 export const ProviderPortalPage: React.FC = () => {

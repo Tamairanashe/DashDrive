@@ -21,30 +21,29 @@ const { Option } = Select;
 // ALL SERVICE MODULES
 // ============================================================
 const serviceModules = [
-  { key: 'ride_management', label: 'Ride Management', icon: '🚗' },
-  { key: 'food_delivery', label: 'Food Delivery Management', icon: '🍽️' },
-  { key: 'parcel_management', label: 'Parcel Management', icon: '📦' },
-  { key: 'mart_management', label: 'Mart Management', icon: '🛒' },
-  { key: 'shopping_management', label: 'Shopping Management', icon: '🛍️' },
-  { key: 'hotel_management', label: 'Hotel & Booking Management', icon: '🏨' },
-  { key: 'event_management', label: 'Events & Ticketing', icon: '🎟️' },
-  { key: 'car_rental', label: 'Car Rental Management', icon: '🚘' },
-  { key: 'fuel_management', label: 'Fuel Services', icon: '⛽' },
-  { key: 'transit_management', label: 'Public Transit', icon: '🚌' },
-  { key: 'fare_management', label: 'Fare & Pricing Management', icon: '💲' },
-  { key: 'vehicle_management', label: 'Vehicle Management', icon: '🔧' },
-  { key: 'driver_management', label: 'Driver Management', icon: '👨‍✈️' },
-  { key: 'user_management', label: 'User Management', icon: '👥' },
-  { key: 'finance_management', label: 'Finance & Wallet', icon: '💰' },
-  { key: 'loan_management', label: 'Loans & BNPL', icon: '🏦' },
-  { key: 'insurance_management', label: 'Insurance Management', icon: '🛡️' },
-  { key: 'marketing', label: 'Marketing & Promotions', icon: '📢' },
-  { key: 'support_tickets', label: 'Support & Tickets', icon: '🎧' },
-  { key: 'analytics', label: 'Analytics & Reports', icon: '📊' },
-  { key: 'content_management', label: 'CMS & Pages', icon: '📝' },
-  { key: 'system_settings', label: 'System Settings', icon: '⚙️' },
-  { key: 'enterprise_config', label: 'Enterprise Configuration', icon: '🏢' },
-  { key: 'api_management', label: 'API Management', icon: '🔌' },
+  { key: 'ride_management', label: 'Ride Management', icon: 'ðŸš—' },
+  { key: 'food_delivery', label: 'Food Delivery Management', icon: 'ðŸ½ï¸' },
+  { key: 'parcel_management', label: 'Parcel Management', icon: 'ðŸ“¦' },
+  { key: 'mart_management', label: 'Mart Management', icon: 'ðŸ›’' },
+  { key: 'shopping_management', label: 'Shopping Management', icon: 'ðŸ›ï¸' },
+  { key: 'hotel_management', label: 'Hotel & Booking Management', icon: 'ðŸ¨' },
+  { key: 'event_management', label: 'Events & Ticketing', icon: 'ðŸŽŸï¸' },
+  { key: 'car_rental', label: 'Car Rental Management', icon: 'ðŸš˜' },
+  { key: 'city_to_city', label: 'City to City', icon: 'ðŸšŒ' },
+  { key: 'fare_management', label: 'Fare & Pricing Management', icon: 'ðŸ’²' },
+  { key: 'vehicle_management', label: 'Vehicle Management', icon: 'ðŸ”§' },
+  { key: 'driver_management', label: 'Driver Management', icon: 'ðŸ‘¨â€âœˆï¸' },
+  { key: 'user_management', label: 'User Management', icon: 'ðŸ‘¥' },
+  { key: 'finance_management', label: 'Finance & Wallet', icon: 'ðŸ’°' },
+  { key: 'loan_management', label: 'Loans & BNPL', icon: 'ðŸ¦' },
+  { key: 'insurance_management', label: 'Insurance Management', icon: 'ðŸ›¡ï¸' },
+  { key: 'marketing', label: 'Marketing & Promotions', icon: 'ðŸ“¢' },
+  { key: 'support_tickets', label: 'Support & Tickets', icon: 'ðŸŽ§' },
+  { key: 'analytics', label: 'Analytics & Reports', icon: 'ðŸ“Š' },
+  { key: 'content_management', label: 'CMS & Pages', icon: 'ðŸ“' },
+  { key: 'system_settings', label: 'System Settings', icon: 'âš™ï¸' },
+  { key: 'enterprise_config', label: 'Enterprise Configuration', icon: 'ðŸ¢' },
+  { key: 'api_management', label: 'API Management', icon: 'ðŸ”Œ' },
 ];
 
 // ============================================================
@@ -180,7 +179,7 @@ interface RoleDefinition {
 }
 
 const initialRoles: RoleDefinition[] = [
-  { key: 'R1', name: 'Super Admin', description: 'Full system access — all modules', modules: serviceModules.map(m => m.key), employeeCount: 2, color: '#dc2626' },
+  { key: 'R1', name: 'Super Admin', description: 'Full system access â€” all modules', modules: serviceModules.map(m => m.key), employeeCount: 2, color: '#dc2626' },
   { key: 'R2', name: 'Logistics Manager', description: 'Rides, deliveries, drivers, vehicles, fares', modules: ['ride_management', 'food_delivery', 'parcel_management', 'driver_management', 'vehicle_management', 'fare_management'], employeeCount: 3, color: '#3b82f6' },
   { key: 'R3', name: 'Finance Controller', description: 'Wallets, loans, insurance, analytics', modules: ['finance_management', 'loan_management', 'insurance_management', 'analytics', 'marketing'], employeeCount: 2, color: '#10b981' },
   { key: 'R4', name: 'Support Agent', description: 'Users, support tickets, basic ride view', modules: ['user_management', 'support_tickets', 'ride_management'], employeeCount: 2, color: '#f59e0b' },
@@ -687,7 +686,7 @@ const AttributeTab: React.FC = () => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Form.Item label="ID Card — Front" name="idFront">
+            <Form.Item label="ID Card â€” Front" name="idFront">
               <Upload.Dragger
                 beforeUpload={() => { message.info('ID front image selected'); return false; }}
                 maxCount={1}
@@ -703,7 +702,7 @@ const AttributeTab: React.FC = () => {
                 </div>
               </Upload.Dragger>
             </Form.Item>
-            <Form.Item label="ID Card — Back" name="idBack">
+            <Form.Item label="ID Card â€” Back" name="idBack">
               <Upload.Dragger
                 beforeUpload={() => { message.info('ID back image selected'); return false; }}
                 maxCount={1}
@@ -738,7 +737,7 @@ const AttributeTab: React.FC = () => {
                     <Space>
                       <Badge color={r.color} />
                       {r.name}
-                      <Text type="secondary" style={{ fontSize: 11 }}>— {r.modules.length} modules</Text>
+                      <Text type="secondary" style={{ fontSize: 11 }}>â€” {r.modules.length} modules</Text>
                     </Space>
                   </Option>
                 ))}
@@ -752,7 +751,7 @@ const AttributeTab: React.FC = () => {
       {/* EDIT EMPLOYEE MODAL                                          */}
       {/* ============================================================ */}
       <Drawer
-        title={<Space><EditOutlined /> Edit Employee — {selectedEmployee?.name}</Space>}
+        title={<Space><EditOutlined /> Edit Employee â€” {selectedEmployee?.name}</Space>}
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         width={750}
@@ -859,7 +858,7 @@ const AttributeTab: React.FC = () => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Form.Item label="ID Card — Front" name="idFront">
+            <Form.Item label="ID Card â€” Front" name="idFront">
               <Upload.Dragger
                 beforeUpload={() => { message.info('ID front image selected'); return false; }}
                 maxCount={1}
@@ -875,7 +874,7 @@ const AttributeTab: React.FC = () => {
                 </div>
               </Upload.Dragger>
             </Form.Item>
-            <Form.Item label="ID Card — Back" name="idBack">
+            <Form.Item label="ID Card â€” Back" name="idBack">
               <Upload.Dragger
                 beforeUpload={() => { message.info('ID back image selected'); return false; }}
                 maxCount={1}
@@ -910,7 +909,7 @@ const AttributeTab: React.FC = () => {
                     <Space>
                       <Badge color={r.color} />
                       {r.name}
-                      <Text type="secondary" style={{ fontSize: 11 }}>— {r.modules.length} modules</Text>
+                      <Text type="secondary" style={{ fontSize: 11 }}>â€” {r.modules.length} modules</Text>
                     </Space>
                   </Option>
                 ))}
@@ -924,7 +923,7 @@ const AttributeTab: React.FC = () => {
       {/* ACTIVITY LOG MODAL                                           */}
       {/* ============================================================ */}
       <Drawer
-        title={<Space><HistoryOutlined /> Activity Log — {selectedEmployee?.name}</Space>}
+        title={<Space><HistoryOutlined /> Activity Log â€” {selectedEmployee?.name}</Space>}
         open={activityLogModal}
         onClose={() => setActivityLogModal(false)}
         width={600}
@@ -1037,7 +1036,7 @@ const AttributeTab: React.FC = () => {
               <Divider style={{ margin: '0 0 20px 0', fontSize: 13, color: '#64748b' }}>Personal Information</Divider>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 24px' }}>
                 <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Email Address</Text><Text strong>{selectedEmployee.email}</Text></div>
-                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Phone Number</Text><Text strong>{selectedEmployee.phone || '—'}</Text></div>
+                <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Phone Number</Text><Text strong>{selectedEmployee.phone || 'â€”'}</Text></div>
                 <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Date of Birth</Text><Text strong>15 May 1990</Text></div>
                 <div><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Gender</Text><Text strong>Female</Text></div>
                 <div style={{ gridColumn: 'span 2' }}><Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Residential Address</Text><Text strong>42 Samora Machel Ave, Harare, Zimbabwe</Text></div>

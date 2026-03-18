@@ -58,7 +58,7 @@ const EnvironmentSetupTab: React.FC = () => {
         dbPort: 5432,
         dbDatabase: 'dashdrive_production',
         dbUsername: 'dashdrive_admin',
-        dbPassword: '••••••••••••',
+        dbPassword: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
       }}>
         {/* Application Settings */}
         <Card
@@ -366,7 +366,7 @@ const CleanDatabaseTab: React.FC = () => {
         type="error"
         showIcon
         icon={<WarningOutlined />}
-        message={<Text strong style={{ color: '#dc2626' }}>⚠️ DANGER ZONE — Sensitive Operation</Text>}
+        message={<Text strong style={{ color: '#dc2626' }}>âš ï¸ DANGER ZONE â€” Sensitive Operation</Text>}
         description="Cleaning database tables will permanently delete records. This action cannot be undone. Proceed with extreme caution. It is strongly recommended to create a full backup before performing any cleanup."
         style={{ marginBottom: 24, borderRadius: 12, border: '1px solid #fecaca', background: '#fef2f2' }}
       />
@@ -485,7 +485,7 @@ const LanguagesTab: React.FC = () => {
   const translationKeys = [
     { key: 'app.welcome', en: 'Welcome to DashDrive', translated: 'Bienvenue sur DashDrive' },
     { key: 'app.login', en: 'Sign In', translated: 'Se connecter' },
-    { key: 'app.register', en: 'Create Account', translated: 'Créer un compte' },
+    { key: 'app.register', en: 'Create Account', translated: 'CrÃ©er un compte' },
     { key: 'ride.request', en: 'Request a Ride', translated: 'Demander un trajet' },
     { key: 'ride.cancel', en: 'Cancel Ride', translated: 'Annuler le trajet' },
     { key: 'wallet.balance', en: 'Wallet Balance', translated: 'Solde du portefeuille' },
@@ -493,7 +493,7 @@ const LanguagesTab: React.FC = () => {
     { key: 'order.track', en: 'Track Order', translated: 'Suivre la commande' },
     { key: 'order.history', en: 'Order History', translated: 'Historique des commandes' },
     { key: 'support.help', en: 'Need Help?', translated: "Besoin d'aide ?" },
-    { key: 'hotel.book', en: 'Book Now', translated: 'Réserver maintenant' },
+    { key: 'hotel.book', en: 'Book Now', translated: 'RÃ©server maintenant' },
     { key: 'event.tickets', en: 'Get Tickets', translated: 'Obtenir des billets' },
   ];
 
@@ -673,7 +673,7 @@ const LanguagesTab: React.FC = () => {
 
       {/* Translation Modal */}
       <Drawer
-        title={<Space><TranslationOutlined /> Translations — {selectedLang?.name}</Space>}
+        title={<Space><TranslationOutlined /> Translations â€” {selectedLang?.name}</Space>}
         open={translationDrawerOpen}
         onClose={() => setTranslationDrawerOpen(false)}
         width={900}
@@ -741,22 +741,21 @@ const MaintenanceModeTab: React.FC = () => {
   const [serviceStatus, setServiceStatus] = useState<Record<string, boolean>>({
     ride_hailing: false, food_delivery: false, mart: false, parcel: false,
     shopping: false, hotel_booking: false, events: false, car_rental: false,
-    transit: false, fuel: false, wallet: false, loans: false,
+    city_to_city: false, wallet: false, loans: false,
   });
 
   const services = [
-    { key: 'ride_hailing', label: 'Ride Hailing', icon: '🚗' },
-    { key: 'food_delivery', label: 'Food Delivery', icon: '🍽️' },
-    { key: 'mart', label: 'Mart', icon: '🛒' },
-    { key: 'parcel', label: 'Parcel Delivery', icon: '📦' },
-    { key: 'shopping', label: 'Shopping', icon: '🛍️' },
-    { key: 'hotel_booking', label: 'Hotel Booking', icon: '🏨' },
-    { key: 'events', label: 'Events & Ticketing', icon: '🎟️' },
-    { key: 'car_rental', label: 'Car Rental', icon: '🚘' },
-    { key: 'transit', label: 'Public Transit', icon: '🚌' },
-    { key: 'fuel', label: 'Fuel Services', icon: '⛽' },
-    { key: 'wallet', label: 'Wallet & Payments', icon: '💰' },
-    { key: 'loans', label: 'Loans & Insurance', icon: '🏦' },
+    { key: 'ride_hailing', label: 'Ride Hailing', icon: 'ðŸš—' },
+    { key: 'food_delivery', label: 'Food Delivery', icon: 'ðŸ½ï¸' },
+    { key: 'mart', label: 'Mart', icon: 'ðŸ›’' },
+    { key: 'parcel', label: 'Parcel Delivery', icon: 'ðŸ“¦' },
+    { key: 'shopping', label: 'Shopping', icon: 'ðŸ›ï¸' },
+    { key: 'hotel_booking', label: 'Hotel Booking', icon: 'ðŸ¨' },
+    { key: 'events', label: 'Events & Ticketing', icon: 'ðŸŽŸï¸' },
+    { key: 'car_rental', label: 'Car Rental', icon: 'ðŸš˜' },
+    { key: 'city_to_city', label: 'City to City', icon: 'ðŸšŒ' },
+    { key: 'wallet', label: 'Wallet & Payments', icon: 'ðŸ’°' },
+    { key: 'loans', label: 'Loans & Insurance', icon: 'ðŸ¦' },
   ];
 
   const handleGlobalToggle = (checked: boolean) => {
@@ -806,7 +805,7 @@ const MaintenanceModeTab: React.FC = () => {
             </div>
             <div>
               <Title level={4} style={{ margin: 0, color: globalMaintenance ? '#dc2626' : '#0f172a' }}>
-                {globalMaintenance ? '🔴 MAINTENANCE MODE ACTIVE' : '🟢 System Online'}
+                {globalMaintenance ? 'ðŸ”´ MAINTENANCE MODE ACTIVE' : 'ðŸŸ¢ System Online'}
               </Title>
               <Text type="secondary">
                 {globalMaintenance
@@ -936,11 +935,11 @@ const ServiceWebhooksTab: React.FC = () => {
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [addForm] = Form.useForm();
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>([
-    { key: '1', name: 'Payment Gateway', url: 'https://api.dashdrive.app/webhooks/payments', events: ['payment.completed', 'payment.failed', 'refund.processed'], status: 'active', lastTriggered: '2 min ago', successRate: 99.8, secret: 'whsec_••••••••' },
-    { key: '2', name: 'Driver Service', url: 'https://api.dashdrive.app/webhooks/drivers', events: ['driver.online', 'driver.offline', 'trip.completed'], status: 'active', lastTriggered: '30 sec ago', successRate: 100, secret: 'whsec_••••••••' },
-    { key: '3', name: 'Analytics Pipeline', url: 'https://analytics.dashdrive.app/ingest', events: ['order.created', 'order.completed', 'user.signup'], status: 'active', lastTriggered: '5 min ago', successRate: 97.2, secret: 'whsec_••••••••' },
-    { key: '4', name: 'Fraud Detection', url: 'https://fraud.dashdrive.app/events', events: ['payment.completed', 'login.suspicious', 'account.flagged'], status: 'failing', lastTriggered: '1 hr ago', successRate: 45.0, secret: 'whsec_••••••••' },
-    { key: '5', name: 'CRM Sync', url: 'https://crm.example.com/api/webhooks', events: ['user.signup', 'user.updated', 'support.ticket.created'], status: 'inactive', lastTriggered: 'Never', successRate: 0, secret: 'whsec_••••••••' },
+    { key: '1', name: 'Payment Gateway', url: 'https://api.dashdrive.app/webhooks/payments', events: ['payment.completed', 'payment.failed', 'refund.processed'], status: 'active', lastTriggered: '2 min ago', successRate: 99.8, secret: 'whsec_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+    { key: '2', name: 'Driver Service', url: 'https://api.dashdrive.app/webhooks/drivers', events: ['driver.online', 'driver.offline', 'trip.completed'], status: 'active', lastTriggered: '30 sec ago', successRate: 100, secret: 'whsec_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+    { key: '3', name: 'Analytics Pipeline', url: 'https://analytics.dashdrive.app/ingest', events: ['order.created', 'order.completed', 'user.signup'], status: 'active', lastTriggered: '5 min ago', successRate: 97.2, secret: 'whsec_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+    { key: '4', name: 'Fraud Detection', url: 'https://fraud.dashdrive.app/events', events: ['payment.completed', 'login.suspicious', 'account.flagged'], status: 'failing', lastTriggered: '1 hr ago', successRate: 45.0, secret: 'whsec_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+    { key: '5', name: 'CRM Sync', url: 'https://crm.example.com/api/webhooks', events: ['user.signup', 'user.updated', 'support.ticket.created'], status: 'inactive', lastTriggered: 'Never', successRate: 0, secret: 'whsec_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
   ]);
 
   const allEvents = [

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Typography, Row, Col, Card, Select, Button, Space, 
@@ -7,10 +7,10 @@ import {
     Calendar, Form, TimePicker, Slider, Timeline
 } from 'antd';
 import { 
-    MapContainer, TileLayer, Circle, Popup, useMap, 
+    Circle, Popup, useMap, 
     Polygon, Polyline, Marker
 } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import { BaseMap } from '../components/BaseMap';
 import { 
     SyncOutlined, 
     GlobalOutlined, 
@@ -228,7 +228,7 @@ export const HeatMapPage: React.FC = () => {
     const [selectedRegion, setSelectedRegion] = useState('Mashonaland');
     const [selectedCity, setSelectedCity] = useState('Harare');
     const [viewMode, setViewMode] = useState<'demand' | 'density'>('demand');
-    const [weather, setWeather] = useState({ condition: 'Light Rain', temp: '22°C', impact: '+15%' });
+    const [weather, setWeather] = useState({ condition: 'Light Rain', temp: '22Â°C', impact: '+15%' });
     const [marketTemperament, setMarketTemperament] = useState({ label: 'Evening Rush', status: 'Peak' });
     const [traffic, setTraffic] = useState({ level: 'Heavy Congestion', delay: '+12 min', impact: '+25%' });
     const [enabledLayers, setEnabledLayers] = useState<string[]>(['demand', 'rain', 'traffic', 'events']);
@@ -504,16 +504,12 @@ export const HeatMapPage: React.FC = () => {
                         id="heatmap-container"
                     >
                         <div style={{ height: '100%', width: '100%', overflow: 'hidden', borderRadius: isFullscreen ? 0 : 12 }}>
-                            <MapContainer 
+                            <BaseMap 
                                 center={[LOCATION_COORDS[selectedCity].lat, LOCATION_COORDS[selectedCity].lng]} 
                                 zoom={12} 
-                                style={{ height: '100%', width: '100%', zIndex: 1 }}
+                                height="100%"
                             >
                                 <MapFlyTo center={[LOCATION_COORDS[selectedCity].lat, LOCATION_COORDS[selectedCity].lng]} />
-                                <TileLayer
-                                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                                    attribution='&copy; CARTO'
-                                />
                                 {(enabledLayers.includes('demand') || enabledLayers.includes('supply')) && zones.map(zone => (
                                     <Circle 
                                         key={zone.id}
@@ -622,7 +618,7 @@ export const HeatMapPage: React.FC = () => {
                                 ))}
 
                                 <MapFlyTo center={mapCenter} zoom={isDrilldownActive ? 15 : 12} />
-                            </MapContainer>
+                            </BaseMap>
                         </div>
 
                        {/* Global Map Controls */}
@@ -935,16 +931,16 @@ export const HeatMapPage: React.FC = () => {
                                                             style={{ width: '100%', marginBottom: 8 }}
                                                             onChange={(val) => setManualBroadcastMessage(val)}
                                                         >
-                                                            <Option value={`WEATHER ALERT: Heavy rain reported near ${selectedZone.name}. Please drive safely and maintain visibility.`}>⛈️ Heavy Rain Warning</Option>
-                                                            <Option value={`TRAFFIC ALERT: Road closure/Gridlock reported near ${selectedZone.name}. Please seek alternative routes.`}>🚧 Road Closure / Gridlock</Option>
-                                                            <Option value={`COMMUNITY: ${selectedZone.name} is seeing high demand right now. Head there for back-to-back orders!`}>🚀 High Demand Spike</Option>
-                                                            <Option value={`EVENT RADAR: Local event finishing near ${selectedZone.name}. Expect a surge in ride requests shortly.`}>🎫 Event Outflow Warning</Option>
-                                                            <Option value={`SAFETY: Maintain high situational awareness in ${selectedZone.name}. Standard safety protocols active.`}>🛡️ Routine Safety Alert</Option>
-                                                            <Option value={`PEAK HOUR: Evening rush is starting in ${selectedZone.name}. Log on now to maximize earnings!`}>🌇 Evening Rush Kick-off</Option>
-                                                            <Option value={`FUEL TIP: High traffic in ${selectedZone.name}. Consider a break or refueling nearby to stay ready.`}>⛽ Fuel & Efficiency Tip</Option>
-                                                            <Option value={`TECH UPDATE: New app version available. Please update at your next break for improved map accuracy.`}>📱 App Update Available</Option>
-                                                            <Option value={`INCENTIVE REMINDER: Complete 3 more trips near ${selectedZone.name} to unlock your Daily Streak bonus!`}>💰 Streak Bonus Push</Option>
-                                                            <Option value={`URGENT: Temporary parking restrictions active in ${selectedZone.name} due to civic works.`}>🚫 Parking Restriction Alert</Option>
+                                                            <Option value={`WEATHER ALERT: Heavy rain reported near ${selectedZone.name}. Please drive safely and maintain visibility.`}>â›ˆï¸ Heavy Rain Warning</Option>
+                                                            <Option value={`TRAFFIC ALERT: Road closure/Gridlock reported near ${selectedZone.name}. Please seek alternative routes.`}>ðŸš§ Road Closure / Gridlock</Option>
+                                                            <Option value={`COMMUNITY: ${selectedZone.name} is seeing high demand right now. Head there for back-to-back orders!`}>ðŸš€ High Demand Spike</Option>
+                                                            <Option value={`EVENT RADAR: Local event finishing near ${selectedZone.name}. Expect a surge in ride requests shortly.`}>ðŸŽ« Event Outflow Warning</Option>
+                                                            <Option value={`SAFETY: Maintain high situational awareness in ${selectedZone.name}. Standard safety protocols active.`}>ðŸ›¡ï¸ Routine Safety Alert</Option>
+                                                            <Option value={`PEAK HOUR: Evening rush is starting in ${selectedZone.name}. Log on now to maximize earnings!`}>ðŸŒ‡ Evening Rush Kick-off</Option>
+                                                            <Option value={`FUEL TIP: High traffic in ${selectedZone.name}. Consider a break or refueling nearby to stay ready.`}>â›½ Fuel & Efficiency Tip</Option>
+                                                            <Option value={`TECH UPDATE: New app version available. Please update at your next break for improved map accuracy.`}>ðŸ“± App Update Available</Option>
+                                                            <Option value={`INCENTIVE REMINDER: Complete 3 more trips near ${selectedZone.name} to unlock your Daily Streak bonus!`}>ðŸ’° Streak Bonus Push</Option>
+                                                            <Option value={`URGENT: Temporary parking restrictions active in ${selectedZone.name} due to civic works.`}>ðŸš« Parking Restriction Alert</Option>
                                                         </Select>
                                                         <Input.TextArea 
                                                             rows={3} 
@@ -1038,7 +1034,7 @@ export const HeatMapPage: React.FC = () => {
                                                     <Tag color={event.type === 'Holiday' ? 'error' : 'warning'} style={{ fontSize: 10 }}>{event.impact}</Tag>
                                                 </div>
                                                 <Text type="secondary" style={{ fontSize: 11 }}>
-                                                    {event.isGlobal ? 'Global' : 'Regional'} • {event.type}
+                                                    {event.isGlobal ? 'Global' : 'Regional'} â€¢ {event.type}
                                                 </Text>
                                             </div>
                                         )
@@ -1200,7 +1196,7 @@ export const HeatMapPage: React.FC = () => {
                                                     <Avatar icon={SERVICE_TYPES.find(s => s.id === service)?.icon || <CarOutlined />} />
                                                     <div>
                                                         <Text strong>{item.id}</Text><br />
-                                                        <Text type="secondary" style={{ fontSize: 11 }}>{item.date} • {item.service}</Text>
+                                                        <Text type="secondary" style={{ fontSize: 11 }}>{item.date} â€¢ {item.service}</Text>
                                                     </div>
                                                 </Space>
                                                 <Tag color="success">Paid</Tag>
@@ -1330,7 +1326,7 @@ export const HeatMapPage: React.FC = () => {
                                 title={event.name}
                                 description={
                                     <Space direction="vertical" size={0}>
-                                        <Text type="secondary" style={{ fontSize: 12 }}>{event.type} • {event.impact} Demand Lift</Text>
+                                        <Text type="secondary" style={{ fontSize: 12 }}>{event.type} â€¢ {event.impact} Demand Lift</Text>
                                         <Text type="secondary" style={{ fontSize: 12 }}>Sector: {event.isGlobal ? <Tag color="blue">Global Impact</Tag> : (MOCK_ZONES.find(z => Math.abs(z.lat - event.lat) < 0.01)?.name || 'Central Hub')}</Text>
                                     </Space>
                                 }

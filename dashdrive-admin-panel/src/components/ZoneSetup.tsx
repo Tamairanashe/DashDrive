@@ -972,7 +972,7 @@ export const ZoneSetup: React.FC = () => {
  </span>
  </div>
 
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={['All', 'Active', 'Inactive'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
+ <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k as any)} items={['All', 'Active', 'Inactive'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
  </div>
 
  {/* Search & Action Bar */}

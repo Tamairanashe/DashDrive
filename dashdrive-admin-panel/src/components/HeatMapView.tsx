@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -67,7 +67,7 @@ const statusColors: Record<string, string> = {
 const compareData = [
     {
         year: '2023',
-        range: '01 Oct – 31 Dec',
+        range: '01 Oct â€“ 31 Dec',
         rides: 1,
         parcels: 2,
         points: [
@@ -77,7 +77,7 @@ const compareData = [
     },
     {
         year: '2024',
-        range: '01 Jan – 31 Dec',
+        range: '01 Jan â€“ 31 Dec',
         rides: 11,
         parcels: 16,
         points: [
@@ -88,7 +88,7 @@ const compareData = [
     },
     {
         year: '2025',
-        range: '01 Jan – 31 Dec',
+        range: '01 Jan â€“ 31 Dec',
         rides: 6,
         parcels: 0,
         points: [
@@ -121,7 +121,7 @@ const MapController = ({ center, zoom }: { center: [number, number], zoom: numbe
     return null;
 };
 
-// 🔄 Map Synchronization Component
+// ðŸ”„ Map Synchronization Component
 const SyncMaps = ({ mapA, mapB, enabled = true }: { mapA: React.MutableRefObject<L.Map | null>, mapB: React.MutableRefObject<L.Map | null>, enabled?: boolean }) => {
     useEffect(() => {
         if (!enabled) return;
@@ -218,7 +218,7 @@ export const HeatMapView = () => {
     const [zoneA, setZoneA] = useState('Downtown');
     const [zoneB, setZoneB] = useState('Airport');
 
-    // 🗺️ Full Ops Layer States
+    // ðŸ—ºï¸ Full Ops Layer States
     const [syncLayers, setSyncLayers] = useState(true);
     const [showHeat, setShowHeat] = useState(true);
     const [showDriversLayer, setShowDriversLayer] = useState(true);
@@ -227,7 +227,7 @@ export const HeatMapView = () => {
     const [showZonesLayer, setShowZonesLayer] = useState(true);
     const [showPaymentsLayer, setShowPaymentsLayer] = useState(false);
 
-    // 🗺️ Layer States for Sync
+    // ðŸ—ºï¸ Layer States for Sync
     const [compareHeatA, setCompareHeatA] = useState(true);
     const [compareDriversA, setCompareDriversA] = useState(true);
     const [compareOrdersA, setCompareOrdersA] = useState(true);
@@ -235,7 +235,7 @@ export const HeatMapView = () => {
     const [compareDriversB, setCompareDriversB] = useState(true);
     const [compareOrdersB, setCompareOrdersB] = useState(true);
 
-    // 🖱️ Interaction States
+    // ðŸ–±ï¸ Interaction States
     const [hoveredZone, setHoveredZone] = useState<string | null>(null);
     const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
@@ -273,7 +273,7 @@ export const HeatMapView = () => {
         }
     };
 
-    // 🧭 Auto-Center Logic for Zone vs Zone
+    // ðŸ§­ Auto-Center Logic for Zone vs Zone
     useEffect(() => {
         if (activeTab === 'Compare' && compareMode === 'Zone vs Zone') {
             const zoneToCoord = (name: string): [number, number] => {
@@ -293,7 +293,7 @@ export const HeatMapView = () => {
 
     return (
         <div className="flex flex-col h-full space-y-4">
-            {/* 🧭 ENTERPRISE NAVIGATION LAYER */}
+            {/* ðŸ§­ ENTERPRISE NAVIGATION LAYER */}
             <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-xl font-bold text-slate-800">Heat map</h1>
@@ -306,7 +306,7 @@ export const HeatMapView = () => {
                 </div>
             </div>
 
-            {/* 3️⃣ HEAT MAP CONTROL BAR (PRIMARY FILTER PANEL) */}
+            {/* 3ï¸âƒ£ HEAT MAP CONTROL BAR (PRIMARY FILTER PANEL) */}
             {(activeTab === 'Overview' || activeTab === 'SupplyDemand' || activeTab === 'Revenue') && (
                 <div className="bg-white rounded-[24px] shadow-soft border border-slate-100 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-6">
@@ -363,9 +363,9 @@ export const HeatMapView = () => {
                 </div>
             )}
 
-            {/* 4️⃣ MAIN HEAT MAP SECTION (CORE VISUAL) */}
+            {/* 4ï¸âƒ£ MAIN HEAT MAP SECTION (CORE VISUAL) */}
             <div className="flex-1 flex gap-6 min-h-0">
-                {/* 🧪 CONDITIONAL MAIN CONTENT BASED ON ACTIVE TAB */}
+                {/* ðŸ§ª CONDITIONAL MAIN CONTENT BASED ON ACTIVE TAB */}
                 {activeTab === 'Compare' ? (
                     <div className="flex-1 flex flex-col gap-5 overflow-hidden pb-4">
                         {/* 1. Full Ops Header Control Bar */}
@@ -549,7 +549,7 @@ export const HeatMapView = () => {
                             </div>
                         </div>
 
-                        {/* 2. Dual Map Canvas — The Hero Component */}
+                        {/* 2. Dual Map Canvas â€” The Hero Component */}
                         <div className="flex-1 flex gap-5 min-h-0 relative">
                             {[
                                 { id: 'A', ref: mapRefA, title: compareMode === 'Zone vs Zone' ? `${zoneA} Cluster` : dateA, stats: { trips: 142, drivers: 52, eta: 4.8, revenue: '$2.4k' } },
@@ -564,7 +564,7 @@ export const HeatMapView = () => {
                                         </div>
                                     </div>
 
-                                    {/* 🕹️ Floating Vertical Layer Controls */}
+                                    {/* ðŸ•¹ï¸ Floating Vertical Layer Controls */}
                                     <div className="absolute top-20 left-5 z-[1000] flex flex-col gap-2">
                                         {[
                                             { id: 'heat', icon: Layers, label: 'Heat Layer', active: showHeat, set: setShowHeat },
@@ -592,7 +592,7 @@ export const HeatMapView = () => {
                                         ))}
                                     </div>
 
-                                    {/* Floating Stats Card — Core OPS View */}
+                                    {/* Floating Stats Card â€” Core OPS View */}
                                     <div className="absolute top-5 right-5 z-[1000] w-52">
                                         <div className="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-white/10 p-4 shadow-2xl space-y-3">
                                             <div className="flex items-center justify-between">
@@ -740,7 +740,7 @@ export const HeatMapView = () => {
                             ))}
                         </div>
 
-                        {/* 🖱️ INTERACTIVE OVERLAYS (TOOLTIP & MODAL) */}
+                        {/* ðŸ–±ï¸ INTERACTIVE OVERLAYS (TOOLTIP & MODAL) */}
                         <AnimatePresence>
                             {hoveredZone && (
                                 <motion.div
@@ -793,7 +793,7 @@ export const HeatMapView = () => {
                             )}
                         </AnimatePresence>
 
-                        {/* 📈 AI PERFORMANCE DELTA BAR */}
+                        {/* ðŸ“ˆ AI PERFORMANCE DELTA BAR */}
                         <div className="bg-slate-900 border-t border-white/5 p-4 py-3 flex items-center justify-between">
                             <div className="flex items-center gap-8">
                                 <div className="flex items-center gap-3">
@@ -839,7 +839,7 @@ export const HeatMapView = () => {
                     </div>
                 ) : (
                     <>
-                        {/* 🔽 REST OF THE TABS (Overview, Supply vs Demand, Revenue) */}
+                        {/* ðŸ”½ REST OF THE TABS (Overview, Supply vs Demand, Revenue) */}
                         <div className="w-[380px] flex flex-col gap-6 overflow-y-auto pr-2 scrollbar-hide">
                             {/* Live KPI Cards */}
                             <div className="bg-white rounded-[24px] shadow-soft border border-slate-100 p-6">
@@ -929,7 +929,7 @@ export const HeatMapView = () => {
                             </div>
                         </div>
 
-                        {/* 🌍 5️⃣ RIGHT PANEL — INTERACTIVE HEAT MAP */}
+                        {/* ðŸŒ 5ï¸âƒ£ RIGHT PANEL â€” INTERACTIVE HEAT MAP */}
                         <div
                             ref={mapContainerRef}
                             className={cn(
@@ -964,7 +964,7 @@ export const HeatMapView = () => {
 
                                     if (!isVisible) return null;
 
-                                    // 📊 LOGIC BASED ON ACTIVE TAB
+                                    // ðŸ“Š LOGIC BASED ON ACTIVE TAB
                                     let color = serviceColors[point.service];
                                     let val = point.val;
                                     let label = 'Requests';
@@ -1020,7 +1020,7 @@ export const HeatMapView = () => {
  ${activeTab === 'Revenue' ? '$' + val : (activeTab === 'SupplyDemand' ? val + '%' : val)}
  </div>
  <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white px-2 py-1 rounded-md shadow-md text-[9px] font-bold text-slate-600 border border-slate-100 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
- ${point.label} • ${label}
+ ${point.label} â€¢ ${label}
  </div>
  </div>
  `,
@@ -1215,7 +1215,7 @@ export const HeatMapView = () => {
                                     </div>
                                 </div>
 
-                                {/* 📊 6️⃣ REAL-TIME FLOATING ANALYTICS PANEL (OVER MAP) */}
+                                {/* ðŸ“Š 6ï¸âƒ£ REAL-TIME FLOATING ANALYTICS PANEL (OVER MAP) */}
                                 <div className="absolute top-6 right-6 z-[1000]">
                                     <div className="bg-white/80 backdrop-blur-md shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] rounded-[28px] border border-white/50 p-5 w-64">
                                         <div className="flex items-center justify-between mb-4">
@@ -1247,7 +1247,7 @@ export const HeatMapView = () => {
                                     </div>
                                 </div>
 
-                                {/* ⚡ 8️⃣ SMART ALERT BANNER (DYNAMIC) */}
+                                {/* âš¡ 8ï¸âƒ£ SMART ALERT BANNER (DYNAMIC) */}
                                 <div className="absolute top-32 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-sm px-4">
                                     <AnimatePresence>
                                         {alertActive && (
@@ -1266,7 +1266,7 @@ export const HeatMapView = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-[11px] font-bold leading-tight">High Demand Surge</p>
-                                                        <p className="text-[10px] text-slate-400 mt-0.5">Peak activity in Dhaka Central • Click to view</p>
+                                                        <p className="text-[10px] text-slate-400 mt-0.5">Peak activity in Dhaka Central â€¢ Click to view</p>
                                                     </div>
                                                 </div>
                                                 <button

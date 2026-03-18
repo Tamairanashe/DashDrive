@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  DollarSign,
  MapPin,
@@ -64,7 +64,7 @@ export const MartDeliveryFees: React.FC = () => {
  </div>
 
  {/* Sub-Tabs */}
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab.id || tab.name || tab, label: tab.name || tab.label || tab.title || tab.id || tab }))} className="mb-6 font-bold" />
+ <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
 
  {activeTab === 'Base & Zone Fees' && (
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -202,7 +202,7 @@ export const MartDeliveryFees: React.FC = () => {
  <h3 className="text-2xl font-display font-black text-slate-900 tracking-tight">Distance-Based Logistics Tuning</h3>
  <p className="text-slate-500 font-medium">Fine-tune how much customers pay based on the exact road distance from the store.</p>
  <div className="py-6 px-8 bg-slate-50/50 rounded-3xl border border-slate-100 text-left font-mono text-[13px] text-slate-600">
- <span className="text-blue-600 font-bold">FEES</span> = <span className="text-slate-900 font-black">BASE_FEE</span> + (<span className="text-emerald-600 font-black">RATE_PER_KM</span> × <span className="text-slate-900 font-black">DISTANCE</span>)
+ <span className="text-blue-600 font-bold">FEES</span> = <span className="text-slate-900 font-black">BASE_FEE</span> + (<span className="text-emerald-600 font-black">RATE_PER_KM</span> Ãƒâ€” <span className="text-slate-900 font-black">DISTANCE</span>)
  </div>
  </div>
  <div className="flex justify-center gap-4">
@@ -224,7 +224,7 @@ export const MartDeliveryFees: React.FC = () => {
 const PricingField: React.FC<{ label: string, value: string, icon: React.ReactNode, suffix?: string }> = ({ label, value, icon, suffix }) => (
  <div className="space-y-2">
  <label className="text-[10px] font-bold text-slate-400 font-small-caps flex items-center gap-2">
- {React.cloneElement(icon as React.ReactElement, { className: "w-3 h-3" })}
+  <span className="w-3 h-3">{icon}</span>
  {label}
  </label>
  <div className="relative group/field">

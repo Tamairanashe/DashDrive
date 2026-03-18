@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Table, 
   Tag, 
@@ -278,7 +278,7 @@ export const DriverLevelSetupPage: React.FC = () => {
               render: (_: any, record: any) => (
                 <Space>
                   <Text type="secondary">{record.from}</Text>
-                  <Text>→</Text>
+                  <Text>â†’</Text>
                   <Text strong>{record.to}</Text>
                 </Space>
               )

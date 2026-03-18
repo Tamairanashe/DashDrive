@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Table, Tag, Button, Space, Typography, Card, Badge, Row, Col, 
   Tabs, Statistic, Drawer, Descriptions, Alert, Input, Form,
@@ -1187,7 +1187,7 @@ export const FintechPartnerHub: React.FC = () => {
                       <List 
                         size="small"
                         dataSource={sandboxPreview.eligibility || []}
-                        renderItem={(item: string) => <List.Item style={{ fontSize: 11, padding: '4px 0' }}>• {item}</List.Item>}
+                        renderItem={(item: string) => <List.Item style={{ fontSize: 11, padding: '4px 0' }}>â€¢ {item}</List.Item>}
                       />
                       <Button block type="primary" shape="round" style={{ marginTop: 24, background: '#10b981', borderColor: '#10b981' }}>Apply Now</Button>
                    </div>

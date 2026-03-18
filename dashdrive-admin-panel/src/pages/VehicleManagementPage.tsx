@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Typography, Row, Col, Card, Tabs, Table, Button, Tag, Space, Form, 
   Input, Empty, Select, InputNumber, Divider, Badge, Tooltip, 
@@ -445,7 +445,7 @@ export const VehicleManagementPage: React.FC = () => {
           </div>
           <div>
             <Text strong>{r.brand} {r.model}</Text><br />
-            <Text type="secondary" style={{ fontSize: 11 }}>{r.vehicleId} • {r.color}</Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>{r.vehicleId} â€¢ {r.color}</Text>
           </div>
         </Space>
       )
@@ -742,7 +742,7 @@ export const VehicleManagementPage: React.FC = () => {
             <div style={{ textAlign: 'center', marginBottom: 24, padding: 24, background: isDark ? '#1a1a1a' : '#f8fafc', borderRadius: 16 }}>
               <Avatar size={100} icon={<CarOutlined />} style={{ background: '#10b981', marginBottom: 16 }} />
               <Title level={4} style={{ margin: 0 }}>{selectedVehicle.brand} {selectedVehicle.model}</Title>
-              <Text type="secondary">{selectedVehicle.plateNumber} • {selectedVehicle.city}</Text>
+              <Text type="secondary">{selectedVehicle.plateNumber} â€¢ {selectedVehicle.city}</Text>
               <div style={{ marginTop: 12 }}>
                 <Badge status={selectedVehicle.status === 'Active' ? 'success' : 'error'} text={selectedVehicle.status} />
               </div>
@@ -756,7 +756,7 @@ export const VehicleManagementPage: React.FC = () => {
                   <Space direction="vertical" style={{ width: '100%' }} size="large">
                     <Descriptions bordered column={1} size="small">
                       <Descriptions.Item label="Registration">{selectedVehicle.plateNumber}</Descriptions.Item>
-                      <Descriptions.Item label="Color / Year">{selectedVehicle.color} • {selectedVehicle.year}</Descriptions.Item>
+                      <Descriptions.Item label="Color / Year">{selectedVehicle.color} â€¢ {selectedVehicle.year}</Descriptions.Item>
                       <Descriptions.Item label="Driver Instance">{selectedVehicle.driverName} ({selectedVehicle.driverId})</Descriptions.Item>
                       <Descriptions.Item label="Service Class">{selectedVehicle.type}</Descriptions.Item>
                     </Descriptions>
@@ -922,7 +922,7 @@ export const VehicleManagementPage: React.FC = () => {
                         <div style={{ position: 'relative', paddingLeft: 16, borderLeft: '2px solid #10b981' }}>
                            <div style={{ position: 'absolute', left: -5, top: 0, width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
                            <Text strong style={{ display: 'block', fontSize: 13 }}>{item.action}</Text>
-                           <Text type="secondary" style={{ fontSize: 11 }}>{item.date} • {item.user}</Text>
+                           <Text type="secondary" style={{ fontSize: 11 }}>{item.date} â€¢ {item.user}</Text>
                         </div>
                       </List.Item>
                     )}

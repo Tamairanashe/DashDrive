@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
  ShoppingBag,
  Users,
@@ -224,7 +224,7 @@ const KPICard: React.FC<KPICardProps> = ({ title, value, change, icon, color }) 
  color === 'rose' && "bg-rose-50 text-rose-600",
  color === 'orange' && "bg-orange-50 text-orange-600"
  )}>
- {React.cloneElement(icon as React.ReactElement, { className: "w-5 h-5" })}
+ <span className="w-5 h-5">{icon}</span>
  </div>
  <span className={cn(
  "text-[10px] font-black px-1.5 py-0.5 rounded-lg",

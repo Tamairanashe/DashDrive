@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Table, Tag, Button, Space, Typography, Card, Badge, Row, Col, 
   Tabs, Statistic, Drawer, Descriptions, Alert, Input, Form,
@@ -15,6 +15,10 @@ import {
   ClockCircleOutlined, GlobalOutlined, MobileOutlined,
   ThunderboltOutlined
 } from '@ant-design/icons';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
+  ResponsiveContainer, AreaChart, Area, Cell, PieChart, Pie 
+} from 'recharts';
 import { useTheme } from '../context/ThemeContext';
 
 const { Title, Text, Paragraph } = Typography;
@@ -211,7 +215,7 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
         </Space>
       )
     },
-    { title: 'Avg Rating', dataIndex: 'avgRating', key: 'avgRating', render: (r: number) => <Text strong>{r} ⭐</Text> },
+    { title: 'Avg Rating', dataIndex: 'avgRating', key: 'avgRating', render: (r: number) => <Text strong>{r} â­</Text> },
     {
       title: 'Trust Score',
       dataIndex: 'trustScore',
@@ -246,27 +250,69 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
     }
   ];
 
-  const renderAnalytics = () => (
-    <div style={{ padding: 16 }}>
-       <Row gutter={[16, 16]}>
+  const renderAnalytics = () => {
+    const ratingDistData = [
+      { name: '5 â˜…', value: 65, fill: '#10b981' },
+      { name: '4 â˜…', value: 20, fill: '#3b82f6' },
+      { name: '3 â˜…', value: 10, fill: '#faad14' },
+      { name: '2 â˜…', value: 3, fill: '#f59e0b' },
+      { name: '1 â˜…', value: 2, fill: '#ff4d4f' },
+    ];
+
+    const trendData = [
+      { month: 'Jan', ride: 4.2, food: 4.5, mart: 4.8 },
+      { month: 'Feb', ride: 4.5, food: 4.3, mart: 4.7 },
+      { month: 'Mar', ride: 4.8, food: 4.6, mart: 4.9 },
+    ];
+
+    return (
+      <div style={{ padding: 16 }}>
+        <Row gutter={[16, 16]}>
           <Col span={12}>
-             <Card variant="borderless" style={{ background: isDark ? '#141414' : '#fafafa', borderRadius: 16 }} title="Rating Distribution (Global)">
-                <div style={{ height: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', paddingBottom: 20 }}>
-                   {[65, 20, 10, 3, 2].map((h, i) => (
-                     <div key={i} style={{ textAlign: 'center' }}>
-                        <div style={{ background: '#1890ff', height: `${h * 2}px`, width: 40, borderRadius: '4px 4px 0 0' }}></div>
-                        <Text style={{ fontSize: 10 }}>{5-i} ★</Text>
-                     </div>
-                   ))}
-                </div>
-             </Card>
+            <Card variant="borderless" style={{ background: isDark ? '#141414' : '#fafafa', borderRadius: 16 }} title="Rating Distribution (Global)">
+              <div style={{ height: 250 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ratingDistData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#333' : '#f0f0f0'} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                      {ratingDistData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
           </Col>
           <Col span={12}>
-             <Card variant="borderless" style={{ background: isDark ? '#141414' : '#fafafa', borderRadius: 16 }} title="Service Quality Trends">
-                <div style={{ height: 200, background: isDark ? '#1a1a1a' : '#f0f2f5', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                   <Text type="secondary">[ QUALITY KPI CHART ]</Text>
-                </div>
-             </Card>
+            <Card variant="borderless" style={{ background: isDark ? '#141414' : '#fafafa', borderRadius: 16 }} title="Service Quality Trends">
+              <div style={{ height: 250 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData}>
+                    <defs>
+                      <linearGradient id="colorRide" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#1890ff" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#1890ff" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#333' : '#f0f0f0'} />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 5]} axisLine={false} tickLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                    <Area type="monotone" dataKey="ride" stroke="#1890ff" fillOpacity={1} fill="url(#colorRide)" strokeWidth={3} />
+                    <Area type="monotone" dataKey="food" stroke="#52c41a" fillOpacity={0} strokeWidth={2} />
+                    <Area type="monotone" dataKey="mart" stroke="#faad14" fillOpacity={0} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
           </Col>
           <Col span={24}>
              <Card variant="borderless" style={{ background: isDark ? '#141414' : '#fafafa', borderRadius: 16 }} title="Top Quality Risks (By City)">
@@ -286,10 +332,11 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
                    ]}
                 />
              </Card>
-          </Col>
-       </Row>
-    </div>
-  );
+           </Col>
+        </Row>
+      </div>
+    );
+  };
 
   return (
     <div style={{ padding: '0 24px 24px 24px' }}>
@@ -373,7 +420,7 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
                             { label: 'Ride Hailing', value: 'ride' },
                             { label: 'Food Delivery', value: 'food' }
                           ]} />
-                          <Segmented options={['All', '5★', '4★', '3★', '2★', '1★']} />
+                          <Segmented options={['All', '5â˜…', '4â˜…', '3â˜…', '2â˜…', '1â˜…']} />
                         </div>
                         <Table 
                           dataSource={reviews} 

@@ -114,7 +114,7 @@ export const SupportTickets: React.FC<SupportTicketsProps> = ({ initialTab = 'Ac
  );
 
  const renderTabs = () => (
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={['Active', 'Agents', 'Performance', 'Settings', 'Console'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
+ <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k as any)} items={['Active', 'Agents', 'Performance', 'Settings', 'Console'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
  );
 
  const renderActiveTickets = () => (
@@ -492,7 +492,7 @@ export const SupportTickets: React.FC<SupportTicketsProps> = ({ initialTab = 'Ac
  </div>
  ))}
  <div className="flex gap-4 items-center pt-2">
- <span className="text-[#0089D1] animate-pulse">❯</span>
+ <span className="text-[#0089D1] animate-pulse">â¯</span>
  <div className="h-4 w-2 bg-[#0089D1] animate-pulse" />
  <span className="text-slate-700 italic">Listening for system events...</span>
  </div>

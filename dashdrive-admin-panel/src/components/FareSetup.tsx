@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
  DollarSign,
  Car,
@@ -147,7 +147,7 @@ const VehicleRow: React.FC<{ type: string; icon: React.ReactNode; base: string; 
  <td className="px-8 py-5">
  <div className="flex items-center gap-4">
  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-primary transition-colors border border-slate-100">
- {React.cloneElement(icon as React.ReactElement, { className: "w-5 h-5" })}
+ <span className="w-5 h-5">{icon}</span>
  </div>
  <span className="text-sm font-display font-bold text-slate-800 tracking-tight">{type}</span>
  </div>

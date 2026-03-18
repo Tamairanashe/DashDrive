@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { cn } from '../utils';
 
 interface StatCardProps {
@@ -21,7 +21,7 @@ export const StatCard = ({ title, value, icon, color = "bg-primary", trend }: St
  "absolute top-6 right-6 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg",
  color.includes('bg-') ? `${color} text-white shadow-current/10` : `bg-${color}/10 text-${color} shadow-slate-200`
  )}>
- {React.cloneElement(icon as React.ReactElement, { className: "w-5 h-5" })}
+ <span className="w-5 h-5">{icon}</span>
  </div>
 
  <div className="mt-6 flex items-center gap-2 z-10">

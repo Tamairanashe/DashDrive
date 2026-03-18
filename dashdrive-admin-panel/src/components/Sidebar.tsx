@@ -63,7 +63,9 @@ import {
  Award,
  Settings2,
  Lock,
- Building2
+ Building2,
+ Key,
+ Compass
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils';
@@ -128,6 +130,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
  label: 'Parcel Delivery',
  subItems: ['Parcel Dashboard', 'Parcel Orders', 'Parcel Categories', 'Parcel Weights', 'Parcel Attributes', 'Refund Requests']
  },
+ {
+ icon: Ticket,
+ label: 'Events & Ticketing',
+ subItems: ['Event List', 'Ticket Sales', 'Venue Management', 'Promo Codes']
+ },
+ {
+ icon: Key,
+ label: 'Car Rental',
+ subItems: ['Fleet Overview', 'Rental Bookings', 'Fleet Health', 'Lease Agreements']
+ },
+ {
+ icon: Compass,
+ label: 'City to City',
+ subItems: ['Route Monitor', 'Schedules', 'Load Factors', 'Safety Audit']
+ }
  ]
  },
  {

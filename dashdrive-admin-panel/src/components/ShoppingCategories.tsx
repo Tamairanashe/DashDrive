@@ -151,7 +151,7 @@ export const ShoppingCategories: React.FC = () => {
  cat.color === 'purple' ? "bg-purple-100 text-purple-600 shadow-purple-100/30" :
  "bg-amber-100 text-amber-600 shadow-amber-100/30"
  )}>
- {React.cloneElement(cat.icon as React.ReactElement, { className: "w-8 h-8" })}
+ <span className="w-8 h-8 flex items-center justify-center">{cat.icon}</span>
  </div>
 
  <div>

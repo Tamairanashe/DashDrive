@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Tabs } from 'antd';
 import {
     CreditCard,
@@ -279,7 +279,7 @@ export const ThirdPartyConfig: React.FC = () => {
                         { label: 'Username', placeholder: 'user@example.com' },
                         { label: 'Email ID', placeholder: 'noreply@example.com' },
                         { label: 'Encryption', placeholder: 'TLS' },
-                        { label: 'Password', placeholder: '••••••••', type: 'password' }
+                        { label: 'Password', placeholder: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', type: 'password' }
                     ].map((f, i) => (
                         <div key={i} className="space-y-3">
                             <label className="text-[10px] font-black text-slate-400 tracking-[0.2em] ml-4">{f.label} *</label>
@@ -376,7 +376,7 @@ export const ThirdPartyConfig: React.FC = () => {
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 ml-1">Secret Key *</label>
-                            <input type="password" className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-[28px] text-xs font-mono text-slate-500 outline-none" placeholder="••••••••" />
+                            <input type="password" className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-[28px] text-xs font-mono text-slate-500 outline-none" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
                         </div>
                     </div>
 

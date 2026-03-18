@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Clock,
  CheckCircle2,
@@ -68,7 +68,7 @@ export const WithdrawRequests: React.FC = () => {
  {/* Navigation & Search */}
  <div className="p-8 border-b border-slate-50 space-y-6">
  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={['Pending', 'Approved', 'Rejected', 'Processed', 'All'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
+  <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k as PayoutStatus)} items={['Pending', 'Approved', 'Rejected', 'Processed', 'All'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
 
  <div className="flex items-center gap-3">
  <div className="relative group">

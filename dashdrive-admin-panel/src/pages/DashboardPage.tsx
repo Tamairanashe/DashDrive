@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { 
   Row, Col, Card, Statistic, Table, Tag, Typography, 
   Button, Space, message, Select, Badge, Divider, Skeleton,
@@ -18,9 +18,6 @@ import {
   CloseCircleOutlined,
   SyncOutlined
 } from '@ant-design/icons';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -28,17 +25,11 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { analyticsApi } from '../api/analyticsApi';
+import { BaseMap } from '../components/BaseMap';
+import { Marker, Popup } from 'react-leaflet';
 
 const { Title, Text } = Typography;
 
-// Leaflet Icon Fix
-const DefaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
 
 const LOCATION_DATA: any = {
   'Zimbabwe': { regions: { 'Mashonaland': ['Harare', 'Chitungwiza'], 'Matabeleland': ['Bulawayo'] } },
@@ -86,7 +77,7 @@ export const DashboardPage: React.FC = () => {
               trend: 'Action Req', 
               icon: <UserOutlined />, 
               color: '#f59e0b',
-              badge: '🟠',
+              badge: 'ðŸŸ ',
               link: '/management/drivers'
           },
           { 
@@ -95,7 +86,7 @@ export const DashboardPage: React.FC = () => {
               trend: '-2.1%', 
               icon: <CloseCircleOutlined />, 
               color: '#ef4444',
-              badge: '🔴',
+              badge: 'ðŸ”´',
               link: '/finance/settlements'
           }
         ];
@@ -241,9 +232,7 @@ export const DashboardPage: React.FC = () => {
             style={{ borderRadius: 12, overflow: 'hidden' }}
             bodyStyle={{ padding: 0 }}
           >
-            <div style={{ height: 450, width: '100%' }}>
-              <MapContainer center={[-17.8248, 31.0530]} zoom={13} style={{ height: '100%', width: '100%' }}>
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <BaseMap center={[-17.8248, 31.0530]} zoom={13} height={450}>
                 <Marker position={[-17.8248, 31.0530]}>
                   <Popup>
                     <Text strong>RIDE-8821</Text><br/>
@@ -256,8 +245,7 @@ export const DashboardPage: React.FC = () => {
                     <Tag color="success">Online</Tag>
                   </Popup>
                 </Marker>
-              </MapContainer>
-            </div>
+            </BaseMap>
           </Card>
         </Col>
 

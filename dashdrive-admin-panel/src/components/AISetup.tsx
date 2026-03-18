@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Zap,
  RotateCcw,
@@ -115,7 +115,7 @@ export const AISetup: React.FC = () => {
  type="password"
  value={apiKey}
  onChange={(e) => setApiKey(e.target.value)}
- placeholder="sk-••••••••••••••••••••••••••••••••"
+ placeholder="sk-â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
  className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[40px] text-xs font-mono text-slate-600 outline-none hover:border-amber-200 focus:ring-8 focus:ring-amber-500/5 transition-all shadow-sm"
  />
  <Key className="absolute right-8 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-amber-500 transition-colors" />
@@ -129,7 +129,7 @@ export const AISetup: React.FC = () => {
  type="text"
  value={orgId}
  onChange={(e) => setOrgId(e.target.value)}
- placeholder="org-••••••••••••••••••••••••"
+ placeholder="org-â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
  className="w-full px-10 py-6 bg-slate-50 border border-slate-100 rounded-[40px] text-xs font-mono text-slate-600 outline-none hover:border-amber-200 focus:ring-8 focus:ring-amber-500/5 transition-all shadow-sm"
  />
  <Lock className="absolute right-8 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-amber-500 transition-colors" />

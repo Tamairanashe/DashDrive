@@ -110,7 +110,7 @@ export const Trips: React.FC = () => {
  </div>
 
  {/* Tabs */}
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={['All', 'Ongoing', 'Completed', 'Cancelled'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
+ <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k as any)} items={['All', 'Ongoing', 'Completed', 'Cancelled'].map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
 
  <div className="bg-white rounded-[32px] shadow-soft border border-slate-100/50 overflow-hidden">
  <div className="overflow-x-auto">
@@ -167,7 +167,7 @@ export const Trips: React.FC = () => {
  </td>
  <td className="px-8 py-6">
  <p className="text-sm font-display font-extrabold text-slate-900 tracking-tight">{trip.fare}</p>
- <p className="text-[10px] text-slate-400 font-bold font-small-caps mt-1.5">{trip.distance} • {trip.payment}</p>
+ <p className="text-[10px] text-slate-400 font-bold font-small-caps mt-1.5">{trip.distance} â€¢ {trip.payment}</p>
  </td>
  <td className="px-8 py-6">
  <span className={cn(

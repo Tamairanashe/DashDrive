@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
  Search,
  Filter,
@@ -140,7 +140,7 @@ export const MartStores: React.FC = () => {
 
  {/* Search & Tabs Bar */}
  <div className="bg-white p-6 rounded-[32px] shadow-soft border border-slate-100/50 flex flex-col md:flex-row items-center justify-between gap-6">
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab.id || tab.name || tab, label: tab.name || tab.label || tab.title || tab.id || tab }))} className="mb-6 font-bold" />
+ <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
  <div className="relative w-full md:w-96 group">
  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-primary transition-colors" />
  <input
@@ -192,7 +192,7 @@ export const MartStores: React.FC = () => {
  <div className="flex items-center gap-2">
  <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
  <span className="text-[11px] font-black text-slate-900">{store.rating}</span>
- <span className="text-[10px] text-slate-400 font-bold">• {store.totalOrders} Orders</span>
+ <span className="text-[10px] text-slate-400 font-bold">â€¢ {store.totalOrders} Orders</span>
  </div>
  </div>
  </td>
@@ -277,7 +277,7 @@ const StoreKPICard: React.FC<KPICardProps> = ({ title, value, icon, trend, color
  color === 'emerald' ? "bg-emerald-100 text-emerald-600 shadow-emerald-100/30" :
  "bg-blue-100 text-blue-600 shadow-blue-100/30"
  )}>
- {React.cloneElement(icon as React.ReactElement, { className: "w-7 h-7" })}
+ <span className="w-7 h-7">{icon}</span>
  </div>
  <ArrowUpRight className="w-6 h-6 text-slate-200 group-hover:text-primary transition-colors" />
  </div>

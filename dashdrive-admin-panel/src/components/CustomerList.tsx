@@ -158,7 +158,7 @@ export const CustomerList: React.FC<CustomerListProps> = ({ onCustomerClick }) =
  <div className="bg-white rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
  {/* Navigation Tabs */}
  <div className="px-8 pt-8 pb-4 border-b border-slate-50">
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab.id || tab.name || tab, label: tab.name || tab.label || tab.title || tab.id || tab }))} className="mb-6 font-bold" />
+  <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k as CustomerTab)} items={tabs.map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
  </div>
 
  {/* Toolbar */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Briefcase,
  Settings2,
@@ -39,7 +39,7 @@ export const BusinessConfig: React.FC = () => {
  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
  {[
- { title: 'Global Operations', icon: Globe, items: ['Country: Nigeria', 'Currency: NGN (₦)', 'Timezone: UTC+1', 'Language: English'] },
+ { title: 'Global Operations', icon: Globe, items: ['Country: Nigeria', 'Currency: NGN (â‚¦)', 'Timezone: UTC+1', 'Language: English'] },
  { title: 'Platform Controls', icon: Zap, items: ['Multi-currency: Enabled', 'Real-time Tracking: ON', 'Auto-assign: Optimized', 'Dynamic Pricing: Active'] },
  { title: 'System Health', icon: RefreshCw, items: ['API Latency: 45ms', 'DB Status: Healthy', 'Queue Status: Empty', 'Last Backup: 1hr ago'] }
  ].map((box, i) => (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Typography, Tabs, Card, Table, Tag, Badge, Space, Button, Select, Divider, Row, Col, Statistic } from 'antd';
 import { 
     ShopOutlined, 
@@ -103,136 +103,153 @@ export const MartDeliveryPage: React.FC = () => {
                 </Col>
             </Row>
 
-            <Card bordered={false} className="shadow-sm" style={{ borderRadius: 16, overflow: 'hidden' }} styles={{ body: { padding: 0 } }}>
+            <Card bordered={false} className="shadow-sm" style={{ borderRadius: 16, overflow: 'hidden' }}>
                 <Tabs 
                     activeKey={activeTab} 
                     onChange={setActiveTab} 
                     size="large"
                     tabBarStyle={{ padding: '16px 24px 0 24px', margin: 0, background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
-                >
-                    <Tabs.TabPane tab={<span><ShopOutlined /> Mart Vendors</span>} key="vendors">
-                        <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                                <div>
-                                    <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Partner Supermarkets & Stores</Title>
-                                    <Text type="secondary" style={{ fontSize: 15 }}>Onboard and manage active grocery retail locations.</Text>
+                    items={[
+                        {
+                            key: 'vendors',
+                            label: <span><ShopOutlined /> Mart Vendors</span>,
+                            children: (
+                                <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                                        <div>
+                                            <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Partner Supermarkets & Stores</Title>
+                                            <Text type="secondary" style={{ fontSize: 15 }}>Onboard and manage active grocery retail locations.</Text>
+                                        </div>
+                                    </div>
+                                    <MartVendorManagement />
                                 </div>
-                            </div>
-                            <MartVendorManagement />
-                        </div>
-                    </Tabs.TabPane>
-                    
-                    <Tabs.TabPane tab={<span><AppstoreOutlined /> Product Catalog</span>} key="catalog">
-                        <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
-                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                                <div>
-                                    <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Global Aisle Master Catalog</Title>
-                                    <Text type="secondary" style={{ fontSize: 15 }}>Review and approve items sold across all retail partners.</Text>
+                            )
+                        },
+                        {
+                            key: 'catalog',
+                            label: <span><AppstoreOutlined /> Product Catalog</span>,
+                            children: (
+                                <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
+                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                                        <div>
+                                            <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Global Aisle Master Catalog</Title>
+                                            <Text type="secondary" style={{ fontSize: 15 }}>Review and approve items sold across all retail partners.</Text>
+                                        </div>
+                                        <Space>
+                                            <Select defaultValue="All Stores" style={{ width: 150 }} options={[{value: 'All Stores', label: 'All Stores'}, {value: 'OK Mart', label: 'OK Mart'}]} />
+                                            <Select defaultValue="All Aisles" style={{ width: 150 }} options={[{value: 'All Aisles', label: 'All Aisles'}, {value: 'Dairy', label: 'Dairy & Eggs'}]} />
+                                        </Space>
+                                    </div>
+                                    <Table 
+                                        dataSource={mockCatalog}
+                                        rowKey="id"
+                                        columns={[
+                                            { title: 'SKU / ID', dataIndex: 'id', key: 'id', render: (t) => <Text type="secondary">{t}</Text> },
+                                            { title: 'Product Name', dataIndex: 'name', key: 'name', render: (t) => <Text strong>{t}</Text> },
+                                            { title: 'Category (Aisle)', dataIndex: 'category', key: 'category', render: (t) => <Tag>{t}</Tag> },
+                                            { title: 'Vendor', dataIndex: 'vendor', key: 'vendor' },
+                                            { title: 'Price', dataIndex: 'price', key: 'price', render: (p) => `$${p.toFixed(2)}` },
+                                            { title: 'Stock Level', dataIndex: 'stock', key: 'stock', render: (s) => <span style={{ color: s < 20 ? 'red' : 'inherit' }}>{s} units</span> },
+                                            { title: 'Actions', key: 'actions', render: () => <Button type="link" size="small">Edit Details</Button> }
+                                        ]}
+                                    />
                                 </div>
-                                <Space>
-                                    <Select defaultValue="All Stores" style={{ width: 150 }} options={[{value: 'All Stores', label: 'All Stores'}, {value: 'OK Mart', label: 'OK Mart'}]} />
-                                    <Select defaultValue="All Aisles" style={{ width: 150 }} options={[{value: 'All Aisles', label: 'All Aisles'}, {value: 'Dairy', label: 'Dairy & Eggs'}]} />
-                                </Space>
-                            </div>
-                            <Table 
-                                dataSource={mockCatalog}
-                                rowKey="id"
-                                columns={[
-                                    { title: 'SKU / ID', dataIndex: 'id', key: 'id', render: (t) => <Text type="secondary">{t}</Text> },
-                                    { title: 'Product Name', dataIndex: 'name', key: 'name', render: (t) => <Text strong>{t}</Text> },
-                                    { title: 'Category (Aisle)', dataIndex: 'category', key: 'category', render: (t) => <Tag>{t}</Tag> },
-                                    { title: 'Vendor', dataIndex: 'vendor', key: 'vendor' },
-                                    { title: 'Price', dataIndex: 'price', key: 'price', render: (p) => `$${p.toFixed(2)}` },
-                                    { title: 'Stock Level', dataIndex: 'stock', key: 'stock', render: (s) => <span style={{ color: s < 20 ? 'red' : 'inherit' }}>{s} units</span> },
-                                    { title: 'Actions', key: 'actions', render: () => <Button type="link" size="small">Edit Details</Button> }
-                                ]}
-                            />
-                        </div>
-                    </Tabs.TabPane>
-
-                    <Tabs.TabPane tab={<span><SyncOutlined /> Inventory Sync</span>} key="inventory">
-                        <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                                <div>
-                                    <Title level={5}>Live POS Integrations</Title>
-                                    <Text type="secondary">Monitor the health of third-party POS stock synchronization hooks.</Text>
+                            )
+                        },
+                        {
+                            key: 'inventory',
+                            label: <span><SyncOutlined /> Inventory Sync</span>,
+                            children: (
+                                <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                                        <div>
+                                            <Title level={5}>Live POS Integrations</Title>
+                                            <Text type="secondary">Monitor the health of third-party POS stock synchronization hooks.</Text>
+                                        </div>
+                                    </div>
+                                    <Table 
+                                        dataSource={mockSyncStatus}
+                                        rowKey="id"
+                                        columns={[
+                                            { title: 'Vendor Endpoint', dataIndex: 'vendor', key: 'vendor', render: (t) => <Text strong>{t}</Text> },
+                                            { title: 'Integration Type', dataIndex: 'integrationType', key: 'integrationType', render: (t) => <Tag color="blue">{t}</Tag> },
+                                            { title: 'Last Sync', dataIndex: 'lastSync', key: 'lastSync' },
+                                            { title: 'Payload Data', dataIndex: 'itemsUpdate', key: 'itemsUpdate' },
+                                            { 
+                                                title: 'Health', 
+                                                dataIndex: 'status', 
+                                                key: 'status', 
+                                                render: (status) => status === 'Healthy' 
+                                                    ? <Tag icon={<CheckCircleOutlined />} color="success">Healthy Sync</Tag> 
+                                                    : <Tag icon={<WarningOutlined />} color="warning">Fix Required</Tag> 
+                                            },
+                                            { 
+                                                title: 'Actions', 
+                                                key: 'actions', 
+                                                render: (_, record) => (
+                                                    <Button 
+                                                        type="default" 
+                                                        size="small" 
+                                                        icon={<ReloadOutlined />} 
+                                                        loading={isSyncing === record.id}
+                                                        onClick={() => handleManualSync(record.id)}
+                                                    >
+                                                        Force Sync
+                                                    </Button>
+                                                ) 
+                                            }
+                                        ]}
+                                    />
                                 </div>
-                            </div>
-                            <Table 
-                                dataSource={mockSyncStatus}
-                                rowKey="id"
-                                columns={[
-                                    { title: 'Vendor Endpoint', dataIndex: 'vendor', key: 'vendor', render: (t) => <Text strong>{t}</Text> },
-                                    { title: 'Integration Type', dataIndex: 'integrationType', key: 'integrationType', render: (t) => <Tag color="blue">{t}</Tag> },
-                                    { title: 'Last Sync', dataIndex: 'lastSync', key: 'lastSync' },
-                                    { title: 'Payload Data', dataIndex: 'itemsUpdate', key: 'itemsUpdate' },
-                                    { 
-                                        title: 'Health', 
-                                        dataIndex: 'status', 
-                                        key: 'status', 
-                                        render: (status) => status === 'Healthy' 
-                                            ? <Tag icon={<CheckCircleOutlined />} color="success">Healthy Sync</Tag> 
-                                            : <Tag icon={<WarningOutlined />} color="warning">Fix Required</Tag> 
-                                    },
-                                    { 
-                                        title: 'Actions', 
-                                        key: 'actions', 
-                                        render: (_, record) => (
-                                            <Button 
-                                                type="default" 
-                                                size="small" 
-                                                icon={<ReloadOutlined />} 
-                                                loading={isSyncing === record.id}
-                                                onClick={() => handleManualSync(record.id)}
-                                            >
-                                                Force Sync
-                                            </Button>
-                                        ) 
-                                    }
-                                ]}
-                            />
-                        </div>
-                    </Tabs.TabPane>
-
-                    <Tabs.TabPane tab={<span><ShoppingCartOutlined /> Live Orders</span>} key="orders">
-                        <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
-                            <div style={{ marginBottom: 16 }}>
-                                <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Active Grocery Dispatches</Title>
-                                <Text type="secondary" style={{ fontSize: 15 }}>Monitor live consumer cart deliveries in real-time.</Text>
-                            </div>
-                            <Table 
-                                dataSource={mockOrders}
-                                rowKey="id"
-                                columns={[
-                                    { title: 'Order ID', dataIndex: 'id', key: 'id', render: (t) => <Text strong>{t}</Text> },
-                                    { title: 'Customer', dataIndex: 'customer', key: 'customer' },
-                                    { title: 'Fulfilling Mart', dataIndex: 'vendor', key: 'vendor' },
-                                    { title: 'Cart Size', dataIndex: 'items', key: 'items', render: (i) => `${i} items` },
-                                    { title: 'Total', dataIndex: 'total', key: 'total', render: (t) => <Text strong>${t.toFixed(2)}</Text> },
-                                    { 
-                                        title: 'Status', 
-                                        dataIndex: 'status', 
-                                        key: 'status', 
-                                        render: (status) => {
-                                            let color = 'blue';
-                                            if (status === 'Out for Delivery') color = 'purple';
-                                            if (status === 'Pending') color = 'orange';
-                                            return <Badge color={color} text={status} />;
-                                        } 
-                                    },
-                                    { title: 'Placed At', dataIndex: 'time', key: 'time' },
-                                    { title: 'Actions', key: 'actions', render: () => <Button type="link" size="small">View Receipt & Tracking</Button> }
-                                ]}
-                            />
-                        </div>
-                    </Tabs.TabPane>
-
-                    <Tabs.TabPane tab={<span><SettingOutlined /> Service Rules</span>} key="settings">
-                        <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
-                            <MartServiceRules />
-                        </div>
-                    </Tabs.TabPane>
-                </Tabs>
+                            )
+                        },
+                        {
+                            key: 'orders',
+                            label: <span><ShoppingCartOutlined /> Live Orders</span>,
+                            children: (
+                                <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
+                                    <div style={{ marginBottom: 16 }}>
+                                        <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Active Grocery Dispatches</Title>
+                                        <Text type="secondary" style={{ fontSize: 15 }}>Monitor live consumer cart deliveries in real-time.</Text>
+                                    </div>
+                                    <Table 
+                                        dataSource={mockOrders}
+                                        rowKey="id"
+                                        columns={[
+                                            { title: 'Order ID', dataIndex: 'id', key: 'id', render: (t) => <Text strong>{t}</Text> },
+                                            { title: 'Customer', dataIndex: 'customer', key: 'customer' },
+                                            { title: 'Fulfilling Mart', dataIndex: 'vendor', key: 'vendor' },
+                                            { title: 'Cart Size', dataIndex: 'items', key: 'items', render: (i) => `${i} items` },
+                                            { title: 'Total', dataIndex: 'total', key: 'total', render: (t) => <Text strong>${t.toFixed(2)}</Text> },
+                                            { 
+                                                title: 'Status', 
+                                                dataIndex: 'status', 
+                                                key: 'status', 
+                                                render: (status) => {
+                                                    let color = 'blue';
+                                                    if (status === 'Out for Delivery') color = 'purple';
+                                                    if (status === 'Pending') color = 'orange';
+                                                    return <Badge color={color} text={status} />;
+                                                } 
+                                            },
+                                            { title: 'Placed At', dataIndex: 'time', key: 'time' },
+                                            { title: 'Actions', key: 'actions', render: () => <Button type="link" size="small">View Receipt & Tracking</Button> }
+                                        ]}
+                                    />
+                                </div>
+                            )
+                        },
+                        {
+                            key: 'settings',
+                            label: <span><SettingOutlined /> Service Rules</span>,
+                            children: (
+                                <div style={{ padding: 24, minHeight: 'calc(100vh - 280px)' }}>
+                                    <MartServiceRules />
+                                </div>
+                            )
+                        }
+                    ]}
+                />
             </Card>
         </div>
     );

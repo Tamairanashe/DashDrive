@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Typography, 
   Row, 
@@ -217,7 +217,7 @@ export const DriverRewards: React.FC<DriverRewardsProps> = ({ activeTab }) => {
       title: 'Period',
       key: 'period',
       render: (_: any, record: any) => (
-        <Text type="secondary" style={{ fontSize: 11 }}>{record.startDate} → {record.endDate}</Text>
+        <Text type="secondary" style={{ fontSize: 11 }}>{record.startDate} â†’ {record.endDate}</Text>
       )
     },
     {
@@ -254,7 +254,7 @@ export const DriverRewards: React.FC<DriverRewardsProps> = ({ activeTab }) => {
 
   const renderCampaigns = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Summary Stats — matching standard DashDrive Statistic card pattern */}
+      {/* Summary Stats â€” matching standard DashDrive Statistic card pattern */}
       <Row gutter={[24, 24]}>
         {[
           { title: 'Active Campaigns', value: 4, icon: <RocketOutlined />, color: '#3b82f6' },

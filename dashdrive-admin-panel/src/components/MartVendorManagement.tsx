@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Table, Card, Button, Input, Space, Tag, Typography, Row, Col, Dropdown, MenuProps, Empty, Drawer, Descriptions, Divider, Switch, Avatar, InputNumber, Select, message, Alert, Tabs, Statistic, Modal } from 'antd';
 import { PlusOutlined, SearchOutlined, EyeOutlined, WarningOutlined, HistoryOutlined, DollarCircleOutlined, SolutionOutlined, ExceptionOutlined } from '@ant-design/icons';
 import { adminApi } from '../api/adminApi';
@@ -285,7 +285,7 @@ export const MartVendorManagement: React.FC = () => {
           <Avatar src={record.logo} shape="square" size="large" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <Text strong>{record.name}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.location} • {record.storeTypes[0]}</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>{record.location} â€¢ {record.storeTypes[0]}</Text>
           </div>
         </Space>
       ),
@@ -297,7 +297,7 @@ export const MartVendorManagement: React.FC = () => {
       render: (rating: number) => (
         <Space size={4}>
           <Text strong>{rating.toFixed(1)}</Text>
-          <span style={{ color: '#fadb14' }}>★</span>
+          <span style={{ color: '#fadb14' }}>â˜…</span>
         </Space>
       ),
     },

@@ -7,9 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "dashdrive",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -17,7 +14,19 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "package": "com.jojolw.DashDrive"
+      "package": "com.jojolw.DashDrive",
+      "config": {
+        "googleMaps": {
+          "apiKey": "your_google_maps_api_key_here"
+        }
+      }
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jojolw.DashDrive",
+      "config": {
+        "googleMapsApiKey": "your_google_maps_api_key_here"
+      }
     },
     "web": {
       "output": "static",

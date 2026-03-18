@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAdminSocketStore } from '../lib/adminSocketStore';
 import { Layout, Menu, Button, Input, Badge, Avatar, Space, Typography, ConfigProvider, theme, Segmented } from 'antd';
 import {
@@ -101,12 +101,10 @@ export const AdminLayout: React.FC = () => {
         { key: '/services/mart', icon: <ShopOutlined />, label: 'Mart Delivery' },
         { key: '/services/shopping', icon: <ShoppingOutlined />, label: 'Shopping' },
         { key: '/services/parcel', icon: <PushpinOutlined />, label: 'Parcel Delivery' },
-        { key: '/services/hotels', icon: <BankOutlined />, label: 'Hotels' },
+        { key: '/services/hotels', icon: <ShopOutlined />, label: 'Marketplace & Stays' },
         { key: '/services/events', icon: <CalendarOutlined />, label: 'Events Booking' },
         { key: '/services/rental', icon: <KeyOutlined />, label: 'Car Rental' },
-        { key: '/services/marketplace', icon: <ShopOutlined />, label: 'Marketplace Management' },
-        { key: '/services/transport', icon: <CompassOutlined />, label: 'Public Transport' },
-        { key: '/services/fuel', icon: <ThunderboltOutlined />, label: 'Fuel Services' },
+        { key: '/services/transport', icon: <CompassOutlined />, label: 'City to City' },
         { key: '/services/school-run', icon: <SafetyOutlined />, label: 'School Run Monitor' },
         { key: '/services/config', icon: <AppstoreOutlined />, label: 'Master Config' },
       ],

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Table, Tag, Space, Button, Input, Card, Typography, Tabs, 
   Row, Col, Statistic, Avatar, Tooltip, Badge, Dropdown, 
@@ -14,7 +14,8 @@ import {
   CloudUploadOutlined, MessageOutlined, BellOutlined, SafetyOutlined,
   AuditOutlined, SwapOutlined, ThunderboltOutlined, RocketOutlined,
   DollarOutlined, LockOutlined, UnlockOutlined, ClockCircleOutlined,
-  ShoppingOutlined, CoffeeOutlined, ShopOutlined
+  ShoppingOutlined, CoffeeOutlined, ShopOutlined, SyncOutlined,
+  FileSearchOutlined, CheckOutlined, CloseOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -29,7 +30,9 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
   const [editingCourier, setEditingCourier] = useState<any>(null);
   const [selectedCourier, setSelectedCourier] = useState<any>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [incidentForm] = Form.useForm();
 
   const [couriers, setCouriers] = useState([
     { 
@@ -241,11 +244,128 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
   const items = [
     { key: '1', label: <Space><UserOutlined /> Courier List</Space>, children: <ListTab /> },
     { key: '2', label: <Space><PlusOutlined /> Manual Requests</Space>, children: <RequestsTab /> },
-    { key: '3', label: <Space><FileTextOutlined /> Documents</Space>, children: <div style={{ padding: 20 }}>Document Management Layer...</div> },
+    { 
+      key: '3', 
+      label: <Space><FileTextOutlined /> Documents</Space>, 
+      children: (
+        <div style={{ marginTop: 20 }}>
+          <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+              <Space>
+                <Text strong>Document Status:</Text>
+                <Radio.Group defaultValue="All" buttonStyle="solid">
+                  <Radio.Button value="All">All</Radio.Button>
+                  <Radio.Button value="Verified">Verified</Radio.Button>
+                  <Radio.Button value="Pending">Pending</Radio.Button>
+                </Radio.Group>
+              </Space>
+              <Button icon={<AuditOutlined />}>Bulk Verify</Button>
+            </div>
+            <Table 
+              dataSource={[
+                { id: 'DOC-501', courier: 'Alex Makoni', type: 'Bike Registration', expiry: '2025-10-12', status: 'Verified' },
+                { id: 'DOC-502', courier: 'Sarah Chipo', type: 'National ID', expiry: 'N/A', status: 'Pending' },
+                { id: 'DOC-503', courier: 'John Doe', type: 'Operator License', expiry: '2026-01-15', status: 'Verified' },
+              ]}
+              columns={[
+                { title: 'Doc ID', dataIndex: 'id', key: 'id' },
+                { title: 'Courier', dataIndex: 'courier', key: 'courier', render: (t) => <Text strong>{t}</Text> },
+                { title: 'Document Type', dataIndex: 'type', key: 'type' },
+                { title: 'Expiry', dataIndex: 'expiry', key: 'expiry' },
+                { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => (
+                  <Tag color={s === 'Verified' ? 'success' : 'warning'} icon={s === 'Verified' ? <CheckCircleOutlined /> : <SyncOutlined spin />}>
+                    {s}
+                  </Tag>
+                )},
+                { title: 'Actions', key: 'actions', render: () => (
+                  <Space>
+                    <Button size="small" icon={<FileSearchOutlined />}>View</Button>
+                    <Button size="small" type="link">Verify</Button>
+                  </Space>
+                )}
+              ]}
+            />
+          </Card>
+        </div>
+      )
+    },
     { key: '4', label: <Space><WalletOutlined /> Earnings</Space>, children: <EarningsTab /> },
     { key: '5', label: <Space><RocketOutlined /> Deliveries</Space>, children: <DeliveriesTab /> },
-    { key: '6', label: <Space><StarOutlined /> Ratings</Space>, children: <div style={{ padding: 20 }}>Ratings & Feedback...</div> },
-    { key: '7', label: <Space><WarningOutlined /> Incidents</Space>, children: <div style={{ padding: 20 }}>Safety Incidents...</div> },
+    { 
+      key: '6', 
+      label: <Space><StarOutlined /> Ratings</Space>, 
+      children: (
+        <div style={{ marginTop: 20 }}>
+          <Row gutter={24}>
+            <Col span={8}>
+              <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16, textAlign: 'center' }}>
+                <Statistic title="Overall Rating" value={4.85} prefix={<StarOutlined style={{ color: '#fadb14' }} />} precision={2} />
+                <Divider />
+                <div style={{ textAlign: 'left' }}>
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <div><Text>Timeliness</Text><Rate disabled defaultValue={4.9} style={{ fontSize: 12, float: 'right' }} /></div>
+                    <div><Text>Communication</Text><Rate disabled defaultValue={4.7} style={{ fontSize: 12, float: 'right' }} /></div>
+                    <div><Text>Care of Items</Text><Rate disabled defaultValue={4.9} style={{ fontSize: 12, float: 'right' }} /></div>
+                  </Space>
+                </div>
+              </Card>
+            </Col>
+            <Col span={16}>
+              <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
+                <Title level={5}>Recent Courier Reviews</Title>
+                <List
+                  itemLayout="horizontal"
+                  dataSource={[
+                    { user: 'Tendai M.', rating: 5, comment: 'Quick delivery and very polite.', courier: 'Alex Makoni' },
+                    { user: 'Blessing K.', rating: 4, comment: 'Food was a bit cold but courier was fast.', courier: 'Sarah Chipo' },
+                  ]}
+                  renderItem={item => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={<Avatar icon={<UserOutlined />} />}
+                        title={<Space><Text strong>{item.user}</Text> <Text type="secondary">reviewed</Text> <Text strong>{item.courier}</Text></Space>}
+                        description={<div><Rate disabled defaultValue={item.rating} style={{ fontSize: 10 }} /><br/><Text>"{item.comment}"</Text></div>}
+                      />
+                    </List.Item>
+                  )}
+                />
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      )
+    },
+    { 
+      key: '7', 
+      label: <Space><WarningOutlined /> Incidents</Space>, 
+      children: (
+        <div style={{ marginTop: 20 }}>
+          <Card 
+            variant="borderless" 
+            className="shadow-sm" 
+            style={{ borderRadius: 16 }}
+            title="Logistics Incidents"
+            extra={<Button type="primary" danger icon={<PlusOutlined />} onClick={() => setIsIncidentModalOpen(true)}>Report Incident</Button>}
+          >
+            <Table
+              dataSource={[
+                { id: 'INC-201', courier: 'John Doe', type: 'Late Delivery', severity: 'Low', status: 'Resolved', date: 'Yesterday' },
+                { id: 'INC-202', courier: 'Alex Makoni', type: 'Damaged Goods', severity: 'Medium', status: 'Investigating', date: 'Today' },
+              ]}
+              columns={[
+                { title: 'ID', dataIndex: 'id', key: 'id' },
+                { title: 'Courier', dataIndex: 'courier', key: 'courier' },
+                { title: 'Type', dataIndex: 'type', key: 'type' },
+                { title: 'Severity', dataIndex: 'severity', key: 'severity', render: (s) => <Tag color={s === 'High' ? 'red' : 'blue'}>{s}</Tag> },
+                { title: 'Status', dataIndex: 'status', key: 'status' },
+                { title: 'Date', dataIndex: 'date', key: 'date' },
+                { title: 'Action', key: 'action', render: () => <Button size="small">Details</Button> }
+              ]}
+            />
+          </Card>
+        </div>
+      )
+    },
   ];
 
   return (
@@ -330,7 +450,7 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
       </Drawer>
 
       <Drawer
-        title="Courier 360° Profile"
+        title="Courier 360Â° Profile"
         width={800}
         onClose={() => setIsDetailDrawerOpen(false)}
         open={isDetailDrawerOpen}
@@ -382,8 +502,73 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
           </div>
         )}
       </Drawer>
+
+      <CourierIncidentModal 
+        isOpen={isIncidentModalOpen} 
+        onClose={() => setIsIncidentModalOpen(false)} 
+        form={incidentForm} 
+      />
     </div>
   );
 };
+
+const CourierIncidentModal: React.FC<{ 
+  isOpen: boolean, 
+  onClose: () => void, 
+  form: any 
+}> = ({ isOpen, onClose, form }) => (
+  <Modal
+    title={<Space><WarningOutlined style={{ color: '#ff4d4f' }} /> Report Courier Incident</Space>}
+    open={isOpen}
+    onCancel={onClose}
+    onOk={() => form.submit()}
+    okText="Report Incident"
+    okButtonProps={{ danger: true }}
+    centered
+  >
+    <Form form={form} layout="vertical" onFinish={(values) => {
+      antdMessage.success(`Incident reported for ${values.courierName}`);
+      onClose();
+      form.resetFields();
+    }}>
+      <Form.Item name="courierName" label="Courier Name / ID" rules={[{ required: true }]}>
+        <Input placeholder="Search courier..." />
+      </Form.Item>
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item name="type" label="Incident Type" rules={[{ required: true }]}>
+            <Select placeholder="Select type">
+              <Select.Option value="Damaged Goods">Damaged Goods</Select.Option>
+              <Select.Option value="Late Delivery">Late Delivery</Select.Option>
+              <Select.Option value="Rude Behavior">Rude Behavior</Select.Option>
+              <Select.Option value="Traffic Violation">Traffic Violation</Select.Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item name="severity" label="Severity" rules={[{ required: true }]}>
+            <Select placeholder="Select severity">
+              <Select.Option value="Low">Low</Select.Option>
+              <Select.Option value="Medium">Medium</Select.Option>
+              <Select.Option value="High">High</Select.Option>
+              <Select.Option value="Critical">Critical</Select.Option>
+            </Select>
+          </Form.Item>
+        </Col>
+      </Row>
+      <Form.Item name="description" label="Incident Description" rules={[{ required: true }]}>
+        <Input.TextArea rows={4} placeholder="Describe the incident in detail..." />
+      </Form.Item>
+      <Form.Item label="Supporting Evidence (Photos)">
+        <div style={{ border: '1px dashed #d9d9d9', padding: '16px', textAlign: 'center', borderRadius: 8 }}>
+          <CloudUploadOutlined style={{ fontSize: 24, color: '#94a3b8' }} /><br/>
+          <Button size="small">Upload Files</Button>
+        </div>
+      </Form.Item>
+    </Form>
+  </Modal>
+);
+
+export default CourierManagementHub;
 
 

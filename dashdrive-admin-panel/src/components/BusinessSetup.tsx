@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Briefcase,
  Globe,
@@ -81,7 +81,7 @@ export const BusinessSetup: React.FC = () => {
  <div className="grid grid-cols-2 gap-4">
  {[
  { label: 'Primary Market', value: 'Nigeria', icon: MapPin },
- { label: 'Main Currency', value: 'NGN (₦)', icon: CreditCard },
+ { label: 'Main Currency', value: 'NGN (â‚¦)', icon: CreditCard },
  { label: 'Timezone', value: 'WAT (UTC+1)', icon: Globe },
  { label: 'Measure Sys', value: 'Metric (km)', icon: Activity }
  ].map((m, i) => (

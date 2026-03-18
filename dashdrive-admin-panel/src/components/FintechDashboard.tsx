@@ -1,4 +1,15 @@
+﻿import React from 'react';
+import { 
+  Row, Col, Card, Statistic, Button, Typography, 
+  Badge, Tag, Table, Progress, Divider 
+} from 'antd';
+import { 
+  RiseOutlined, ArrowUpOutlined, BarChartOutlined, WalletOutlined, 
+  CreditCardOutlined, HistoryOutlined, AlertOutlined, SafetyCertificateOutlined 
+} from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
+
+const { Title, Text } = Typography;
 
 export const FintechDashboard: React.FC = () => {
   const { isDark } = useTheme();

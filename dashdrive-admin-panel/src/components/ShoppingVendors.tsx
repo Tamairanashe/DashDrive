@@ -151,7 +151,7 @@ export const ShoppingVendors: React.FC = () => {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      setIsDrawerVisible(false);
+      setIsProfileDrawerOpen(false);
       message.success(`Vendor ${action.toLowerCase()} successfully`);
     }, 600);
   };
@@ -160,7 +160,7 @@ export const ShoppingVendors: React.FC = () => {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      setIsDrawerVisible(false);
+      setIsProfileDrawerOpen(false);
       message.success('Vendor configuration saved successfully');
     }, 500);
   };
@@ -174,7 +174,7 @@ export const ShoppingVendors: React.FC = () => {
           <Avatar src={record.image} shape="square" size="large" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <Text strong>{record.businessName}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>Owner: {record.name} • {record.id}</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>Owner: {record.name} â€¢ {record.id}</Text>
           </div>
         </Space>
       ),
@@ -191,7 +191,7 @@ export const ShoppingVendors: React.FC = () => {
       render: (_, record: ShoppingVendor) => (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <Text strong>{record.earnings}</Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>{record.ordersCount} Orders • {record.rating}★</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}>{record.ordersCount} Orders â€¢ {record.rating}â˜…</Text>
         </div>
       ),
     },
@@ -301,7 +301,7 @@ export const ShoppingVendors: React.FC = () => {
                                 <Avatar src={selectedVendor.image} size={80} shape="square" />
                                 <div>
                                     <Title level={4} style={{ margin: 0 }}>{selectedVendor.businessName}</Title>
-                                    <Text type="secondary">{selectedVendor.id} • {selectedVendor.name}</Text>
+                                    <Text type="secondary">{selectedVendor.id} â€¢ {selectedVendor.name}</Text>
                                     <div style={{ marginTop: 8 }}>
                                         <Select 
                                             value={editedStatus} 
@@ -325,7 +325,7 @@ export const ShoppingVendors: React.FC = () => {
                                 <Descriptions.Item label="Contact Phone">{selectedVendor.phone}</Descriptions.Item>
                                 <Descriptions.Item label="Department"><Tag color="blue">{selectedVendor.category}</Tag></Descriptions.Item>
                                 <Descriptions.Item label="Catalog Size">{selectedVendor.productsCount} SKUs</Descriptions.Item>
-                                <Descriptions.Item label="Avg Rating">{selectedVendor.rating} ★</Descriptions.Item>
+                                <Descriptions.Item label="Avg Rating">{selectedVendor.rating} â˜…</Descriptions.Item>
                             </Descriptions>
 
                             <Descriptions title="Economics" column={1} bordered size="small">

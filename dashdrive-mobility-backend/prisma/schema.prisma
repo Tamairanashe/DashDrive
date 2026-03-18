@@ -627,3 +627,217 @@ enum TransitType {
 
   @@schema("mobility")
 }
+
+// ==========================================
+// 3. CITY-TO-CITY MODELS
+// ==========================================
+
+model CityRoute {
+  id                String       @id @db.Uuid @default(uuid())
+  originCity        String
+  destinationCity   String
+  distanceKm        Decimal?     @db.Decimal(10, 2)
+  estimatedDuration String?      // ISO 8601 or descriptive
+  minPrice          Decimal?     @db.Decimal(10, 2)
+  maxPrice          Decimal?     @db.Decimal(10, 2)
+  status            String       @default("active")
+  createdAt         DateTime     @default(now())
+  
+  cityRides         CityRide[]
+  driverTrips       DriverTrip[]
+
+  @@schema("mobility")
+}
+
+model CityRide {
+  id             String        @id @db.Uuid @default(uuid())
+  userId         String        @db.Uuid
+  routeId        String        @db.Uuid
+  departureTime  DateTime
+  passengerCount Int           @default(1)
+  proposedPrice  Decimal       @db.Decimal(10, 2)
+  status         String        @default("pending")
+  createdAt      DateTime      @default(now())
+  
+  route          CityRoute     @relation(fields: [routeId], references: [id])
+  offers         RideOffer[]
+  payments       CityPayment[]
+
+  @@schema("mobility")
+}
+
+model RideOffer {
+  id         String   @id @db.Uuid @default(uuid())
+  rideId     String   @db.Uuid
+  driverId   String   @db.Uuid
+  offerPrice Decimal  @db.Decimal(10, 2)
+  status     String   @default("pending")
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+  
+  ride       CityRide @relation(fields: [rideId], references: [id])
+
+  @@schema("mobility")
+}
+
+model DriverTrip {
+  id             String   @id @db.Uuid @default(uuid())
+  driverId       String   @db.Uuid
+  routeId        String   @db.Uuid
+  departureTime  DateTime
+  pricePerSeat   Decimal  @db.Decimal(10, 2)
+  totalSeats     Int
+  availableSeats Int
+  status         String   @default("scheduled")
+  createdAt      DateTime @default(now())
+  
+  route          CityRoute @relation(fields: [routeId], references: [id])
+  bookings       DriverTripBooking[]
+  payments       CityPayment[]
+
+  @@schema("mobility")
+}
+
+model DriverTripBooking {
+  id         String   @id @db.Uuid @default(uuid())
+  tripId     String   @db.Uuid
+  userId     String   @db.Uuid
+  seatCount  Int      @default(1)
+  totalPrice Decimal  @db.Decimal(10, 2)
+  status     String   @default("confirmed")
+  createdAt  DateTime @default(now())
+  
+  trip       DriverTrip @relation(fields: [tripId], references: [id])
+
+  @@schema("mobility")
+}
+
+model CityPayment {
+  id            String   @id @db.Uuid @default(uuid())
+  amount        Decimal  @db.Decimal(10, 2)
+  currency      String   @default("USD")
+  status        String   @default("held")
+  paymentMethod String?
+  releasedAt    DateTime?
+  createdAt     DateTime @default(now())
+  
+  cityRideId    String?  @db.Uuid
+  driverTripId  String?  @db.Uuid
+  
+  cityRide      CityRide? @relation(fields: [cityRideId], references: [id])
+  driverTrip    DriverTrip? @relation(fields: [driverTripId], references: [id])
+
+  @@schema("mobility")
+}
+
+// ==========================================
+// 4. LOCAL RIDES (inDrive-style)
+// ==========================================
+
+model LocalRideRequest {
+  id              String           @id @db.Uuid @default(uuid())
+  rider_id        String           @db.Uuid
+  pickup_address  String
+  dropoff_address String
+  pickup_lat      Float
+  pickup_lng      Float
+  dropoff_lat     Float
+  dropoff_lng     Float
+  distance_km     Decimal?         @db.Decimal(10, 2)
+  proposed_price  Decimal          @db.Decimal(10, 2)
+  passenger_count Int              @default(1)
+  status          String           @default("requested") // requested, driver_selected, cancelled, completed
+  created_at      DateTime         @default(now())
+  
+  offers          LocalRideOffer[]
+  active_ride     LocalRide?
+
+  @@schema("mobility")
+}
+
+model LocalRideOffer {
+  id           String           @id @db.Uuid @default(uuid())
+  request_id   String           @db.Uuid
+  driver_id    String           @db.Uuid
+  offer_price  Decimal          @db.Decimal(10, 2)
+  eta_minutes  Int?
+  status       String           @default("pending") // pending, accepted, rejected, expired
+  created_at   DateTime         @default(now())
+  
+  request      LocalRideRequest @relation(fields: [request_id], references: [id], onDelete: Cascade)
+
+  @@schema("mobility")
+}
+
+model LocalRide {
+  id          String           @id @db.Uuid @default(uuid())
+  request_id  String           @unique @db.Uuid
+  driver_id   String           @db.Uuid
+  final_price Decimal          @db.Decimal(10, 2)
+  otp_code    String?          @db.VarChar(6)
+  start_time  DateTime?
+  end_time    DateTime?
+  status      String           @default("en_route") // en_route, started, completed, disputed
+  created_at  DateTime         @default(now())
+  
+  request     LocalRideRequest @relation(fields: [request_id], references: [id])
+
+  @@schema("mobility")
+}
+// ==========================================
+// 5. TRUST & SAFETY MODELS
+// ==========================================
+
+model RideCancellation {
+  id                  String   @id @db.Uuid @default(uuid())
+  ride_id             String   @db.Uuid
+  cancelled_by_type   String   // user or driver
+  cancelled_by_id     String   @db.Uuid
+  reason              String?
+  fee_amount          Decimal  @default(0) @db.Decimal(10, 2)
+  driver_compensation Decimal  @default(0) @db.Decimal(10, 2)
+  status_at_cancel    String
+  created_at          DateTime @default(now())
+
+  @@schema("mobility")
+}
+
+model DriverReliability {
+  driver_id                String   @id @db.Uuid
+  total_trips_requested   Int      @default(0)
+  trips_accepted          Int      @default(0)
+  trips_completed         Int      @default(0)
+  cancellations_count     Int      @default(0)
+  current_reliability_score Float    @default(1.0)
+  last_score_update       DateTime @default(now())
+
+  @@schema("mobility")
+}
+
+model FraudLog {
+  id          String   @id @db.Uuid @default(uuid())
+  entity_id   String   @db.Uuid
+  entity_type String   // user or driver
+  fraud_type  String
+  severity    String   @default("low")
+  metadata    Json     @default("{}")
+  created_at  DateTime @default(now())
+
+  @@schema("mobility")
+}
+
+model SupportTicket {
+  id          String   @id @db.Uuid @default(uuid())
+  user_id     String   @db.Uuid
+  ride_id     String?  @db.Uuid
+  subject     String
+  description String
+  category    String?
+  priority    String   @default("normal")
+  status      String   @default("open")
+  assigned_to String?  @db.Uuid
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@schema("mobility")
+}

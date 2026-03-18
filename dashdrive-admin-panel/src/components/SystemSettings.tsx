@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Settings,
  Key,
@@ -644,7 +644,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({ activeTab: exter
  </div>
  <div>
  <p className="text-[10px] font-black text-slate-900 ">trip.completed</p>
- <p className="text-[8px] font-bold text-slate-400 mt-1">ID: evt_0lx95sh28f • {i * 2}m ago</p>
+ <p className="text-[8px] font-bold text-slate-400 mt-1">ID: evt_0lx95sh28f â€¢ {i * 2}m ago</p>
  </div>
  </div>
  <div className="flex items-center gap-4">

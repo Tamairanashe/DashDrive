@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Settings2,
  Shield,
@@ -223,7 +223,7 @@ export const EnterpriseBusinessSetup: React.FC<EnterpriseBusinessSetupProps> = (
  <div className="space-y-2">
  <label className="text-[10px] font-black text-slate-400 ml-1">Currency</label>
  <div className="px-6 py-4 bg-slate-50 rounded-[24px] flex items-center justify-between group">
- <span className="text-xs font-bold text-slate-900">NGN (₦)</span>
+ <span className="text-xs font-bold text-slate-900">NGN (â‚¦)</span>
  <CreditCard className="w-4 h-4 text-slate-300 group-hover:text-[#0089D1] transition-colors" />
  </div>
  </div>
@@ -250,7 +250,7 @@ export const EnterpriseBusinessSetup: React.FC<EnterpriseBusinessSetupProps> = (
  </div>
  <div className="space-y-2">
  <label className="text-[10px] font-black text-white/30 ml-1">Company Copyright</label>
- <input type="text" defaultValue="© 2024 DashDrive Technologies. All rights reserved." className="w-full px-8 py-5 bg-white/5 border border-white/10 rounded-[28px] text-sm font-bold text-white/80" />
+ <input type="text" defaultValue="Â© 2024 DashDrive Technologies. All rights reserved." className="w-full px-8 py-5 bg-white/5 border border-white/10 rounded-[28px] text-sm font-bold text-white/80" />
  </div>
  </div>
  </div>
@@ -3099,7 +3099,7 @@ export const EnterpriseBusinessSetup: React.FC<EnterpriseBusinessSetupProps> = (
  <ArrowLeftRight className="w-5 h-5" />
  </div>
  <div>
- <p className="text-sm font-black text-slate-900">Customer ↔ Driver</p>
+ <p className="text-sm font-black text-slate-900">Customer â†” Driver</p>
  <p className="text-[10px] font-bold text-slate-400 ">Trip Coordination</p>
  </div>
  </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
  TrendingUp,
  ShoppingBag,
@@ -239,7 +239,7 @@ const FintechCard: React.FC<FintechCardProps> = ({ title, icon, value, subtext, 
  <div className="bg-white p-6 rounded-[24px] shadow-soft border border-slate-100">
  <div className="flex items-center gap-2 mb-4">
  <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center">
- {React.cloneElement(icon as React.ReactElement, { className: "w-4 h-4" })}
+ <span className="w-4 h-4">{icon}</span>
  </div>
  <h4 className="text-xs font-bold text-slate-400 ">{title}</h4>
  </div>
@@ -270,7 +270,7 @@ const PlatformStatsCard: React.FC<PlatformStatsCardProps> = ({ title, icon, stat
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center">
- {React.cloneElement(icon as React.ReactElement, { className: "w-5 h-5" })}
+ <span className="w-5 h-5">{icon}</span>
  </div>
  <h4 className="font-bold text-slate-800">{title} Stats</h4>
  </div>

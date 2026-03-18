@@ -1276,8 +1276,7 @@ export const FinancialReportsHub: React.FC = () => {
               <Option value="hotel">Hotels Booking</Option>
               <Option value="event">Events Booking</Option>
               <Option value="car">Car Rental</Option>
-              <Option value="transit">Public Transport</Option>
-              <Option value="fuel">Fuel Services</Option>
+              <Option value="city_to_city">City to City</Option>
             </Select>
           </Col>
           <Col xs={24} md={6}>
@@ -1474,10 +1473,7 @@ export const FinancialReportsHub: React.FC = () => {
               <Statistic title={<span style={{ fontSize: 12 }}>Car Rental</span>} value={(activeTab === '1') ? 28900 : 22100} prefix="$" styles={{ content: { fontSize: 18, color: '#3b82f6', fontWeight: 600 } }} />
             </Col>
             <Col xs={12} sm={8} md={6} lg={4}>
-              <Statistic title={<span style={{ fontSize: 12 }}>Public Transport</span>} value={(activeTab === '1') ? 9400 : 7200} prefix="$" styles={{ content: { fontSize: 18, color: '#10b981', fontWeight: 600 } }} />
-            </Col>
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Statistic title={<span style={{ fontSize: 12 }}>Fuel Services</span>} value={(activeTab === '1') ? 21100 : 16600} prefix="$" styles={{ content: { fontSize: 18, color: '#f59e0b', fontWeight: 600 } }} />
+              <Statistic title={<span style={{ fontSize: 12 }}>City to City</span>} value={(activeTab === '1') ? 9400 : 7200} prefix="$" styles={{ content: { fontSize: 18, color: '#10b981', fontWeight: 600 } }} />
             </Col>
           </Row>
         </Card>

@@ -25,7 +25,6 @@ export const adminApi = {
     },
     // Fintech & Finance
     fintech: {
-    fintech: {
         wallets: {
             list: (params?: any) => adminApiInstance.get('/fintech/wallets', { params }),
             getDetails: (id: string) => adminApiInstance.get(`/fintech/wallets/${id}`),
@@ -47,7 +46,6 @@ export const adminApi = {
             createProduct: (data: any) => adminApiInstance.post('/fintech/insurance/products', data),
             listClaims: (status?: string) => adminApiInstance.get('/fintech/insurance/claims', { params: { status } }),
         }
-    },
     },
     // Super-App Services
     rides: {

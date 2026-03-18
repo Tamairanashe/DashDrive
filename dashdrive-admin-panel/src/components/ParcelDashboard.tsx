@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  TrendingUp,
  TrendingDown,
@@ -159,7 +159,7 @@ const KPICard: React.FC<{ title: string, value: string, trend: string, trendUp: 
  <div className="bg-white p-7 rounded-[40px] shadow-soft border border-slate-100/50 group hover:shadow-xl transition-all duration-500">
  <div className="flex items-start justify-between mb-4">
  <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm">
- {React.cloneElement(icon as React.ReactElement, { className: "w-7 h-7" })}
+ <span className="w-7 h-7">{icon}</span>
  </div>
  <div className={cn(
  "flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black tracking-tighter shadow-sm",
@@ -190,7 +190,7 @@ const AuditItem: React.FC<{ id: string, reason: string, location: string, time: 
  <div className="w-2 h-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/20" />
  <div>
  <p className="text-xs font-black text-slate-900 tracking-tight leading-none mb-1 group-hover/item:text-rose-500 transition-colors">{id}</p>
- <p className="text-[10px] font-bold text-slate-400 tracking-tighter leading-none">{reason} • {location}</p>
+ <p className="text-[10px] font-bold text-slate-400 tracking-tighter leading-none">{reason} â€¢ {location}</p>
  </div>
  </div>
  <span className="text-[9px] font-bold text-slate-300 ">{time}</span>

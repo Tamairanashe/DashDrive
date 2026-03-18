@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
  Search,
  Filter,
@@ -125,7 +125,7 @@ export const MartOrders: React.FC = () => {
  </div>
 
  {/* Tab Navigation */}
- <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab.id || tab.name || tab, label: tab.name || tab.label || tab.title || tab.id || tab }))} className="mb-6 font-bold" />
+ <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs.map(tab => ({ key: tab, label: tab }))} className="mb-6 font-bold" />
 
  {/* Orders Table */}
  <div className="bg-white rounded-[32px] shadow-soft border border-slate-100/50 overflow-hidden">
@@ -250,7 +250,7 @@ export const MartOrders: React.FC = () => {
  <h3 className="text-2xl font-display font-black text-slate-900 tracking-tight">{selectedOrder.id}</h3>
  <MartStatusBadge status={selectedOrder.status} />
  </div>
- <p className="text-sm text-slate-400 font-medium mt-1">Placed on {selectedOrder.time} • {selectedOrder.zone}</p>
+ <p className="text-sm text-slate-400 font-medium mt-1">Placed on {selectedOrder.time} â€¢ {selectedOrder.zone}</p>
  </div>
  </div>
  <button

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Table, Card, Button, Input, Space, Tag, Typography, Badge, Avatar, Divider, message, Select } from 'antd';
 import { SearchOutlined, PlusOutlined, FilterOutlined, ReloadOutlined, DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
@@ -91,7 +91,7 @@ export const ShoppingProducts: React.FC = () => {
           <Avatar src={record.image} shape="square" size={48} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <Text strong>{record.name}</Text>
-            <Text type="secondary" style={{ fontSize: 11 }}>SKU: {record.sku} • {record.lastUpdated}</Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>SKU: {record.sku} â€¢ {record.lastUpdated}</Text>
           </div>
         </Space>
       ),
@@ -108,7 +108,7 @@ export const ShoppingProducts: React.FC = () => {
       render: (_, record: ShoppingProduct) => (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <Text strong>{record.price}</Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>{record.sales} sold • {record.rating}★</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}>{record.sales} sold â€¢ {record.rating}â˜…</Text>
         </div>
       ),
     },

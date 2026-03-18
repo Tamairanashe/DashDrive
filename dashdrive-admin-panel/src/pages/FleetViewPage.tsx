@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Row, Col, Card, Typography, Select, Input, Button, Avatar, Space, Tag, List, Statistic, Divider, Alert, message, Badge, Switch, Drawer, Tabs, Table, Progress, Modal
 } from 'antd';
@@ -9,10 +9,10 @@ import {
     GlobalOutlined, SafetyOutlined, InfoCircleOutlined, ThunderboltOutlined,
     AimOutlined, ArrowUpOutlined, AudioOutlined, SettingOutlined, HistoryOutlined, WalletOutlined, StarFilled
 } from '@ant-design/icons';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Circle } from 'react-leaflet';
+import { Marker, Popup, useMap, Polyline, Circle } from 'react-leaflet';
+import { BaseMap } from '../components/BaseMap';
 import L from 'leaflet';
 import { useLocation } from 'react-router-dom';
-import 'leaflet/dist/leaflet.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -477,8 +477,7 @@ export const FleetViewPage: React.FC = () => {
         <Col span={17} style={{ height: '100%' }}>
             <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 0, height: '100%', minHeight: 600, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
-                    <MapContainer center={[-17.824858, 31.053028]} zoom={12} style={{ height: '100%', width: '100%' }} zoomControl={false}>
-                        <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
+                    <BaseMap center={[-17.824858, 31.053028]} zoom={12} height="100%">
                     
                     {showDemand && MOCK_DEMAND_CLUSTERS.map(cluster => (
                         <Circle 
@@ -570,7 +569,7 @@ export const FleetViewPage: React.FC = () => {
                             <Marker position={selectedDriver.currentTrip.dropoff as [number, number]} icon={L.divIcon({ className: '', html: '<div style="width:14px;height:14px;background:white;border:3px solid #ef4444;border-radius:50%;box-shadow:0 0 4px rgba(0,0,0,0.3)"></div>', iconSize:[14,14], iconAnchor:[7,7] })} />
                         </>
                     )}
-                </MapContainer>
+                </BaseMap>
                 </div>
                 
                 {/* Overlay Legend */}
@@ -652,7 +651,7 @@ export const FleetViewPage: React.FC = () => {
                                                     <Text type="secondary" style={{ fontSize: 11 }}>{item.lastSeen}</Text>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-                                                    <Text type="secondary" style={{ fontSize: 12 }}>{item.type} • {item.plate}</Text>
+                                                    <Text type="secondary" style={{ fontSize: 12 }}>{item.type} â€¢ {item.plate}</Text>
                                                     <Tag color={getStatusColor(item.status)} style={{ margin: 0, fontSize: 10 }}>{item.status}</Tag>
                                                 </div>
                                             </div>
@@ -679,7 +678,7 @@ export const FleetViewPage: React.FC = () => {
                 <Avatar size={64} shape="square" src={`https://picsum.photos/seed/${selectedDriver?.id}/200/200`} style={{ borderRadius: 12, border: '2px solid #fff' }} />
                 <div>
                     <Title level={4} style={{ margin: 0 }}>{selectedDriver?.name}</Title>
-                    <Text type="secondary">{selectedDriver?.id} • {selectedDriver?.service}</Text>
+                    <Text type="secondary">{selectedDriver?.id} â€¢ {selectedDriver?.service}</Text>
                     <br />
                     <Space>
                         <Tag color="gold" icon={<StarOutlined />}>{selectedDriver?.rating}</Tag>
@@ -744,8 +743,8 @@ export const FleetViewPage: React.FC = () => {
                                             <Col span={12}>
                                                 <Text type="secondary">Activity Logs</Text>
                                                 <List size="small" split={false} style={{ marginTop: 8 }}>
-                                                    <List.Item style={{ padding: '2px 0' }}><Badge status="success" /> <Text style={{ fontSize: 12 }}>Logged in • 08:30 am</Text></List.Item>
-                                                    <List.Item style={{ padding: '2px 0' }}><Badge status="processing" /> <Text style={{ fontSize: 12 }}>Trip ORD-991 Started • 11:20 am</Text></List.Item>
+                                                    <List.Item style={{ padding: '2px 0' }}><Badge status="success" /> <Text style={{ fontSize: 12 }}>Logged in â€¢ 08:30 am</Text></List.Item>
+                                                    <List.Item style={{ padding: '2px 0' }}><Badge status="processing" /> <Text style={{ fontSize: 12 }}>Trip ORD-991 Started â€¢ 11:20 am</Text></List.Item>
                                                 </List>
                                             </Col>
                                         </Row>
@@ -893,7 +892,7 @@ export const FleetViewPage: React.FC = () => {
                                         <Space size={2} style={{ color: '#f59e0b', fontSize: 18, marginBottom: 8 }}>
                                             <StarFilled/><StarFilled/><StarFilled/><StarFilled/><StarFilled/>
                                         </Space>
-                                        <br/><Text type="secondary">20 Ratings • 4 Reviews</Text>
+                                        <br/><Text type="secondary">20 Ratings â€¢ 4 Reviews</Text>
                                         <Divider />
                                         <div style={{ textAlign: 'left' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -938,7 +937,7 @@ export const FleetViewPage: React.FC = () => {
                 <Avatar size={64} src={`https://picsum.photos/seed/${selectedCustomer?.id}/200/200`} style={{ borderRadius: 12, border: '2px solid #fff' }} />
                 <div>
                     <Title level={4} style={{ margin: 0 }}>{selectedCustomer?.name}</Title>
-                    <Text type="secondary">{selectedCustomer?.id} • {selectedCustomer?.loyalty} Member</Text>
+                    <Text type="secondary">{selectedCustomer?.id} â€¢ {selectedCustomer?.loyalty} Member</Text>
                     <br />
                     <Space>
                         <Tag color="gold" icon={<StarOutlined />}>{selectedCustomer?.rating}</Tag>

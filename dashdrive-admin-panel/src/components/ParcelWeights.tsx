@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
     Table,
     Tag,
@@ -127,7 +127,7 @@ export const ParcelWeights: React.FC = () => {
                             style={{ backgroundColor: '#0f172a', textAlign: 'center', borderRadius: 24 }}
                         >
                             <Text style={{ color: '#3b82f6', fontWeight: 900, fontSize: 10, letterSpacing: 2 }}>GLOBAL FORMULA</Text>
-                            <Title level={4} style={{ color: 'white', margin: '12px 0 4px 0' }}>Base + (KM × Rate)</Title>
+                            <Title level={4} style={{ color: 'white', margin: '12px 0 4px 0' }}>Base + (KM Ã— Rate)</Title>
                             <Text style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: 10 }}>+ Additional Surcharges</Text>
                         </Card>
                     </Col>
