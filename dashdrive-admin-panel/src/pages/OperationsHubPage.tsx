@@ -215,8 +215,9 @@ const OperationsDashboard: React.FC<{
     alerts: any[],
     onFix: (id: string) => void,
     isManualDispatch: boolean,
-    onToggleDispatch: () => void
-}> = ({ onViewAll, filter, onFilterChange, alerts, onFix, isManualDispatch, onToggleDispatch }) => {
+    onToggleDispatch: () => void,
+    onNewBroadcast: () => void
+}> = ({ onViewAll, filter, onFilterChange, alerts, onFix, isManualDispatch, onToggleDispatch, onNewBroadcast }) => {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const handleLiveSync = () => {
@@ -271,7 +272,6 @@ const OperationsDashboard: React.FC<{
                     value={filter}
                     onChange={(val) => onFilterChange(val as string)}
                   />
-                  <Button icon={<SyncOutlined spin={isRefreshing} />} size="small" onClick={handleLiveSync}>Pulse</Button>
                 </Space>
               }
               styles={{ body: { padding: 0, height: 450, position: 'relative' } }}
@@ -1876,6 +1876,7 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
                     onFix={handleFixAlert}
                     isManualDispatch={isManualDispatch}
                     onToggleDispatch={handleToggleDispatch}
+                    onNewBroadcast={() => setActiveTab('9')}
                   />
       },
        {
