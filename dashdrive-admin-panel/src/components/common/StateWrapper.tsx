@@ -75,7 +75,7 @@ export const StateWrapper: React.FC<StateWrapperProps> = ({
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
-            <Space direction="vertical" align="center">
+            <Space orientation="vertical" align="center">
               <Typography.Title level={5} style={{ margin: 0 }}>{emptyTitle}</Typography.Title>
               <Typography.Text type="secondary">{emptyDescription}</Typography.Text>
               {onRetry && (
@@ -90,3 +90,4 @@ export const StateWrapper: React.FC<StateWrapperProps> = ({
 
   return <>{children}</>;
 };
+

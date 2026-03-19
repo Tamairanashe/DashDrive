@@ -20,7 +20,8 @@ import {
   message,
   notification,
   Divider,
-  Popconfirm
+  Popconfirm,
+  Empty
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -61,6 +62,24 @@ export const CustomerListPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [customerForm] = Form.useForm();
   const [suspendForm] = Form.useForm();
+
+  // Governance & Trash State
+  const [trashedCustomers, setTrashedCustomers] = useState<any[]>([]);
+  const [isTrashDrawerOpen, setIsTrashDrawerOpen] = useState(false);
+  const [filterLevel, setFilterLevel] = useState<string | undefined>(undefined);
+  const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
+
+  const handleResetFilters = () => {
+    setSearchText('');
+    setFilterLevel(undefined);
+    setFilterStatus(undefined);
+    setActiveTab('All');
+  };
+
+  const handleRestoreCustomer = (customer: any) => {
+    setTrashedCustomers(prev => prev.filter(c => c.id !== customer.id));
+    message.success(`Customer ${customer.name} restored successfully`);
+  };
 
   const stats = [
     { 
@@ -214,7 +233,7 @@ export const CustomerListPage: React.FC = () => {
         if (record.status === 'Inactive') color = 'warning';
 
         return (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Tag color={color} style={{ borderRadius: 4, border: 'none' }}>{record.status}</Tag>
             <Tag 
                 style={{ borderRadius: 4, border: 'none' }}
@@ -231,7 +250,7 @@ export const CustomerListPage: React.FC = () => {
        title: 'Operational Audit',
        key: 'audit',
        render: (_: any, record: any) => (
-         <Space direction="vertical" size={0}>
+         <Space orientation="vertical" size={0}>
            <Text style={{ fontSize: 10, color: '#64748b' }}>Joined: {new Date(record.createdAt).toLocaleDateString()}</Text>
            <Text style={{ fontSize: 10, color: '#64748b' }}>Sync: {new Date(record.updatedAt).toLocaleTimeString()}</Text>
          </Space>
@@ -256,12 +275,40 @@ export const CustomerListPage: React.FC = () => {
           <Tooltip title="Secure Account Suspension">
             <Button size="small" danger icon={<StopOutlined />} onClick={() => handleSuspend(record)} />
           </Tooltip>
+
+          <Tooltip title="Move to Trash">
+            <Popconfirm 
+              title="Move to Trash?" 
+              description="This user will be deactivated and moved to trash for 30 days."
+              onConfirm={() => handleDeleteCustomer(record)}
+              okText="Yes, Trash"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+            >
+              <Button size="small" danger icon={<UserDeleteOutlined />} />
+            </Popconfirm>
+          </Tooltip>
         </Space>
       ),
     },
   ];
 
-  const currentData = activeTab === 'All' ? customers : customers.filter(c => (activeTab === 'Diamond' ? (c.level === 'Diamond' || c.level === 'Gold') : c.status === activeTab));
+  const handleDeleteCustomer = (customer: any) => {
+    setTrashedCustomers(prev => [...prev, { ...customer, deletedAt: new Date().toISOString() }]);
+    message.warning(`Customer ${customer.name} moved to trash`);
+  };
+
+  const currentData = activeTab === 'All' 
+    ? customers.filter(c => !trashedCustomers.find(tc => tc.id === c.id))
+    : customers.filter(c => !trashedCustomers.find(tc => tc.id === c.id) && (activeTab === 'Diamond' ? (c.level === 'Diamond' || c.level === 'Gold') : c.status === activeTab));
+
+  const filteredData = currentData.filter(c => {
+    const matchesSearch = !searchText || 
+      c.name.toLowerCase().includes(searchText.toLowerCase()) || 
+      c.id.toLowerCase().includes(searchText.toLowerCase()) ||
+      c.phone.includes(searchText);
+    return matchesSearch;
+  });
 
   return (
     <div style={{ padding: '0 0 24px 0' }}>
@@ -277,7 +324,8 @@ export const CustomerListPage: React.FC = () => {
         </Col>
         <Col>
             <Space>
-                <Button icon={<HistoryOutlined />} onClick={() => navigate('/enterprise/audit-logs')}>User Logs</Button>
+                <Button icon={<HistoryOutlined />} onClick={() => setIsTrashDrawerOpen(true)}>Manage Trash</Button>
+                <Button icon={<ReloadOutlined />} onClick={() => navigate('/enterprise/audit-logs')}>User Logs</Button>
                 <Button 
                     type="primary" 
                     icon={<PlusOutlined />} 
@@ -293,7 +341,7 @@ export const CustomerListPage: React.FC = () => {
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         {stats.map(stat => (
           <Col xs={24} sm={12} lg={6} key={stat.title}>
-            <Card bordered={false} bodyStyle={{ padding: 20 }} className="shadow-sm">
+            <Card variant="borderless" styles={{ body: { padding: 20 } }} className="shadow-sm">
               <Space size={16}>
                 <div style={{ 
                   width: 48, height: 48, background: `${stat.color}15`, 
@@ -318,7 +366,7 @@ export const CustomerListPage: React.FC = () => {
         ))}
       </Row>
 
-      <Card bordered={false} bodyStyle={{ padding: 0 }} className="shadow-sm">
+      <Card variant="borderless" styles={{ body: { padding: 0 } }} className="shadow-sm">
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <Tabs 
             activeKey={activeTab} 
@@ -332,7 +380,9 @@ export const CustomerListPage: React.FC = () => {
             style={{ marginBottom: -16 }}
           />
           <Space size="middle">
-            <Button icon={<ReloadOutlined />} onClick={() => { setLoading(true); setTimeout(() => setLoading(false), 500); message.success('Database refreshed'); }} />
+            <Tooltip title="Reset All Filters">
+               <Button icon={<ReloadOutlined />} onClick={handleResetFilters} />
+            </Tooltip>
             <Button icon={<DownloadOutlined />}>Export List</Button>
             <Input
               prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
@@ -340,18 +390,19 @@ export const CustomerListPage: React.FC = () => {
               style={{ width: 280, borderRadius: 8 }}
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
+              allowClear
             />
           </Space>
         </div>
         <StateWrapper 
             loading={loading} 
             error={error} 
-            isEmpty={currentData.length === 0}
+            isEmpty={filteredData.length === 0}
             onRetry={() => { setLoading(true); setTimeout(() => setLoading(false), 500); }}
           >
           <Table 
             columns={columns} 
-            dataSource={currentData} 
+            dataSource={filteredData} 
             rowKey="id"
             pagination={{ 
               pageSize: 10, 
@@ -472,6 +523,35 @@ export const CustomerListPage: React.FC = () => {
         <Divider />
         <Button block icon={<HistoryOutlined />} onClick={() => navigate('/enterprise/audit-logs')}>View Full User History</Button>
       </Drawer>
+
+      <Drawer
+        title={<span><HistoryOutlined /> Manage Trashed Customers</span>}
+        open={isTrashDrawerOpen}
+        onClose={() => setIsTrashDrawerOpen(false)}
+        size="large"
+      >
+        <Table 
+          dataSource={trashedCustomers}
+          rowKey="id"
+          columns={[
+            { title: 'User ID', dataIndex: 'id', key: 'id' },
+            { title: 'Name', dataIndex: 'name', key: 'name' },
+            { title: 'Deleted At', dataIndex: 'deletedAt', key: 'date', render: (d) => new Date(d).toLocaleString() },
+            { 
+              title: 'Actions', 
+              key: 'actions', 
+              align: 'right',
+              render: (_, record) => (
+                <Space>
+                  <Button size="small" icon={<ReloadOutlined />} onClick={() => handleRestoreCustomer(record)}>Restore</Button>
+                  <Button size="small" danger onClick={() => setTrashedCustomers(prev => prev.filter(c => c.id !== record.id))}>Purge</Button>
+                </Space>
+              )
+            }
+          ]}
+          locale={{ emptyText: <Empty description="Trash is empty" /> }}
+        />
+      </Drawer>
     </div>
   );
 };
@@ -492,3 +572,4 @@ const Alert: React.FC<{message: string, description: string, type: 'info' | 'war
         </div>
     </div>
 );
+

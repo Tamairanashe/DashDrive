@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Form,
     Switch,
@@ -42,7 +42,7 @@ export const MartServiceRules: React.FC = () => {
     };
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             <div>
                 <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Mart & Grocery Engine</Title>
                 <Text type="secondary" style={{ fontSize: 15 }}>Configure retail commissions, SKU sync frequency, and inventory health thresholds</Text>
@@ -131,7 +131,7 @@ export const MartServiceRules: React.FC = () => {
                             </Col>
                         </Row>
                         <Divider style={{ margin: '12px 0' }} />
-                        <Space direction="vertical" style={{ width: '100%' }}>
+                        <Space orientation="vertical" style={{ width: '100%' }}>
                             <Text strong><AlertOutlined /> Sync Integrity Shield</Text>
                             <Alert
                                 message="Anti-Fragmentation Active"
@@ -159,3 +159,4 @@ export const MartServiceRules: React.FC = () => {
         </Space>
     );
 };
+

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Layout, Menu, Typography, Button, Dropdown, Avatar, Space } from 'antd';
 import {
   DashboardOutlined,
@@ -78,7 +78,7 @@ export const ProviderDashboard: React.FC = () => {
         <Col span={16}>
           <Card title="Application Volume Trends" bordered={false} className="shadow-sm" style={{ height: '400px' }}>
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 8 }}>
-              <Space direction="vertical" align="center">
+              <Space orientation="vertical" align="center">
                 <LineChartOutlined style={{ fontSize: 48, color: '#bfbfbf' }} />
                 <Text type="secondary">Chart: Applications over 30 Days</Text>
               </Space>
@@ -87,7 +87,7 @@ export const ProviderDashboard: React.FC = () => {
         </Col>
         <Col span={8}>
           <Card title="Performance Quick Stats" bordered={false} className="shadow-sm" style={{ height: '400px' }}>
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
               <div>
                 <Text type="secondary">Approval Rate</Text>
                 <Title level={3} style={{ margin: 0, color: '#52c41a' }}>50%</Title>
@@ -133,7 +133,7 @@ export const ProviderDashboard: React.FC = () => {
         <Col span={24}>
           <Card title="Revenue Growth & Loan Distribution" bordered={false} className="shadow-sm" style={{ height: '400px' }}>
              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 8 }}>
-              <Space direction="vertical" align="center">
+              <Space orientation="vertical" align="center">
                 <RiseOutlined style={{ fontSize: 48, color: '#bfbfbf' }} />
                 <Text type="secondary">Chart: Revenue vs Submissions Timeline</Text>
               </Space>
@@ -213,3 +213,4 @@ export const ProviderDashboard: React.FC = () => {
     </Layout>
   );
 };
+

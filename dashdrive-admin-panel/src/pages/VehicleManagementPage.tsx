@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, Row, Col, Card, Tabs, Table, Button, Tag, Space, Form, 
   Input, Empty, Select, InputNumber, Divider, Badge, Tooltip, 
@@ -303,6 +303,19 @@ export const VehicleManagementPage: React.FC = () => {
   const [attributeForm] = Form.useForm();
   const [addVehicleForm] = Form.useForm();
 
+  // Governance & Trash State
+  const [trashedVehicles, setTrashedVehicles] = useState<Vehicle[]>([]);
+  const [isTrashDrawerOpen, setIsTrashDrawerOpen] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [filterType, setFilterType] = useState<string | undefined>(undefined);
+  const [filterCity, setFilterCity] = useState<string | undefined>(undefined);
+
+  const handleResetFilters = () => {
+    setSearchText('');
+    setFilterType(undefined);
+    setFilterCity(undefined);
+  };
+
   useEffect(() => {
     // Simulate API Fetch
     setTimeout(() => {
@@ -475,7 +488,7 @@ export const VehicleManagementPage: React.FC = () => {
       key: 'compliance', 
       width: 150,
       render: (_: any, r: Vehicle) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Tag color={r.status === 'Active' ? 'green' : 'orange'} icon={<SafetyOutlined />} style={{ margin: 0 }}>Verified</Tag>
           <Space size={4} style={{ marginTop: 4 }}>
             <Tooltip title="Licence Disc"><FileTextOutlined style={{ fontSize: 12, color: r.licenceDisc ? '#10b981' : '#d1d5db' }} /></Tooltip>
@@ -499,7 +512,19 @@ export const VehicleManagementPage: React.FC = () => {
         <Space>
           <Tooltip title="View Details"><Button size="small" type="text" icon={<EyeOutlined />} onClick={() => { setSelectedVehicle(r); setIsVehicleDetailDrawerVisible(true); }} /></Tooltip>
           <Tooltip title="Edit"><Button size="small" type="text" icon={<EditOutlined style={{ color: '#10b981' }} />} /></Tooltip>
-          <Tooltip title="Suspend"><Button size="small" type="text" danger icon={<StopOutlined />} /></Tooltip>
+          <Tooltip title="Delete (Move to Trash)">
+            <Button 
+              size="small" 
+              type="text" 
+              danger 
+              icon={<DeleteOutlined />} 
+              onClick={() => {
+                setTrashedVehicles(prev => [...prev, r]);
+                setVehicles(prev => prev.filter(v => v.key !== r.key));
+                message.success('Vehicle moved to trash');
+              }}
+            />
+          </Tooltip>
         </Space>
       ) 
     },
@@ -640,19 +665,55 @@ export const VehicleManagementPage: React.FC = () => {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
                     <Space>
-                      <Input prefix={<SearchOutlined />} placeholder="Search by plate or ID..." style={{ width: 300, borderRadius: 8 }} />
-                      <Select defaultValue="all" style={{ width: 140 }}>
-                        <Option value="all">All Types</Option>
-                        <Option value="sedan">Sedan</Option>
-                        <Option value="moto">Motorcycle</Option>
+                      <Input 
+                        prefix={<SearchOutlined />} 
+                        placeholder="Search by plate or ID..." 
+                        style={{ width: 300, borderRadius: 8 }} 
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        allowClear
+                      />
+                      <Select 
+                        placeholder="All Types" 
+                        style={{ width: 140 }} 
+                        allowClear
+                        value={filterType}
+                        onChange={setFilterType}
+                      >
+                        <Option value="Sedan">Sedan</Option>
+                        <Option value="Motorcycle">Motorcycle</Option>
+                        <Option value="Premium">Premium</Option>
+                        <Option value="Van">Van</Option>
                       </Select>
-                      <Button icon={<FilterOutlined />}>More Filters</Button>
+                      <Select
+                        placeholder="City"
+                        style={{ width: 120 }}
+                        allowClear
+                        value={filterCity}
+                        onChange={setFilterCity}
+                      >
+                        <Option value="Harare">Harare</Option>
+                        <Option value="Bulawayo">Bulawayo</Option>
+                      </Select>
+                      <Tooltip title="Reset Filters">
+                        <Button icon={<HistoryOutlined />} onClick={handleResetFilters} />
+                      </Tooltip>
                     </Space>
-                    <Segmented options={['Daily', 'Weekly', 'Monthly']} />
+                    <Space>
+                      <Button icon={<InboxOutlined />} onClick={() => setIsTrashDrawerOpen(true)}>Manage Trash</Button>
+                      <Segmented options={['Daily', 'Weekly', 'Monthly']} />
+                    </Space>
                   </div>
                   <Table 
                     loading={loading}
-                    dataSource={vehicles} 
+                    dataSource={vehicles.filter(v => {
+                      const matchesSearch = !searchText || 
+                        v.plateNumber.toLowerCase().includes(searchText.toLowerCase()) || 
+                        v.vehicleId.toLowerCase().includes(searchText.toLowerCase());
+                      const matchesType = !filterType || v.type === filterType;
+                      const matchesCity = !filterCity || v.city === filterCity;
+                      return matchesSearch && matchesType && matchesCity;
+                    })} 
                     columns={vehicleColumns}
                     className="premium-table"
                   />
@@ -753,7 +814,7 @@ export const VehicleManagementPage: React.FC = () => {
                 key: 'info',
                 label: <span><InfoCircleOutlined /> General Info</span>,
                 children: (
-                  <Space direction="vertical" style={{ width: '100%' }} size="large">
+                  <Space orientation="vertical" style={{ width: '100%' }} size="large">
                     <Descriptions bordered column={1} size="small">
                       <Descriptions.Item label="Registration">{selectedVehicle.plateNumber}</Descriptions.Item>
                       <Descriptions.Item label="Color / Year">{selectedVehicle.color} â€¢ {selectedVehicle.year}</Descriptions.Item>
@@ -782,7 +843,7 @@ export const VehicleManagementPage: React.FC = () => {
                 key: 'analytics',
                 label: <span><LineChartOutlined /> Performance</span>,
                 children: (
-                  <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                      <Row gutter={16}>
                         <Col span={12}>
                            <Card size="small" style={{ textAlign: 'center' }}>
@@ -861,7 +922,7 @@ export const VehicleManagementPage: React.FC = () => {
         {selectedRequest && (
           <Row gutter={24}>
             <Col span={14}>
-               <Space direction="vertical" size="large" style={{ width: '100%' }}>
+               <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                   <Alert 
                     message="Manual Verification Required" 
                     description={`Driver ${selectedRequest.driverName} has submitted a ${selectedRequest.brand} ${selectedRequest.model} for the ${selectedRequest.vehicleType} class.`} 
@@ -1028,6 +1089,55 @@ export const VehicleManagementPage: React.FC = () => {
         </Form>
       </Drawer>
 
+      <Drawer
+        title={<Space><HistoryOutlined /> Recover Trashed Vehicles</Space>}
+        open={isTrashDrawerOpen}
+        onClose={() => setIsTrashDrawerOpen(false)}
+        width={700}
+      >
+        <Table 
+          dataSource={trashedVehicles}
+          rowKey="key"
+          columns={[
+            { title: 'Vehicle ID', dataIndex: 'vehicleId', key: 'id' },
+            { title: 'Type/Brand', key: 'info', render: (_, r) => <Text>{r.brand} {r.model} ({r.type})</Text> },
+            { title: 'Plate', dataIndex: 'plateNumber', key: 'plate' },
+            { 
+              title: 'Actions', 
+              key: 'actions', 
+              align: 'right',
+              render: (_, record) => (
+                <Space>
+                  <Button 
+                    size="small" 
+                    icon={<ThunderboltOutlined />} 
+                    onClick={() => {
+                      setVehicles([record, ...vehicles]);
+                      setTrashedVehicles(prev => prev.filter(v => v.key !== record.key));
+                      message.success('Vehicle restored to fleet');
+                    }}
+                  >
+                    Restore
+                  </Button>
+                  <Button 
+                    size="small" 
+                    danger 
+                    icon={<CloseCircleOutlined />}
+                    onClick={() => {
+                      setTrashedVehicles(prev => prev.filter(v => v.key !== record.key));
+                      message.warning('Vehicle purged from records');
+                    }}
+                  >
+                    Purge
+                  </Button>
+                </Space>
+              )
+            }
+          ]}
+          locale={{ emptyText: <Empty description="Trash bin is empty" /> }}
+        />
+      </Drawer>
+
       <style>{`
         .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
         .ant-card { border-radius: 12px; }
@@ -1038,3 +1148,4 @@ export const VehicleManagementPage: React.FC = () => {
     </div>
   );
 };
+

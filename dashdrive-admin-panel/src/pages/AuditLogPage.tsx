@@ -80,7 +80,7 @@ export const AuditLogPage: React.FC = () => {
       dataIndex: 'timestamp',
       key: 'timestamp',
       render: (t: string) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong style={{ fontSize: 13 }}>{new Date(t).toLocaleDateString()}</Text>
           <Text type="secondary" style={{ fontSize: 11 }}>{new Date(t).toLocaleTimeString()}</Text>
         </Space>
@@ -212,3 +212,4 @@ export const AuditLogPage: React.FC = () => {
     </div>
   );
 };
+

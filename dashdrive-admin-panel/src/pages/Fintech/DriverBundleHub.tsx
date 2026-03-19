@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, Typography, Row, Col, Button, Tag, Space, 
   Table, Modal, message, Empty, Progress, Statistic, 
@@ -148,7 +148,7 @@ const InventoryTab: React.FC<{
                 </Col>
               </Row>
               <Divider style={{ margin: '16px 0' }} />
-              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                 <Text type="secondary" style={{ fontSize: 12 }}><ClockCircleOutlined /> Valid for {bundle.expiryDays} days</Text>
                 <Progress percent={75} size="small" status="active" strokeColor="#3b82f6" />
               </Space>
@@ -312,7 +312,7 @@ const MasterOversightTab: React.FC<{ driverBalances: any[] }> = ({ driverBalance
               dataIndex: 'balance', 
               key: 'balance',
               render: (val, record) => (
-                  <Space direction="vertical" size={2}>
+                  <Space orientation="vertical" size={2}>
                       <Text strong style={{ color: record.status === 'Low' ? '#ef4444' : '#0f172a' }}>{val} Rides</Text>
                       <Progress 
                           percent={val > 100 ? 100 : val} 
@@ -482,7 +482,7 @@ const MasterOversightTab: React.FC<{ driverBalances: any[] }> = ({ driverBalance
                   <List.Item.Meta
                     avatar={<Avatar icon={<CarOutlined />} style={{ backgroundColor: '#f1f5f9', color: '#64748b' }} />}
                     title={bundle.name}
-                    description={`${bundle.rides} Rides â€¢ $${bundle.price}`}
+                    description={`${bundle.rides} Rides • $${bundle.price}`}
                   />
                 </List.Item>
               )}
@@ -493,3 +493,4 @@ const MasterOversightTab: React.FC<{ driverBalances: any[] }> = ({ driverBalance
     </div>
   );
 };
+

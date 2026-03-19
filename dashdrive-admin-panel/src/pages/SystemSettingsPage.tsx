@@ -276,7 +276,7 @@ const AppVersionTab: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {versions.map(v => (
           <Card key={v.key} size="small" style={{ borderRadius: 12, borderLeft: `3px solid ${v.platform === 'Android' ? '#3DDC84' : '#0e172a'}` }}>
-            <Space direction="vertical" size={2} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={2} style={{ width: '100%' }}>
               <Space>
                 {v.platform === 'Android' ? <AndroidOutlined style={{ color: '#3DDC84' }} /> : <AppleOutlined />}
                 <Text strong style={{ fontSize: 12 }}>{v.appType}</Text>
@@ -988,7 +988,7 @@ const ServiceWebhooksTab: React.FC = () => {
     {
       title: 'Endpoint',
       render: (_: any, record: WebhookEndpoint) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong style={{ fontSize: 13 }}>{record.name}</Text>
           <Text type="secondary" style={{ fontSize: 11, fontFamily: 'monospace' }}>{record.url}</Text>
         </Space>
@@ -1184,3 +1184,4 @@ export const SystemSettingsPage: React.FC = () => {
     </div>
   );
 };
+

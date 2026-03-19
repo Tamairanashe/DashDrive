@@ -1,23 +1,14 @@
-﻿import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useState, useEffect, useRef } from 'react';
+import { MarkerF, OverlayViewF, OverlayView } from '@react-google-maps/api';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Car, User, Navigation, MapPin, Phone, MessageSquare,
     X, ChevronRight, Search, Globe, ShieldAlert,
-    AlertCircle, LayoutGrid, Layers, Maximize2
+    AlertCircle, LayoutGrid, Layers, Maximize2, Plus, Minus
 } from 'lucide-react';
 import { cn } from '../utils';
 import { Tabs } from 'antd';
-
-// Fix Leaflet icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { BaseMap, useBaseMap } from './BaseMap';
 
 const INITIAL_VEHICLES = [
     { id: 'V-101', driver: 'Alex Rivera', status: 'Active', trip: 'Airport Transfer', lat: 23.7953, lng: 90.3825, type: 'Luxury', rating: 4.9, phone: '+1 555-0101', model: 'Tesla Model S', level: 'Gold', alerts: [] },
@@ -34,22 +25,23 @@ const INITIAL_CUSTOMERS = [
     { id: 'C-203', name: 'Emma Watson', lat: 23.8103, lng: 90.3625, phone: '+1 555-0203', trips: 28, status: 'Idle' },
 ];
 
-const MapController = ({ selectedPos, zoom }: { selectedPos: [number, number] | null, zoom: number }) => {
-    const map = useMap();
+const MapController = ({ selectedPos, zoom }: { selectedPos: {lat: number, lng: number} | null, zoom: number }) => {
+    const { map } = useBaseMap();
     useEffect(() => {
-        if (selectedPos) {
-            map.setView(selectedPos, zoom, { animate: true });
+        if (map && selectedPos) {
+            map.panTo(selectedPos);
+            map.setZoom(zoom);
         }
     }, [selectedPos, zoom, map]);
     return null;
 };
 
 const ZoomButtons = () => {
-    const map = useMap();
+    const { map } = useBaseMap();
     return (
         <>
-            <button onClick={() => map.zoomIn()} className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors border-b border-slate-50">+</button>
-            <button onClick={() => map.zoomOut()} className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors">-</button>
+            <button onClick={() => map?.setZoom((map.getZoom() || 13) + 1)} className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors border-b border-slate-50"><Plus className="w-4 h-4" /></button>
+            <button onClick={() => map?.setZoom((map.getZoom() || 13) - 1)} className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors"><Minus className="w-4 h-4" /></button>
         </>
     );
 };
@@ -69,6 +61,43 @@ const MaximizeButton = ({ isFullscreen, onToggle }: { isFullscreen: boolean, onT
     );
 };
 
+const EntityMarker = ({ item, isSelected, activeTab, onClick }: { item: any, isSelected: boolean, activeTab: string, onClick: () => void }) => (
+    <OverlayViewF 
+        position={{ lat: item.lat, lng: item.lng }} 
+        mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+    >
+        <div 
+            onClick={onClick}
+            className={cn(
+                "relative transition-all duration-300 cursor-pointer",
+                isSelected ? "scale-125 z-50" : "scale-100"
+            )} 
+            style={{ transform: 'translate(-50%, -50%)' }}
+        >
+            <div className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 border-white transition-colors",
+                activeTab === 'Drivers'
+                    ? (item.status === 'On Trip' ? 'bg-[#00C4B4]' : 'bg-blue-500')
+                    : 'bg-amber-500'
+            )}>
+                {activeTab === 'Drivers' ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+                ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                )}
+                {item.alerts && item.alerts.length > 0 && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                )}
+            </div>
+            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm border border-slate-100 whitespace-nowrap">
+                <span className="text-[9px] font-bold text-slate-700">{activeTab === 'Drivers' ? item.driver : item.name}</span>
+            </div>
+        </div>
+    </OverlayViewF>
+);
+
 export const FleetView = ({
     onCustomerClick,
     onDriverClick,
@@ -84,9 +113,9 @@ export const FleetView = ({
     const [driverFilter, setDriverFilter] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
-    const [mapType, setMapType] = useState<'Map' | 'Satellite'>('Map');
+    const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const mapContainerRef = React.useRef<HTMLDivElement>(null);
+    const mapContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -123,7 +152,6 @@ export const FleetView = ({
 
     const currentItems = activeTab === 'Drivers' ? filteredVehicles : filteredCustomers;
 
-    // Simulate vehicle movement
     useEffect(() => {
         const interval = setInterval(() => {
             setVehicles(prev => prev.map(v => {
@@ -146,7 +174,6 @@ export const FleetView = ({
 
     return (
         <div className="flex flex-col h-full space-y-6">
-            {/* Header & Main Tabs */}
             <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                     <div>
@@ -187,19 +214,19 @@ export const FleetView = ({
                     </div>
                     <div className="flex bg-white rounded-xl shadow-sm border border-slate-100 p-1">
                         <button
-                            onClick={() => setMapType('Map')}
+                            onClick={() => setMapType('roadmap')}
                             className={cn(
                                 "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all",
-                                mapType === 'Map' ? "bg-slate-100 text-slate-800" : "text-slate-500"
+                                mapType === 'roadmap' ? "bg-slate-100 text-slate-800" : "text-slate-500"
                             )}
                         >
                             Map
                         </button>
                         <button
-                            onClick={() => setMapType('Satellite')}
+                            onClick={() => setMapType('satellite')}
                             className={cn(
                                 "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all",
-                                mapType === 'Satellite' ? "bg-slate-100 text-slate-800" : "text-slate-500"
+                                mapType === 'satellite' ? "bg-slate-100 text-slate-800" : "text-slate-500"
                             )}
                         >
                             Satellite
@@ -209,7 +236,6 @@ export const FleetView = ({
             </div>
 
             <div className="flex-1 flex gap-6 min-h-0">
-                {/* Left Panel: Entity List */}
                 <div className="w-80 bg-white rounded-[24px] shadow-soft border border-slate-100 flex flex-col overflow-hidden">
                     {activeTab === 'Drivers' && (
                         <div className="p-4 border-b border-slate-50 flex gap-2">
@@ -278,7 +304,6 @@ export const FleetView = ({
                     </div>
                 </div>
 
-                {/* Right Panel: Map Area */}
                 <div
                     ref={mapContainerRef}
                     className={cn(
@@ -286,22 +311,14 @@ export const FleetView = ({
                         isFullscreen && "rounded-none border-none"
                     )}
                 >
-                    <MapContainer
+                    <BaseMap
                         center={[23.8103, 90.4125]}
                         zoom={13}
-                        style={{ height: '100%', width: '100%' }}
-                        zoomControl={false}
-                        attributionControl={false}
+                        height="100%"
+                        mapTypeId={mapType}
                     >
-                        <TileLayer
-                            url={mapType === 'Map'
-                                ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-                                : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                            }
-                        />
-
                         <MapController
-                            selectedPos={selectedEntity ? [selectedEntity.lat, selectedEntity.lng] : null}
+                            selectedPos={selectedEntity ? { lat: selectedEntity.lat, lng: selectedEntity.lng } : null}
                             zoom={15}
                         />
 
@@ -312,47 +329,17 @@ export const FleetView = ({
                             <MaximizeButton isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
                         </div>
 
-                        {currentItems.map((item) => {
-                            const isSelected = selectedEntityId === item.id;
-                            return (
-                                <Marker
-                                    key={item.id}
-                                    position={[item.lat, item.lng]}
-                                    icon={L.divIcon({
-                                        className: '',
-                                        html: `
- <div class="relative transition-all duration-300 ${isSelected ? 'scale-125' : 'scale-100'}" style="transform: translate(-50%, -50%)">
- <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 border-white transition-colors ${activeTab === 'Drivers'
-                                                ? (item.status === 'On Trip' ? 'bg-[#00C4B4]' : 'bg-blue-500')
-                                                : 'bg-amber-500'
-                                            }">
- ${activeTab === 'Drivers'
-                                                ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>'
-                                                : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
-                                            }
- ${item.alerts && item.alerts.length > 0 ? `
- <div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
- <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
- </div>
- ` : ''}
- </div>
- <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm border border-slate-100 whitespace-nowrap">
- <span class="text-[9px] font-bold text-slate-700">${activeTab === 'Drivers' ? item.driver : item.name}</span>
- </div>
- </div>
- `,
-                                        iconSize: [40, 40],
-                                        iconAnchor: [20, 20],
-                                    })}
-                                    eventHandlers={{
-                                        click: () => setSelectedEntityId(item.id),
-                                    }}
-                                />
-                            );
-                        })}
-                    </MapContainer>
+                        {currentItems.map((item) => (
+                            <EntityMarker 
+                                key={item.id} 
+                                item={item} 
+                                isSelected={selectedEntityId === item.id} 
+                                activeTab={activeTab}
+                                onClick={() => setSelectedEntityId(item.id)}
+                            />
+                        ))}
+                    </BaseMap>
 
-                    {/* Detail Pop-up Overlay (Floating) */}
                     <AnimatePresence>
                         {selectedEntity && (
                             <motion.div
@@ -370,7 +357,7 @@ export const FleetView = ({
                                         <div>
                                             <h4 className="text-sm font-bold text-slate-800">{activeTab === 'Drivers' ? (selectedEntity as any).driver : (selectedEntity as any).name}</h4>
                                             <p className="text-[10px] text-slate-500 font-medium ">
-                                                {activeTab === 'Drivers' ? `${(selectedEntity as any).level} â€¢ ${(selectedEntity as any).id}` : `Customer â€¢ ${(selectedEntity as any).id}`}
+                                                {activeTab === 'Drivers' ? `${(selectedEntity as any).level} • ${(selectedEntity as any).id}` : `Customer • ${(selectedEntity as any).id}`}
                                             </p>
                                         </div>
                                     </div>
@@ -392,7 +379,7 @@ export const FleetView = ({
                                         <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
                                             <p className="text-[10px] text-slate-400 font-bold mb-1">Rating</p>
                                             <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                                                {activeTab === 'Drivers' ? (selectedEntity as any).rating : '4.5'} <span className="text-yellow-400">â˜…</span>
+                                                {activeTab === 'Drivers' ? (selectedEntity as any).rating : '4.5'} <span className="text-yellow-400">★</span>
                                             </span>
                                         </div>
                                     </div>

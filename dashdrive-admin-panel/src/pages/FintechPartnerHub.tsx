@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, Tag, Button, Space, Typography, Card, Badge, Row, Col, 
   Tabs, Statistic, Drawer, Descriptions, Alert, Input, Form,
@@ -470,7 +470,7 @@ export const FintechPartnerHub: React.FC = () => {
       <Row gutter={24}>
         <Col span={12}>
            <Card variant="borderless" className="shadow-sm" title={<Space><ThunderboltOutlined /> Utility Switch (Water/Power)</Space>}>
-             <Space direction="vertical" style={{ width: '100%' }} size="large">
+             <Space orientation="vertical" style={{ width: '100%' }} size="large">
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Space><Avatar size="large" src="https://www.paynow.co.zw/Content/img/logo.png" /> <Text strong>Paynow BillPay Engine</Text></Space>
                     <Tag color="green">INTEGRATED</Tag>
@@ -529,7 +529,7 @@ export const FintechPartnerHub: React.FC = () => {
                 <Col>
                   <Space>
                     <Badge status="processing" text={<Text strong style={{ color: '#fa8c16' }}>PROD MODE ACTIVE</Text>} />
-                    <Divider type="vertical" />
+                    <Divider orientation="vertical" />
                     <Button icon={<SettingOutlined />}>Configure API</Button>
                   </Space>
                 </Col>
@@ -659,7 +659,7 @@ export const FintechPartnerHub: React.FC = () => {
                  style={{ marginBottom: 16 }}
                />
                <Steps
-                 direction="vertical"
+                 orientation="vertical"
                  size="small"
                  current={1}
                  items={pendingSubmissions.map(sub => ({
@@ -1187,7 +1187,7 @@ export const FintechPartnerHub: React.FC = () => {
                       <List 
                         size="small"
                         dataSource={sandboxPreview.eligibility || []}
-                        renderItem={(item: string) => <List.Item style={{ fontSize: 11, padding: '4px 0' }}>â€¢ {item}</List.Item>}
+                        renderItem={(item: string) => <List.Item style={{ fontSize: 11, padding: '4px 0' }}>• {item}</List.Item>}
                       />
                       <Button block type="primary" shape="round" style={{ marginTop: 24, background: '#10b981', borderColor: '#10b981' }}>Apply Now</Button>
                    </div>
@@ -1411,3 +1411,4 @@ export const FintechPartnerHub: React.FC = () => {
     </div>
   );
 };
+

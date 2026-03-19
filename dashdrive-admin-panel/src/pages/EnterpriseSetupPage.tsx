@@ -468,12 +468,12 @@ export const EnterpriseSetupPage: React.FC = () => {
                         <Space size="small">
                           <Tooltip title="Zoom In"><Button size="small" icon={<PlusOutlined />} /></Tooltip>
                           <Tooltip title="Zoom Out"><Button size="small">-</Button></Tooltip>
-                          <Divider type="vertical" />
+                          <Divider orientation="vertical" />
                           <Tooltip title="Move Up"><Button size="small">â†‘</Button></Tooltip>
                           <Tooltip title="Move Down"><Button size="small">â†“</Button></Tooltip>
                           <Tooltip title="Move Left"><Button size="small">â†</Button></Tooltip>
                           <Tooltip title="Move Right"><Button size="small">â†’</Button></Tooltip>
-                          <Divider type="vertical" />
+                          <Divider orientation="vertical" />
                           <Tooltip title="Expand Map"><Button size="small" icon={<GlobalOutlined />} /></Tooltip>
                         </Space>
                       </div>
@@ -2830,3 +2830,4 @@ export const EnterpriseSetupPage: React.FC = () => {
     </div>
   );
 };
+

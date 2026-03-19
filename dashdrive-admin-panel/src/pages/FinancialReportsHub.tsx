@@ -57,7 +57,10 @@ import {
   AccountBookOutlined,
   ContainerOutlined,
   HistoryOutlined,
-  AuditOutlined
+  AuditOutlined,
+  ReloadOutlined,
+  FileExcelOutlined,
+  FilePdfOutlined
 } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
 import { Link } from 'react-router-dom';
@@ -346,6 +349,12 @@ export const FinancialReportsHub: React.FC = () => {
   const [isExpenseDrawerVisible, setIsExpenseDrawerVisible] = useState(false);
   const [isAdjustmentDrawerVisible, setIsAdjustmentDrawerVisible] = useState(false);
   const [isWalletActionDrawerVisible, setIsWalletActionDrawerVisible] = useState(false);
+  
+  // Standardization State
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
+
   const [walletActionType, setWalletActionType] = useState<'add' | 'debit' | 'freeze' | 'unfreeze'>('add');
   const [selectedWalletForAction, setSelectedWalletForAction] = useState<WalletRecord | null>(null);
   const [expenseForm] = Form.useForm();
@@ -364,6 +373,27 @@ export const FinancialReportsHub: React.FC = () => {
   const [reconciliations, setReconciliations] = useState<ReconciliationRecord[]>(initialReconciliationData);
   const [frauds, setFrauds] = useState<FraudRecord[]>(initialFraudData);
   const [treasuryData, setTreasuryData] = useState<TreasuryRecord[]>(initialTreasuryData);
+  
+  // High-Performance Standardization Actions
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    message.loading({ content: 'Synchronizing financial ledger...', key: 'refresh-finance' });
+    setTimeout(() => {
+      setIsRefreshing(false);
+      message.success({ content: 'Financial data synchronized', key: 'refresh-finance' });
+    }, 1500);
+  };
+
+  const handleStandardExport = (format: 'pdf' | 'excel' | 'csv') => {
+    setExportLoading(true);
+    const tabName = Object.keys(tabMap).find(name => tabMap[name] === activeTab) || 'report';
+    message.loading({ content: `Generating audit-ready ${format.toUpperCase()} for ${tabName}...`, key: 'export-finance' });
+    
+    setTimeout(() => {
+      setExportLoading(false);
+      message.success({ content: `${format.toUpperCase()} Exported successfully`, key: 'export-finance' });
+    }, 2000);
+  };
 
   // Derived Metrics & Executive Logic
   const totalEarnings = earnings.reduce((sum, item) => sum + (item.amount || 0), 0);
@@ -743,7 +773,7 @@ export const FinancialReportsHub: React.FC = () => {
       title: 'Surge/Fees ($)', 
       key: 'fees',
       render: (_: any, record: ReportData) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text style={{ fontSize: 12 }} type="secondary">Surge: ${(record.surgeFees || 0).toLocaleString()}</Text>
           <Text style={{ fontSize: 12 }} type="secondary">Cancel: ${(record.cancellationFees || 0).toLocaleString()}</Text>
         </Space>
@@ -1055,7 +1085,7 @@ export const FinancialReportsHub: React.FC = () => {
       dataIndex: 'riskScore', 
       key: 'riskScore',
       render: (score: number) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong style={{ color: score > 80 ? '#ef4444' : score > 50 ? '#f59e0b' : '#10b981' }}>{score}</Text>
           <div style={{ width: 80, height: 4, background: '#eee', borderRadius: 2 }}>
             <div style={{ width: `${score}%`, height: '100%', background: score > 80 ? '#ef4444' : score > 50 ? '#f59e0b' : '#10b981', borderRadius: 2 }} />
@@ -1080,7 +1110,7 @@ export const FinancialReportsHub: React.FC = () => {
   const treasuryColumns = [
     { title: 'SL', dataIndex: 'sl', key: 'sl' },
     { title: 'Bank/Account', dataIndex: 'bankName', key: 'bankName', render: (text: string, record: TreasuryRecord) => (
-      <Space direction="vertical" size={0}>
+      <Space orientation="vertical" size={0}>
         <Text strong>{text}</Text>
         <Text style={{ fontSize: 12 }} type="secondary">{record.accountNo}</Text>
       </Space>
@@ -1304,8 +1334,18 @@ export const FinancialReportsHub: React.FC = () => {
               <RangePicker size="large" style={{ flex: 1 }} />
             </div>
           </Col>
+          <Col xs={24} md={6}>
+            <Text strong type="secondary" style={{ display: 'block', marginBottom: 8 }}>Transaction Status</Text>
+            <Select value={filterStatus} onChange={setFilterStatus} style={{ width: '100%' }} size="large">
+              <Option value="all">All Statuses</Option>
+              <Option value="paid">Paid / Settled</Option>
+              <Option value="pending">Pending Audit</Option>
+              <Option value="processing">Processing</Option>
+              <Option value="failed">Failed / Mismatched</Option>
+            </Select>
+          </Col>
           <Col xs={24} md={4} style={{ textAlign: 'right', paddingTop: 28 }}>
-            <Button type="primary" size="large" icon={<FilterOutlined />} block>Apply Filters</Button>
+            <Button type="primary" size="large" icon={<FilterOutlined />} block>Apply Advanced Filters</Button>
           </Col>
         </Row>
       </Card>
@@ -1333,9 +1373,28 @@ export const FinancialReportsHub: React.FC = () => {
         </Col>
         <Col>
           <Space>
+            <Button 
+                icon={<ReloadOutlined spin={isRefreshing} />} 
+                onClick={handleManualRefresh}
+                loading={isRefreshing}
+            >
+                Refresh Hub
+            </Button>
             {activeTab === '2' && <Button type="primary" icon={<PlusOutlined />} style={{ background: '#ef4444', borderColor: '#ef4444' }} onClick={() => setIsExpenseDrawerVisible(true)}>Add Expense Report</Button>}
             {activeTab === '7' && <Button type="primary" icon={<PlusOutlined />} style={{ background: '#f59e0b', borderColor: '#f59e0b' }} onClick={() => setIsAdjustmentDrawerVisible(true)}>Create Adjustment</Button>}
-            <Button icon={<DownloadOutlined />}>Export All</Button>
+            <Dropdown
+              menu={{
+                items: [
+                  { key: 'pdf', label: 'Export as PDF (Audit-Ready)', icon: <FilePdfOutlined />, onClick: () => handleStandardExport('pdf') },
+                  { key: 'excel', label: 'Export as Excel', icon: <FileExcelOutlined />, onClick: () => handleStandardExport('excel') },
+                  { key: 'csv', label: 'Export as CSV', icon: <DownloadOutlined />, onClick: () => handleStandardExport('csv') },
+                ]
+              }}
+            >
+              <Button type="primary" icon={<DownloadOutlined />} loading={exportLoading}>
+                Generate Export <MoreOutlined />
+              </Button>
+            </Dropdown>
             <Button icon={<PrinterOutlined />}>Print Hub Statement</Button>
           </Space>
         </Col>
@@ -2369,3 +2428,4 @@ export const FinancialReportsHub: React.FC = () => {
     </div>
   );
 };
+

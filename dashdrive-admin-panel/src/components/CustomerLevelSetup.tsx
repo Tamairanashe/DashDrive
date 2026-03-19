@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Typography, Card, Table, Button, Space, Tag, Input, Modal, Form, InputNumber, Select, Switch, Divider, List } from 'antd';
 import { Trophy, Plus, Edit, Trash2, Award, Star, Zap, Search, HelpCircle } from 'lucide-react';
 
@@ -87,7 +87,7 @@ export function CustomerLevelSetup() {
  title: 'Requirements (Lifetime)',
  key: 'requirements',
  render: (_: any, record: any) => (
- <Space direction="vertical" size="small">
+ <Space orientation="vertical" size="small">
  <Text type="secondary"><strong className="text-zinc-700">{record.minOrders}</strong> Min. Orders</Text>
  <Text type="secondary"><strong className="text-zinc-700">${record.minSpend}</strong> Min. Spend</Text>
  </Space>
@@ -245,3 +245,4 @@ export function CustomerLevelSetup() {
  </div>
  );
 }
+

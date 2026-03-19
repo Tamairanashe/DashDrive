@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Typography, Row, Col, Input, Button, Space, Divider, message, Steps, Statistic, Tag, Alert, Select, Result, Spin } from 'antd';
 import { 
   ThunderboltOutlined, 
@@ -256,7 +256,7 @@ export const UtilityPaymentHub: React.FC = () => {
                   style={{ borderRadius: 12, marginBottom: 20, textAlign: 'center', fontSize: 24, height: 60 }}
                 />
                 
-                <Space direction="vertical" style={{ width: '100%' }}>
+                <Space orientation="vertical" style={{ width: '100%' }}>
                     <Button 
                         type="primary" 
                         size="large" 
@@ -304,7 +304,7 @@ export const UtilityPaymentHub: React.FC = () => {
         </Card>
 
         <div style={{ marginTop: 40, textAlign: 'center' }}>
-          <Space split={<Divider type="vertical" />}>
+          <Space split={<Divider orientation="vertical" />}>
             <Text type="secondary"><WalletOutlined /> Secure SSL Encrypted</Text>
             <Text type="secondary"><CheckCircleOutlined /> Authorized Paynow Channel</Text>
             <Text type="secondary">DashDrive Fintech</Text>
@@ -314,3 +314,4 @@ export const UtilityPaymentHub: React.FC = () => {
     </div>
   );
 };
+

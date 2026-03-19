@@ -10,7 +10,7 @@ import {
   DeleteOutlined, CalendarOutlined, GiftOutlined,
   InfoCircleOutlined, CheckCircleOutlined,
   HistoryOutlined, CopyOutlined, WarningOutlined,
-  SyncOutlined
+  ReloadOutlined, RestOutlined
 } from '@ant-design/icons';
 import { Gift, Percent, Calendar, Search, ShieldCheck } from 'lucide-react';
 import dayjs from 'dayjs';
@@ -57,9 +57,23 @@ export const WalletBonusManagement: React.FC = () => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [bonuses, setBonuses] = useState(initialBonuses);
   const [filteredBonuses, setFilteredBonuses] = useState(initialBonuses);
+  const [trashedBonuses, setTrashedBonuses] = useState<any[]>([]);
+  const [trashVisible, setTrashVisible] = useState(false);
   const [editingBonus, setEditingBonus] = useState<any>(null);
   const [selectedBonus, setSelectedBonus] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setFilteredBonuses(bonuses);
+  };
+
+  const handleRestoreBonus = (bonus: any) => {
+    setTrashedBonuses(prev => prev.filter(b => b.id !== bonus.id));
+    setBonuses(prev => [bonus, ...prev]);
+    setFilteredBonuses(prev => [bonus, ...prev]);
+    message.success(`Bonus "${bonus.title}" restored successfully`);
+  };
   
   const [form] = Form.useForm();
   const [deleteForm] = Form.useForm();
@@ -106,13 +120,17 @@ export const WalletBonusManagement: React.FC = () => {
   const handleDelete = (values: any) => {
     setLoading(true);
     setTimeout(() => {
-      const updated = bonuses.filter(b => b.id !== selectedBonus.id);
-      setBonuses(updated);
-      setFilteredBonuses(updated);
+      const bonusToRemove = bonuses.find(b => b.id === selectedBonus.id);
+      if (bonusToRemove) {
+        setTrashedBonuses(prev => [...prev, { ...bonusToRemove, deletedAt: new Date().toISOString(), reason: values.reason }]);
+        const updated = bonuses.filter(b => b.id !== selectedBonus.id);
+        setBonuses(updated);
+        setFilteredBonuses(updated);
+      }
       
       notification.warning({
-          message: 'Bonus Terminated',
-          description: `The "${selectedBonus.title}" program has been removed. Reason: ${values.reason}`,
+          message: 'Bonus Moved to Trash',
+          description: `The "${selectedBonus.title}" program has been moved to trash. Reason: ${values.reason}`,
       });
       
       setDeleteModalVisible(false);
@@ -171,7 +189,7 @@ export const WalletBonusManagement: React.FC = () => {
       title: 'Logic / Eligibility', 
       key: 'logic',
       render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text type="secondary" style={{ fontSize: 11 }}>Min Deposit: <Text strong style={{ fontSize: 11, color: '#0f172a' }}>$ {record.minAddAmount.toFixed(2)}</Text></Text>
           <Text type="secondary" style={{ fontSize: 11 }}>Max Cap: <Text strong style={{ fontSize: 11, color: '#0f172a' }}>$ {record.maxBonus.toFixed(2)}</Text></Text>
         </Space>
@@ -191,7 +209,7 @@ export const WalletBonusManagement: React.FC = () => {
         title: 'Timeline', 
         key: 'timeline', 
         render: (_: any, record: any) => (
-            <Space direction="vertical" size={2}>
+            <Space orientation="vertical" size={2}>
                 <Text style={{ fontSize: 11 }}><CalendarOutlined className="mr-1" /> {dayjs(record.startDate).format('MMM D, YYYY')}</Text>
                 <Text type="secondary" style={{ fontSize: 10, marginLeft: 16 }}>Until {dayjs(record.endDate).format('MMM D, YYYY')}</Text>
             </Space>
@@ -237,6 +255,7 @@ export const WalletBonusManagement: React.FC = () => {
         </div>
         <Space size="middle">
           <Button icon={<HistoryOutlined />} onClick={() => navigate('/enterprise/audit-logs')}>Bonus Logs</Button>
+          <Button icon={<RestOutlined />} onClick={() => setTrashVisible(true)}>Manage Trash</Button>
           <Button icon={<SyncOutlined spin={refreshing} />} onClick={handleRefresh} />
           <Button 
             type="primary" 
@@ -254,19 +273,25 @@ export const WalletBonusManagement: React.FC = () => {
       </div>
 
       {/* Bonus List */}
-      <Card bordered={false} className="shadow-md rounded-2xl overflow-hidden">
+      <Card variant="borderless" className="shadow-md rounded-2xl overflow-hidden">
         <div className="mb-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
              <Title level={5} style={{ margin: 0 }}>Active Campaigns</Title>
              <Tag color="blue" style={{ borderRadius: 4, border: 'none' }}>{filteredBonuses.length} Programs</Tag>
           </div>
-          <Input 
-            prefix={<SearchOutlined style={{ color: '#94a3b8' }} />} 
-            placeholder="Search by title, ID or description..." 
-            style={{ width: 320, borderRadius: 10 }}
-            value={searchQuery}
-            onChange={handleSearch}
-          />
+          <Space>
+            <Tooltip title="Reset Filters">
+              <Button icon={<ReloadOutlined />} onClick={handleResetFilters} />
+            </Tooltip>
+            <Input 
+              prefix={<SearchOutlined style={{ color: '#94a3b8' }} />} 
+              placeholder="Search by title, ID or description..." 
+              style={{ width: 320, borderRadius: 10 }}
+              value={searchQuery}
+              onChange={handleSearch}
+              allowClear
+            />
+          </Space>
         </div>
 
         <Table 
@@ -389,6 +414,36 @@ export const WalletBonusManagement: React.FC = () => {
             </Form.Item>
         </Form>
       </Modal>
+
+      {/* Trash Drawer */}
+      <Drawer
+        title={<span><RestOutlined /> Trashed Campaigns</span>}
+        open={trashVisible}
+        onClose={() => setTrashVisible(false)}
+        width={500}
+      >
+        <Table 
+          dataSource={trashedBonuses}
+          rowKey="id"
+          pagination={false}
+          columns={[
+            { title: 'Campaign', dataIndex: 'title', key: 'title' },
+            { title: 'Deleted At', dataIndex: 'deletedAt', key: 'date', render: (d) => new Date(d).toLocaleString() },
+            { 
+              title: 'Actions', 
+              key: 'actions', 
+              align: 'right',
+              render: (_, record) => (
+                <Space>
+                  <Button size="small" icon={<ReloadOutlined />} onClick={() => handleRestoreBonus(record)}>Restore</Button>
+                  <Button size="small" danger onClick={() => setTrashedBonuses(prev => prev.filter(b => b.id !== record.id))}>Purge</Button>
+                </Space>
+              )
+            }
+          ]}
+          locale={{ emptyText: <Empty description="No trashed campaigns" /> }}
+        />
+      </Drawer>
     </div>
   );
 };
@@ -408,3 +463,4 @@ const Alert: React.FC<{message: string, description: string, type: 'info' | 'war
         </div>
     </div>
 );
+

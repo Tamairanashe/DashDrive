@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Typography, Card, Table, Button, Space, Tag, Input, Avatar, Dropdown, MenuProps } from 'antd';
 import { Users, Plus, Edit, Trash2, Search, Filter, MoreVertical, Mail, Phone, Shield } from 'lucide-react';
 
@@ -111,7 +111,7 @@ export function Employees() {
  title: 'Contact Information',
  key: 'contact',
  render: (_: any, record: any) => (
- <Space direction="vertical" size="small">
+ <Space orientation="vertical" size="small">
  <div className="flex items-center gap-2 text-xs text-zinc-600">
  <Mail className="w-3 h-3" /> {record.email}
  </div>
@@ -125,7 +125,7 @@ export function Employees() {
  title: 'Role & Department',
  key: 'role',
  render: (_: any, record: any) => (
- <Space direction="vertical" size="small">
+ <Space orientation="vertical" size="small">
  <Tag color={getRoleColor(record.role)} className="rounded-md border-0 bg-opacity-20">{record.role.replace('_', ' ')}</Tag>
  <Text type="secondary" className="text-xs">{record.department}</Text>
  </Space>
@@ -201,3 +201,4 @@ export function Employees() {
  </div>
  );
 }
+

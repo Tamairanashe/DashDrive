@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Typography, 
   Row, 
@@ -177,7 +177,7 @@ export const DriverLeaderboard: React.FC<DriverLeaderboardProps> = ({ timeFilter
                 <Statistic value={top3[1].earnings} prefix="$" valueStyle={{ fontSize: 16, fontWeight: 700 }} />
               </Col>
               <Col span={12}>
-                <Statistic value={top3[1].rating} suffix="â˜…" valueStyle={{ fontSize: 16, fontWeight: 700, color: '#faad14' }} />
+                <Statistic value={top3[1].rating} suffix="★" valueStyle={{ fontSize: 16, fontWeight: 700, color: '#faad14' }} />
               </Col>
             </Row>
             <Button 
@@ -213,7 +213,7 @@ export const DriverLeaderboard: React.FC<DriverLeaderboardProps> = ({ timeFilter
                 <Statistic value={top3[0].earnings} prefix="$" valueStyle={{ fontSize: 20, fontWeight: 800, color: '#52c41a' }} />
               </Col>
               <Col span={12}>
-                <Statistic value={top3[0].rating} suffix="â˜…" valueStyle={{ fontSize: 20, fontWeight: 800, color: '#faad14' }} />
+                <Statistic value={top3[0].rating} suffix="★" valueStyle={{ fontSize: 20, fontWeight: 800, color: '#faad14' }} />
               </Col>
             </Row>
             <Button 
@@ -246,7 +246,7 @@ export const DriverLeaderboard: React.FC<DriverLeaderboardProps> = ({ timeFilter
                 <Statistic value={top3[2].earnings} prefix="$" valueStyle={{ fontSize: 16, fontWeight: 700 }} />
               </Col>
               <Col span={12}>
-                <Statistic value={top3[2].rating} suffix="â˜…" valueStyle={{ fontSize: 16, fontWeight: 700, color: '#faad14' }} />
+                <Statistic value={top3[2].rating} suffix="★" valueStyle={{ fontSize: 16, fontWeight: 700, color: '#faad14' }} />
               </Col>
             </Row>
             <Button 
@@ -299,7 +299,7 @@ export const DriverLeaderboard: React.FC<DriverLeaderboardProps> = ({ timeFilter
       key: 'activity',
       render: (record: LeaderboardEntry) => (
         <div style={{ width: 140 }}>
-          <Space direction="vertical" size={0} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={0} style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
               <Text strong style={{ fontSize: 12 }}>{record.trips} Trips</Text>
               <Text type="secondary" style={{ fontSize: 10 }}>{record.acceptanceRate}%</Text>
@@ -319,7 +319,7 @@ export const DriverLeaderboard: React.FC<DriverLeaderboardProps> = ({ timeFilter
               <div style={{ padding: 8 }}>
                 {Object.entries(record.starsCount).reverse().map(([star, count]) => (
                   <Row key={star} gutter={8} align="middle">
-                    <Col span={4}><Text style={{ color: 'white', fontSize: 10 }}>{star}â˜…</Text></Col>
+                    <Col span={4}><Text style={{ color: 'white', fontSize: 10 }}>{star}★</Text></Col>
                     <Col span={14}><Progress percent={(count / record.ratingCount) * 100} showInfo={false} size="small" strokeColor="#faad14" /></Col>
                     <Col span={6}><Text style={{ color: 'white', fontSize: 10 }}>{count}</Text></Col>
                   </Row>
@@ -334,7 +334,7 @@ export const DriverLeaderboard: React.FC<DriverLeaderboardProps> = ({ timeFilter
               <Text type="secondary" style={{ fontSize: 11 }}>({record.ratingCount})</Text>
             </Space>
             <br/>
-            <Text style={{ fontSize: 10, color: '#faad14', fontWeight: 600 }}>{record.starsCount[5]} listings of 5â˜…</Text>
+            <Text style={{ fontSize: 10, color: '#faad14', fontWeight: 600 }}>{record.starsCount[5]} listings of 5★</Text>
           </div>
         </Tooltip>
       )
@@ -470,3 +470,4 @@ export const DriverLeaderboard: React.FC<DriverLeaderboardProps> = ({ timeFilter
     </div>
   );
 };
+

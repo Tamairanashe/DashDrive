@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Typography, Row, Col, Card, Select, Button, Space, 
@@ -7,10 +7,10 @@ import {
     Calendar, Form, TimePicker, Slider, Timeline
 } from 'antd';
 import { 
-    Circle, Popup, useMap, 
-    Polygon, Polyline, Marker
-} from 'react-leaflet';
-import { BaseMap } from '../components/BaseMap';
+    CircleF, InfoWindowF, 
+    PolygonF, PolylineF, MarkerF, OverlayViewF, OverlayView
+} from '@react-google-maps/api';
+import { BaseMap, useBaseMap } from '../components/BaseMap';
 import { 
     SyncOutlined, 
     GlobalOutlined, 
@@ -45,7 +45,7 @@ import {
     CalendarOutlined,
     ClockCircleOutlined
 } from '@ant-design/icons';
-import L from 'leaflet';
+// import L from 'leaflet';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -107,7 +107,7 @@ const getMockZonesForService = (serviceId: string) => {
 const MOCK_RAIN_CLUSTERS = [
     { 
         id: 'r1', 
-        points: [[-17.8100, 31.0400], [-17.8200, 31.0600], [-17.8400, 31.0500]], 
+        points: [{lat: -17.8100, lng: 31.0400}, {lat: -17.8200, lng: 31.0600}, {lat: -17.8400, lng: 31.0500}], 
         intensity: 'Heavy Storm', 
         impact: '+35% Demand' 
     }
@@ -116,13 +116,13 @@ const MOCK_RAIN_CLUSTERS = [
 const MOCK_TRAFFIC_CLUSTERS = [
     { 
         id: 't1', 
-        path: [[-17.8200, 31.0200], [-17.8200, 31.0800]], 
+        path: [{lat: -17.8200, lng: 31.0200}, {lat: -17.8200, lng: 31.0800}], 
         level: 'Gridlock', 
         delay: '+15 min' 
     },
     { 
         id: 't2', 
-        path: [[-17.7800, 31.0500], [-17.8500, 31.0500]], 
+        path: [{lat: -17.7800, lng: 31.0500}, {lat: -17.8500, lng: 31.0500}], 
         level: 'Flowing Heavy', 
         delay: '+8 min' 
     }
@@ -174,50 +174,56 @@ const MOCK_TRANSACTIONS = [
     { id: 'TX-8827', userId: 'UP-002', date: '2024-03-07 16:40', service: 'ride', type: 'debit', amount: 22.50, description: 'Ride: Corporate Office', status: 'Refunded' },
 ];
 
-const getDemandPointIcon = (service: string) => {
+const DemandPointMarker = ({ position, service }: { position: google.maps.LatLngLiteral, service: string }) => {
     const color = SERVICE_TYPES.find(s => s.id === service)?.color || '#3b82f6';
-    return L.divIcon({
-        html: `<div class="pulse-marker" style="background: ${color}; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px ${color};"></div>`,
-        className: '',
-        iconSize: [12, 12],
-        iconAnchor: [6, 6]
-    });
+    return (
+        <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+            <div style={{ transform: 'translate(-50%, -50%)' }}>
+                <div className="pulse-marker" style={{ background: color, width: '12px', height: '12px', border: '2px solid white', borderRadius: '50%', boxShadow: `0 0 10px ${color}` }}></div>
+            </div>
+        </OverlayViewF>
+    );
 };
 
-const getServiceIcon = (service: string) => {
+const ServiceAssetMarker = ({ position, service, id, name }: { position: google.maps.LatLngLiteral, service: string, id: string, name: string }) => {
     const color = SERVICE_TYPES.find(s => s.id === service)?.color || '#3b82f6';
-    let iconHtml = '';
+    let iconHtml: React.ReactNode = null;
     
-    if (service === 'ride') iconHtml = '<i class="anticon anticon-car" style="font-size: 18px;"></i>';
-    else if (service === 'food') iconHtml = '<i class="anticon anticon-thunderbolt" style="font-size: 18px;"></i>';
-    else if (service === 'parcel') iconHtml = '<i class="anticon anticon-environment" style="font-size: 18px;"></i>';
-    else iconHtml = '<i class="anticon anticon-team" style="font-size: 18px;"></i>';
+    if (service === 'ride') iconHtml = <CarOutlined style={{ fontSize: 18 }} />;
+    else if (service === 'food') iconHtml = <ThunderboltOutlined style={{ fontSize: 18 }} />;
+    else if (service === 'parcel') iconHtml = <EnvironmentOutlined style={{ fontSize: 18 }} />;
+    else iconHtml = <TeamOutlined style={{ fontSize: 18 }} />;
 
-    return L.divIcon({
-        html: `<div style="background: white; border: 2px solid ${color}; color: ${color}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-                ${iconHtml}
-               </div>`,
-        className: '',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-    });
+    return (
+        <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+            <div style={{ transform: 'translate(-50%, -50%)' }}>
+                <div style={{ background: 'white', border: `2px solid ${color}`, color: color, width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+                    {iconHtml}
+                </div>
+            </div>
+        </OverlayViewF>
+    );
 };
 
-const getEventIcon = (name: string) => {
-    return L.divIcon({
-        html: `<div class="pulse-marker" style="background: #eab308; width: 14px; height: 14px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 15px #eab308; display: flex; align-items: center; justify-content: center;">
-                <i class="anticon anticon-star" style="font-size: 8px; color: white;"></i>
-               </div>`,
-        className: '',
-        iconSize: [14, 14],
-        iconAnchor: [7, 7]
-    });
+const EventMarker = ({ position, name }: { position: google.maps.LatLngLiteral, name: string }) => {
+    return (
+        <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+            <div style={{ transform: 'translate(-50%, -50%)' }}>
+                <div className="pulse-marker" style={{ background: '#eab308', width: '14px', height: '14px', border: '2px solid white', borderRadius: '50%', boxShadow: '0 0 15px #eab308', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <StarFilled style={{ fontSize: 8, color: 'white' }} />
+                </div>
+            </div>
+        </OverlayViewF>
+    );
 };
 
-const MapFlyTo = ({ center, zoom = 12 }: { center: [number, number], zoom?: number }) => {
-    const map = useMap();
+const MapEffect = ({ center, zoom = 12 }: { center: { lat: number, lng: number }, zoom?: number }) => {
+    const { map } = useBaseMap();
     useEffect(() => {
-        map.flyTo(center, zoom, { duration: 1.5 });
+        if (map) {
+            map.panTo(center);
+            map.setZoom(zoom);
+        }
     }, [center, zoom, map]);
     return null;
 };
@@ -375,7 +381,7 @@ export const HeatMapPage: React.FC = () => {
                             <Col>
                                 <Space align="center" size="middle">
                                     <Title level={4} style={{ margin: 0, whiteSpace: 'nowrap' }}>Market Intensity Hub</Title>
-                                    <Divider type="vertical" />
+                                    <Divider orientation="vertical" />
                                     <Space size="small" wrap>
                                         <Select 
                                             value={selectedCountry} 
@@ -411,7 +417,7 @@ export const HeatMapPage: React.FC = () => {
                                         >
                                             {LOCATION_DATA[selectedCountry].regions[selectedRegion].map((c: string) => <Select.Option key={c} value={c}>{c}</Select.Option>)}
                                         </Select>
-                                        <Divider type="vertical" />
+                                        <Divider orientation="vertical" />
                                         <Select 
                                             value={service} 
                                             style={{ width: 180, fontWeight: 700 }} 
@@ -456,13 +462,13 @@ export const HeatMapPage: React.FC = () => {
                                         <Text strong>{weather.condition}</Text>
                                         <Tag color="cyan" style={{ borderRadius: 4 }}>{weather.impact}</Tag>
                                     </Space>
-                                    <Divider type="vertical" />
+                                    <Divider orientation="vertical" />
                                     <Space>
                                         <StopOutlined style={{ color: '#ef4444' }} />
                                         <Text strong>Traffic</Text>
                                         <Tag color="error" style={{ borderRadius: 4 }}>{traffic.impact}</Tag>
                                     </Space>
-                                    <Divider type="vertical" />
+                                    <Divider orientation="vertical" />
                                     <Space>
                                         <FieldTimeOutlined style={{ color: '#f59e0b' }} />
                                         <Text strong>{marketTemperament.label}</Text>
@@ -509,115 +515,66 @@ export const HeatMapPage: React.FC = () => {
                                 zoom={12} 
                                 height="100%"
                             >
-                                <MapFlyTo center={[LOCATION_COORDS[selectedCity].lat, LOCATION_COORDS[selectedCity].lng]} />
+                                <MapEffect center={{ lat: mapCenter[0], lng: mapCenter[1] }} zoom={isDrilldownActive ? 15 : 12} />
                                 {(enabledLayers.includes('demand') || enabledLayers.includes('supply')) && zones.map(zone => (
-                                    <Circle 
+                                    <CircleF 
                                         key={zone.id}
-                                        center={[zone.lat, zone.lng]}
-                                        pathOptions={{ 
+                                        center={{ lat: zone.lat, lng: zone.lng }}
+                                        options={{ 
                                             fillColor: enabledLayers.includes('demand') ? getZoneColor(zone.demand) : '#3b82f6', 
-                                            color: enabledLayers.includes('demand') ? getZoneColor(zone.demand) : '#3b82f6', 
+                                            strokeColor: enabledLayers.includes('demand') ? getZoneColor(zone.demand) : '#3b82f6', 
                                             fillOpacity: enabledLayers.includes('demand') ? 0.5 : 0.3 
                                         }}
                                         radius={enabledLayers.includes('demand') ? (zone.demand === 'critical' ? 2000 : 3000) : (zone.drivers * 150)}
-                                        eventHandlers={{
-                                            click: () => {
-                                                setSelectedZone(zone);
-                                                setMapCenter([zone.lat, zone.lng]);
-                                                setIsDrilldownActive(true);
-                                            }
-                                        }}
-                                    >
-                                        <Popup>
-                                            <Title level={5}>{zone.name}</Title>
-                                            <Divider style={{ margin: '8px 0' }} />
-                                            <Text strong>{enabledLayers.includes('demand') ? 'Market Demand' : 'Driver Supply'}</Text><br/>
-                                            <Tag color={getZoneColor(zone.demand)}>{zone.demand.toUpperCase()}</Tag>
-                                        </Popup>
-                                    </Circle>
-                                ))}
-
-                                {enabledLayers.includes('rain') && MOCK_RAIN_CLUSTERS.map(rain => (
-                                    <Polygon 
-                                        key={rain.id}
-                                        positions={rain.points as any}
-                                        pathOptions={{ fillColor: '#0ea5e9', color: '#0ea5e9', fillOpacity: 0.25, weight: 1 }}
-                                    >
-                                        <Popup>
-                                            <Text strong><CloudOutlined /> {rain.intensity}</Text><br/>
-                                            <Text type="secondary">Localized Impact: {rain.impact}</Text>
-                                        </Popup>
-                                    </Polygon>
-                                ))}
-
-                                {enabledLayers.includes('traffic') && MOCK_TRAFFIC_CLUSTERS.map(jam => (
-                                    <Polyline 
-                                        key={jam.id}
-                                        positions={jam.path as any}
-                                        pathOptions={{ color: '#ef4444', weight: 8, opacity: 0.6 }}
-                                    >
-                                        <Popup>
-                                            <Text strong><StopOutlined /> {jam.level}</Text><br/>
-                                            <Text type="secondary">Est. Delay: {jam.delay}</Text>
-                                        </Popup>
-                                    </Polyline>
-                                ))}
-
-                                {enabledLayers.includes('events') && events.map(event => (
-                                    <Marker 
-                                        key={event.id} 
-                                        position={[event.lat, event.lng]} 
-                                        icon={getEventIcon(event.name)}
-                                    >
-                                        <Popup>
-                                            <div style={{ padding: '4px' }}>
-                                                <Space>
-                                                    <Tag color="gold" icon={<StarFilled />}>{event.type}</Tag>
-                                                </Space>
-                                                <Divider style={{ margin: '8px 0' }} />
-                                                <Text strong>{event.name}</Text><br/>
-                                                <Text type="secondary" style={{ fontSize: 11 }}>Est. Attendance: {event.attendees}</Text><br/>
-                                                <Badge status="processing" text={`Impact: ${event.impact}`} style={{ fontSize: 11 }} />
-                                            </div>
-                                        </Popup>
-                                    </Marker>
-                                ))}
-
-                                {service !== 'ALL' && MOCK_SERVICE_ASSETS.filter(a => a.service === service).map(asset => (
-                                    <Marker 
-                                        key={asset.id} 
-                                        position={[asset.lat, asset.lng]} 
-                                        icon={getServiceIcon(asset.service)}
-                                    >
-                                        <Popup>
-                                            <div style={{ padding: '4px' }}>
-                                                <Space>
-                                                    <Avatar size="small" icon={SERVICE_TYPES.find(s => s.id === service)?.icon} />
-                                                    <Text strong>{asset.id}</Text>
-                                                </Space>
-                                                <Divider style={{ margin: '8px 0' }} />
-                                                <Text type="secondary" style={{ fontSize: 11 }}>Agent: {asset.name}</Text><br/>
-                                                <Badge status="processing" text="Online" style={{ fontSize: 11 }} />
-                                            </div>
-                                        </Popup>
-                                    </Marker>
-                                ))}
-
-                                {isDrilldownActive && selectedZone && MOCK_DEMAND_POINTS.map(point => (
-                                    <Marker 
-                                        key={point.id} 
-                                        position={[point.lat, point.lng]} 
-                                        icon={getDemandPointIcon(service === 'ALL' ? 'ride' : service)}
-                                        eventHandlers={{
-                                            click: () => {
-                                                setSelectedUser(point);
-                                                setIsProfileDrawerVisible(true);
-                                            }
+                                        onClick={() => {
+                                            setSelectedZone(zone);
+                                            setMapCenter([zone.lat, zone.lng]);
+                                            setIsDrilldownActive(true);
                                         }}
                                     />
                                 ))}
 
-                                <MapFlyTo center={mapCenter} zoom={isDrilldownActive ? 15 : 12} />
+                                {enabledLayers.includes('rain') && MOCK_RAIN_CLUSTERS.map(rain => (
+                                    <PolygonF 
+                                        key={rain.id}
+                                        path={rain.points}
+                                        options={{ fillColor: '#0ea5e9', strokeColor: '#0ea5e9', fillOpacity: 0.25, strokeWeight: 1 }}
+                                    />
+                                ))}
+
+                                {enabledLayers.includes('traffic') && MOCK_TRAFFIC_CLUSTERS.map(jam => (
+                                    <PolylineF 
+                                        key={jam.id}
+                                        path={jam.path}
+                                        options={{ strokeColor: '#ef4444', strokeWeight: 8, strokeOpacity: 0.6 }}
+                                    />
+                                ))}
+
+                                {enabledLayers.includes('events') && events.map(event => (
+                                    <EventMarker 
+                                        key={event.id} 
+                                        position={{ lat: event.lat, lng: event.lng }} 
+                                        name={event.name}
+                                    />
+                                ))}
+
+                                {service !== 'ALL' && MOCK_SERVICE_ASSETS.filter(a => a.service === service).map(asset => (
+                                    <ServiceAssetMarker 
+                                        key={asset.id} 
+                                        position={{ lat: asset.lat, lng: asset.lng }} 
+                                        service={asset.service}
+                                        id={asset.id}
+                                        name={asset.name}
+                                    />
+                                ))}
+
+                                {isDrilldownActive && selectedZone && MOCK_DEMAND_POINTS.map(point => (
+                                    <DemandPointMarker 
+                                        key={point.id} 
+                                        position={{ lat: point.lat, lng: point.lng }} 
+                                        service={service === 'ALL' ? 'ride' : service}
+                                    />
+                                ))}
                             </BaseMap>
                         </div>
 
@@ -645,7 +602,7 @@ export const HeatMapPage: React.FC = () => {
                         className="glass-search"
                         prefix={<EnvironmentOutlined style={{ color: '#3b82f6' }} />}
                     />
-                    <Divider type="vertical" style={{ height: 24, margin: '4px 0' }} />
+                    <Divider orientation="vertical" style={{ height: 24, margin: '4px 0' }} />
                     <DatePicker.RangePicker
                         onChange={handleDateChange}
                         className="glass-picker"
@@ -702,7 +659,7 @@ export const HeatMapPage: React.FC = () => {
                             boxShadow: '0 8px 16px -4px rgba(0,0,0,0.1)'
                         }}>
                             <Text strong style={{ display: 'block', marginBottom: 12 }}>Visual Intelligence</Text>
-                            <Space direction="vertical" size={12}>
+                            <Space orientation="vertical" size={12}>
                                 {enabledLayers.includes('demand') && (
                                     <>
                                         <Space><div style={{ width: 14, height: 14, borderRadius: '50%', background: '#ef4444', border: '2px solid rgba(239, 68, 68, 0.4)' }} /> <Text style={{ fontSize: 13 }}>High Demand (Red)</Text></Space>
@@ -789,7 +746,7 @@ export const HeatMapPage: React.FC = () => {
                             <Divider style={{ margin: '16px 0' }} />
 
                             <Title level={5}>Environmental Impact</Title>
-                            <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
+                            <Space orientation="vertical" style={{ width: '100%', marginBottom: 16 }}>
                                 <Row justify="space-between">
                                     <Text type="secondary"><CloudOutlined /> Weather (Rain)</Text>
                                     <Text type="success">+15.2%</Text>
@@ -818,7 +775,7 @@ export const HeatMapPage: React.FC = () => {
                                 </Row>
                             </Space>
 
-                            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                            <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                                 <Alert
                                     message="AI Tactics Engine"
                                     description={(() => {
@@ -839,7 +796,7 @@ export const HeatMapPage: React.FC = () => {
 
                                 <div style={{ background: '#fffbeb', padding: '16px', borderRadius: 12, border: '1px solid #fef3c7' }}>
                                     <Text strong style={{ fontSize: 12, color: '#92400e', display: 'block', marginBottom: 12 }}>SURGE TACTICAL CONTROL</Text>
-                                    <Space direction="vertical" style={{ width: '100%' }} size="small">
+                                    <Space orientation="vertical" style={{ width: '100%' }} size="small">
                                         <Row gutter={8}>
                                             <Col span={14}>
                                                 <Select
@@ -1087,7 +1044,7 @@ export const HeatMapPage: React.FC = () => {
                             label: 'Overview',
                             children: (
                                 <div style={{ padding: '20px' }}>
-                                    <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                                    <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                                         <Text type="secondary">Real-time marketplace insights for {selectedCity}.</Text>
                                         <div style={{ padding: '4px 0 16px 0' }}>
                                             <Input.Search
@@ -1149,7 +1106,7 @@ export const HeatMapPage: React.FC = () => {
                             children: (
                                 <div style={{ padding: '20px' }}>
                                     <Title level={5}>Global Analytics Scope</Title>
-                                    <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                                    <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                                         <div>
                                             <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>Select Service</Text>
                                             <Select value={service} style={{ width: '100%' }} onChange={setService}>
@@ -1325,7 +1282,7 @@ export const HeatMapPage: React.FC = () => {
                                 avatar={<Avatar icon={<StarFilled />} style={{ background: '#fef3c7', color: '#eab308' }} />}
                                 title={event.name}
                                 description={
-                                    <Space direction="vertical" size={0}>
+                                    <Space orientation="vertical" size={0}>
                                         <Text type="secondary" style={{ fontSize: 12 }}>{event.type} â€¢ {event.impact} Demand Lift</Text>
                                         <Text type="secondary" style={{ fontSize: 12 }}>Sector: {event.isGlobal ? <Tag color="blue">Global Impact</Tag> : (MOCK_ZONES.find(z => Math.abs(z.lat - event.lat) < 0.01)?.name || 'Central Hub')}</Text>
                                     </Space>
@@ -1452,3 +1409,4 @@ export const HeatMapPage: React.FC = () => {
         </div>
     );
 };
+

@@ -1,16 +1,16 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, Card, Row, Col, Tabs, Table, Button, Tag, Space, 
   Form, Input, message, Upload, DatePicker, Segmented, Badge,
   Switch, Tooltip, Empty, Drawer, List, Popconfirm, Avatar,
-  Timeline, Statistic, Select
+  Timeline, Statistic, Select, Modal
 } from 'antd';
 import { 
   PlusOutlined, EditOutlined, DeleteOutlined, PictureOutlined, 
   UploadOutlined, SearchOutlined, CalendarOutlined, LinkOutlined,
   EyeOutlined, InfoCircleOutlined, DollarOutlined, NotificationOutlined,
   SyncOutlined, DeleteColumnOutlined, DownloadOutlined, CloudDownloadOutlined,
-  HistoryOutlined, MailOutlined
+  HistoryOutlined, MailOutlined, UndoOutlined, RestOutlined, CheckCircleOutlined
 } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
 import { 
@@ -123,11 +123,13 @@ export const MarketingHubPage: React.FC = () => {
   const [discountDrawerVisible, setDiscountDrawerVisible] = useState(false);
   const [selectedDiscount, setSelectedDiscount] = useState<DiscountRecord | null>(null);
   const [editingDiscount, setEditingDiscount] = useState<DiscountRecord | null>(null);
-  const [form] = Form.useForm();
-  const [couponForm] = Form.useForm();
-  const [discountForm] = Form.useForm();
-  const [notificationForm] = Form.useForm();
   const [newsletterForm] = Form.useForm();
+  
+  // Standardization State
+  const [isTrashOpen, setIsTrashOpen] = useState(false);
+  const [rejectionModalVisible, setRejectionModalVisible] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [pendingAction, setPendingAction] = useState<{ id: string, name: string, type: 'banner' | 'coupon' | 'discount' } | null>(null);
 
   const [banners, setBanners] = useState<BannerRecord[]>([
     {
@@ -385,6 +387,43 @@ export const MarketingHubPage: React.FC = () => {
     });
   };
 
+  const initiateSoftDelete = (id: string, name: string, type: 'banner' | 'coupon' | 'discount') => {
+    setPendingAction({ id, name, type });
+    setRejectionReason('');
+    setRejectionModalVisible(true);
+  };
+
+  const handleConfirmDeletion = () => {
+    if (!rejectionReason.trim()) {
+      message.warning('Audit reason is required for deletion');
+      return;
+    }
+    
+    const { id, type } = pendingAction!;
+    if (type === 'banner') {
+      setBanners(prev => prev.map(b => b.key === id ? { ...b, status: 'Inactive' } : b));
+    } else if (type === 'coupon') {
+      setCoupons(prev => prev.map(c => c.key === id ? { ...c, status: 'Inactive' } : c));
+    } else if (type === 'discount') {
+      setDiscounts(prev => prev.map(d => d.key === id ? { ...d, status: 'Inactive' } : d));
+    }
+    
+    message.error(`${type.charAt(0).toUpperCase() + type.slice(1)} trashed. Reason: ${rejectionReason}`);
+    setRejectionModalVisible(false);
+    setPendingAction(null);
+  };
+
+  const handleRestore = (id: string, type: 'banner' | 'coupon' | 'discount') => {
+    if (type === 'banner') {
+      setBanners(prev => prev.map(b => b.key === id ? { ...b, status: 'Active' } : b));
+    } else if (type === 'coupon') {
+      setCoupons(prev => prev.map(c => c.key === id ? { ...c, status: 'Active' } : c));
+    } else if (type === 'discount') {
+      setDiscounts(prev => prev.map(d => d.key === id ? { ...d, status: 'Active' } : d));
+    }
+    message.success(`${type.charAt(0).toUpperCase() + type.slice(1)} restored to active status`);
+  };
+
   const handleEdit = (record: BannerRecord) => {
     setEditingBanner(record);
     form.setFieldsValue({
@@ -512,7 +551,7 @@ export const MarketingHubPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status: string, record: BannerRecord) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Switch 
             size="small" 
             checked={status === 'Active'} 
@@ -552,24 +591,13 @@ export const MarketingHubPage: React.FC = () => {
             />
           </Tooltip>
           <Tooltip title="Delete">
-            <Popconfirm 
-              title="Delete this banner?" 
-              description="Are you sure you want to delete this promotional banner?"
-              onConfirm={() => {
-                setBanners(prev => prev.filter(b => b.key !== record.key));
-                message.success('Banner removed');
-              }}
-              okText="Yes"
-              cancelText="No"
-              okButtonProps={{ danger: true }}
-            >
-              <Button 
+            <Button 
                 size="small" 
                 type="text" 
                 danger 
                 icon={<DeleteOutlined />} 
-              />
-            </Popconfirm>
+                onClick={() => initiateSoftDelete(record.key, record.title, 'banner')}
+            />
           </Tooltip>
         </Space>
       )
@@ -621,7 +649,7 @@ export const MarketingHubPage: React.FC = () => {
                   <Button icon={<SyncOutlined />} onClick={handleRefresh} />
                 </Tooltip>
                 <Tooltip title="Manage Trashed Data">
-                  <Button icon={<DeleteColumnOutlined />} />
+                  <Button icon={<DeleteColumnOutlined />} onClick={() => setIsTrashOpen(true)} />
                 </Tooltip>
                 <Tooltip title="Download Banner List">
                   <Button icon={<CloudDownloadOutlined />} onClick={handleDownload} />
@@ -734,9 +762,13 @@ export const MarketingHubPage: React.FC = () => {
             <Button size="small" type="text" icon={<EditOutlined style={{ color: '#faad14' }} />} onClick={() => handleEditCoupon(record)} />
           </Tooltip>
           <Tooltip title="Delete">
-            <Popconfirm title="Delete coupon?" onConfirm={() => setCoupons(prev => prev.filter(c => c.key !== record.key))} okButtonProps={{ danger: true }}>
-              <Button size="small" type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <Button 
+              size="small" 
+              type="text" 
+              danger 
+              icon={<DeleteOutlined />} 
+              onClick={() => initiateSoftDelete(record.key, record.title, 'coupon')}
+            />
           </Tooltip>
         </Space>
       )
@@ -1151,7 +1183,7 @@ export const MarketingHubPage: React.FC = () => {
               {/* Left Side: Stats Cards */}
               <Col span={10}>
                 <Title level={5} style={{ marginBottom: 16 }}>Coupon overview</Title>
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                   <Card variant="borderless" style={{ background: isDark ? '#1a1a3a' : '#fff9f0', borderRadius: 16, height: 160, display: 'flex', alignItems: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <Text type="secondary" style={{ fontSize: 12 }}>All time <InfoCircleOutlined /></Text>
@@ -2032,6 +2064,91 @@ export const MarketingHubPage: React.FC = () => {
           {renderNewsletterPreview()}
         </div>
       </Drawer>
+
+      {/* Standardization Modals & Drawers */}
+      <Modal
+        title="Campaign Deletion Reason"
+        open={rejectionModalVisible}
+        onOk={handleConfirmDeletion}
+        onCancel={() => setRejectionModalVisible(false)}
+        okText="Trash Campaign"
+        okButtonProps={{ danger: true }}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary">
+            Provide a reason for trashing <Text strong>{pendingAction?.name}</Text>. 
+            This action will move the campaign to the trash storage.
+          </Text>
+        </div>
+        <Form layout="vertical">
+          <Form.Item label="Reason" required>
+            <Input.TextArea 
+              rows={4} 
+              placeholder="e.g. Budget reallocation, seasonal campaign end, errors in creative..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Drawer
+        title={<span><RestOutlined /> Trashed Marketing Campaigns</span>}
+        width={720}
+        onClose={() => setIsTrashOpen(false)}
+        open={isTrashOpen}
+      >
+        <Tabs
+          defaultActiveKey="1"
+          items={[
+            {
+              key: '1',
+              label: 'Banners',
+              children: (
+                <Table
+                  size="small"
+                  dataSource={banners.filter(b => b.status === 'Inactive')}
+                  rowKey="key"
+                  columns={[
+                    { title: 'Banner', dataIndex: 'title', key: 'title' },
+                    { 
+                      title: 'Actions', 
+                      key: 'actions', 
+                      render: (_, r) => (
+                        <Button size="small" icon={<UndoOutlined />} onClick={() => handleRestore(r.key, 'banner')}>Restore</Button>
+                      )
+                    }
+                  ]}
+                  locale={{ emptyText: <Empty description="No trashed banners" /> }}
+                />
+              )
+            },
+            {
+              key: '2',
+              label: 'Coupons',
+              children: (
+                <Table
+                  size="small"
+                  dataSource={coupons.filter(c => c.status === 'Inactive')}
+                  rowKey="key"
+                  columns={[
+                    { title: 'Coupon Code', dataIndex: 'code', key: 'code' },
+                    { 
+                      title: 'Actions', 
+                      key: 'actions', 
+                      render: (_, r) => (
+                        <Button size="small" icon={<UndoOutlined />} onClick={() => handleRestore(r.key, 'coupon')}>Restore</Button>
+                      )
+                    }
+                  ]}
+                  locale={{ emptyText: <Empty description="No trashed coupons" /> }}
+                />
+              )
+            }
+          ]}
+        />
+      </Drawer>
     </div>
   );
 };
+

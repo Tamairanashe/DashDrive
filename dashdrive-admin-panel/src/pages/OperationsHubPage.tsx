@@ -19,15 +19,17 @@ import {
   InfoCircleOutlined, CompassOutlined, BorderOutlined, ApartmentOutlined,
   CopyOutlined
 } from '@ant-design/icons';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, Polyline, useMap, useMapEvents } from 'react-leaflet';
+import { GoogleMap, MarkerF, InfoWindowF, CircleF, PolygonF, PolylineF, OverlayViewF, OverlayView } from '@react-google-maps/api';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
   ResponsiveContainer, AreaChart, Area, Cell, PieChart, Pie, LineChart, Line,
   Legend
 } from 'recharts';
-import { BaseMap } from '../components/BaseMap';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { BaseMap, useBaseMap } from '../components/BaseMap';
+import carMarker from '../assets/car-marker.png';
+import carMarkerHandicap from '../assets/car-marker-handicap.png';
+// import L from 'leaflet';
+// import 'leaflet/dist/leaflet.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -39,7 +41,7 @@ interface Zone {
   name: string;
   status: 'Active' | 'Inactive';
   type: 'Polygon' | 'Circle' | 'Triangle';
-  points: [number, number][];
+  points: {lat: number, lng: number}[];
   radius?: number;
   volume: string;
   extraFare: boolean;
@@ -80,7 +82,7 @@ const MOCK_TRIPS = [
         customer: { name: 'John Makoni', phone: '+263 77 123 4567', avatar: 'https://i.pravatar.cc/150?u=1' },
         driver: { id: 'D-201', name: 'Alex T.', phone: '+263 71 987 6543', vehicle: 'Motorcycle', plate: 'AB-123', lat: -17.8220, lng: 31.0520 },
         dropoff: { address: '14 Samora Machel Ave', lat: -17.8300, lng: 31.0600 },
-        route: [[-17.8200, 31.0500], [-17.8210, 31.0510], [-17.8220, 31.0520], [-17.8300, 31.0600]],
+        route: [{lat: -17.8200, lng: 31.0500}, {lat: -17.8210, lng: 31.0510}, {lat: -17.8220, lng: 31.0520}, {lat: -17.8300, lng: 31.0600}],
         timeline: [
             { time: '12:00', event: 'Order created', status: 'success' },
             { time: '12:12', event: 'Picked up at Pizza Hub', status: 'success' },
@@ -100,7 +102,7 @@ const MOCK_TRIPS = [
         driver: { id: 'D-405', name: 'Mike N.', phone: '+263 77 111 2222', vehicle: 'Toyota Belta', plate: 'AEE-9901', lat: -17.8050, lng: 31.0400 },
         pickup: { address: 'Avondale Shopping Center', lat: -17.8000, lng: 31.0333 },
         dropoff: { address: 'Borrowdale Village', lat: -17.7500, lng: 31.1000 },
-        route: [[-17.8000, 31.0333], [-17.8050, 31.0400], [-17.7500, 31.1000]],
+        route: [{lat: -17.8000, lng: 31.0333}, {lat: -17.8050, lng: 31.0400}, {lat: -17.7500, lng: 31.1000}],
         timeline: [
             { time: '14:20', event: 'Ride requested', status: 'success' },
             { time: '14:30', event: 'Ride started', status: 'success' },
@@ -114,8 +116,8 @@ const MOCK_TRIPS = [
 ];
 
 const INITIAL_ZONES: Zone[] = [
-  { id: '1', name: 'Harare CBD', type: 'Polygon', volume: 'High', extraFare: true, status: 'Active', points: [[-17.8216, 31.0404], [-17.8256, 31.0504], [-17.8156, 31.0554], [-17.8106, 31.0454]], farePercent: 20 },
-  { id: '2', name: 'Avondale', type: 'Polygon', volume: 'Medium', extraFare: false, status: 'Active', points: [[-17.8025, 31.0378], [-17.8085, 31.0478], [-17.7985, 31.0528], [-17.7925, 31.0428]] },
+  { id: '1', name: 'Harare CBD', type: 'Polygon', volume: 'High', extraFare: true, status: 'Active', points: [{lat: -17.8216, lng: 31.0404}, {lat: -17.8256, lng: 31.0504}, {lat: -17.8156, lng: 31.0554}, {lat: -17.8106, lng: 31.0454}], farePercent: 20 },
+  { id: '2', name: 'Avondale', type: 'Polygon', volume: 'Medium', extraFare: false, status: 'Active', points: [{lat: -17.8025, lng: 31.0378}, {lat: -17.8085, lng: 31.0478}, {lat: -17.7985, lng: 31.0528}, {lat: -17.7925, lng: 31.0428}] },
 ];
 
 const INITIAL_LOGS: ZoneLog[] = [
@@ -141,55 +143,64 @@ const MOCK_BROADCASTS: Broadcast[] = [
   { id: 'BC-002', title: 'System Maintenance', content: 'In-app wallet services will be briefly unavailable between 02:00 and 02:30 AM.', target: 'Customers', priority: 'Normal', status: 'Sent', timestamp: '2024-03-17 22:00', sender: 'DevOps Team', reason: 'Scheduled database optimization' }
 ];
 
-const MapEvents = ({ onMapClick }: { onMapClick: (latlng: [number, number]) => void }) => {
-  useMapEvents({
-    click: (e) => onMapClick([e.latlng.lat, e.latlng.lng]),
-  });
+const MapEvents = ({ onMapClick }: { onMapClick: (latlng: {lat: number, lng: number}) => void }) => {
+  const { map } = useBaseMap();
+  useEffect(() => {
+    if (!map) return;
+    const listener = map.addListener('click', (e: google.maps.MapMouseEvent) => {
+      if (e.latLng) {
+        onMapClick({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+      }
+    });
+    return () => google.maps.event.removeListener(listener);
+  }, [map, onMapClick]);
   return null;
 };
 
-const MapFitter = ({ bounds }: { bounds: L.LatLngBoundsExpression | null }) => {
-    const map = useMap();
+const MapFitter = ({ bounds }: { bounds: {lat: number, lng: number}[] | null }) => {
+    const { map } = useBaseMap();
     useEffect(() => {
-        if (bounds) {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+        if (map && bounds && bounds.length > 0) {
+            const gBounds = new google.maps.LatLngBounds();
+            bounds.forEach(p => gBounds.extend(p));
+            map.fitBounds(gBounds, { top: 50, right: 50, bottom: 50, left: 50 });
         }
     }, [bounds, map]);
     return null;
 };
 
 
-const driverIcon = new L.DivIcon({
-  className: 'driver-marker',
-  html: `<div style="width: 24px; height: 24px; background: #fff; border: 2px solid #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-         </div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
-});
+const DriverMarker = ({ position, isHandicap }: { position: google.maps.LatLngLiteral, isHandicap?: boolean }) => (
+    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+        <div style={{ transform: 'translate(-50%, -50%)', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img 
+                src={isHandicap ? carMarkerHandicap : carMarker} 
+                style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }} 
+                alt="car" 
+            />
+        </div>
+    </OverlayViewF>
+);
 
-const customerIcon = new L.DivIcon({
-    className: 'customer-marker',
-    html: `<div style="width: 20px; height: 20px; background: #fff; border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-           </div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-});
+const CustomerMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
+    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+        <div style={{ transform: 'translate(-50%, -50%)', width: '20px', height: '20px', background: '#fff', border: '2px solid #3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+    </OverlayViewF>
+);
 
-const pickupIcon = new L.DivIcon({
-    className: 'pickup-marker',
-    html: `<div style="width: 18px; height: 18px; background: #0f172a; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9]
-});
+const PickupMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
+    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+        <div style={{ transform: 'translate(-50%, -50%)', width: '18px', height: '18px', background: '#0f172a', border: '2px solid #fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+    </OverlayViewF>
+);
 
-const dropoffIcon = new L.DivIcon({
-    className: 'dropoff-marker',
-    html: `<div style="width: 18px; height: 18px; background: #ef4444; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9]
-});
+const DropoffMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
+    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+        <div style={{ transform: 'translate(-50%, -50%)', width: '18px', height: '18px', background: '#ef4444', border: '2px solid #fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+    </OverlayViewF>
+);
 
 // --- Shared Components ---
 
@@ -261,17 +272,15 @@ const OperationsDashboard: React.FC<{
               title={<Space><GlobalOutlined /> Real-time Platform Mobility Map</Space>}
               extra={
                 <Space>
-                  <Badge status="processing" text={<Text type="secondary" style={{ fontSize: 12 }}>Live Sync</Text>} />
-                  <Tooltip title="Real-time mobility stream active. Data refreshed every 5 seconds.">
-                    <InfoCircleOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-                  </Tooltip>
-                  <Button size="small" icon={<HistoryOutlined />} onClick={() => message.info('Opening mobility audit logs...')}>Logs</Button>
-                  <Segmented 
-                    options={['All', 'Rides', 'Deliveries', 'Customers']} 
-                    size="small" 
-                    value={filter}
-                    onChange={(val) => onFilterChange(val as string)}
-                  />
+                   <Button icon={<PlusOutlined />} size="small" type="primary" ghost onClick={onNewBroadcast}>Quick Broadcast</Button>
+                   <Button icon={<SyncOutlined spin={isRefreshing} />} size="small" onClick={handleLiveSync}>Pulse</Button>
+                   <Button icon={<HistoryOutlined />} size="small" onClick={() => message.info('Opening mobility audit logs...')}>Logs</Button>
+                   <Segmented 
+                     options={['All', 'Rides', 'Deliveries', 'Customers']} 
+                     size="small" 
+                     value={filter}
+                     onChange={(val) => onFilterChange(val as string)}
+                   />
                 </Space>
               }
               styles={{ body: { padding: 0, height: 450, position: 'relative' } }}
@@ -280,29 +289,29 @@ const OperationsDashboard: React.FC<{
                <BaseMap center={[-17.824858, 31.053028]} zoom={13} height="100%">
                   {(filter === 'All' || filter === 'Rides') && (
                     <>
-                        <Marker position={[-17.824858, 31.053028]} icon={driverIcon} />
-                        <Marker position={[-17.8100, 31.0400]} icon={driverIcon} />
+                        <DriverMarker position={{lat: -17.824858, lng: 31.053028}} />
+                        <DriverMarker position={{lat: -17.8100, lng: 31.0400}} />
                     </>
                   )}
                   
                   {(filter === 'All' || filter === 'Deliveries') && (
-                    <Marker position={[-17.8300, 31.0600]} icon={driverIcon} />
+                    <DriverMarker position={{lat: -17.8300, lng: 31.0600}} />
                   )}
 
                   {(filter === 'All' || filter === 'Customers') && (
                     <>
-                        <Marker position={[-17.8200, 31.0600]} icon={customerIcon} />
-                        <Marker position={[-17.8150, 31.0450]} icon={customerIcon} />
+                        <CustomerMarker position={{lat: -17.8200, lng: 31.0600}} />
+                        <CustomerMarker position={{lat: -17.8150, lng: 31.0450}} />
                     </>
                   )}
 
-                  <Circle center={[-17.824858, 31.053028]} radius={500} pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.1 }} />
+                  <CircleF center={{lat: -17.824858, lng: 31.053028}} radius={500} options={{ strokeColor: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.1, strokeWeight: 1 }} />
                </BaseMap>
                
                {/* Map Overlays */}
                <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 1000 }}>
                   <Card size="small" style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)' }}>
-                     <Space direction="vertical" size="small">
+                     <Space orientation="vertical" size="small">
                         <Badge status="success" text={`Available (${filter === 'Customers' ? '0' : '620'})`} />
                         <Badge status="processing" text={`On Trip (${filter === 'Customers' ? '0' : '1,245'})`} />
                         {filter === 'Customers' && <Badge color="blue" text="Active Customers (2,450)" />}
@@ -315,7 +324,7 @@ const OperationsDashboard: React.FC<{
 
           {/* Sidebar: Performance & Alerts */}
           <Col xs={24} lg={8}>
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <Space orientation="vertical" style={{ width: '100%' }} size="middle">
               <Card 
                 title={<Space><LineChartOutlined /> Operational Health</Space>} 
                 variant="borderless" 
@@ -390,7 +399,7 @@ const OperationsDashboard: React.FC<{
     );
 };
 
-const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void, mapBounds: any }> = ({ onLocate, mapBounds }) => {
+const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[]) => void, mapBounds: any }> = ({ onLocate, mapBounds }) => {
     const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
     const [trashedZones, setTrashedZones] = useState<Zone[]>([]);
     const [logs, setLogs] = useState<ZoneLog[]>(INITIAL_LOGS);
@@ -398,7 +407,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
     const [searchQuery, setSearchQuery] = useState('');
     const [isLogDrawerOpen, setIsLogDrawerOpen] = useState(false);
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
-    const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
+    const [drawingPoints, setDrawingPoints] = useState<{lat: number, lng: number}[]>([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [editingZone, setEditingZone] = useState<Zone | null>(null);
     const [form] = Form.useForm();
@@ -579,8 +588,11 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
             ...values,
             type: drawingPoints.length > 0 ? drawingMode : z.type,
             points: drawingPoints.length > 0 ? [...drawingPoints] : z.points,
-            radius: (drawingPoints.length > 0 && drawingMode === 'Circle') ? 
-                L.latLng(drawingPoints[0]).distanceTo(L.latLng(drawingPoints[1])) : 
+            radius: (drawingPoints.length > 1 && drawingMode === 'Circle') ? 
+                google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(drawingPoints[0]),
+                    new google.maps.LatLng(drawingPoints[1])
+                ) : 
                 (drawingPoints.length > 0 ? undefined : z.radius)
         } : z));
         addLog(editingZone, 'Updated', `Configuration and geometry synchronized: ${values.name}`);
@@ -592,7 +604,10 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
           status: 'Active',
           type: drawingMode,
           points: [...drawingPoints],
-          radius: drawingMode === 'Circle' ? L.latLng(drawingPoints[0]).distanceTo(L.latLng(drawingPoints[1])) : undefined,
+          radius: drawingMode === 'Circle' ? google.maps.geometry.spherical.computeDistanceBetween(
+              new google.maps.LatLng(drawingPoints[0]),
+              new google.maps.LatLng(drawingPoints[1])
+          ) : undefined,
           volume: 'Low',
           extraFare: values.extraFare,
           farePercent: values.farePercent
@@ -654,48 +669,41 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
                 <MapEvents onMapClick={handleMapClick} />
                 <MapFitter bounds={mapBounds} />
                 
-                {zones.map(zone => (
+                 {zones.map(zone => (
                   zone.type === 'Circle' ? (
-                    <Circle
+                    <CircleF
                       key={zone.id}
                       center={zone.points[0]}
                       radius={zone.radius || 500}
-                      pathOptions={{ color: zone.status === 'Active' ? '#10b981' : '#94a3b8', fillOpacity: 0.2 }}
-                    >
-                      <Popup>
-                        <Text strong>{zone.name}</Text><br/>
-                        <Text type="secondary">Type: Circle</Text>
-                      </Popup>
-                    </Circle>
+                      options={{ strokeColor: zone.status === 'Active' ? '#10b981' : '#94a3b8', fillOpacity: 0.2 }}
+                    />
                   ) : (
-                    <Polygon 
+                    <PolygonF 
                       key={zone.id} 
-                      positions={zone.points} 
-                      pathOptions={{ color: zone.status === 'Active' ? '#10b981' : '#94a3b8', fillOpacity: 0.2 }} 
-                    >
-                      <Popup>
-                        <Text strong>{zone.name}</Text><br/>
-                        <Text type="secondary">Type: {zone.type || 'Polygon'}</Text>
-                      </Popup>
-                    </Polygon>
+                      paths={zone.points} 
+                      options={{ strokeColor: zone.status === 'Active' ? '#10b981' : '#94a3b8', fillOpacity: 0.2 }} 
+                    />
                   )
                 ))}
 
                 {drawingPoints.length > 0 && (
                   drawingMode === 'Circle' ? (
                     drawingPoints.length > 1 ? (
-                      <Circle 
+                      <CircleF 
                         center={drawingPoints[0]} 
-                        radius={L.latLng(drawingPoints[0]).distanceTo(L.latLng(drawingPoints[1]))} 
-                        pathOptions={{ color: '#3b82f6', dashArray: '5, 10' }} 
+                        radius={google.maps.geometry.spherical.computeDistanceBetween(
+                            new google.maps.LatLng(drawingPoints[0]),
+                            new google.maps.LatLng(drawingPoints[1])
+                        )} 
+                        options={{ strokeColor: '#3b82f6', strokeOpacity: 0.8, fillOpacity: 0.1 }} 
                       />
                     ) : (
-                      <Marker position={drawingPoints[0]} />
+                      <MarkerF position={drawingPoints[0]} />
                     )
                   ) : (
-                    <Polygon 
-                      positions={drawingPoints} 
-                      pathOptions={{ color: '#3b82f6', dashArray: '5, 10' }} 
+                    <PolygonF 
+                      paths={drawingPoints} 
+                      options={{ strokeColor: '#3b82f6', strokeOpacity: 0.8, fillOpacity: 0.1 }} 
                     />
                   )
                 )}
@@ -715,7 +723,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
               )}
 
               <div style={{ position: 'absolute', top: 70, left: 20, zIndex: 1000 }}>
-                <Space direction="vertical">
+                <Space orientation="vertical">
                   <Button icon={<RocketOutlined />} shape="circle" className="shadow-sm" />
                   <Button icon={<EnvironmentOutlined />} shape="circle" className="shadow-sm" />
                 </Space>
@@ -723,7 +731,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
             </Card>
             
             <Card title={<Space><InfoCircleOutlined style={{ color: '#10b981' }} /> Drawing Modes</Space>} variant="borderless" className="shadow-sm" style={{ borderRadius: 16, marginTop: 16 }}>
-              <Space direction="vertical" size="small" style={{ width: '100%' }}>
+              <Space orientation="vertical" size="small" style={{ width: '100%' }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   <Badge status="processing" />
                   <Text style={{ fontSize: 13 }}><Text strong>Polygon:</Text> Click map to add points. Min 3 pts.</Text>
@@ -751,7 +759,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
                   <Title level={5} style={{ margin: 0 }}>Boundaries</Title>
                   <Badge count={displayedZones.length} style={{ backgroundColor: '#00b894' }} />
                 </div>
-                 <Space direction="vertical" style={{ width: '100%' }} size="small">
+                 <Space orientation="vertical" style={{ width: '100%' }} size="small">
                     <Input 
                         placeholder="Search zones..." 
                         prefix={<SearchOutlined />} 
@@ -892,7 +900,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: [number, number][]) => void
                   <List.Item.Meta
                     title={<Text strong>{z.name}</Text>}
                     description={
-                        <Space direction="vertical" size={2}>
+                        <Space orientation="vertical" size={2}>
                             <Text type="secondary" style={{ fontSize: 11 }}>ID: {z.id} • Reason: <Text type="danger" style={{ fontSize: 11 }}>{z.deleteReason || 'No reason provided'}</Text></Text>
                         </Space>
                     }
@@ -1054,7 +1062,7 @@ const RenderDispatchManagement: React.FC = () => {
                 {!selectedOrder ? (
                   <Empty description="Select an order for Oversight" style={{ marginTop: 80 }} />
                 ) : (
-                  <Space direction="vertical" style={{ width: '100%' }} size="large">
+                  <Space orientation="vertical" style={{ width: '100%' }} size="large">
                     <Descriptions column={1} size="small" bordered>
                       <Descriptions.Item label="Order ID">{selectedOrder.id}</Descriptions.Item>
                       <Descriptions.Item label="Status">{selectedOrder.status}</Descriptions.Item>
@@ -1134,11 +1142,11 @@ const RenderLiveTracking: React.FC = () => {
         }, 600);
     };
 
-    const bounds: L.LatLngBoundsExpression | null = activeTrip ? [
-        [activeTrip.merchant?.lat || activeTrip.pickup?.lat, activeTrip.merchant?.lng || activeTrip.pickup?.lng],
-        [activeTrip.dropoff.lat, activeTrip.dropoff.lng],
-        [activeTrip.driver.lat, activeTrip.driver.lng]
-    ] : MOCK_TRIPS.map(t => [t.driver.lat, t.driver.lng]);
+    const bounds: {lat: number, lng: number}[] | null = activeTrip ? [
+        { lat: activeTrip.merchant?.lat || activeTrip.pickup?.lat, lng: activeTrip.merchant?.lng || activeTrip.pickup?.lng },
+        { lat: activeTrip.dropoff.lat, lng: activeTrip.dropoff.lng },
+        { lat: activeTrip.driver.lat, lng: activeTrip.driver.lng }
+    ] : MOCK_TRIPS.map(t => ({ lat: t.driver.lat, lng: t.driver.lng }));
 
     return (
       <div style={{ marginTop: 16 }}>
@@ -1157,7 +1165,7 @@ const RenderLiveTracking: React.FC = () => {
           <Col span={8}>
             <Space>
                <Badge status="processing" text="421 Active Trips" />
-               <Divider type="vertical" />
+               <Divider orientation="vertical" />
                <Badge status="error" text="12 Incidents" />
             </Space>
           </Col>
@@ -1171,35 +1179,38 @@ const RenderLiveTracking: React.FC = () => {
                 styles={{ body: { padding: 0, height: '100%', position: 'relative', overflow: 'hidden' } }} 
                 style={{ borderRadius: 16, height: '100%', minHeight: 600 }}
               >
-                  <MapContainer 
-                    center={[-17.8248, 31.0530]} 
-                    zoom={13} 
-                    zoomControl={false} 
-                    style={{ height: '100%', width: '100%', minHeight: 600 }}
-                  >
-                      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
+                   <BaseMap 
+                      center={[-17.8248, 31.0530]} 
+                      zoom={13} 
+                      height={600}
+                   >
                       <MapFitter bounds={bounds} />
                       
                       {activeTrip ? (
                           <>
-                              <Marker position={[activeTrip.driver.lat, activeTrip.driver.lng]} icon={driverIcon} />
+                              <DriverMarker position={{ lat: activeTrip.driver.lat, lng: activeTrip.driver.lng }} />
                               {(activeTrip.merchant || activeTrip.pickup) && (
-                                  <Marker position={[activeTrip.merchant?.lat || activeTrip.pickup?.lat, activeTrip.merchant?.lng || activeTrip.pickup?.lng]} icon={pickupIcon} />
+                                  <PickupMarker position={{ lat: activeTrip.merchant?.lat || activeTrip.pickup?.lat, lng: activeTrip.merchant?.lng || activeTrip.pickup?.lng }} />
                               )}
-                              <Marker position={[activeTrip.dropoff.lat, activeTrip.dropoff.lng]} icon={dropoffIcon} />
-                              <Polyline positions={activeTrip.route} color="#0f172a" weight={4} opacity={0.6} dashArray="10, 10" />
+                              <DropoffMarker position={{ lat: activeTrip.dropoff.lat, lng: activeTrip.dropoff.lng }} />
+                              <PolylineF 
+                                path={activeTrip.route} 
+                                options={{ strokeColor: "#0f172a", strokeWeight: 4, strokeOpacity: 0.6, icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 }, offset: '0', repeat: '20px' }] }} 
+                              />
                           </>
                       ) : (
                           MOCK_TRIPS.map(trip => (
-                              <Marker key={trip.id} position={[trip.driver.lat, trip.driver.lng]} icon={driverIcon} eventHandlers={{ click: () => setActiveTrip(trip) }}>
-                                  <Popup>
-                                      <Text strong>{trip.id}</Text><br/>
-                                      <Text type="secondary">{trip.driver.name}</Text>
-                                  </Popup>
-                              </Marker>
+                              <MarkerF key={trip.id} position={{ lat: trip.driver.lat, lng: trip.driver.lng }} onClick={() => setActiveTrip(trip)}>
+                                  <InfoWindowF position={{ lat: trip.driver.lat, lng: trip.driver.lng }}>
+                                      <div>
+                                          <Text strong>{trip.id}</Text><br/>
+                                          <Text type="secondary">{trip.driver.name}</Text>
+                                      </div>
+                                  </InfoWindowF>
+                              </MarkerF>
                           ))
                       )}
-                  </MapContainer>
+                   </BaseMap>
 
                   {activeTrip && (
                     <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 1000 }}>
@@ -1216,7 +1227,7 @@ const RenderLiveTracking: React.FC = () => {
 
            {activeTrip && (
               <Col span={8}>
-                 <Space direction="vertical" style={{ width: '100%' }}>
+                 <Space orientation="vertical" style={{ width: '100%' }}>
                     <Card title={<Space><SyncOutlined spin={playbackMode} /> Trip Intelligence</Space>} variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
                        <div style={{ marginBottom: 20 }}>
                           <Space align="start">
@@ -1240,7 +1251,7 @@ const RenderLiveTracking: React.FC = () => {
                             <Title level={5} style={{ margin: 0 }}>Intervention Terminal</Title>
                             <Tooltip title="Emergency overrides for active trips. Every action here is logged and requires administrative clearance."><InfoCircleOutlined style={{ fontSize: 12, color: '#94a3b8' }} /></Tooltip>
                         </Space>
-                        <Space direction="vertical" style={{ width: '100%', marginTop: 12 }}>
+                        <Space orientation="vertical" style={{ width: '100%', marginTop: 12 }}>
                            <Button block icon={<PhoneOutlined />} onClick={() => message.info('Connecting to regional operator...')}>Call Operator</Button>
                            <Button block type="primary" danger style={{ background: '#ef4444', border: 'none' }} onClick={() => {
                                Modal.confirm({
@@ -1365,31 +1376,24 @@ const RenderSurgeAndDemand: React.FC<{
                 style={{ borderRadius: 16, overflow: 'hidden' }}
                 title={<Space><ThunderboltOutlined /> Dynamic Demand Heatmap</Space>}
               >
-                  <MapContainer center={[-17.8248, 31.0530]} zoom={13} zoomControl={false} style={{ height: '100%', width: '100%' }}>
-                      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
+                  <BaseMap center={[-17.8248, 31.0530]} zoom={13} height={600}>
                       {zones.map(dz => (
-                          <Circle 
+                          <CircleF 
                             key={dz.id}
-                            center={[dz.coords[0], dz.coords[1]]} 
+                            center={dz.coords as any} 
                             radius={dz.radius}
-                            pathOptions={{ 
-                                color: dz.demand === 'Extreme' ? '#ef4444' : '#f59e0b', 
+                            options={{ 
+                                strokeColor: dz.demand === 'Extreme' ? '#ef4444' : '#f59e0b', 
                                 fillColor: dz.demand === 'Extreme' ? '#ef4444' : '#f59e0b', 
                                 fillOpacity: 0.3 
                             }} 
-                          >
-                             <Popup>
-                                <Text strong>{dz.name}</Text><br/>
-                                <Text>Demand: {dz.demand}</Text><br/>
-                                <Text type="danger">Multiplier: {dz.currentMulti}x</Text>
-                             </Popup>
-                          </Circle>
+                          />
                       ))}
-                  </MapContainer>
+                  </BaseMap>
                   
                   <div style={{ position: 'absolute', top: 70, right: 20, zIndex: 1000 }}>
                     <Card size="small" style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)' }}>
-                       <Space direction="vertical" size="small">
+                       <Space orientation="vertical" size="small">
                           <Badge status="error" text="Critical Demand" />
                           <Badge status="warning" text="High Demand" />
                           <Badge status="processing" text="Normal" />
@@ -1487,34 +1491,10 @@ const RenderSurgeAndDemand: React.FC<{
     );
 };
 
-const RenderBroadcastCommand: React.FC = () => {
-    const [broadcasts, setBroadcasts] = useState<Broadcast[]>(MOCK_BROADCASTS);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [form] = Form.useForm();
-    const [previewContent, setPreviewContent] = useState('');
-
-    const handleSendBroadcast = (values: any) => {
-        setLoading(true);
-        setTimeout(() => {
-            const newBC: Broadcast = {
-                id: `BC-${Date.now()}`,
-                ...values,
-                status: 'Sent',
-                timestamp: new Date().toLocaleString(),
-                sender: 'Current Admin'
-            };
-            setBroadcasts(prev => [newBC, ...prev]);
-            setLoading(false);
-            setIsModalOpen(false);
-            form.resetFields();
-            notification.success({
-                message: 'Broadcast Dispatched',
-                description: `Successfully sent "${values.title}" to target audience.`
-            });
-        }, 1500);
-    };
-
+const RenderBroadcastCommand: React.FC<{ 
+    broadcasts: Broadcast[], 
+    onNew: () => void 
+}> = ({ broadcasts, onNew }) => {
     const columns = [
         { 
           title: 'Broadcast Identity', 
@@ -1568,7 +1548,7 @@ const RenderBroadcastCommand: React.FC = () => {
                    <Title level={4} style={{ margin: 0 }}>Operations Broadcast Terminal</Title>
                    <Text type="secondary">High-priority platform-wide announcements and mobility alerts</Text>
                 </div>
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>Create New Broadcast</Button>
+                <Button type="primary" icon={<PlusOutlined />} onClick={onNew}>Create New Broadcast</Button>
             </div>
 
             <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }} styles={{ body: { padding: 0 } }}>
@@ -1589,81 +1569,6 @@ const RenderBroadcastCommand: React.FC = () => {
                     }}
                 />
             </Card>
-
-            <Modal
-                title={<Space><BellOutlined style={{ color: '#3b82f6' }} /> Compose Operational Broadcast</Space>}
-                open={isModalOpen}
-                onCancel={() => setIsModalOpen(false)}
-                onOk={() => form.submit()}
-                confirmLoading={loading}
-                width={600}
-                okText="Dispatch Broadcast"
-            >
-                <Form form={form} layout="vertical" onFinish={handleSendBroadcast} initialValues={{ priority: 'Normal', target: 'All' }}>
-                    <Row gutter={16}>
-                        <Col span={16}>
-                            <Form.Item name="title" label="Broadcast Heading" rules={[{ required: true }]}>
-                                <Input placeholder="Brief, urgent headline..." />
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item name="priority" label="Priority Level">
-                                <Select options={[{ value: 'Normal', label: 'Normal' }, { value: 'High', label: 'Tactical High' }, { value: 'Emergency', label: 'Operational Emergency' }]} />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <Form.Item name="target" label="Target Audience Group">
-                        <Segmented 
-                            block 
-                            options={[
-                                { label: 'Global (All)', value: 'All', icon: <GlobalOutlined /> },
-                                { label: 'Drivers', value: 'Drivers', icon: <CarOutlined /> },
-                                { label: 'Customers', value: 'Customers', icon: <UserOutlined /> },
-                                { label: 'Zone Only', value: 'Zone', icon: <EnvironmentOutlined /> }
-                            ]} 
-                        />
-                    </Form.Item>
-
-                    <Form.Item 
-                        noStyle 
-                        shouldUpdate={(prev, curr) => prev.target !== curr.target}
-                    >
-                        {({ getFieldValue }) => getFieldValue('target') === 'Zone' && (
-                            <Form.Item name="targetDetail" label="Target Zone" rules={[{ required: true }]}>
-                                <Select placeholder="Select geographical zone..." options={INITIAL_ZONES.map(z => ({ value: z.name, label: z.name }))} />
-                            </Form.Item>
-                        )}
-                    </Form.Item>
-
-                    <Form.Item name="content" label="Notification Content" rules={[{ required: true }]}>
-                        <TextArea 
-                            rows={4} 
-                            placeholder="Detailed operational update..." 
-                            onChange={(e) => setPreviewContent(e.target.value)}
-                        />
-                    </Form.Item>
-
-                    <Card size="small" style={{ background: '#f8fafc', marginBottom: 20 }}>
-                        <Text strong style={{ fontSize: 12 }}>Device Preview:</Text>
-                        <div style={{ marginTop: 8, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
-                            <Badge dot status="processing" style={{ marginRight: 8 }} />
-                            <Text strong style={{ fontSize: 13 }}>{form.getFieldValue('title') || 'Heading'}</Text>
-                            <Paragraph style={{ fontSize: 12, margin: '4px 0 0 0', color: '#64748b' }}>
-                                {previewContent || 'Message preview will appear here...'}
-                            </Paragraph>
-                        </div>
-                    </Card>
-
-                    <Form.Item 
-                        name="reason" 
-                        label="Operational Justification (Audit Log)" 
-                        rules={[{ required: true }]}
-                    >
-                        <TextArea placeholder="Why is this broadcast necessary? (e.g. Traffic disruption reported in Zone A)" rows={2} />
-                    </Form.Item>
-                </Form>
-            </Modal>
         </div>
     );
 };
@@ -1809,7 +1714,7 @@ const RenderOperationsAnalytics: React.FC = () => {
 export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTab: propInitialTab = '1' }) => {
     const [activeTab, setActiveTab] = useState(propInitialTab);
     const [hubMapFilter, setHubMapFilter] = useState('All');
-    const [mapBounds, setMapBounds] = useState<L.LatLngBoundsExpression | null>(null);
+    const [mapBounds, setMapBounds] = useState<{lat: number, lng: number}[] | null>(null);
     const [alerts, setAlerts] = useState([
         { id: 'AL-101', type: 'Driver Unresponsive', severity: 'High', service: 'Ride', location: 'Harare CBD', time: '10:45 AM', driver: 'Alex T.', detail: 'Driver assigned to RID-1055 but has not moved for 5 minutes.' },
         { id: 'AL-102', type: 'Delay in Pickup', severity: 'Medium', service: 'Food', location: 'Avondale', time: '10:50 AM', driver: 'Mike N.', detail: 'Pickup time exceeded by 8 minutes at Pizza Hub.' },
@@ -1817,14 +1722,18 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
     ]);
     const [isManualDispatch, setIsManualDispatch] = useState(false);
     const [demandZones, setDemandZones] = useState([
-      { id: 'D-1', name: 'CBD North', demand: 'Extreme', currentMulti: 1.8, coords: [-17.8200, 31.0510], radius: 600 },
-      { id: 'D-2', name: 'Avondale Shops', demand: 'High', currentMulti: 1.4, coords: [-17.8050, 31.0400], radius: 400 },
+      { id: 'D-1', name: 'CBD North', demand: 'Extreme', currentMulti: 1.8, coords: {lat: -17.8200, lng: 31.0510}, radius: 600 },
+      { id: 'D-2', name: 'Avondale Shops', demand: 'High', currentMulti: 1.4, coords: {lat: -17.8050, lng: 31.0400}, radius: 400 },
     ]);
+    const [broadcasts, setBroadcasts] = useState<Broadcast[]>(MOCK_BROADCASTS);
+    const [isBCModalOpen, setIsBCModalOpen] = useState(false);
+    const [bcLoading, setBcLoading] = useState(false);
+    const [bcForm] = Form.useForm();
+    const [bcPreview, setBcPreview] = useState('');
 
-    const handleLocateZone = (points: [number, number][]) => {
+    const handleLocateZone = (points: {lat: number, lng: number}[]) => {
         if (!points || points.length === 0) return;
-        const bounds = L.latLngBounds(points);
-        setMapBounds(bounds);
+        setMapBounds(points);
         message.info('Map centered on selected zone.');
     };
 
@@ -1844,7 +1753,7 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
     const handleApplyRecommendation = () => {
         setDemandZones(prev => [
             ...prev,
-            { id: `D-${Date.now()}`, name: 'Mt Pleasant', demand: 'Medium', currentMulti: 1.2, coords: [-17.7800, 31.0500], radius: 500 }
+            { id: `D-${Date.now()}`, name: 'Mt Pleasant', demand: 'Medium', currentMulti: 1.2, coords: {lat: -17.7800, lng: 31.0500}, radius: 500 }
         ]);
         message.success('System recommendation applied. Mt Pleasant zone activated.');
     };
@@ -1856,6 +1765,28 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
         } else {
             message.success('Autonomous Dispatch Engine Restored.');
         }
+    };
+
+    const handleSendBC = (values: any) => {
+        setBcLoading(true);
+        setTimeout(() => {
+            const newBC: Broadcast = {
+                id: `BC-${Date.now()}`,
+                ...values,
+                status: 'Sent',
+                timestamp: new Date().toLocaleString(),
+                sender: 'Current Admin'
+            };
+            setBroadcasts(prev => [newBC, ...prev]);
+            setBcLoading(false);
+            setIsBCModalOpen(false);
+            bcForm.resetFields();
+            setBcPreview('');
+            notification.success({
+                message: 'Broadcast Dispatched',
+                description: `Successfully sent "${values.title}" to target audience.`
+            });
+        }, 1500);
     };
 
     useEffect(() => {
@@ -1876,7 +1807,7 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
                     onFix={handleFixAlert}
                     isManualDispatch={isManualDispatch}
                     onToggleDispatch={handleToggleDispatch}
-                    onNewBroadcast={() => setActiveTab('9')}
+                    onNewBroadcast={() => setIsBCModalOpen(true)}
                   />
       },
        {
@@ -1921,7 +1852,10 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
       {
         key: '9',
         label: <Space><BellOutlined /> Broadcast Command</Space>,
-        children: <RenderBroadcastCommand />
+        children: <RenderBroadcastCommand 
+                    broadcasts={broadcasts} 
+                    onNew={() => setIsBCModalOpen(true)} 
+                  />
       }
     ];
 
@@ -1939,8 +1873,8 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
                     <Text strong style={{ display: 'block' }}>Network Status: Optimal</Text>
                     <Text style={{ fontSize: 12, color: '#10b981' }}><SyncOutlined spin /> Live Sync: 0.4ms latency</Text>
                   </div>
-                  <Divider type="vertical" style={{ height: 40 }} />
-                  <Button type="primary" icon={<PlusOutlined />} size="large" style={{ borderRadius: 8, background: '#00b894', border: 'none' }}>
+                  <Divider orientation="vertical" style={{ height: 40 }} />
+                  <Button type="primary" icon={<PlusOutlined />} size="large" style={{ borderRadius: 8, background: '#00b894', border: 'none' }} onClick={() => setIsBCModalOpen(true)}>
                     New Broadcast
                   </Button>
                </Space>
@@ -1977,6 +1911,116 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
           }
         `}</style>
+
+        <Modal
+            title={<Space><BellOutlined style={{ color: '#3b82f6' }} /> Compose Operational Broadcast</Space>}
+            open={isBCModalOpen}
+            onCancel={() => setIsBCModalOpen(false)}
+            onOk={() => bcForm.submit()}
+            confirmLoading={bcLoading}
+            width={600}
+            okText="Dispatch Broadcast"
+        >
+            <Form form={bcForm} layout="vertical" onFinish={handleSendBC} initialValues={{ priority: 'Normal', target: 'All' }}>
+                <Row gutter={16}>
+                    <Col span={16}>
+                        <div style={{ marginBottom: 4, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                            {['📢', '🚨', '🚧', '🔥', '🚀', '💎', 'ℹ️'].map(emoji => (
+                                <Button 
+                                    key={emoji} 
+                                    size="small" 
+                                    type="text"
+                                    onClick={() => {
+                                        const curr = bcForm.getFieldValue('title') || '';
+                                        bcForm.setFieldsValue({ title: curr + emoji });
+                                    }}
+                                    style={{ padding: '0 4px', fontSize: 14 }}
+                                >
+                                    {emoji}
+                                </Button>
+                            ))}
+                        </div>
+                        <Form.Item name="title" label="Broadcast Heading" rules={[{ required: true }]}>
+                            <Input placeholder="Brief, urgent headline..." />
+                        </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                        <Form.Item name="priority" label="Priority Level">
+                            <Select options={[{ value: 'Normal', label: 'Normal' }, { value: 'High', label: 'Tactical High' }, { value: 'Emergency', label: 'Operational Emergency' }]} />
+                        </Form.Item>
+                    </Col>
+                </Row>
+
+                <Form.Item name="target" label="Target Audience Group">
+                    <Segmented 
+                        block 
+                        options={[
+                            { label: 'Global (All)', value: 'All', icon: <GlobalOutlined /> },
+                            { label: 'Drivers', value: 'Drivers', icon: <CarOutlined /> },
+                            { label: 'Customers', value: 'Customers', icon: <UserOutlined /> },
+                            { label: 'Zone Only', value: 'Zone', icon: <EnvironmentOutlined /> }
+                        ]} 
+                    />
+                </Form.Item>
+
+                <Form.Item 
+                    noStyle 
+                    shouldUpdate={(prev, curr) => prev.target !== curr.target}
+                >
+                    {({ getFieldValue }) => getFieldValue('target') === 'Zone' && (
+                        <Form.Item name="targetDetail" label="Target Zone" rules={[{ required: true }]}>
+                            <Select placeholder="Select geographical zone..." options={INITIAL_ZONES.map(z => ({ value: z.name, label: z.name }))} />
+                        </Form.Item>
+                    )}
+                </Form.Item>
+
+                <div style={{ marginBottom: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {['📢', '🚨', '🚧', '🔥', '🚀', '💎', '🌧️', '✅', '⚠️', '⚡', '✨', '🌟', 'ℹ️'].map(emoji => (
+                        <Button 
+                            key={emoji} 
+                            size="small" 
+                            onClick={() => {
+                                const curr = bcForm.getFieldValue('content') || '';
+                                bcForm.setFieldsValue({ content: curr + emoji });
+                                setBcPreview(curr + emoji);
+                            }}
+                            style={{ borderRadius: 6, padding: '0 8px' }}
+                        >
+                            {emoji}
+                        </Button>
+                    ))}
+                </div>
+
+                <Form.Item name="content" label="Notification Content" rules={[{ required: true }]}>
+                    <TextArea 
+                        rows={4} 
+                        placeholder="Detailed operational update..." 
+                        onChange={(e) => setBcPreview(e.target.value)}
+                    />
+                </Form.Item>
+
+                <Card size="small" style={{ background: '#f8fafc', marginBottom: 20 }}>
+                    <Text strong style={{ fontSize: 12 }}>Device Preview:</Text>
+                    <div style={{ marginTop: 8, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
+                        <Badge dot status="processing" style={{ marginRight: 8 }} />
+                        <Text strong style={{ fontSize: 13 }}>{Form.useWatch('title', bcForm) || 'Heading'}</Text>
+                        <Paragraph style={{ fontSize: 12, margin: '4px 0 0 0', color: '#64748b' }}>
+                            {bcPreview || 'Message preview will appear here...'}
+                        </Paragraph>
+                    </div>
+                </Card>
+
+                <Form.Item 
+                    name="reason" 
+                    label="Operational Justification (Audit Log)" 
+                    rules={[{ required: true }]}
+                >
+                    <TextArea placeholder="Why is this broadcast necessary? (e.g. Traffic disruption reported in Zone A)" rows={2} />
+                </Form.Item>
+            </Form>
+        </Modal>
       </div>
     );
 };
+
+                                                                                                                           

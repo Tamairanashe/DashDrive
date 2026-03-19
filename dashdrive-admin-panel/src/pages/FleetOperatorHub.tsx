@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Table, Tag, Space, Button, Input, Card, Typography, Tabs, 
   Row, Col, Statistic, Avatar, Tooltip, Badge, Dropdown, 
@@ -14,7 +14,8 @@ import {
   CloudUploadOutlined, MessageOutlined, BellOutlined, SafetyOutlined,
   AuditOutlined, SwapOutlined, ThunderboltOutlined, RocketOutlined,
   DollarOutlined, LockOutlined, UnlockOutlined, BankOutlined,
-  PieChartOutlined, TeamOutlined, LineChartOutlined
+  PieChartOutlined, TeamOutlined, LineChartOutlined,
+  ReloadOutlined, RestOutlined, UndoOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -28,6 +29,14 @@ export const FleetOperatorHub: React.FC<FleetOperatorHubProps> = ({ initialTab =
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedFleet, setSelectedFleet] = useState<any>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  
+  // Standardization State
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [trashVisible, setTrashVisible] = useState(false);
+  const [rejectionModalVisible, setRejectionModalVisible] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [pendingAction, setPendingAction] = useState<{ id: string, name: string } | null>(null);
+
   const [form] = Form.useForm();
 
   const [fleets, setFleets] = useState([
@@ -44,6 +53,37 @@ export const FleetOperatorHub: React.FC<FleetOperatorHubProps> = ({ initialTab =
       joinedDate: '15 Mar 2023'
     }
   ]);
+
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      antdMessage.success('Fleet data synchronized');
+    }, 1000);
+  };
+
+  const handleStatusChange = (id: string, newStatus: string, reason?: string) => {
+    setFleets(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));
+    antdMessage.success(`Fleet ${id} status: ${newStatus}`);
+    if (reason) antdMessage.info(`Audit Reason: ${reason}`);
+    setRejectionModalVisible(false);
+    setPendingAction(null);
+  };
+
+  const initiateSuspension = (record: any) => {
+    setPendingAction({ id: record.id, name: record.companyName });
+    setRejectionReason('');
+    setRejectionModalVisible(true);
+  };
+
+  const handleConfirmSuspension = () => {
+    if (!rejectionReason.trim()) {
+      antdMessage.warning('Please provide a reason');
+      return;
+    }
+    handleStatusChange(pendingAction!.id, 'Suspended', rejectionReason);
+  };
+ Jonah
 
   const ListTab = () => (
     <div style={{ marginTop: 20 }}>
@@ -82,6 +122,11 @@ export const FleetOperatorHub: React.FC<FleetOperatorHubProps> = ({ initialTab =
               render: (_, record) => (
                 <Space>
                   <Button size="small" onClick={() => { setSelectedFleet(record); setIsDetailDrawerOpen(true); }}>View</Button>
+                  {record.status === 'Active' ? (
+                    <Button size="small" danger icon={<StopOutlined />} onClick={() => initiateSuspension(record)}>Suspend</Button>
+                  ) : (
+                    <Button size="small" icon={<CheckCircleOutlined />} onClick={() => handleStatusChange(record.id, 'Active')}>Activate</Button>
+                  )}
                   <Button size="small" icon={<MoreOutlined />} />
                 </Space>
               )
@@ -247,6 +292,8 @@ export const FleetOperatorHub: React.FC<FleetOperatorHubProps> = ({ initialTab =
           <Text type="secondary">Manage enterprise partners, company-owned vehicles, and large-scale operations</Text>
         </div>
         <Space>
+          <Button icon={<ReloadOutlined spin={isRefreshing} />} onClick={handleManualRefresh}>Refresh</Button>
+          <Button icon={<RestOutlined />} onClick={() => setTrashVisible(true)}>Suspended Hubs</Button>
           <Button icon={<FileTextOutlined />}>Enterprise Analytics</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsDrawerOpen(true)}>Register Fleet</Button>
         </Space>
@@ -358,6 +405,70 @@ export const FleetOperatorHub: React.FC<FleetOperatorHubProps> = ({ initialTab =
           <Button onClick={() => setIsDrawerOpen(false)} style={{ marginRight: 8 }}>Cancel</Button>
           <Button type="primary">Submit Registration</Button>
         </div>
+      </Drawer>
+
+      {/* Standardization Modals & Drawers */}
+      <Modal
+        title="Fleet Suspension Reason"
+        open={rejectionModalVisible}
+        onOk={handleConfirmSuspension}
+        onCancel={() => setRejectionModalVisible(false)}
+        okText="Suspend Operator"
+        okButtonProps={{ danger: true }}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary">
+            Provide a mandatory reason for suspending <Text strong>{pendingAction?.name}</Text>. 
+          </Text>
+        </div>
+        <Form layout="vertical">
+          <Form.Item label="Reason" required>
+            <Input.TextArea 
+              rows={4} 
+              placeholder="e.g. Repeated failure to meet service levels..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Drawer
+        title={<span><RestOutlined /> Trashed / Suspended Fleet Operators</span>}
+        width={720}
+        onClose={() => setTrashVisible(false)}
+        open={trashVisible}
+      >
+        <Table
+          size="small"
+          dataSource={fleets.filter(f => f.status === 'Suspended')}
+          rowKey="id"
+          columns={[
+            {
+              title: 'Fleet Operator',
+              key: 'fleet',
+              render: (_, r) => (
+                <Space>
+                  <div style={{ width: 32, height: 32, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <BankOutlined style={{ fontSize: 16, color: '#0f172a' }} />
+                  </div>
+                  <Text strong>{r.companyName}</Text>
+                </Space>
+              )
+            },
+            { title: 'Vehicles', dataIndex: 'vehicles', key: 'vehicles' },
+            { 
+              title: 'Actions', 
+              key: 'actions', 
+              render: (_: any, r: any) => (
+                <Space>
+                  <Button size="small" icon={<UndoOutlined />} onClick={() => handleStatusChange(r.id, 'Active')}>Restore Fleet</Button>
+                </Space>
+              )
+            }
+          ]}
+          locale={{ emptyText: <Empty description="No suspended fleets found" /> }}
+        />
       </Drawer>
     </div>
   );

@@ -515,7 +515,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                         { title: 'Customer', dataIndex: 'customer', key: 'customer' },
                         { title: 'Cost', dataIndex: 'cost', key: 'cost' },
                         { title: 'Status', dataIndex: 'status', key: 'status', render: (s, record: any) => (
-                          <Space direction="vertical" size={0}>
+                          <Space orientation="vertical" size={0}>
                             <Badge status={s === 'Completed' ? 'success' : 'error'} text={s} />
                             {s === 'Cancelled' && <Text type="secondary" style={{ fontSize: 10 }}>By: {record.canceledBy}</Text>}
                           </Space>
@@ -739,7 +739,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                     <Text strong>{selectedTrip.dropoffAddr}</Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="Distance / Duration">
-                    <Space split={<Divider type="vertical" />}>
+                    <Space split={<Divider orientation="vertical" />}>
                       <Text>{selectedTrip.distance}</Text>
                       <Text>{selectedTrip.duration}</Text>
                     </Space>
@@ -929,7 +929,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                             </div>
                           </Col>
                           <Col span={8} style={{ textAlign: 'right' }}>
-                            <Space direction="vertical" style={{ width: '100%' }}>
+                            <Space orientation="vertical" style={{ width: '100%' }}>
                               <Button 
                                 block 
                                 size="small" 
@@ -1002,7 +1002,7 @@ export const DriverDetails: React.FC<DriverDetailsProps> = ({ driverId, onBack }
                               </div>
                             </Col>
                             <Col span={8} style={{ textAlign: 'right' }}>
-                              <Space direction="vertical" style={{ width: '100%' }}>
+                              <Space orientation="vertical" style={{ width: '100%' }}>
                                 <Button 
                                   block 
                                   size="small" 
@@ -1259,3 +1259,4 @@ const InfoCircleOutlined = ({ style }: { style?: React.CSSProperties }) => (
     <path d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"></path>
   </svg>
 );
+

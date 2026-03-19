@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Row, 
   Col, 
@@ -31,9 +31,8 @@ import {
   SaveOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
-import { MapContainer, TileLayer, Polygon, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { PolygonF, MarkerF } from '@react-google-maps/api';
+import { BaseMap, useBaseMap } from '../components/BaseMap';
 
 const { Title, Text } = Typography;
 
@@ -41,27 +40,35 @@ interface Zone {
   id: string;
   name: string;
   status: 'Active' | 'Inactive';
-  points: [number, number][];
+  points: {lat: number, lng: number}[];
   volume: string;
   extraFare: boolean;
+  farePercent?: number;
 }
 
 const INITIAL_ZONES: Zone[] = [
-  { id: '1', name: 'Dhanmondi', volume: 'High', extraFare: true, status: 'Active', points: [[23.7516, 90.3704], [23.7556, 90.3804], [23.7456, 90.3854], [23.7406, 90.3754]] },
-  { id: '2', name: 'Gulshan', volume: 'Medium', extraFare: false, status: 'Active', points: [[23.7925, 90.4078], [23.7985, 90.4178], [23.7885, 90.4228], [23.7825, 90.4128]] },
+  { id: '1', name: 'Dhanmondi', volume: 'High', extraFare: true, status: 'Active', points: [{lat: 23.7516, lng: 90.3704}, {lat: 23.7556, lng: 90.3804}, {lat: 23.7456, lng: 90.3854}, {lat: 23.7406, lng: 90.3754}], farePercent: 20 },
+  { id: '2', name: 'Gulshan', volume: 'Medium', extraFare: false, status: 'Active', points: [{lat: 23.7925, lng: 90.4078}, {lat: 23.7985, lng: 90.4178}, {lat: 23.7885, lng: 90.4228}, {lat: 23.7825, lng: 90.4128}] },
 ];
 
-const MapEvents = ({ onMapClick }: { onMapClick: (latlng: [number, number]) => void }) => {
-  useMapEvents({
-    click: (e) => onMapClick([e.latlng.lat, e.latlng.lng]),
-  });
+const MapEvents = ({ onMapClick }: { onMapClick: (latlng: {lat: number, lng: number}) => void }) => {
+  const { map } = useBaseMap();
+  useEffect(() => {
+    if (!map) return;
+    const listener = map.addListener('click', (e: google.maps.MapMouseEvent) => {
+      if (e.latLng) {
+        onMapClick({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+      }
+    });
+    return () => google.maps.event.removeListener(listener);
+  }, [map, onMapClick]);
   return null;
 };
 
 export const ZoneSetupPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Setup');
   const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
-  const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
+  const [drawingPoints, setDrawingPoints] = useState<{lat: number, lng: number}[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [form] = Form.useForm();
@@ -73,7 +80,7 @@ export const ZoneSetupPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_, record: Zone) => (
+      render: (_: any, record: Zone) => (
         <Space>
           <Button type="text" icon={<EditOutlined />} onClick={() => {
             setEditingZone(record);
@@ -86,7 +93,7 @@ export const ZoneSetupPage: React.FC = () => {
     },
   ];
 
-  const handleMapClick = (latlng: [number, number]) => {
+  const handleMapClick = (latlng: {lat: number, lng: number}) => {
     if (activeTab === 'Setup') {
       setDrawingPoints(prev => [...prev, latlng]);
     }
@@ -103,7 +110,8 @@ export const ZoneSetupPage: React.FC = () => {
         status: 'Active',
         points: [...drawingPoints],
         volume: 'Low',
-        extraFare: values.extraFare
+        extraFare: values.extraFare,
+        farePercent: values.farePercent
       };
       setZones(prev => [newZone, ...prev]);
       message.success('Zone created');
@@ -124,7 +132,10 @@ export const ZoneSetupPage: React.FC = () => {
         <Col>
           <Space>
             <Button icon={<HistoryOutlined />}>Activity Log</Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawingPoints([])}>New Boundary</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => {
+              setDrawingPoints([]);
+              setActiveTab('Setup');
+            }}>New Boundary</Button>
           </Space>
         </Col>
       </Row>
@@ -132,36 +143,48 @@ export const ZoneSetupPage: React.FC = () => {
       <Row gutter={24}>
         <Col span={16}>
           <Card 
-            bodyStyle={{ padding: 0, height: 500, position: 'relative' }} 
+            styles={{ body: { padding: 0, height: 500, position: 'relative' } }} 
             bordered={false}
             style={{ borderRadius: 16, overflow: 'hidden' }}
           >
-            <MapContainer
+            <BaseMap
               center={[23.8103, 90.4125]}
               zoom={13}
-              style={{ height: '100%', width: '100%' }}
-              zoomControl={false}
+              height={500}
             >
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
               <MapEvents onMapClick={handleMapClick} />
               
               {zones.map(zone => (
-                <Polygon 
+                <PolygonF 
                   key={zone.id} 
-                  positions={zone.points} 
-                  pathOptions={{ color: zone.status === 'Active' ? '#10b981' : '#94a3b8', fillOpacity: 0.2 }} 
+                  path={zone.points} 
+                  options={{ 
+                    strokeColor: zone.status === 'Active' ? '#10b981' : '#94a3b8', 
+                    strokeWeight: 2,
+                    fillOpacity: 0.2, 
+                    fillColor: zone.status === 'Active' ? '#10b981' : '#94a3b8' 
+                  }} 
                 />
               ))}
 
               {drawingPoints.length > 0 && (
-                <Polygon 
-                  positions={drawingPoints} 
-                  pathOptions={{ color: '#3b82f6', dashArray: '5, 10' }} 
+                <PolygonF 
+                  path={drawingPoints} 
+                  options={{ 
+                    strokeColor: '#3b82f6', 
+                    strokeOpacity: 0.8, 
+                    strokeWeight: 2,
+                    fillOpacity: 0.2, 
+                    fillColor: '#3b82f6' 
+                  }} 
                 />
               )}
-            </MapContainer>
+              {drawingPoints.map((p, i) => (
+                <MarkerF key={i} position={p} />
+              ))}
+            </BaseMap>
 
-            {drawingPoints.length >= 3 && (
+            {drawingPoints.length >= 3 && (activeTab === 'Setup') && (
               <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
                 <Button type="primary" size="large" icon={<SaveOutlined />} onClick={() => {
                   setEditingZone(null);
@@ -173,16 +196,26 @@ export const ZoneSetupPage: React.FC = () => {
             )}
 
             <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 1000 }}>
-              <Space direction="vertical">
-                <Button icon={<PlusOutlined />} />
-                <Button icon={<CompassOutlined />} />
+              <Space orientation="vertical">
+                <Button 
+                  icon={<PlusOutlined />} 
+                  onClick={() => setActiveTab('Setup')} 
+                  type={activeTab === 'Setup' ? 'primary' : 'default'} 
+                  title="Drawing Mode"
+                />
+                <Button 
+                  icon={<CompassOutlined />} 
+                  onClick={() => setActiveTab('View')} 
+                  type={activeTab === 'View' ? 'primary' : 'default'} 
+                  title="View Mode"
+                />
               </Space>
             </div>
           </Card>
           
           <div style={{ marginTop: 24 }}>
             <Card title={<Space><InfoCircleOutlined style={{ color: '#10b981' }} /> Instructions</Space>} bordered={false} className="shadow-sm" style={{ borderRadius: 12 }}>
-              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <Text type="secondary" style={{ width: 24, height: 24, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>1</Text>
                   <div>
@@ -219,7 +252,7 @@ export const ZoneSetupPage: React.FC = () => {
         </Col>
 
         <Col span={8}>
-          <Card bordered={false} bodyStyle={{ padding: 0 }}>
+          <Card bordered={false} styles={{ body: { padding: 0 } }}>
             <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9' }}>
               <Title level={5} style={{ margin: 0 }}>Existing Boundaries</Title>
             </div>
@@ -280,3 +313,4 @@ export const ZoneSetupPage: React.FC = () => {
     </div>
   );
 };
+

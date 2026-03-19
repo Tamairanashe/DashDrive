@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
  Info, Map as MapIcon, Search, Layers, Maximize2, Plus, Minus, RefreshCw,
  Download, MoreVertical, Edit3, Trash2, CheckCircle2, XCircle, X, Filter,
@@ -10,6 +10,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { cn } from '../utils';
 import { Tabs } from 'antd';
+import { MapPreview } from './MapPreview';
 
 // Fix for default marker icons in Leaflet with React
 // @ts-ignore
@@ -163,111 +164,6 @@ export const ZoneSetup: React.FC = () => {
  } else {
  document.exitFullscreen();
  }
- };
-
- // Map Preview Helper Component
- const MapPreview = ({ points, status }: { points: [number, number][], status: string }) => {
- const [isInternalFullscreen, setIsInternalFullscreen] = useState(false);
- const previewRef = useRef<HTMLDivElement>(null);
-
- useEffect(() => {
- const handleFsChange = () => {
- setIsInternalFullscreen(document.fullscreenElement === previewRef.current);
- };
- document.addEventListener('fullscreenchange', handleFsChange);
- return () => document.removeEventListener('fullscreenchange', handleFsChange);
- }, []);
-
- const toggleFullscreen = (e: React.MouseEvent) => {
- e.stopPropagation();
- if (!previewRef.current) return;
- if (!document.fullscreenElement) {
- previewRef.current.requestFullscreen().catch(err => {
- console.error(`Error attempting to enable full-screen mode: ${err.message}`);
- });
- } else {
- document.exitFullscreen();
- }
- };
-
- const FitBounds = ({ points }: { points: [number, number][] }) => {
- const map = useMap();
- React.useEffect(() => {
- if (points.length > 0) {
- map.fitBounds(points, { padding: [10, 10] });
- }
- }, [points, map]);
- return null;
- };
-
- return (
- <div
- ref={previewRef}
- onClick={!isInternalFullscreen ? toggleFullscreen : undefined}
- className={cn(
- "bg-slate-100 rounded-lg overflow-hidden border border-slate-200 relative group/map transition-all duration-300",
- isInternalFullscreen ? "w-full h-full rounded-none border-none" : "w-16 h-12 cursor-pointer hover:border-primary/50 hover:shadow-md"
- )}
- >
- <MapContainer
- center={[23.8103, 90.4125]}
- zoom={13}
- style={{ height: '100%', width: '100%' }}
- zoomControl={isInternalFullscreen}
- dragging={isInternalFullscreen}
- touchZoom={isInternalFullscreen}
- doubleClickZoom={isInternalFullscreen}
- scrollWheelZoom={isInternalFullscreen}
- boxZoom={isInternalFullscreen}
- keyboard={isInternalFullscreen}
- attributionControl={isInternalFullscreen}
- >
- <TileLayer
- url={mapType === 'satellite'
- ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
- : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
- }
- />
- <Polygon
- positions={points}
- pathOptions={{
- fillColor: status === 'Active' ? '#00C4B4' : '#64748b',
- fillOpacity: 0.4,
- color: status === 'Active' ? '#00C4B4' : '#64748b',
- weight: isInternalFullscreen ? 3 : 1
- }}
- />
- <FitBounds points={points} />
- </MapContainer>
-
- {!isInternalFullscreen ? (
- <>
- <div className="absolute inset-0 bg-transparent z-[1000]" /> {/* Interaction Shield */}
- <div className="absolute inset-0 bg-black/0 group-hover/map:bg-black/5 transition-colors z-[1001] flex items-center justify-center">
- <Maximize2 className="w-3 h-3 text-white opacity-0 group-hover/map:opacity-100 transition-opacity" />
- </div>
- </>
- ) : (
- <button
- onClick={toggleFullscreen}
- className="absolute top-6 right-6 z-[1001] bg-white/90 backdrop-blur-sm p-3 rounded-2xl shadow-2xl border border-slate-100 text-slate-500 hover:text-red-500 hover:bg-white transition-all active:scale-95 group"
- >
- <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
- </button>
- )}
-
- {/* Legend in fullscreen */}
- {isInternalFullscreen && (
- <div className="absolute bottom-8 left-8 z-[1001] bg-white/90 backdrop-blur-sm px-6 py-4 rounded-[24px] shadow-2xl border border-slate-100 animate-in slide-in-from-bottom-4 duration-500">
- <h4 className="text-sm font-bold text-slate-800 mb-1">Zone Preview</h4>
- <div className="flex items-center gap-2">
- <div className={cn("w-2 h-2 rounded-full", status === 'Active' ? "bg-emerald-500" : "bg-slate-400")} />
- <span className="text-xs font-bold text-slate-500 ">{status} Zone</span>
- </div>
- </div>
- )}
- </div>
- );
  };
 
  // Map Helper Components
@@ -623,7 +519,7 @@ export const ZoneSetup: React.FC = () => {
  <tr key={zone.id} className="hover:bg-slate-50/50 transition-colors group">
  <td className="px-6 py-4 text-xs font-medium text-slate-400">{idx + 1}</td>
  <td className="px-6 py-4">
- <MapPreview points={zone.points} status={zone.status} />
+ <MapPreview type="polygon" data={zone.points} status={zone.status} label={zone.name} />
  </td>
  <td className="px-6 py-4 text-xs font-bold text-slate-800">{zone.name}</td>
  <td className="px-6 py-4">
@@ -705,7 +601,7 @@ export const ZoneSetup: React.FC = () => {
  <div className="mt-12 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
  <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden relative">
  {points.length > 0 ? (
- <MapPreview points={points} status={isInvalid ? 'Inactive' : 'Active'} />
+  <MapPreview type="polygon" data={points} status={isInvalid ? 'Inactive' : 'Active'} label={zoneName || 'New Zone'} />
  ) : (
  <div className="w-full h-full flex flex-col items-center justify-center grayscale opacity-50 bg-[url('https://picsum.photos/seed/map-preview/400/225')] bg-cover bg-center">
  <div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center shadow-lg">
@@ -1052,7 +948,7 @@ export const ZoneSetup: React.FC = () => {
  <tr key={zone.id} className="hover:bg-slate-50/50 transition-colors group">
  <td className="px-6 py-4 text-xs font-medium text-slate-400">{idx + 1}</td>
  <td className="px-6 py-4">
- <MapPreview points={zone.points} status={zone.status} />
+ <MapPreview type=" polygon\ data={zone.points} status={zone.status} label={zone.name} variant=\mini\ />
  </td>
  <td className="px-6 py-4">
  <div className="flex flex-col gap-0.5">

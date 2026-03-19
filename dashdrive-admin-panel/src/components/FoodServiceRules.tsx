@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Form,
     Switch,
@@ -40,7 +40,7 @@ export const FoodServiceRules: React.FC = () => {
     };
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             <div>
                 <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Food Logistics Engine</Title>
                 <Text type="secondary" style={{ fontSize: 15 }}>Configure restaurant commissions, automated fulfillment buffers, and delivery radius limits</Text>
@@ -133,7 +133,7 @@ export const FoodServiceRules: React.FC = () => {
                             </Col>
                         </Row>
                         <Divider style={{ margin: '12px 0' }} />
-                        <Space direction="vertical" style={{ width: '100%' }}>
+                        <Space orientation="vertical" style={{ width: '100%' }}>
                             <Text strong><ThunderboltOutlined /> Ultra-Fast Delivery Zone</Text>
                             <Alert
                                 message="Priority Routing Active"
@@ -161,3 +161,4 @@ export const FoodServiceRules: React.FC = () => {
         </Space>
     );
 };
+

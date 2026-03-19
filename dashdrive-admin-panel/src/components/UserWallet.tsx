@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Typography, Card, Table, Button, Space, Tag, Input, Statistic, Row, Col, DatePicker, Select, Badge } from 'antd';
 import { Wallet, ArrowUpRight, ArrowDownRight, RefreshCcw, Search, Download, Filter, UserCheck, Smartphone } from 'lucide-react';
 
@@ -102,7 +102,7 @@ export function UserWallet() {
  title: 'User',
  key: 'user',
  render: (_: any, record: any) => (
- <Space direction="vertical" size={2}>
+ <Space orientation="vertical" size={2}>
  <Text strong className="text-zinc-800">{record.user}</Text>
  <Space className="text-zinc-500 text-xs">
  {getUserTypeIcon(record.userType)}
@@ -115,7 +115,7 @@ export function UserWallet() {
  title: 'Type & Method',
  key: 'type',
  render: (_: any, record: any) => (
- <Space direction="vertical" size={2}>
+ <Space orientation="vertical" size={2}>
  <Tag color={getTypeColor(record.type)} className="rounded-md border-0 m-0">{record.type}</Tag>
  <Text type="secondary" className="text-xs">{record.method}</Text>
  </Space>
@@ -150,7 +150,7 @@ export function UserWallet() {
  dataIndex: 'date',
  key: 'date',
  render: (text: string) => (
- <Space direction="vertical" size={0}>
+ <Space orientation="vertical" size={0}>
  <Text className="text-sm">{new Date(text).toLocaleDateString()}</Text>
  <Text type="secondary" className="text-xs">{new Date(text).toLocaleTimeString()}</Text>
  </Space>
@@ -283,3 +283,4 @@ export function UserWallet() {
  </div>
  );
 }
+

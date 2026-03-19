@@ -23,10 +23,16 @@ import {
   ShopOutlined,
   AlertOutlined,
   WalletOutlined,
-  StarOutlined
+  StarOutlined,
+  ReloadOutlined,
+  RestOutlined,
+  UndoOutlined,
+  CloseCircleOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons';
 import { adminApi } from '../api/adminApi';
 import { StateWrapper } from '../components/common/StateWrapper';
+import { Modal, Form, message, Drawer, Empty } from 'antd';
 
 const { Title, Text } = Typography;
 
@@ -36,6 +42,13 @@ export const MerchantListPage: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Standardization State
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [trashVisible, setTrashVisible] = useState(false);
+  const [rejectionModalVisible, setRejectionModalVisible] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [pendingAction, setPendingAction] = useState<{ id: string, name: string } | null>(null);
 
   useEffect(() => {
     fetchMerchants();
@@ -70,6 +83,56 @@ export const MerchantListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    fetchMerchants().finally(() => {
+      setIsRefreshing(false);
+      message.success('Merchant data synchronized');
+    });
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string, reason?: string) => {
+    try {
+      setLoading(true);
+      // In a real app, this would be an API call
+      // await adminApi.stores.updateStatus(id, newStatus, reason);
+      
+      setData(prev => prev.map(m => m.id === id ? { 
+        ...m, 
+        status: newStatus === 'Active' ? 'Active' : (newStatus === 'Suspended' ? 'Suspended' : 'PENDING'),
+        is_active: newStatus === 'Active',
+        updatedAt: new Date().toISOString()
+      } : m));
+
+      message.success(`Merchant status updated to ${newStatus}`);
+      if (reason) message.info(`Audit Reason: ${reason}`);
+    } catch (err) {
+      message.error('Failed to update status');
+    } finally {
+      setLoading(false);
+      setRejectionModalVisible(false);
+      setPendingAction(null);
+    }
+  };
+
+  const initiateSuspension = (record: any) => {
+    setPendingAction({ id: record.id, name: record.name });
+    setRejectionReason('');
+    setRejectionModalVisible(true);
+  };
+
+  const handleConfirmSuspension = () => {
+    if (!rejectionReason.trim()) {
+      message.warning('Please provide a reason for suspension');
+      return;
+    }
+    handleStatusChange(pendingAction!.id, 'Suspended', rejectionReason);
+  };
+
+  const handleResetToPending = (id: string) => {
+    handleStatusChange(id, 'PENDING');
   };
 
   const columns = [
@@ -121,7 +184,7 @@ export const MerchantListPage: React.FC = () => {
        title: 'Audit Logs',
        key: 'audit',
        render: (_: any, record: any) => (
-         <Space direction="vertical" size={0}>
+         <Space orientation="vertical" size={0}>
            <Text style={{ fontSize: 11, color: '#64748b' }}>Created: {new Date(record.createdAt).toLocaleDateString()}</Text>
            <Text style={{ fontSize: 11, color: '#64748b' }}>Modified: {new Date(record.updatedAt).toLocaleDateString()}</Text>
          </Space>
@@ -135,8 +198,17 @@ export const MerchantListPage: React.FC = () => {
           <Tooltip title="View Details">
             <Button type="text" icon={<EyeOutlined />} />
           </Tooltip>
-          <Tooltip title="Analytics">
-            <Button type="text" icon={<LineChartOutlined />} />
+          {record.status === 'Active' ? (
+            <Tooltip title="Suspend Merchant">
+              <Button type="text" danger icon={<CloseCircleOutlined />} onClick={() => initiateSuspension(record)} />
+            </Tooltip>
+          ) : (
+            <Tooltip title="Approve / Activate">
+              <Button type="text" icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />} onClick={() => handleStatusChange(record.id, 'Active')} />
+            </Tooltip>
+          )}
+          <Tooltip title="Reset to Pending">
+             <Button type="text" icon={<UndoOutlined />} onClick={() => handleResetToPending(record.id)} />
           </Tooltip>
           <Button type="text" icon={<MoreOutlined />} />
         </Space>
@@ -159,9 +231,24 @@ export const MerchantListPage: React.FC = () => {
           <Text type="secondary">Administer grocery partners, approvals, and performance metrics</Text>
         </Col>
         <Col>
-          <Button type="primary" size="large" icon={<PlusOutlined />} style={{ borderRadius: 8 }}>
-            Onboard New Merchant
-          </Button>
+          <Space size="middle">
+            <Button 
+              icon={<ReloadOutlined spin={isRefreshing} />} 
+              onClick={handleManualRefresh}
+              loading={isRefreshing}
+            >
+              Refresh
+            </Button>
+            <Button 
+               icon={<RestOutlined />} 
+               onClick={() => setTrashVisible(true)}
+            >
+               Trashed Merchants
+            </Button>
+            <Button type="primary" size="large" icon={<PlusOutlined />} style={{ borderRadius: 8 }}>
+              Onboard New Merchant
+            </Button>
+          </Space>
         </Col>
       </Row>
 
@@ -169,7 +256,7 @@ export const MerchantListPage: React.FC = () => {
         {stats.map(stat => (
           <Col xs={24} sm={12} lg={6} key={stat.title}>
             <Card bordered={false} bodyStyle={{ padding: 20 }}>
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                 <div style={{ 
                   width: 40, height: 40, background: `${stat.color}15`, 
                   borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -227,6 +314,71 @@ export const MerchantListPage: React.FC = () => {
           />
         </StateWrapper>
       </Card>
+
+      {/* Standardization Modals & Drawers */}
+      <Modal
+        title="Reason for Suspension"
+        open={rejectionModalVisible}
+        onOk={handleConfirmSuspension}
+        onCancel={() => setRejectionModalVisible(false)}
+        okText="Confirm Suspension"
+        okButtonProps={{ danger: true }}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary">
+            Provide a reason for suspending <Text strong>{pendingAction?.name}</Text>. 
+            This will be logged in the audit history.
+          </Text>
+        </div>
+        <Form layout="vertical">
+          <Form.Item label="Suspension Reason" required>
+            <Input.TextArea 
+              rows={4} 
+              placeholder="e.g. Non-compliance with safety standards, repeated order cancellations..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Drawer
+        title={<span><RestOutlined /> Trashed Merchants (Suspended / Inactive)</span>}
+        width={720}
+        onClose={() => setTrashVisible(false)}
+        open={trashVisible}
+      >
+        <Table
+          size="small"
+          dataSource={data.filter(m => m.status === 'Suspended' || !m.is_active)}
+          rowKey="id"
+          columns={[
+            {
+              title: 'Merchant',
+              key: 'merchant',
+              render: (_, r) => (
+                <Space>
+                  <Avatar size="small" src={r.logo_url} icon={<ShopOutlined />} />
+                  <Text strong>{r.name}</Text>
+                </Space>
+              )
+            },
+            { title: 'Zone', dataIndex: ['regions', 'name'], key: 'zone' },
+            { 
+              title: 'Actions', 
+              key: 'actions', 
+              render: (_: any, r: any) => (
+                <Space>
+                  <Button size="small" icon={<UndoOutlined />} onClick={() => handleStatusChange(r.id, 'Active')}>Restore</Button>
+                  <Button size="small" type="text" danger icon={<CloseCircleOutlined />}>Permanent Delete</Button>
+                </Space>
+              )
+            }
+          ]}
+          locale={{ emptyText: <Empty description="No trashed merchants found" /> }}
+        />
+      </Drawer>
     </div>
   );
 };
+

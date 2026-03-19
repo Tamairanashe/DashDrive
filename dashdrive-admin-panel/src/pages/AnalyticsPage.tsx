@@ -201,7 +201,7 @@ export const AnalyticsPage: React.FC = () => {
                             </ResponsiveContainer>
                         </div>
                         <Divider style={{ margin: '12px 0' }} />
-                        <Space direction="vertical" style={{ width: '100%' }}>
+                        <Space orientation="vertical" style={{ width: '100%' }}>
                             {VERTICAL_DATA.map(item => (
                                 <div key={item.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Space size="small">
@@ -344,3 +344,4 @@ export const AnalyticsPage: React.FC = () => {
         </div>
     );
 };
+

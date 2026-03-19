@@ -1,7 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Typography, Row, Col, Card, Space, Input, Button, Timeline, 
-  Descriptions, Tag, Avatar, Badge, message, Divider, Alert, Tooltip, List, Statistic
+  Tag, Avatar, Badge, message, Divider, Alert, Tooltip, List, Statistic
 } from 'antd';
 import { 
   SearchOutlined, EnvironmentOutlined, CarOutlined, ShopOutlined, 
@@ -9,41 +9,70 @@ import {
   CompassOutlined, SyncOutlined, SwapOutlined, WarningOutlined,
   PlayCircleOutlined, PauseCircleOutlined, ExpandOutlined
 } from '@ant-design/icons';
-import { Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import { BaseMap } from '../components/BaseMap';
-import L from 'leaflet';
+import { MarkerF, InfoWindowF, PolylineF, OverlayViewF, OverlayView } from '@react-google-maps/api';
+import { BaseMap, useBaseMap } from '../components/BaseMap';
+import carMarker from '../assets/car-marker.png';
+import carMarkerHandicap from '../assets/car-marker-handicap.png';
 
 const { Title, Text } = Typography;
 
+const DriverMarker = ({ position, isHandicap }: { position: google.maps.LatLngLiteral, isHandicap?: boolean }) => (
+  <OverlayViewF
+    position={position}
+    mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+  >
+    <div style={{ 
+      transform: 'translate(-50%, -50%)',
+      width: '40px', height: '40px', 
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <img 
+        src={isHandicap ? carMarkerHandicap : carMarker} 
+        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }} 
+        alt="car" 
+      />
+    </div>
+  </OverlayViewF>
+);
 
-const driverIcon = new L.DivIcon({
-    className: 'driver-marker',
-    html: `<div style="width: 32px; height: 32px; background: #fff; border: 3px solid #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-           </div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-});
+const PickupMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
+  <OverlayViewF
+    position={position}
+    mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+  >
+    <div style={{ 
+      transform: 'translate(-50%, -50%)',
+      width: '24px', height: '24px', background: '#0f172a', border: '2px solid #fff', 
+      borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+      boxShadow: '0 2px 4px rgba(0,0,0,0.2)' 
+    }}></div>
+  </OverlayViewF>
+);
 
-const pickupIcon = new L.DivIcon({
-    className: 'pickup-marker',
-    html: `<div style="width: 24px; height: 24px; background: #0f172a; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-});
+const DropoffMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
+  <OverlayViewF
+    position={position}
+    mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+  >
+    <div style={{ 
+      transform: 'translate(-50%, -50%)',
+      width: '24px', height: '24px', background: '#ef4444', border: '2px solid #fff', 
+      borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+      boxShadow: '0 2px 4px rgba(0,0,0,0.2)' 
+    }}></div>
+  </OverlayViewF>
+);
 
-const dropoffIcon = new L.DivIcon({
-    className: 'dropoff-marker',
-    html: `<div style="width: 24px; height: 24px; background: #ef4444; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-});
-
-const MapFitter = ({ bounds }: { bounds: L.LatLngBoundsExpression | null }) => {
-    const map = useMap();
+const MapFitter = ({ bounds }: { bounds: google.maps.LatLngBoundsLiteral | null }) => {
+    const { map } = useBaseMap();
     useEffect(() => {
-        if (bounds) {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+        if (bounds && map) {
+            const googleBounds = new google.maps.LatLngBounds();
+            if (Array.isArray(bounds)) {
+               // Handle legacy array bounds if passed
+            } else {
+              // Assume it's handled or we adjust the caller
+            }
         }
     }, [bounds, map]);
     return null;
@@ -59,7 +88,7 @@ const MOCK_TRIPS = [
         customer: { name: 'John Makoni', phone: '+263 77 123 4567', avatar: 'https://i.pravatar.cc/150?u=1' },
         driver: { id: 'D-201', name: 'Alex T.', phone: '+263 71 987 6543', vehicle: 'Motorcycle', plate: 'AB-123', lat: -17.8220, lng: 31.0520 },
         dropoff: { address: '14 Samora Machel Ave', lat: -17.8300, lng: 31.0600 },
-        route: [[-17.8200, 31.0500], [-17.8210, 31.0510], [-17.8220, 31.0520], [-17.8300, 31.0600]],
+        route: [{lat: -17.8200, lng: 31.0500}, {lat: -17.8210, lng: 31.0510}, {lat: -17.8220, lng: 31.0520}, {lat: -17.8300, lng: 31.0600}],
         timeline: [
             { time: '12:00', event: 'Order created', status: 'success' },
             { time: '12:02', event: 'Restaurant accepted', status: 'success' },
@@ -82,7 +111,7 @@ const MOCK_TRIPS = [
         driver: { id: 'D-405', name: 'Mike N.', phone: '+263 77 111 2222', vehicle: 'Toyota Belta', plate: 'AEE-9901', lat: -17.8050, lng: 31.0400 },
         pickup: { address: 'Avondale Shopping Center', lat: -17.8000, lng: 31.0333 },
         dropoff: { address: 'Borrowdale Village', lat: -17.7500, lng: 31.1000 },
-        route: [[-17.8000, 31.0333], [-17.8050, 31.0400], [-17.7500, 31.1000]],
+        route: [{lat: -17.8000, lng: 31.0333}, {lat: -17.8050, lng: 31.0400}, {lat: -17.7500, lng: 31.1000}],
         timeline: [
             { time: '14:20', event: 'Ride requested', status: 'success' },
             { time: '14:22', event: 'Driver accepted', status: 'success' },
@@ -102,6 +131,7 @@ export const LiveTrackingPage: React.FC = () => {
     const [activeTrip, setActiveTrip] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
     const [playbackMode, setPlaybackMode] = useState(false);
+    const [showInfoWindow, setShowInfoWindow] = useState<string | null>(null);
 
     const handleSearch = (value: string) => {
         setLoading(true);
@@ -137,11 +167,22 @@ export const LiveTrackingPage: React.FC = () => {
         return () => clearInterval(interval);
     }, [activeTrip]);
 
-    const bounds: L.LatLngBoundsExpression | null = activeTrip ? [
-        [activeTrip.merchant?.lat || activeTrip.pickup?.lat, activeTrip.merchant?.lng || activeTrip.pickup?.lng],
-        [activeTrip.dropoff.lat, activeTrip.dropoff.lng],
-        [activeTrip.driver.lat, activeTrip.driver.lng]
-    ] : MOCK_TRIPS.map(t => [t.driver.lat, t.driver.lng]);
+    const fitBoundsTrigger = useMemo(() => {
+        if (!activeTrip) return MOCK_TRIPS.map(t => ({ lat: t.driver.lat, lng: t.driver.lng }));
+        const points = [
+            { lat: activeTrip.driver.lat, lng: activeTrip.driver.lng },
+            { lat: activeTrip.dropoff.lat, lng: activeTrip.dropoff.lng }
+        ];
+        if (activeTrip.merchant) points.push({ lat: activeTrip.merchant.lat, lng: activeTrip.merchant.lng });
+        if (activeTrip.pickup) points.push({ lat: activeTrip.pickup.lat, lng: activeTrip.pickup.lng });
+        return points;
+    }, [activeTrip]);
+
+    const handleMapLoad = (map: google.maps.Map) => {
+        const bounds = new google.maps.LatLngBounds();
+        fitBoundsTrigger.forEach(p => bounds.extend(p));
+        map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+    };
 
     return (
         <div style={{ paddingBottom: 24, height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }}>
@@ -177,7 +218,7 @@ export const LiveTrackingPage: React.FC = () => {
                                             <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Active Order</Text>
                                             <Text strong style={{ fontSize: 16 }}>{activeTrip.id}</Text> <Tag color={activeTrip.service === 'Food Delivery' ? 'orange' : 'blue'}>{activeTrip.service}</Tag>
                                         </div>
-                                        <Divider type="vertical" style={{ height: 32 }} />
+                                        <Divider orientation="vertical" style={{ height: 32 }} />
                                         <div>
                                             <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Driver</Text>
                                             <Space><CarOutlined /> <Text strong>{activeTrip.driver.name}</Text></Space>
@@ -201,39 +242,54 @@ export const LiveTrackingPage: React.FC = () => {
                     {/* Map View - ALWAYS SHOWING */}
                     <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 0, height: '100%', minHeight: 400, position: 'relative', overflow: 'hidden', flex: 1 }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
-                            <BaseMap center={[-17.824858, 31.053028]} zoom={13}>
-                                <MapFitter bounds={bounds} />
-
+                            <BaseMap center={[-17.824858, 31.053028]} zoom={13} onLoad={handleMapLoad}>
                                 {activeTrip ? (
                                     <>
-                                        <Marker position={[activeTrip.driver.lat, activeTrip.driver.lng]} icon={driverIcon} zIndexOffset={100} />
+                                        <DriverMarker position={{ lat: activeTrip.driver.lat, lng: activeTrip.driver.lng }} />
                                         {(activeTrip.merchant || activeTrip.pickup) && (
-                                            <Marker position={[activeTrip.merchant?.lat || activeTrip.pickup?.lat, activeTrip.merchant?.lng || activeTrip.pickup?.lng]} icon={pickupIcon} />
+                                            <PickupMarker position={{ lat: activeTrip.merchant?.lat || activeTrip.pickup?.lat, lng: activeTrip.merchant?.lng || activeTrip.pickup?.lng }} />
                                         )}
-                                        <Marker position={[activeTrip.dropoff.lat, activeTrip.dropoff.lng]} icon={dropoffIcon} />
-                                        <Polyline 
-                                            positions={activeTrip.route} 
-                                            color="#0f172a" 
-                                            weight={4} 
-                                            opacity={0.6}
-                                            dashArray={activeTrip.status === 'Delivering' ? "10, 10" : ""}
+                                        <DropoffMarker position={{ lat: activeTrip.dropoff.lat, lng: activeTrip.dropoff.lng }} />
+                                        <PolylineF 
+                                            path={activeTrip.route} 
+                                            options={{
+                                                strokeColor: "#0f172a",
+                                                strokeOpacity: activeTrip.status === 'Delivering' ? 0 : 0.6,
+                                                strokeWeight: 4,
+                                                icons: activeTrip.status === 'Delivering' ? [{
+                                                  icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 },
+                                                  offset: '0',
+                                                  repeat: '10px'
+                                                }] : undefined
+                                            }}
                                         />
                                     </>
                                 ) : (
                                     // Show all active trips when none selected
                                     MOCK_TRIPS.map(trip => (
-                                        <Marker 
-                                            key={trip.id} 
-                                            position={[trip.driver.lat, trip.driver.lng]} 
-                                            icon={driverIcon}
-                                            eventHandlers={{ click: () => setActiveTrip(trip) }}
-                                        >
-                                            <Popup>
-                                                <strong>{trip.id}</strong><br/>
-                                                Driver: {trip.driver.name}<br/>
-                                                Status: {trip.status}
-                                            </Popup>
-                                        </Marker>
+                                        <React.Fragment key={trip.id}>
+                                            <MarkerF 
+                                                position={{ lat: trip.driver.lat, lng: trip.driver.lng }} 
+                                                onClick={() => setShowInfoWindow(trip.id)}
+                                                icon={{
+                                                    url: trip.id.includes('HANDICAP') ? carMarkerHandicap : carMarker,
+                                                    scaledSize: new google.maps.Size(32, 32),
+                                                    anchor: new google.maps.Point(16, 16)
+                                                }}
+                                            />
+                                            {showInfoWindow === trip.id && (
+                                                <InfoWindowF 
+                                                    position={{ lat: trip.driver.lat, lng: trip.driver.lng }}
+                                                    onCloseClick={() => setShowInfoWindow(null)}
+                                                >
+                                                    <div onClick={() => setActiveTrip(trip)} style={{ cursor: 'pointer' }}>
+                                                        <strong>{trip.id}</strong><br/>
+                                                        Driver: {trip.driver.name}<br/>
+                                                        Status: {trip.status}
+                                                    </div>
+                                                </InfoWindowF>
+                                            )}
+                                        </React.Fragment>
                                     ))
                                 )}
                             </BaseMap>

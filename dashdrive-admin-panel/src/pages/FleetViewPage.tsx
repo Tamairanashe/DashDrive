@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Row, Col, Card, Typography, Select, Input, Button, Avatar, Space, Tag, List, Statistic, Divider, Alert, message, Badge, Switch, Drawer, Tabs, Table, Progress, Modal
 } from 'antd';
@@ -9,9 +9,11 @@ import {
     GlobalOutlined, SafetyOutlined, InfoCircleOutlined, ThunderboltOutlined,
     AimOutlined, ArrowUpOutlined, AudioOutlined, SettingOutlined, HistoryOutlined, WalletOutlined, StarFilled
 } from '@ant-design/icons';
-import { Marker, Popup, useMap, Polyline, Circle } from 'react-leaflet';
-import { BaseMap } from '../components/BaseMap';
-import L from 'leaflet';
+import { MarkerF, InfoWindowF, PolylineF, CircleF, OverlayViewF, OverlayView } from '@react-google-maps/api';
+import { BaseMap, useBaseMap } from '../components/BaseMap';
+import carMarker from '../assets/car-marker.png';
+import carMarkerHandicap from '../assets/car-marker-handicap.png';
+// import L from 'leaflet';
 import { useLocation } from 'react-router-dom';
 
 const { Title, Text } = Typography;
@@ -44,7 +46,7 @@ interface Driver {
     plate: string;
     rating: number;
     tripsToday: number;
-    currentTrip: { id: string; pickup: [number, number]; dropoff: [number, number]; eta: string; } | null;
+    currentTrip: { id: string; pickup: {lat: number, lng: number}; dropoff: {lat: number, lng: number}; eta: string; } | null;
     alerts: string[];
     phone: string;
     email: string;
@@ -105,7 +107,7 @@ const MOCK_DRIVERS: Driver[] = [
         id: 'D-201', name: 'John Makoni', status: 'On Trip', service: 'Food Delivery', 
         lat: -17.824858, lng: 31.053028, type: 'Motorcycle', plate: 'AB-123', 
         rating: 4.8, tripsToday: 14, 
-        currentTrip: { id: 'ORD-991', pickup: [-17.8200, 31.0500], dropoff: [-17.8300, 31.0600], eta: '12 min' },
+        currentTrip: { id: 'ORD-991', pickup: {lat: -17.8200, lng: 31.0500}, dropoff: {lat: -17.8300, lng: 31.0600}, eta: '12 min' },
         alerts: [],
         phone: '+263 771 222 333',
         email: 'john.m@dashdrive.com',
@@ -174,14 +176,18 @@ const MOCK_CUSTOMERS: Customer[] = [
     },
 ];
 
-const MapController = ({ selectedPos, selectedCity }: { selectedPos: [number, number] | null, selectedCity: string }) => {
-  const map = useMap();
+const MapController = ({ selectedPos, selectedCity }: { selectedPos: {lat: number, lng: number} | null, selectedCity: string }) => {
+  const { map } = useBaseMap();
   useEffect(() => {
-    if (selectedPos) {
-      map.setView(selectedPos, 16, { animate: true });
-    } else if (selectedCity && LOCATION_COORDS[selectedCity]) {
-      const coords = LOCATION_COORDS[selectedCity];
-      map.setView([coords.lat, coords.lng], 13, { animate: true });
+    if (map) {
+      if (selectedPos) {
+        map.panTo(selectedPos);
+        map.setZoom(16);
+      } else if (selectedCity && LOCATION_COORDS[selectedCity]) {
+        const coords = LOCATION_COORDS[selectedCity];
+        map.panTo({ lat: coords.lat, lng: coords.lng });
+        map.setZoom(13);
+      }
     }
   }, [selectedPos, selectedCity, map]);
   return null;
@@ -367,7 +373,7 @@ export const FleetViewPage: React.FC = () => {
                         <Col>
                             <Space size="middle">
                                 <Title level={4} style={{ margin: 0 }}>Fleet Control Center</Title>
-                                <Divider type="vertical" />
+                                <Divider orientation="vertical" />
                                 <Space size="small" wrap>
                                     <Select 
                                         value={selectedCountry} 
@@ -418,7 +424,7 @@ export const FleetViewPage: React.FC = () => {
                         <Col><Statistic title="Online" value={312} valueStyle={{ color: '#10b981', fontSize: 18 }}/></Col>
                         <Col><Statistic title="Busy" value={210} valueStyle={{ color: '#f59e0b', fontSize: 18 }}/></Col>
                         <Col><Statistic title="Idle" value={102} valueStyle={{ color: '#3b82f6', fontSize: 18 }}/></Col>
-                        <Col><Divider type="vertical" style={{ height: 32 }} /></Col>
+                        <Col><Divider orientation="vertical" style={{ height: 32 }} /></Col>
                         <Col><Statistic title="Active Trips" value={184} valueStyle={{ fontSize: 18 }}/></Col>
                         <Col><Statistic title="Avg ETA" value="6.5m" valueStyle={{ fontSize: 18 }}/></Col>
                     </Row>
@@ -480,93 +486,93 @@ export const FleetViewPage: React.FC = () => {
                     <BaseMap center={[-17.824858, 31.053028]} zoom={12} height="100%">
                     
                     {showDemand && MOCK_DEMAND_CLUSTERS.map(cluster => (
-                        <Circle 
+                        <CircleF 
                             key={cluster.id}
-                            center={[cluster.lat, cluster.lng]}
+                            center={{ lat: cluster.lat, lng: cluster.lng }}
                             radius={cluster.radius}
-                            pathOptions={{ 
+                            options={{ 
                                 fillColor: '#3b82f6', 
-                                color: '#3b82f6', 
+                                strokeColor: '#3b82f6', 
                                 fillOpacity: cluster.intensity * 0.3,
-                                weight: 0
+                                strokeWeight: 0
                             }}
-                        >
-                            <Popup>
-                                <Text strong>{cluster.label}</Text><br/>
-                                <Text type="secondary">Intensity: {Math.round(cluster.intensity * 100)}%</Text>
-                            </Popup>
-                        </Circle>
+                        />
                     ))}
                     
                     <MapController 
-                        selectedPos={selectedDriver ? [selectedDriver.lat, selectedDriver.lng] : null} 
+                        selectedPos={selectedDriver ? { lat: selectedDriver.lat, lng: selectedDriver.lng } : null} 
                         selectedCity={selectedCity}
                     />
 
                     {/* Driver Markers */}
                     {viewMode !== 'customers' && filteredDrivers.map(d => (
-                        <Marker 
-                            key={d.id} 
-                            position={[d.lat, d.lng]}
-                            icon={L.divIcon({
-                                className: 'fleet-marker',
-                                html: `
-                                    <div style="background: ${getStatusColor(d.status)}; width: 32px; height: 32px; border-radius: 10px; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; transform: ${selectedDriverId === d.id ? 'scale(1.2)' : 'scale(1)'}; transition: all 0.3s ease;">
-                                        ${d.alerts.length > 0 ? '<div style="position: absolute; top: -6px; right: -6px; background: #ef4444; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; animation: pulse 2s infinite;"></div>' : ''}
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                            ${d.type === 'Motorcycle' ? '<path d="M10 17h.01"/><path d="M15 17h.01"/><path d="M7 17a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z"/><path d="M15 17a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z"/><path d="M13 17V9h5l2 2v2"/><path d="M13 9H8l-2 3v1"/>' : '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>'}
-                                        </svg>
-                                    </div>
-                                `,
-                                iconSize: [32, 32],
-                                iconAnchor: [16, 16]
-                            })}
-                            eventHandlers={{ click: () => setSelectedDriverId(d.id) }}
+                        <OverlayViewF
+                            key={d.id}
+                            position={{ lat: d.lat, lng: d.lng }}
+                            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                         >
-                            <Popup>
-                                <strong>{d.name}</strong><br/>
-                                Plate: {d.plate}<br/>
-                                <Tag color={getStatusColor(d.status)} style={{ marginTop: 4 }}>{d.status}</Tag>
-                            </Popup>
-                        </Marker>
+                            <div 
+                                onClick={() => setSelectedDriverId(d.id)}
+                                style={{ 
+                                    transform: 'translate(-50%, -50%)',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <div style={{ 
+                                    background: getStatusColor(d.status), 
+                                    width: '32px', height: '32px', 
+                                    borderRadius: '10px', border: '2px solid white', 
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)', 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                    transform: selectedDriverId === d.id ? 'scale(1.2)' : 'scale(1)', 
+                                    transition: 'all 0.3s ease',
+                                    position: 'relative'
+                                }}>
+                                    {d.alerts.length > 0 && <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid white' }} className="animate-pulse"></div>}
+                                    <img 
+                                        src={d.id.includes('HANDICAP') ? carMarkerHandicap : carMarker} 
+                                        style={{ width: '24px', height: '24px', objectFit: 'contain' }} 
+                                        alt="car" 
+                                    />
+                                </div>
+                            </div>
+                        </OverlayViewF>
                     ))}
 
                     {/* Customer Markers */}
                     {viewMode === 'customers' && filteredCustomers.map(c => (
-                        <Marker 
-                            key={c.id} 
-                            position={[c.lat, c.lng]}
-                            icon={L.divIcon({
-                                className: 'customer-marker',
-                                html: `
-                                    <div class="pulse-marker" style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); display: flex; align-items: center; justify-content: center; transform: ${selectedDriverId === c.id ? 'scale(1.2)' : 'scale(1)'};">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                                        </svg>
-                                    </div>
-                                `,
-                                iconSize: [24, 24],
-                                iconAnchor: [12, 12]
-                            })}
-                            eventHandlers={{ click: () => setSelectedDriverId(c.id) }}
+                        <OverlayViewF
+                            key={c.id}
+                            position={{ lat: c.lat, lng: c.lng }}
+                            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                         >
-                            <Popup>
-                                <strong>{c.name}</strong><br/>
-                                Loyalty: <Tag color="blue">{c.loyalty}</Tag><br/>
-                                Behavior: <Text type="secondary">{c.behavior}</Text>
-                            </Popup>
-                        </Marker>
+                            <div 
+                                onClick={() => setSelectedDriverId(c.id)}
+                                style={{ transform: 'translate(-50%, -50%)', cursor: 'pointer' }}
+                                className="pulse-marker"
+                            >
+                                <div style={{ background: '#3b82f6', width: '24px', height: '24px', borderRadius: '50%', border: '3px solid white', boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: selectedDriverId === c.id ? 'scale(1.2)' : 'scale(1)' }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </OverlayViewF>
                     ))}
 
                     {/* Trip Lines & Points for Selected Driver */}
                     {selectedDriver?.currentTrip && (
                         <>
-                            <Polyline 
-                                positions={[[selectedDriver.lat, selectedDriver.lng], selectedDriver.currentTrip.pickup as [number, number], selectedDriver.currentTrip.dropoff as [number, number]]} 
-                                color="#3b82f6" weight={3} dashArray="8, 8" 
+                            <PolylineF 
+                                path={[{lat: selectedDriver.lat, lng: selectedDriver.lng}, selectedDriver.currentTrip.pickup, selectedDriver.currentTrip.dropoff]} 
+                                options={{ strokeColor: "#3b82f6", strokeWeight: 3, strokeOpacity: 0.6, icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 }, offset: '0', repeat: '20px' }] }} 
                             />
-                            <Marker position={selectedDriver.currentTrip.pickup as [number, number]} icon={L.divIcon({ className: '', html: '<div style="width:14px;height:14px;background:white;border:3px solid black;border-radius:50%;box-shadow:0 0 4px rgba(0,0,0,0.3)"></div>', iconSize:[14,14], iconAnchor:[7,7] })} />
-                            <Marker position={selectedDriver.currentTrip.dropoff as [number, number]} icon={L.divIcon({ className: '', html: '<div style="width:14px;height:14px;background:white;border:3px solid #ef4444;border-radius:50%;box-shadow:0 0 4px rgba(0,0,0,0.3)"></div>', iconSize:[14,14], iconAnchor:[7,7] })} />
+                            <OverlayViewF position={selectedDriver.currentTrip.pickup} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+                                <div style={{ transform: 'translate(-50%, -50%)', width:'14px',height:'14px',background:'white',border:'3px solid black',borderRadius:'50%',boxShadow:'0 0 4px rgba(0,0,0,0.3)' }}></div>
+                            </OverlayViewF>
+                            <OverlayViewF position={selectedDriver.currentTrip.dropoff} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+                                <div style={{ transform: 'translate(-50%, -50%)', width:'14px',height:'14px',background:'white',border:'3px solid #ef4444',borderRadius:'50%',boxShadow:'0 0 4px rgba(0,0,0,0.3)' }}></div>
+                            </OverlayViewF>
                         </>
                     )}
                 </BaseMap>
@@ -586,7 +592,7 @@ export const FleetViewPage: React.FC = () => {
                         <Space size={6}><div style={{ width:10, height:10, borderRadius:'50%', background:'#10b981' }} /><Text style={{ fontSize:12, fontWeight: 500 }}>Available</Text></Space>
                         <Space size={6}><div style={{ width:10, height:10, borderRadius:'50%', background:'#f59e0b' }} /><Text style={{ fontSize:12, fontWeight: 500 }}>On Trip</Text></Space>
                         <Space size={6}><div style={{ width:10, height:10, borderRadius:'50%', background:'#ef4444' }} /><Text style={{ fontSize:12, fontWeight: 500 }}>Offline</Text></Space>
-                        <Divider type="vertical" />
+                        <Divider orientation="vertical" />
                         <Space size={6}><div style={{ width:14, height:14, borderRadius:'50%', background:'rgba(59, 130, 246, 0.3)', border:'1px solid #3b82f6' }} /><Text style={{ fontSize:12, fontWeight: 500 }}>Customer Clusters</Text></Space>
                     </Space>
                 </div>
@@ -752,7 +758,7 @@ export const FleetViewPage: React.FC = () => {
                                 </Col>
                                 <Col span={8}>
                                     <Card title="Contact Details" bordered={false} className="shadow-sm">
-                                        <Space direction="vertical" style={{ width: '100%' }}>
+                                        <Space orientation="vertical" style={{ width: '100%' }}>
                                             <div><Text type="secondary" style={{ fontSize: 12 }}>Phone Number</Text><br /><Text strong>{selectedDriver?.phone}</Text></div>
                                             <div><Text type="secondary" style={{ fontSize: 12 }}>Email Address</Text><br /><Text strong>{selectedDriver?.email || 'N/A'}</Text></div>
                                             <Divider style={{ margin: '12px 0' }} />
@@ -1017,7 +1023,7 @@ export const FleetViewPage: React.FC = () => {
                                 </Col>
                                 <Col span={8}>
                                     <Card title="User Contact" bordered={false} className="shadow-sm">
-                                        <Space direction="vertical" style={{ width: '100%' }}>
+                                        <Space orientation="vertical" style={{ width: '100%' }}>
                                             <div><Text type="secondary" style={{ fontSize: 12 }}>Phone Number</Text><br /><Text strong>{selectedCustomer?.phone}</Text></div>
                                             <div><Text type="secondary" style={{ fontSize: 12 }}>Email Address</Text><br /><Text strong>{selectedCustomer?.email}</Text></div>
                                             <Divider style={{ margin: '12px 0' }} />
@@ -1306,5 +1312,6 @@ export const FleetViewPage: React.FC = () => {
     </div>
   );
 };
+
 
 

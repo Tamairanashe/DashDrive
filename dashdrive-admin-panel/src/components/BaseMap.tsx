@@ -1,15 +1,16 @@
-﻿import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useEffect, useState, createContext, useContext, useCallback } from 'react';
+import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 
-// Fix for default marker icons in Leaflet with Webpack/Vite
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+const GOOGLE_MAPS_API_KEY = "AIzaSyCxwlIiOcrI_yBrehP9CKr-CoIoPusShh0";
+
+interface MapContextType {
+  map: google.maps.Map | null;
+  setMap: (map: google.maps.Map | null) => void;
+}
+
+const MapContext = createContext<MapContextType>({ map: null, setMap: () => {} });
+
+export const useBaseMap = () => useContext(MapContext);
 
 interface BaseMapProps {
   center: [number, number];
@@ -17,46 +18,60 @@ interface BaseMapProps {
   children?: React.ReactNode;
   style?: React.CSSProperties;
   height?: string | number;
+  onLoad?: (map: google.maps.Map) => void;
 }
 
-/**
- * Functional component to handle map resizing and other global map behaviors
- */
-const MapHandlers = () => {
-  const map = useMap();
-  
-  useEffect(() => {
-    // Ensure map is correctly sized even if initialized in an invisible container (e.g. tabs)
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-  }, [map]);
-
-  return null;
-};
+const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry")[] = ['places', 'drawing', 'visualization', 'geometry'];
 
 export const BaseMap: React.FC<BaseMapProps> = ({ 
   center, 
   zoom = 13, 
   children, 
   style, 
-  height = '100%' 
+  height = '100%',
+  onLoad: externalOnLoad
 }) => {
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: LIBRARIES
+  });
+
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+
+  const onLoad = useCallback(function callback(mapInstance: google.maps.Map) {
+    setMap(mapInstance);
+    if (externalOnLoad) externalOnLoad(mapInstance);
+  }, [externalOnLoad]);
+
+  const onUnmount = useCallback(function callback() {
+    setMap(null);
+  }, []);
+
+  if (!isLoaded) return <div style={{ height, width: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyCenter: 'center' }}>Loading Maps...</div>;
+
   return (
-    <div style={{ height, width: '100%', position: 'relative', ...style }}>
-      <MapContainer 
-        center={center} 
-        zoom={zoom} 
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        />
-        <MapHandlers />
-        {children}
-      </MapContainer>
-    </div>
+    <MapContext.Provider value={{ map, setMap }}>
+      <div style={{ height, width: '100%', position: 'relative', ...style }}>
+        <GoogleMap
+          mapContainerStyle={{ height: '100%', width: '100%' }}
+          center={{ lat: center[0], lng: center[1] }}
+          zoom={zoom}
+          onLoad={onLoad}
+          onUnmount={onUnmount}
+          options={{
+            disableDefaultUI: false,
+            zoomControl: true,
+            mapTypeControl: false,
+            scaleControl: true,
+            streetViewControl: false,
+            rotateControl: false,
+            fullscreenControl: false
+          }}
+        >
+          {children}
+        </GoogleMap>
+      </div>
+    </MapContext.Provider>
   );
 };

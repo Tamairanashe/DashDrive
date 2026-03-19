@@ -360,7 +360,7 @@ export const AdminLayout: React.FC = () => {
                      <Text style={{ fontSize: 12, fontWeight: 600, color: '#10b981' }}>SYNX ACTIVE</Text>
                    </div>
                  </Tooltip>
-                 <Divider type="vertical" style={{ height: 20 }} />
+                 <Divider orientation="vertical" style={{ height: 20 }} />
                  <Input
                     prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
                     placeholder="Global Search..."
@@ -511,3 +511,4 @@ export const AdminLayout: React.FC = () => {
     </ConfigProvider>
   );
 };
+

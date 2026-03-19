@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Typography,
   Card,
@@ -177,7 +177,7 @@ export const AppDownloadSetup: React.FC = () => {
         <Row gutter={[24, 24]}>
           <Col span={12}>
             <Card size="small" style={{ borderRadius: 12, border: `1px solid ${isDark ? '#333' : '#f0f0f0'}` }}>
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                 <Space>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                         <AndroidOutlined />
@@ -193,7 +193,7 @@ export const AppDownloadSetup: React.FC = () => {
           </Col>
           <Col span={12}>
             <Card size="small" style={{ borderRadius: 12, border: `1px solid ${isDark ? '#333' : '#f0f0f0'}` }}>
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                 <Space>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                         <AppleOutlined />
@@ -274,7 +274,7 @@ export const AppDownloadSetup: React.FC = () => {
           <Col span={12}>
             <Card size="small" style={{ borderRadius: 12, border: `1px solid ${isDark ? '#333' : '#f0f0f0'}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Space direction="vertical" size={12} style={{ width: '80%' }}>
+                <Space orientation="vertical" size={12} style={{ width: '80%' }}>
                     <Space>
                         <div style={{ width: 32, height: 32, borderRadius: 8, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                             <AndroidOutlined />
@@ -293,7 +293,7 @@ export const AppDownloadSetup: React.FC = () => {
           <Col span={12}>
             <Card size="small" style={{ borderRadius: 12, border: `1px solid ${isDark ? '#333' : '#f0f0f0'}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Space direction="vertical" size={12} style={{ width: '80%' }}>
+                <Space orientation="vertical" size={12} style={{ width: '80%' }}>
                     <Space>
                         <div style={{ width: 32, height: 32, borderRadius: 8, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                             <AppleOutlined />
@@ -323,3 +323,4 @@ export const AppDownloadSetup: React.FC = () => {
     </div>
   );
 };
+

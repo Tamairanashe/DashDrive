@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Tabs, Card, Form, Input, Select, Switch, Button, Table, Tag, Space, Typography,
   Divider, InputNumber, message, Alert, Badge, Tooltip, Modal, Popconfirm, Progress, Drawer
@@ -49,50 +49,50 @@ const BankFintechTab: React.FC = () => {
   const [providers, setProviders] = useState<BankProviderConfig[]>([
     {
       key: '1', name: 'Primary Bank (Production)', type: 'banking', environment: 'production',
-      status: 'active', baseUrl: 'https://api.testbank.com', apiKey: 'BANK_API_KEY_â€¢â€¢â€¢â€¢',
-      apiSecret: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', lastHealthCheck: '30 sec ago', uptime: 99.97,
+      status: 'active', baseUrl: 'https://api.testbank.com', apiKey: 'BANK_API_KEY_••••',
+      apiSecret: '••••••••••••', lastHealthCheck: '30 sec ago', uptime: 99.97,
       txnLimit: 50000, dailyLimit: 500000, monthlyLimit: 5000000,
       timeout: 10000, retries: 3, fallbackProvider: 'Backup Bank',
     },
     {
       key: '2', name: 'Backup Bank (Failover)', type: 'banking', environment: 'production',
-      status: 'inactive', baseUrl: 'https://api.backupbank.com', apiKey: 'BKUP_API_KEY_â€¢â€¢â€¢â€¢',
-      apiSecret: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', lastHealthCheck: '5 min ago', uptime: 99.85,
+      status: 'inactive', baseUrl: 'https://api.backupbank.com', apiKey: 'BKUP_API_KEY_••••',
+      apiSecret: '••••••••••••', lastHealthCheck: '5 min ago', uptime: 99.85,
       txnLimit: 50000, dailyLimit: 500000, monthlyLimit: 5000000,
       timeout: 10000, retries: 3, fallbackProvider: '',
     },
     {
       key: '3', name: 'Insurance Provider', type: 'insurance', environment: 'production',
-      status: 'active', baseUrl: 'https://api.testinsurance.com', apiKey: 'INS_API_KEY_â€¢â€¢â€¢â€¢',
-      apiSecret: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', lastHealthCheck: '1 min ago', uptime: 99.92,
+      status: 'active', baseUrl: 'https://api.testinsurance.com', apiKey: 'INS_API_KEY_••••',
+      apiSecret: '••••••••••••', lastHealthCheck: '1 min ago', uptime: 99.92,
       txnLimit: 100000, dailyLimit: 1000000, monthlyLimit: 10000000,
       timeout: 15000, retries: 2, fallbackProvider: '',
     },
     {
       key: '4', name: 'KYC / Identity Verification', type: 'kyc', environment: 'production',
-      status: 'active', baseUrl: 'https://api.kycprovider.com', apiKey: 'KYC_API_KEY_â€¢â€¢â€¢â€¢',
-      apiSecret: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', lastHealthCheck: '2 min ago', uptime: 99.99,
+      status: 'active', baseUrl: 'https://api.kycprovider.com', apiKey: 'KYC_API_KEY_••••',
+      apiSecret: '••••••••••••', lastHealthCheck: '2 min ago', uptime: 99.99,
       txnLimit: 0, dailyLimit: 0, monthlyLimit: 0,
       timeout: 20000, retries: 2, fallbackProvider: '',
     },
     {
       key: '5', name: 'Stripe Payment Gateway', type: 'payment', environment: 'production',
-      status: 'active', baseUrl: 'https://api.stripe.com/v1', apiKey: 'sk_live_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
-      apiSecret: 'whsec_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', lastHealthCheck: '15 sec ago', uptime: 99.99,
+      status: 'active', baseUrl: 'https://api.stripe.com/v1', apiKey: 'sk_live_••••••••',
+      apiSecret: 'whsec_••••••••', lastHealthCheck: '15 sec ago', uptime: 99.99,
       txnLimit: 100000, dailyLimit: 2000000, monthlyLimit: 50000000,
       timeout: 10000, retries: 3, fallbackProvider: 'Paystack',
     },
     {
       key: '6', name: 'Paystack (Africa)', type: 'payment', environment: 'production',
-      status: 'active', baseUrl: 'https://api.paystack.co', apiKey: 'sk_live_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
-      apiSecret: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', lastHealthCheck: '1 min ago', uptime: 99.90,
+      status: 'active', baseUrl: 'https://api.paystack.co', apiKey: 'sk_live_••••••••',
+      apiSecret: '••••••••••••', lastHealthCheck: '1 min ago', uptime: 99.90,
       txnLimit: 50000, dailyLimit: 500000, monthlyLimit: 10000000,
       timeout: 10000, retries: 3, fallbackProvider: '',
     },
     {
       key: '7', name: 'Sandbox Bank (Testing)', type: 'banking', environment: 'sandbox',
-      status: 'active', baseUrl: 'https://sandbox.testbank.com', apiKey: 'SBX_BANK_â€¢â€¢â€¢â€¢',
-      apiSecret: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', lastHealthCheck: '10 min ago', uptime: 99.00,
+      status: 'active', baseUrl: 'https://sandbox.testbank.com', apiKey: 'SBX_BANK_••••',
+      apiSecret: '••••••••••••', lastHealthCheck: '10 min ago', uptime: 99.00,
       txnLimit: 1000, dailyLimit: 10000, monthlyLimit: 100000,
       timeout: 5000, retries: 5, fallbackProvider: '',
     },
@@ -136,51 +136,51 @@ const BankFintechTab: React.FC = () => {
       setProviders(prev => [...prev, newProvider]);
       addProviderForm.resetFields();
       setAddProviderDrawerOpen(false);
-      message.success(`${values.providerName} added successfully â€” testing connection...`);
-      setTimeout(() => message.success(`${values.providerName} connection verified âœ“`), 1500);
+      message.success(`${values.providerName} added successfully — testing connection...`);
+      setTimeout(() => message.success(`${values.providerName} connection verified ✓`), 1500);
     });
   };
 
   const wellKnownProviders: Record<string, { name: string; url: string; icon: string }[]> = {
     banking: [
-      { name: 'Standard Bank', url: 'https://api.standardbank.co.za', icon: 'ðŸ¦' },
-      { name: 'First National Bank', url: 'https://api.fnb.co.za', icon: 'ðŸ¦' },
-      { name: 'Stanbic Bank', url: 'https://api.stanbicbank.co.zw', icon: 'ðŸ¦' },
-      { name: 'CBZ Bank', url: 'https://api.cbz.co.zw', icon: 'ðŸ¦' },
-      { name: 'Ecobank', url: 'https://api.ecobank.com', icon: 'ðŸ¦' },
-      { name: 'CABS', url: 'https://api.cabs.co.zw', icon: 'ðŸ¦' },
-      { name: 'Custom Bank', url: '', icon: 'ðŸ—ï¸' },
+      { name: 'Standard Bank', url: 'https://api.standardbank.co.za', icon: '🏦' },
+      { name: 'First National Bank', url: 'https://api.fnb.co.za', icon: '🏦' },
+      { name: 'Stanbic Bank', url: 'https://api.stanbicbank.co.zw', icon: '🏦' },
+      { name: 'CBZ Bank', url: 'https://api.cbz.co.zw', icon: '🏦' },
+      { name: 'Ecobank', url: 'https://api.ecobank.com', icon: '🏦' },
+      { name: 'CABS', url: 'https://api.cabs.co.zw', icon: '🏦' },
+      { name: 'Custom Bank', url: '', icon: '🏗️' },
     ],
     insurance: [
-      { name: 'Old Mutual', url: 'https://api.oldmutual.com', icon: 'ðŸ›¡ï¸' },
-      { name: 'Sanlam', url: 'https://api.sanlam.com', icon: 'ðŸ›¡ï¸' },
-      { name: 'Nicoz Diamond', url: 'https://api.nicoz.co.zw', icon: 'ðŸ›¡ï¸' },
-      { name: 'First Mutual', url: 'https://api.firstmutual.co.zw', icon: 'ðŸ›¡ï¸' },
-      { name: 'Hollard Insurance', url: 'https://api.hollard.com', icon: 'ðŸ›¡ï¸' },
-      { name: 'Custom Insurance', url: '', icon: 'ðŸ—ï¸' },
+      { name: 'Old Mutual', url: 'https://api.oldmutual.com', icon: '🛡️' },
+      { name: 'Sanlam', url: 'https://api.sanlam.com', icon: '🛡️' },
+      { name: 'Nicoz Diamond', url: 'https://api.nicoz.co.zw', icon: '🛡️' },
+      { name: 'First Mutual', url: 'https://api.firstmutual.co.zw', icon: '🛡️' },
+      { name: 'Hollard Insurance', url: 'https://api.hollard.com', icon: '🛡️' },
+      { name: 'Custom Insurance', url: '', icon: '🏗️' },
     ],
     kyc: [
-      { name: 'Onfido', url: 'https://api.onfido.com/v3.6', icon: 'ðŸªª' },
-      { name: 'Jumio', url: 'https://api.jumio.com', icon: 'ðŸªª' },
-      { name: 'Trulioo', url: 'https://api.trulioo.com', icon: 'ðŸªª' },
-      { name: 'Smile Identity', url: 'https://api.smileidentity.com', icon: 'ðŸªª' },
-      { name: 'Veriff', url: 'https://api.veriff.com', icon: 'ðŸªª' },
-      { name: 'Custom KYC', url: '', icon: 'ðŸ—ï¸' },
+      { name: 'Onfido', url: 'https://api.onfido.com/v3.6', icon: '🪪' },
+      { name: 'Jumio', url: 'https://api.jumio.com', icon: '🪪' },
+      { name: 'Trulioo', url: 'https://api.trulioo.com', icon: '🪪' },
+      { name: 'Smile Identity', url: 'https://api.smileidentity.com', icon: '🪪' },
+      { name: 'Veriff', url: 'https://api.veriff.com', icon: '🪪' },
+      { name: 'Custom KYC', url: '', icon: '🏗️' },
     ],
     payment: [
-      { name: 'Stripe', url: 'https://api.stripe.com/v1', icon: 'ðŸ’³' },
-      { name: 'Paystack', url: 'https://api.paystack.co', icon: 'ðŸ’³' },
-      { name: 'Flutterwave', url: 'https://api.flutterwave.com/v3', icon: 'ðŸ’³' },
-      { name: 'DPO Group', url: 'https://api.dpogroup.com', icon: 'ðŸ’³' },
-      { name: 'Paynow (ZW)', url: 'https://api.paynow.co.zw', icon: 'ðŸ’³' },
-      { name: 'EcoCash API', url: 'https://api.ecocash.co.zw', icon: 'ðŸ“±' },
-      { name: 'Innbucks', url: 'https://api.innbucks.co.zw', icon: 'ðŸ“±' },
-      { name: 'Custom Gateway', url: '', icon: 'ðŸ—ï¸' },
+      { name: 'Stripe', url: 'https://api.stripe.com/v1', icon: '💳' },
+      { name: 'Paystack', url: 'https://api.paystack.co', icon: '💳' },
+      { name: 'Flutterwave', url: 'https://api.flutterwave.com/v3', icon: '💳' },
+      { name: 'DPO Group', url: 'https://api.dpogroup.com', icon: '💳' },
+      { name: 'Paynow (ZW)', url: 'https://api.paynow.co.zw', icon: '💳' },
+      { name: 'EcoCash API', url: 'https://api.ecocash.co.zw', icon: '📱' },
+      { name: 'Innbucks', url: 'https://api.innbucks.co.zw', icon: '📱' },
+      { name: 'Custom Gateway', url: '', icon: '🏗️' },
     ],
   };
 
   const typeColors = { banking: '#3b82f6', insurance: '#8b5cf6', kyc: '#f59e0b', payment: '#10b981' };
-  const typeIcons = { banking: 'ðŸ¦', insurance: 'ðŸ›¡ï¸', kyc: 'ðŸªª', payment: 'ðŸ’³' };
+  const typeIcons = { banking: '🏦', insurance: '🛡️', kyc: '🪪', payment: '💳' };
 
   const columns = [
     {
@@ -365,7 +365,7 @@ const BankFintechTab: React.FC = () => {
 
       {/* Edit Provider Modal */}
       <Drawer
-        title={`Configure â€” ${selectedProvider?.name || ''}`}
+        title={`Configure — ${selectedProvider?.name || ''}`}
         open={editDrawerOpen}
         onClose={() => setEditDrawerOpen(false)}
         width={700}
@@ -451,7 +451,7 @@ const BankFintechTab: React.FC = () => {
         <Form form={addProviderForm} layout="vertical" initialValues={{ type: 'banking', environment: 'production', timeout: 10000, retries: 3 }}>
           {/* Step 1: Provider Type */}
           <div style={{ marginBottom: 20 }}>
-            <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>â‘  Select Provider Type</Text>
+            <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>① Select Provider Type</Text>
             <Form.Item name="type" rules={[{ required: true }]} style={{ marginBottom: 0 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                 {(['banking', 'insurance', 'kyc', 'payment'] as const).map(type => (
@@ -472,7 +472,7 @@ const BankFintechTab: React.FC = () => {
 
           {/* Step 2: Pick well-known or custom */}
           <div style={{ marginBottom: 20 }}>
-            <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>â‘¡ Choose Provider</Text>
+            <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>② Choose Provider</Text>
             <Form.Item name="preset" style={{ marginBottom: 0 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {(wellKnownProviders[selectedType] || []).map(p => (
@@ -496,7 +496,7 @@ const BankFintechTab: React.FC = () => {
           <Divider style={{ margin: '16px 0' }} />
 
           {/* Step 3: Details */}
-          <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 12 }}>â‘¢ Provider Details</Text>
+          <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 12 }}>③ Provider Details</Text>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
             <Form.Item label="Provider Name" name="providerName" rules={[{ required: true, message: 'Required' }]}>
               <Input placeholder="e.g. Standard Bank Production" />
@@ -532,7 +532,7 @@ const BankFintechTab: React.FC = () => {
           </div>
 
           <Divider style={{ margin: '12px 0' }} />
-          <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 12 }}>â‘£ Limits & Behaviour</Text>
+          <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 12 }}>④ Limits & Behaviour</Text>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <Form.Item label="Max Transaction ($)" name="txnLimit">
@@ -601,37 +601,37 @@ const DashDirectApiTab: React.FC = () => {
   const [clients, setClients] = useState<ApiClient[]>([
     {
       key: '1', clientName: 'DashDrive User App (Android)', clientId: 'dd_android_usr_prod',
-      apiKey: 'dd_live_sk_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', scopes: ['rides:read', 'rides:write', 'food:read', 'food:write', 'wallet:read', 'wallet:write', 'hotels:read', 'hotels:book'],
+      apiKey: 'dd_live_sk_••••••••••••', scopes: ['rides:read', 'rides:write', 'food:read', 'food:write', 'wallet:read', 'wallet:write', 'hotels:read', 'hotels:book'],
       rateLimit: 1000, status: 'active', createdAt: '2024-01-15', lastUsed: 'Just now', requestsToday: 245000, totalRequests: 89000000,
     },
     {
       key: '2', clientName: 'DashDrive User App (iOS)', clientId: 'dd_ios_usr_prod',
-      apiKey: 'dd_live_sk_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', scopes: ['rides:read', 'rides:write', 'food:read', 'food:write', 'wallet:read', 'wallet:write', 'hotels:read', 'hotels:book'],
+      apiKey: 'dd_live_sk_••••••••••••', scopes: ['rides:read', 'rides:write', 'food:read', 'food:write', 'wallet:read', 'wallet:write', 'hotels:read', 'hotels:book'],
       rateLimit: 1000, status: 'active', createdAt: '2024-01-15', lastUsed: 'Just now', requestsToday: 198000, totalRequests: 72000000,
     },
     {
       key: '3', clientName: 'DashDrive Driver App', clientId: 'dd_driver_prod',
-      apiKey: 'dd_live_sk_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', scopes: ['rides:read', 'rides:dispatch', 'delivery:track', 'wallet:read', 'wallet:write'],
+      apiKey: 'dd_live_sk_••••••••••••', scopes: ['rides:read', 'rides:dispatch', 'delivery:track', 'wallet:read', 'wallet:write'],
       rateLimit: 500, status: 'active', createdAt: '2024-01-20', lastUsed: '5 sec ago', requestsToday: 120000, totalRequests: 45000000,
     },
     {
       key: '4', clientName: 'Admin Panel', clientId: 'dd_admin_prod',
-      apiKey: 'dd_live_sk_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', scopes: ['admin:read', 'admin:write', 'users:read', 'users:write', 'rides:read', 'wallet:read'],
+      apiKey: 'dd_live_sk_••••••••••••', scopes: ['admin:read', 'admin:write', 'users:read', 'users:write', 'rides:read', 'wallet:read'],
       rateLimit: 200, status: 'active', createdAt: '2024-02-01', lastUsed: '30 sec ago', requestsToday: 8500, totalRequests: 3200000,
     },
     {
       key: '5', clientName: 'Financier Partner Portal', clientId: 'dd_financier_prod',
-      apiKey: 'dd_live_sk_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', scopes: ['loans:read', 'insurance:read', 'wallet:read'],
+      apiKey: 'dd_live_sk_••••••••••••', scopes: ['loans:read', 'insurance:read', 'wallet:read'],
       rateLimit: 100, status: 'active', createdAt: '2024-03-10', lastUsed: '2 min ago', requestsToday: 3200, totalRequests: 890000,
     },
     {
       key: '6', clientName: 'Insurance Partner Portal', clientId: 'dd_insurance_prod',
-      apiKey: 'dd_live_sk_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', scopes: ['insurance:read', 'users:read', 'users:verify'],
+      apiKey: 'dd_live_sk_••••••••••••', scopes: ['insurance:read', 'users:read', 'users:verify'],
       rateLimit: 100, status: 'active', createdAt: '2024-04-05', lastUsed: '10 min ago', requestsToday: 1200, totalRequests: 340000,
     },
     {
       key: '7', clientName: 'Legacy App (Deprecated)', clientId: 'dd_legacy_v1',
-      apiKey: 'dd_test_sk_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢', scopes: ['rides:read'],
+      apiKey: 'dd_test_sk_••••••••••••', scopes: ['rides:read'],
       rateLimit: 10, status: 'expired', createdAt: '2023-06-01', lastUsed: '3 months ago', requestsToday: 0, totalRequests: 12000000,
     },
   ]);
@@ -658,14 +658,14 @@ const DashDirectApiTab: React.FC = () => {
     }]);
     addForm.resetFields();
     setAddDrawerOpen(false);
-    message.success('API client created â€” key generated');
+    message.success('API client created — key generated');
   };
 
   const columns = [
     {
       title: 'Client',
       render: (_: any, r: ApiClient) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong style={{ fontSize: 13 }}>{r.clientName}</Text>
           <Text type="secondary" style={{ fontSize: 11, fontFamily: 'monospace' }}>{r.clientId}</Text>
         </Space>
@@ -718,7 +718,7 @@ const DashDirectApiTab: React.FC = () => {
           <Tooltip title="Copy API Key"><Button size="small" type="text" icon={<CopyOutlined />}
             onClick={() => message.success('API key copied to clipboard')} /></Tooltip>
           <Tooltip title="Rotate Key"><Button size="small" type="text" icon={<SyncOutlined />}
-            onClick={() => message.info('Key rotated â€” old key valid for 24h')} /></Tooltip>
+            onClick={() => message.info('Key rotated — old key valid for 24h')} /></Tooltip>
           {r.status === 'active' && (
             <Popconfirm title="Revoke this API key?" description="Client will lose access immediately." onConfirm={() => handleRevoke(r.key)}>
               <Button size="small" type="text" danger icon={<StopOutlined />} />
@@ -847,14 +847,14 @@ const DashDirectApiTab: React.FC = () => {
           <Button key="submit" type="primary" onClick={handleAdd} style={{ background: '#0e172a' }}>Generate Key</Button>
         ]}
       >
-        <Alert type="warning" showIcon message="A new API key will be generated. Store it securely â€” it will only be shown once." style={{ marginBottom: 16, borderRadius: 10 }} />
+        <Alert type="warning" showIcon message="A new API key will be generated. Store it securely — it will only be shown once." style={{ marginBottom: 16, borderRadius: 10 }} />
         <Form form={addForm} layout="vertical">
           <Form.Item label="Client Name" name="clientName" rules={[{ required: true }]}>
             <Input placeholder="e.g. Partner App, Webhook Service" />
           </Form.Item>
           <Form.Item label="Access Scopes" name="scopes" rules={[{ required: true }]}>
             <Select mode="multiple" placeholder="Select API scopes"
-              options={availableScopes.flatMap(g => g.scopes.map(s => ({ label: `${g.group} â†’ ${s}`, value: s })))}
+              options={availableScopes.flatMap(g => g.scopes.map(s => ({ label: `${g.group} → ${s}`, value: s })))}
             />
           </Form.Item>
           <Form.Item label="Rate Limit (requests/minute)" name="rateLimit">
@@ -898,3 +898,4 @@ export const ApiManagementPage: React.FC = () => {
     </div>
   );
 };
+

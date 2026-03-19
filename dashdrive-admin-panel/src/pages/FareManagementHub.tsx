@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Typography, Card, Row, Col, Tabs, Space, InputNumber, 
-  Form, Button, Divider, Table, Tag, message, Alert,
+  Form, Button, Divider, Table, Tag, message, Alert, Empty,
   Switch, Tooltip, Input, List, Statistic, Progress, Badge,
   Select, Segmented, Drawer, DatePicker, TimePicker, Radio, Checkbox
 } from 'antd';
@@ -57,6 +57,17 @@ const FareManagementHub: React.FC = () => {
     { id: 2, name: 'Asia', drivers: 0, categories: ['Documents', 'Fragile', 'Gift'] },
     { id: 3, name: 'Egypt', drivers: 0, categories: ['Documents', 'Fragile', 'Gift'] },
   ]);
+
+  // Governance & Trash State
+  const [trashedSurgeRules, setTrashedSurgeRules] = useState<any[]>([]);
+  const [isTrashDrawerVisible, setIsTrashDrawerVisible] = useState(false);
+  const [surgeSearchText, setSurgeSearchText] = useState('');
+  const [filterZone, setFilterZone] = useState<string | undefined>(undefined);
+
+  const handleResetFilters = () => {
+    setSurgeSearchText('');
+    setFilterZone(undefined);
+  };
 
   const allCategories = ['Documents', 'Fragile', 'Gift'];
   const [editingSurge, setEditingSurge] = useState<any>(null);
@@ -151,9 +162,10 @@ const FareManagementHub: React.FC = () => {
     });
   };
 
-  const handleDeleteSurge = (id: string) => {
-    setSurgeRules(surgeRules.filter(r => r.id !== id));
-    message.success('Surge rule removed successfully.');
+  const handleDeleteSurge = (record: any) => {
+    setTrashedSurgeRules(prev => [...prev, { ...record, deletedAt: new Date().toISOString() }]);
+    setSurgeRules(surgeRules.filter(r => r.id !== record.id));
+    message.success('Surge rule moved to trash.');
   };
 
   const openSurgeDrawer = (rule?: any) => {
@@ -364,7 +376,7 @@ const FareManagementHub: React.FC = () => {
               >
                 Check all
               </Checkbox>
-              <Divider type="vertical" />
+              <Divider orientation="vertical" />
               <Checkbox.Group
                 options={allCategories}
                 value={selectedCategories}
@@ -458,7 +470,7 @@ const FareManagementHub: React.FC = () => {
           </Row>
           <Divider />
           <Title level={5}>Global Settlement Rules</Title>
-          <Space direction="vertical" style={{ width: '100%' }}>
+          <Space orientation="vertical" style={{ width: '100%' }}>
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDark ? '#1a1a1a' : '#f9f9f9', padding: 12, borderRadius: 8 }}>
                 <Text strong>Auto-disburse Earnings</Text>
                 <Switch defaultChecked />
@@ -601,8 +613,30 @@ const FareManagementHub: React.FC = () => {
                                     <Text type="secondary">Manage time-based boosts and multi-service price multipliers.</Text>
                                  </div>
                                  <Space>
-                                    <Input placeholder="Search by ID, name..." prefix={<SearchOutlined />} style={{ width: 250 }} />
-                                    <Button type="primary" icon={<PlusOutlined />} onClick={() => openSurgeDrawer()}>Create Surge Rule</Button>
+                                    <Input 
+                                        placeholder="Search by ID, name..." 
+                                        prefix={<SearchOutlined />} 
+                                        style={{ width: 250 }} 
+                                        value={surgeSearchText}
+                                        onChange={(e) => setSurgeSearchText(e.target.value)}
+                                        allowClear
+                                     />
+                                     <Select 
+                                        placeholder="All Zones" 
+                                        style={{ width: 140 }} 
+                                        allowClear
+                                        value={filterZone}
+                                        onChange={setFilterZone}
+                                      >
+                                        <Select.Option value="All zones">All Zones</Select.Option>
+                                        <Select.Option value="Asia">Asia</Select.Option>
+                                        <Select.Option value="Egypt">Egypt</Select.Option>
+                                      </Select>
+                                      <Tooltip title="Reset Filters">
+                                        <Button icon={<SyncOutlined />} onClick={handleResetFilters} />
+                                      </Tooltip>
+                                      <Button icon={<HistoryOutlined />} onClick={() => setIsTrashDrawerVisible(true)}>Trash</Button>
+                                     <Button type="primary" icon={<PlusOutlined />} onClick={() => openSurgeDrawer()}>Create Surge Rule</Button>
                                  </Space>
                               </div>
 
@@ -641,7 +675,13 @@ const FareManagementHub: React.FC = () => {
                               <Table 
                                  size="small"
                                  pagination={false}
-                                 dataSource={surgeRules.map((r, index) => ({ ...r, sl: index + 1 }))}
+                                 dataSource={surgeRules.filter(r => {
+                                    const matchesSearch = !surgeSearchText || 
+                                      r.name.toLowerCase().includes(surgeSearchText.toLowerCase()) || 
+                                      r.id.toLowerCase().includes(surgeSearchText.toLowerCase());
+                                    const matchesZone = !filterZone || r.zone === filterZone;
+                                    return matchesSearch && matchesZone;
+                                  }).map((r, index) => ({ ...r, sl: index + 1 }))}
                                  columns={[
                                     { title: 'SL', dataIndex: 'sl', key: 'sl', width: 50 },
                                     { 
@@ -681,7 +721,7 @@ const FareManagementHub: React.FC = () => {
                                     title: 'Status', 
                                     key: 'status_toggle',
                                     render: (record: any) => (
-                                       <Space direction="vertical" size={0}>
+                                       <Space orientation="vertical" size={0}>
                                           <Badge 
                                             status={record.status === 'Ongoing' ? 'processing' : record.status === 'Upcoming' ? 'warning' : 'default'} 
                                             text={record.status} 
@@ -707,7 +747,7 @@ const FareManagementHub: React.FC = () => {
                                             <Button size="small" type="text" icon={<EditOutlined style={{ color: '#faad14' }} />} onClick={() => openSurgeDrawer(record)} />
                                           </Tooltip>
                                           <Tooltip title="Remove Rule">
-                                            <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={() => handleDeleteSurge(record.id)} />
+                                            <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={() => handleDeleteSurge(record)} />
                                           </Tooltip>
                                        </Space>
                                     )
@@ -818,8 +858,61 @@ const FareManagementHub: React.FC = () => {
       </Drawer>
       {/* Parcel Detail Setup Drawer */}
       {renderParcelDetailDrawer()}
+
+      {/* Surge Trash Drawer */}
+      <Drawer
+        title={<Space><HistoryOutlined /> Recover Deleted Surge Rules</Space>}
+        open={isTrashDrawerVisible}
+        onClose={() => setIsTrashDrawerVisible(false)}
+        width={700}
+      >
+        <Table 
+          dataSource={trashedSurgeRules}
+          rowKey="id"
+          size="small"
+          columns={[
+            { title: 'Rule ID', dataIndex: 'id', key: 'id', width: 100 },
+            { title: 'Name', dataIndex: 'name', key: 'name' },
+            { title: 'Zone', dataIndex: 'zone', key: 'zone' },
+            { title: 'Deleted At', dataIndex: 'deletedAt', key: 'date', render: (d) => new Date(d).toLocaleString() },
+            { 
+              title: 'Actions', 
+              key: 'actions', 
+              align: 'right',
+              render: (_, record) => (
+                <Space>
+                  <Button 
+                    size="small" 
+                    icon={<SyncOutlined />} 
+                    onClick={() => {
+                      setSurgeRules([record, ...surgeRules]);
+                      setTrashedSurgeRules(prev => prev.filter(r => r.id !== record.id));
+                      message.success('Surge rule restored.');
+                    }}
+                  >
+                    Restore
+                  </Button>
+                  <Button 
+                    size="small" 
+                    danger 
+                    icon={<DeleteOutlined />}
+                    onClick={() => {
+                      setTrashedSurgeRules(prev => prev.filter(r => r.id !== record.id));
+                      message.warning('Rule permanently purged.');
+                    }}
+                  >
+                    Purge
+                  </Button>
+                </Space>
+              )
+            }
+          ]}
+          locale={{ emptyText: <Empty description="Pricing trash is empty" /> }}
+        />
+      </Drawer>
     </div>
   );
 };
 
 export default FareManagementHub;
+

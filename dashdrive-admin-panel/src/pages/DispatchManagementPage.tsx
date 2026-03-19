@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, Row, Col, Card, Space, Switch, Slider, 
   Table, Tag, Button, Statistic, Divider, message, 
@@ -284,7 +284,7 @@ export const DispatchManagementPage: React.FC = () => {
                       <Row gutter={24}>
                         <Col span={12}>
                           <Title level={5}>Grouping Constraints</Title>
-                          <Space direction="vertical" style={{ width: '100%' }}>
+                          <Space orientation="vertical" style={{ width: '100%' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <Text>Maximum Orders per Batch</Text>
                               <InputNumber min={2} max={5} defaultValue={3} />
@@ -372,7 +372,7 @@ export const DispatchManagementPage: React.FC = () => {
         }
       >
         {selectedOrder && (
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             {selectedOrder.status === 'Failed' && (
               <Alert 
                 type="error" 
@@ -399,7 +399,7 @@ export const DispatchManagementPage: React.FC = () => {
                     <List.Item.Meta 
                       avatar={<Avatar icon={<UserOutlined />} />}
                       title={<Space><Text strong>{item.name}</Text> <Tag color="green">{item.score}% Match</Tag></Space>}
-                      description={`${item.distance} away â€¢ ETA ${item.eta}`}
+                      description={`${item.distance} away • ETA ${item.eta}`}
                     />
                   </List.Item>
                 )}
@@ -425,3 +425,4 @@ export const DispatchManagementPage: React.FC = () => {
     </div>
   );
 };
+

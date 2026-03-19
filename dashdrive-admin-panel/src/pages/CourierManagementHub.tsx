@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Table, Tag, Space, Button, Input, Card, Typography, Tabs, 
   Row, Col, Statistic, Avatar, Tooltip, Badge, Dropdown, 
@@ -15,7 +15,8 @@ import {
   AuditOutlined, SwapOutlined, ThunderboltOutlined, RocketOutlined,
   DollarOutlined, LockOutlined, UnlockOutlined, ClockCircleOutlined,
   ShoppingOutlined, CoffeeOutlined, ShopOutlined, SyncOutlined,
-  FileSearchOutlined, CheckOutlined, CloseOutlined
+  FileSearchOutlined, CheckOutlined, CloseOutlined,
+  ReloadOutlined, RestOutlined, UndoOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -29,8 +30,15 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingCourier, setEditingCourier] = useState<any>(null);
   const [selectedCourier, setSelectedCourier] = useState<any>(null);
-  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
+  
+  // Standardization State
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [trashVisible, setTrashVisible] = useState(false);
+  const [rejectionModalVisible, setRejectionModalVisible] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [pendingAction, setPendingAction] = useState<{ id: string, name: string } | null>(null);
+
   const [form] = Form.useForm();
   const [incidentForm] = Form.useForm();
 
@@ -50,6 +58,36 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
       joinedDate: '01 Mar 2024'
     }
   ]);
+
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      antdMessage.success('Courier synchronization complete');
+    }, 1000);
+  };
+
+  const handleStatusChange = (id: string, newStatus: string, reason?: string) => {
+    setCouriers(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));
+    antdMessage.success(`Courier ${id} is now ${newStatus}`);
+    if (reason) antdMessage.info(`Reason: ${reason}`);
+    setRejectionModalVisible(false);
+    setPendingAction(null);
+  };
+
+  const initiateSuspension = (record: any) => {
+    setPendingAction({ id: record.id, name: record.name });
+    setRejectionReason('');
+    setRejectionModalVisible(true);
+  };
+
+  const handleConfirmSuspension = () => {
+    if (!rejectionReason.trim()) {
+      antdMessage.warning('Please provide a suspension reason');
+      return;
+    }
+    handleStatusChange(pendingAction!.id, 'Suspended', rejectionReason);
+  };
 
   const ListTab = () => (
     <div style={{ marginTop: 20 }}>
@@ -129,7 +167,13 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
                   <Dropdown menu={{ 
                     items: [
                       { key: 'edit', label: 'Edit Profile', icon: <PlusOutlined /> },
-                      { key: 'suspend', label: 'Suspend', danger: true, icon: <StopOutlined /> }
+                      { 
+                        key: 'suspend', 
+                        label: record.status === 'Suspended' ? 'Activate' : 'Suspend', 
+                        danger: record.status !== 'Suspended', 
+                        icon: record.status === 'Suspended' ? <CheckCircleOutlined /> : <StopOutlined />,
+                        onClick: () => record.status === 'Suspended' ? handleStatusChange(record.id, 'Active') : initiateSuspension(record)
+                      }
                     ] 
                   }}>
                     <Button size="small" icon={<MoreOutlined />} />
@@ -302,7 +346,7 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
                 <Statistic title="Overall Rating" value={4.85} prefix={<StarOutlined style={{ color: '#fadb14' }} />} precision={2} />
                 <Divider />
                 <div style={{ textAlign: 'left' }}>
-                  <Space direction="vertical" style={{ width: '100%' }}>
+                  <Space orientation="vertical" style={{ width: '100%' }}>
                     <div><Text>Timeliness</Text><Rate disabled defaultValue={4.9} style={{ fontSize: 12, float: 'right' }} /></div>
                     <div><Text>Communication</Text><Rate disabled defaultValue={4.7} style={{ fontSize: 12, float: 'right' }} /></div>
                     <div><Text>Care of Items</Text><Rate disabled defaultValue={4.9} style={{ fontSize: 12, float: 'right' }} /></div>
@@ -376,6 +420,8 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
           <Text type="secondary">Manage delivery partners, specialized vehicles, and logistics performance</Text>
         </div>
         <Space>
+          <Button icon={<ReloadOutlined spin={isRefreshing} />} onClick={handleManualRefresh}>Refresh</Button>
+          <Button icon={<RestOutlined />} onClick={() => setTrashVisible(true)}>Suspended Partners</Button>
           <Button icon={<AuditOutlined />}>Compliance Report</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsDrawerOpen(true)}>Manual Onboard</Button>
         </Space>
@@ -508,6 +554,68 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
         onClose={() => setIsIncidentModalOpen(false)} 
         form={incidentForm} 
       />
+
+      {/* Standardization Modals & Drawers */}
+      <Modal
+        title="Account Suspension Reason"
+        open={rejectionModalVisible}
+        onOk={handleConfirmSuspension}
+        onCancel={() => setRejectionModalVisible(false)}
+        okText="Suspend Partner"
+        okButtonProps={{ danger: true }}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary">
+            Provide a detailed reason for suspending <Text strong>{pendingAction?.name}</Text>. 
+          </Text>
+        </div>
+        <Form layout="vertical">
+          <Form.Item label="Reason" required>
+            <Input.TextArea 
+              rows={4} 
+              placeholder="e.g. Failure to comply with delivery standards, fraudulent activity..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Drawer
+        title={<span><RestOutlined /> Suspended Courier Partners</span>}
+        width={720}
+        onClose={() => setTrashVisible(false)}
+        open={trashVisible}
+      >
+        <Table
+          size="small"
+          dataSource={couriers.filter(c => c.status === 'Suspended')}
+          rowKey="id"
+          columns={[
+            {
+              title: 'Courier',
+              key: 'courier',
+              render: (_, r) => (
+                <Space>
+                  <Avatar size="small" icon={<UserOutlined />} />
+                  <Text strong>{r.name}</Text>
+                </Space>
+              )
+            },
+            { title: 'Vehicle', dataIndex: 'vehicleType', key: 'vehicle' },
+            { 
+              title: 'Actions', 
+              key: 'actions', 
+              render: (_: any, r: any) => (
+                <Space>
+                  <Button size="small" icon={<UndoOutlined />} onClick={() => handleStatusChange(r.id, 'Active')}>Restore Account</Button>
+                </Space>
+              )
+            }
+          ]}
+          locale={{ emptyText: <Empty description="No suspended couriers found" /> }}
+        />
+      </Drawer>
     </div>
   );
 };
@@ -570,5 +678,6 @@ const CourierIncidentModal: React.FC<{
 );
 
 export default CourierManagementHub;
+
 
 

@@ -10,7 +10,7 @@ import {
   HistoryOutlined, UserOutlined, ArrowUpOutlined,
   ArrowDownOutlined, FilterOutlined, DownloadOutlined,
   InfoCircleOutlined, CopyOutlined, CheckCircleOutlined,
-  SyncOutlined
+  SyncOutlined, ReloadOutlined, WarningOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
@@ -195,7 +195,7 @@ export const CustomerWalletManagement: React.FC = () => {
             { title: 'Avg. Wallet Retention', value: 142.50, icon: <UserOutlined />, color: '#4f46e5', info: 'Average balance held by an active user.' },
         ].map((stat, i) => (
             <Col xs={24} sm={12} lg={6} key={i}>
-                <Card bordered={false} className="shadow-sm" style={{ borderLeft: `4px solid ${stat.color}` }}>
+                <Card variant="borderless" className="shadow-sm" style={{ borderLeft: `4px solid ${stat.color}` }}>
                     <Statistic 
                         title={
                             <Space size="small">
@@ -215,7 +215,7 @@ export const CustomerWalletManagement: React.FC = () => {
 
       {/* Main Ledger Section */}
       <Card 
-        bordered={false} 
+        variant="borderless" 
         className="shadow-md rounded-2xl overflow-hidden"
         title={
             <div>
@@ -265,7 +265,9 @@ export const CustomerWalletManagement: React.FC = () => {
               </Col>
               <Col span={6}>
                   <Space>
-                    <Button icon={<FilterOutlined />} onClick={() => { filterForm.resetFields(); setFilteredTransactions(transactions); }}>Reset Filters</Button>
+                    <Tooltip title="Reset Filters">
+                        <Button icon={<ReloadOutlined />} onClick={() => { filterForm.resetFields(); setFilteredTransactions(transactions); }} />
+                    </Tooltip>
                     <Button type="dashed" icon={<DownloadOutlined />}>Export Ledger</Button>
                   </Space>
               </Col>

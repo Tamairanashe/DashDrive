@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, Tag, Button, Space, Typography, Card, Badge, Row, Col, 
   Tabs, Statistic, Drawer, Descriptions, Alert, Input, Form,
@@ -215,7 +215,7 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
         </Space>
       )
     },
-    { title: 'Avg Rating', dataIndex: 'avgRating', key: 'avgRating', render: (r: number) => <Text strong>{r} â­</Text> },
+    { title: 'Avg Rating', dataIndex: 'avgRating', key: 'avgRating', render: (r: number) => <Text strong>{r} ⭐</Text> },
     {
       title: 'Trust Score',
       dataIndex: 'trustScore',
@@ -252,11 +252,11 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
 
   const renderAnalytics = () => {
     const ratingDistData = [
-      { name: '5 â˜…', value: 65, fill: '#10b981' },
-      { name: '4 â˜…', value: 20, fill: '#3b82f6' },
-      { name: '3 â˜…', value: 10, fill: '#faad14' },
-      { name: '2 â˜…', value: 3, fill: '#f59e0b' },
-      { name: '1 â˜…', value: 2, fill: '#ff4d4f' },
+      { name: '5 ★', value: 65, fill: '#10b981' },
+      { name: '4 ★', value: 20, fill: '#3b82f6' },
+      { name: '3 ★', value: 10, fill: '#faad14' },
+      { name: '2 ★', value: 3, fill: '#f59e0b' },
+      { name: '1 ★', value: 2, fill: '#ff4d4f' },
     ];
 
     const trendData = [
@@ -420,7 +420,7 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
                             { label: 'Ride Hailing', value: 'ride' },
                             { label: 'Food Delivery', value: 'food' }
                           ]} />
-                          <Segmented options={['All', '5â˜…', '4â˜…', '3â˜…', '2â˜…', '1â˜…']} />
+                          <Segmented options={['All', '5★', '4★', '3★', '2★', '1★']} />
                         </div>
                         <Table 
                           dataSource={reviews} 
@@ -461,7 +461,7 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
                           <Card size="small" style={{ marginBottom: 12 }}>
                              <Row align="middle">
                                <Col span={18}>
-                                  <Space direction="vertical">
+                                  <Space orientation="vertical">
                                      <Space>
                                         <Tag color="red">REPORTED</Tag>
                                         <Text strong>{item.customer} vs {item.partner}</Text>
@@ -536,7 +536,7 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
             <Col span={8}>
                <Title level={5}>Related Entities</Title>
                <Card size="small" hoverable style={{ marginBottom: 16 }}>
-                  <Space direction="vertical" style={{ width: '100%' }}>
+                  <Space orientation="vertical" style={{ width: '100%' }}>
                     <Space>
                        <Avatar icon={<UserOutlined />} />
                        <div>
@@ -547,7 +547,7 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
                   </Space>
                </Card>
                <Card size="small" hoverable>
-                  <Space direction="vertical" style={{ width: '100%' }}>
+                  <Space orientation="vertical" style={{ width: '100%' }}>
                     <Space>
                        <Avatar icon={<CarOutlined />} />
                        <div>
@@ -571,3 +571,4 @@ export const ReputationManagementHub: React.FC<{ activeTab?: string }> = ({ acti
     </div>
   );
 };
+

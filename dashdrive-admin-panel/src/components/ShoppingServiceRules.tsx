@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Form,
     Switch,
@@ -41,7 +41,7 @@ export const ShoppingServiceRules: React.FC = () => {
     };
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             <div>
                 <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Marketplace Logistics Engine</Title>
                 <Text type="secondary" style={{ fontSize: 15 }}>Configure global marketplace commissions, multi-tier shipping rates, and merchant payout thresholds</Text>
@@ -140,7 +140,7 @@ export const ShoppingServiceRules: React.FC = () => {
                             </Col>
                         </Row>
                         <Divider style={{ margin: '12px 0' }} />
-                        <Space direction="vertical" style={{ width: '100%' }}>
+                        <Space orientation="vertical" style={{ width: '100%' }}>
                             <Text strong><DollarCircleOutlined /> Revenue Protection</Text>
                             <Alert
                                 message="Escrow Guard Active"
@@ -168,3 +168,4 @@ export const ShoppingServiceRules: React.FC = () => {
         </Space>
     );
 };
+

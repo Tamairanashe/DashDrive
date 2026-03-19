@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Table,
     Tag,
@@ -51,7 +51,7 @@ export const ParcelWeights: React.FC = () => {
             title: 'Slab Identifier',
             key: 'id',
             render: (_: any, record: WeightSlab) => (
-                <Space direction="vertical" size={0}>
+                <Space orientation="vertical" size={0}>
                     <Text strong>{record.id}</Text>
                     <Tag color={record.status === 'Active' ? 'success' : 'warning'} style={{ fontSize: 9 }}>
                         {record.status}
@@ -101,7 +101,7 @@ export const ParcelWeights: React.FC = () => {
     ];
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             {/* Header Section */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -127,7 +127,7 @@ export const ParcelWeights: React.FC = () => {
                             style={{ backgroundColor: '#0f172a', textAlign: 'center', borderRadius: 24 }}
                         >
                             <Text style={{ color: '#3b82f6', fontWeight: 900, fontSize: 10, letterSpacing: 2 }}>GLOBAL FORMULA</Text>
-                            <Title level={4} style={{ color: 'white', margin: '12px 0 4px 0' }}>Base + (KM Ã— Rate)</Title>
+                            <Title level={4} style={{ color: 'white', margin: '12px 0 4px 0' }}>Base + (KM × Rate)</Title>
                             <Text style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: 10 }}>+ Additional Surcharges</Text>
                         </Card>
                     </Col>
@@ -213,3 +213,4 @@ export const ParcelWeights: React.FC = () => {
     );
 };
 ;
+

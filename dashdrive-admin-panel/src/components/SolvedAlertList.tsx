@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Typography, Card, Table, Button, Space, Tag, Input, DatePicker, Select, Modal, Divider } from 'antd';
 import { ShieldAlert, Search, Filter, CheckCircle2, AlertTriangle, Clock, MapPin, UserCheck, MessageSquare } from 'lucide-react';
 
@@ -95,7 +95,7 @@ export function SolvedAlertList() {
  title: 'Alert ID & Type',
  key: 'type',
  render: (_: any, record: any) => (
- <Space direction="vertical" size={2}>
+ <Space orientation="vertical" size={2}>
  <Text strong className="font-mono text-xs">{record.id}</Text>
  <Text className="text-sm font-medium">{getTypeDisplay(record.type)}</Text>
  </Space>
@@ -120,7 +120,7 @@ export function SolvedAlertList() {
  title: 'Duration',
  key: 'duration',
  render: (_: any, record: any) => (
- <Space direction="vertical" size={2}>
+ <Space orientation="vertical" size={2}>
  <Text className="text-sm">{calculateDuration(record.triggerTime, record.resolutionTime)}</Text>
  <Text type="secondary" className="text-xs">Time to Resolve</Text>
  </Space>
@@ -260,3 +260,4 @@ export function SolvedAlertList() {
  </div>
  );
 }
+

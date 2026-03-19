@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Table,
     Tag,
@@ -105,7 +105,7 @@ export const ParcelAttributes: React.FC = () => {
                         shape="square"
                         size="large"
                     />
-                    <Space direction="vertical" size={0}>
+                    <Space orientation="vertical" size={0}>
                         <Text strong>{record.name}</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>{record.id}</Text>
                     </Space>
@@ -122,7 +122,7 @@ export const ParcelAttributes: React.FC = () => {
             title: 'Fee Structure',
             key: 'fee',
             render: (_: any, record: ParcelAttribute) => (
-                <Space direction="vertical" size={0}>
+                <Space orientation="vertical" size={0}>
                     <Text strong style={{ color: '#10b981' }}>{record.feeValue}</Text>
                     <Text type="secondary" style={{ fontSize: 10 }}>{record.feeType}</Text>
                 </Space>
@@ -156,7 +156,7 @@ export const ParcelAttributes: React.FC = () => {
     ];
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             {/* Header Section */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -224,4 +224,5 @@ export const ParcelAttributes: React.FC = () => {
         </Space>
     );
 };
+
 

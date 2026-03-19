@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Tabs, Card, Form, Input, Select, Switch, Button, Table, Tag, Space, Typography,
   Divider, InputNumber, message, Alert, Collapse, Tooltip, Badge, Slider, Radio
@@ -54,7 +54,7 @@ const NotificationMessagePanel: React.FC<{ messages: NotificationMessage[]; colo
       title: 'Push Notification',
       dataIndex: 'pushTitle',
       render: (text: string, record: NotificationMessage) => (
-        <Space direction="vertical" size={0} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={0} style={{ width: '100%' }}>
           <Text style={{ fontSize: 12, fontWeight: 600 }}>{text}</Text>
           <Text type="secondary" style={{ fontSize: 11 }}>{record.pushBody}</Text>
         </Space>
@@ -149,71 +149,71 @@ const NotificationMessagePanel: React.FC<{ messages: NotificationMessage[]; colo
 // NOTIFICATION SERVICE CONFIGS
 // ============================================================
 const scheduleTripMessages: NotificationMessage[] = [
-  { key: 's1', event: 'Trip Scheduled', pushTitle: 'Trip Scheduled! ðŸ—“ï¸', pushBody: 'Your trip to {{destination}} is confirmed for {{date}} at {{time}}.', smsBody: 'DashDrive: Trip to {{destination}} confirmed for {{date}} {{time}}.', emailSubject: 'Your Scheduled Trip Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 's2', event: 'Trip Reminder (1hr)', pushTitle: 'Trip Starting Soon â°', pushBody: 'Your scheduled trip to {{destination}} starts in 1 hour.', smsBody: 'DashDrive: Your trip starts in 1 hour.', emailSubject: 'Trip Reminder - Starting Soon', pushEnabled: true, smsEnabled: true, emailEnabled: false },
-  { key: 's3', event: 'Driver Assigned', pushTitle: 'Driver On The Way ðŸš—', pushBody: '{{driverName}} is heading to your pickup in {{vehicle}}.', smsBody: 'DashDrive: {{driverName}} ({{vehicle}}) is on the way.', emailSubject: 'Your Driver is Assigned', pushEnabled: true, smsEnabled: false, emailEnabled: false },
-  { key: 's4', event: 'Trip Cancelled', pushTitle: 'Trip Cancelled âŒ', pushBody: 'Your scheduled trip for {{date}} has been cancelled.', smsBody: 'DashDrive: Scheduled trip cancelled for {{date}}.', emailSubject: 'Trip Cancellation Notice', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 's1', event: 'Trip Scheduled', pushTitle: 'Trip Scheduled! 🗓️', pushBody: 'Your trip to {{destination}} is confirmed for {{date}} at {{time}}.', smsBody: 'DashDrive: Trip to {{destination}} confirmed for {{date}} {{time}}.', emailSubject: 'Your Scheduled Trip Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 's2', event: 'Trip Reminder (1hr)', pushTitle: 'Trip Starting Soon ⏰', pushBody: 'Your scheduled trip to {{destination}} starts in 1 hour.', smsBody: 'DashDrive: Your trip starts in 1 hour.', emailSubject: 'Trip Reminder - Starting Soon', pushEnabled: true, smsEnabled: true, emailEnabled: false },
+  { key: 's3', event: 'Driver Assigned', pushTitle: 'Driver On The Way 🚗', pushBody: '{{driverName}} is heading to your pickup in {{vehicle}}.', smsBody: 'DashDrive: {{driverName}} ({{vehicle}}) is on the way.', emailSubject: 'Your Driver is Assigned', pushEnabled: true, smsEnabled: false, emailEnabled: false },
+  { key: 's4', event: 'Trip Cancelled', pushTitle: 'Trip Cancelled ❌', pushBody: 'Your scheduled trip for {{date}} has been cancelled.', smsBody: 'DashDrive: Scheduled trip cancelled for {{date}}.', emailSubject: 'Trip Cancellation Notice', pushEnabled: true, smsEnabled: true, emailEnabled: true },
 ];
 
 const regularTripMessages: NotificationMessage[] = [
-  { key: 'r1', event: 'Ride Accepted', pushTitle: 'Ride Accepted âœ…', pushBody: '{{driverName}} accepted your ride. Arriving in {{eta}} min.', smsBody: 'DashDrive: Driver arriving in {{eta}} min.', emailSubject: 'Ride Confirmed', pushEnabled: true, smsEnabled: false, emailEnabled: false },
-  { key: 'r2', event: 'Driver Arrived', pushTitle: 'Driver Has Arrived ðŸ“', pushBody: '{{driverName}} is waiting at the pickup point.', smsBody: 'DashDrive: Your driver is at the pickup.', emailSubject: 'Driver Arrived', pushEnabled: true, smsEnabled: true, emailEnabled: false },
-  { key: 'r3', event: 'Trip Started', pushTitle: 'Trip In Progress ðŸš€', pushBody: 'Your trip to {{destination}} has started. Enjoy the ride!', smsBody: 'DashDrive: Trip started.', emailSubject: 'Trip Started', pushEnabled: true, smsEnabled: false, emailEnabled: false },
-  { key: 'r4', event: 'Trip Completed', pushTitle: 'Trip Completed ðŸŽ‰', pushBody: 'You arrived at {{destination}}. Total: {{currency}}{{amount}}', smsBody: 'DashDrive: Trip complete. Total: {{currency}}{{amount}}', emailSubject: 'Trip Receipt', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'r5', event: 'Rate Your Driver', pushTitle: 'How Was Your Ride? â­', pushBody: 'Rate {{driverName}} and help us improve.', smsBody: '', emailSubject: 'Rate Your Recent Trip', pushEnabled: true, smsEnabled: false, emailEnabled: true },
+  { key: 'r1', event: 'Ride Accepted', pushTitle: 'Ride Accepted ✅', pushBody: '{{driverName}} accepted your ride. Arriving in {{eta}} min.', smsBody: 'DashDrive: Driver arriving in {{eta}} min.', emailSubject: 'Ride Confirmed', pushEnabled: true, smsEnabled: false, emailEnabled: false },
+  { key: 'r2', event: 'Driver Arrived', pushTitle: 'Driver Has Arrived 📍', pushBody: '{{driverName}} is waiting at the pickup point.', smsBody: 'DashDrive: Your driver is at the pickup.', emailSubject: 'Driver Arrived', pushEnabled: true, smsEnabled: true, emailEnabled: false },
+  { key: 'r3', event: 'Trip Started', pushTitle: 'Trip In Progress 🚀', pushBody: 'Your trip to {{destination}} has started. Enjoy the ride!', smsBody: 'DashDrive: Trip started.', emailSubject: 'Trip Started', pushEnabled: true, smsEnabled: false, emailEnabled: false },
+  { key: 'r4', event: 'Trip Completed', pushTitle: 'Trip Completed 🎉', pushBody: 'You arrived at {{destination}}. Total: {{currency}}{{amount}}', smsBody: 'DashDrive: Trip complete. Total: {{currency}}{{amount}}', emailSubject: 'Trip Receipt', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'r5', event: 'Rate Your Driver', pushTitle: 'How Was Your Ride? ⭐', pushBody: 'Rate {{driverName}} and help us improve.', smsBody: '', emailSubject: 'Rate Your Recent Trip', pushEnabled: true, smsEnabled: false, emailEnabled: true },
 ];
 
 const parcelMessages: NotificationMessage[] = [
-  { key: 'p1', event: 'Parcel Picked Up', pushTitle: 'Parcel Collected ðŸ“¦', pushBody: 'Your parcel has been picked up and is on the way.', smsBody: 'DashDrive: Parcel collected, en route.', emailSubject: 'Parcel Picked Up', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'p2', event: 'Parcel In Transit', pushTitle: 'Parcel In Transit ðŸšš', pushBody: 'Your parcel is being delivered. Track it live.', smsBody: 'DashDrive: Parcel in transit.', emailSubject: 'Parcel In Transit', pushEnabled: true, smsEnabled: false, emailEnabled: false },
-  { key: 'p3', event: 'Parcel Delivered', pushTitle: 'Parcel Delivered âœ…', pushBody: 'Your parcel was delivered to {{recipient}}.', smsBody: 'DashDrive: Parcel delivered to {{recipient}}.', emailSubject: 'Parcel Delivery Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'p4', event: 'Delivery Failed', pushTitle: 'Delivery Issue âš ï¸', pushBody: 'We couldn\'t deliver your parcel. Reason: {{reason}}', smsBody: 'DashDrive: Delivery failed â€” {{reason}}.', emailSubject: 'Delivery Issue', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'p1', event: 'Parcel Picked Up', pushTitle: 'Parcel Collected 📦', pushBody: 'Your parcel has been picked up and is on the way.', smsBody: 'DashDrive: Parcel collected, en route.', emailSubject: 'Parcel Picked Up', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'p2', event: 'Parcel In Transit', pushTitle: 'Parcel In Transit 🚚', pushBody: 'Your parcel is being delivered. Track it live.', smsBody: 'DashDrive: Parcel in transit.', emailSubject: 'Parcel In Transit', pushEnabled: true, smsEnabled: false, emailEnabled: false },
+  { key: 'p3', event: 'Parcel Delivered', pushTitle: 'Parcel Delivered ✅', pushBody: 'Your parcel was delivered to {{recipient}}.', smsBody: 'DashDrive: Parcel delivered to {{recipient}}.', emailSubject: 'Parcel Delivery Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'p4', event: 'Delivery Failed', pushTitle: 'Delivery Issue ⚠️', pushBody: 'We couldn\'t deliver your parcel. Reason: {{reason}}', smsBody: 'DashDrive: Delivery failed — {{reason}}.', emailSubject: 'Delivery Issue', pushEnabled: true, smsEnabled: true, emailEnabled: true },
 ];
 
 const foodMessages: NotificationMessage[] = [
-  { key: 'f1', event: 'Order Placed', pushTitle: 'Order Confirmed ðŸ½ï¸', pushBody: 'Your order from {{restaurant}} is being prepared.', smsBody: 'DashDrive: Order from {{restaurant}} confirmed.', emailSubject: 'Food Order Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'f2', event: 'Preparing', pushTitle: 'Being Prepared ðŸ‘¨â€ðŸ³', pushBody: '{{restaurant}} is preparing your order. Est. {{eta}} min.', smsBody: '', emailSubject: '', pushEnabled: true, smsEnabled: false, emailEnabled: false },
-  { key: 'f3', event: 'Rider Picked Up', pushTitle: 'Food On The Way ðŸ›µ', pushBody: '{{driverName}} has picked up your food!', smsBody: 'DashDrive: Food on the way!', emailSubject: 'Food Being Delivered', pushEnabled: true, smsEnabled: false, emailEnabled: false },
-  { key: 'f4', event: 'Delivered', pushTitle: 'Enjoy Your Meal! ðŸŽ‰', pushBody: 'Your order from {{restaurant}} has been delivered.', smsBody: 'DashDrive: Food delivered!', emailSubject: 'Food Delivery Receipt', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'f1', event: 'Order Placed', pushTitle: 'Order Confirmed 🍽️', pushBody: 'Your order from {{restaurant}} is being prepared.', smsBody: 'DashDrive: Order from {{restaurant}} confirmed.', emailSubject: 'Food Order Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'f2', event: 'Preparing', pushTitle: 'Being Prepared 👨‍🍳', pushBody: '{{restaurant}} is preparing your order. Est. {{eta}} min.', smsBody: '', emailSubject: '', pushEnabled: true, smsEnabled: false, emailEnabled: false },
+  { key: 'f3', event: 'Rider Picked Up', pushTitle: 'Food On The Way 🛵', pushBody: '{{driverName}} has picked up your food!', smsBody: 'DashDrive: Food on the way!', emailSubject: 'Food Being Delivered', pushEnabled: true, smsEnabled: false, emailEnabled: false },
+  { key: 'f4', event: 'Delivered', pushTitle: 'Enjoy Your Meal! 🎉', pushBody: 'Your order from {{restaurant}} has been delivered.', smsBody: 'DashDrive: Food delivered!', emailSubject: 'Food Delivery Receipt', pushEnabled: true, smsEnabled: true, emailEnabled: true },
 ];
 
 const martMessages: NotificationMessage[] = [
-  { key: 'm1', event: 'Order Placed', pushTitle: 'Mart Order Placed ðŸ›’', pushBody: 'Your mart order is being processed.', smsBody: 'DashDrive Mart: Order confirmed.', emailSubject: 'Mart Order Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'm2', event: 'Items Picked', pushTitle: 'Items Collected âœ…', pushBody: 'All items have been picked. Rider on the way.', smsBody: 'DashDrive Mart: Items collected, on the way.', emailSubject: 'Items Collected', pushEnabled: true, smsEnabled: false, emailEnabled: false },
-  { key: 'm3', event: 'Item Unavailable', pushTitle: 'Item Substitution âš ï¸', pushBody: '{{item}} is unavailable. We replaced it with {{substitute}}.', smsBody: 'DashDrive: {{item}} replaced with {{substitute}}.', emailSubject: 'Item Substitution Notice', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'm4', event: 'Delivered', pushTitle: 'Mart Order Delivered ðŸ“¦', pushBody: 'Your mart order has been delivered!', smsBody: 'DashDrive Mart: Delivered!', emailSubject: 'Mart Delivery Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'm1', event: 'Order Placed', pushTitle: 'Mart Order Placed 🛒', pushBody: 'Your mart order is being processed.', smsBody: 'DashDrive Mart: Order confirmed.', emailSubject: 'Mart Order Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'm2', event: 'Items Picked', pushTitle: 'Items Collected ✅', pushBody: 'All items have been picked. Rider on the way.', smsBody: 'DashDrive Mart: Items collected, on the way.', emailSubject: 'Items Collected', pushEnabled: true, smsEnabled: false, emailEnabled: false },
+  { key: 'm3', event: 'Item Unavailable', pushTitle: 'Item Substitution ⚠️', pushBody: '{{item}} is unavailable. We replaced it with {{substitute}}.', smsBody: 'DashDrive: {{item}} replaced with {{substitute}}.', emailSubject: 'Item Substitution Notice', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'm4', event: 'Delivered', pushTitle: 'Mart Order Delivered 📦', pushBody: 'Your mart order has been delivered!', smsBody: 'DashDrive Mart: Delivered!', emailSubject: 'Mart Delivery Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
 ];
 
 const shoppingMessages: NotificationMessage[] = [
-  { key: 'sh1', event: 'Order Confirmed', pushTitle: 'Order Placed ðŸ›ï¸', pushBody: 'Your shopping order has been confirmed!', smsBody: 'DashDrive Shop: Order confirmed.', emailSubject: 'Shopping Order Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'sh2', event: 'Shipped', pushTitle: 'Order Shipped ðŸ“®', pushBody: 'Your order is on the way. Track it live.', smsBody: 'DashDrive Shop: Order shipped.', emailSubject: 'Order Shipped', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'sh3', event: 'Out For Delivery', pushTitle: 'Almost There ðŸšš', pushBody: 'Your order is out for delivery today.', smsBody: 'DashDrive Shop: Out for delivery.', emailSubject: 'Out For Delivery', pushEnabled: true, smsEnabled: false, emailEnabled: false },
-  { key: 'sh4', event: 'Delivered', pushTitle: 'Delivered! ðŸŽ‰', pushBody: 'Your shopping order has been delivered.', smsBody: 'DashDrive Shop: Delivered!', emailSubject: 'Delivery Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'sh5', event: 'Refund Processed', pushTitle: 'Refund Issued ðŸ’°', pushBody: '{{currency}}{{amount}} refunded for order #{{orderId}}.', smsBody: 'DashDrive: Refund of {{currency}}{{amount}} processed.', emailSubject: 'Refund Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'sh1', event: 'Order Confirmed', pushTitle: 'Order Placed 🛍️', pushBody: 'Your shopping order has been confirmed!', smsBody: 'DashDrive Shop: Order confirmed.', emailSubject: 'Shopping Order Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'sh2', event: 'Shipped', pushTitle: 'Order Shipped 📮', pushBody: 'Your order is on the way. Track it live.', smsBody: 'DashDrive Shop: Order shipped.', emailSubject: 'Order Shipped', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'sh3', event: 'Out For Delivery', pushTitle: 'Almost There 🚚', pushBody: 'Your order is out for delivery today.', smsBody: 'DashDrive Shop: Out for delivery.', emailSubject: 'Out For Delivery', pushEnabled: true, smsEnabled: false, emailEnabled: false },
+  { key: 'sh4', event: 'Delivered', pushTitle: 'Delivered! 🎉', pushBody: 'Your shopping order has been delivered.', smsBody: 'DashDrive Shop: Delivered!', emailSubject: 'Delivery Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'sh5', event: 'Refund Processed', pushTitle: 'Refund Issued 💰', pushBody: '{{currency}}{{amount}} refunded for order #{{orderId}}.', smsBody: 'DashDrive: Refund of {{currency}}{{amount}} processed.', emailSubject: 'Refund Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
 ];
 
 const driverRegMessages: NotificationMessage[] = [
-  { key: 'd1', event: 'Registration Received', pushTitle: 'Welcome to DashDrive ðŸš—', pushBody: 'Your driver registration has been received. We\'ll review it shortly.', smsBody: 'DashDrive: Registration received. Under review.', emailSubject: 'Driver Registration Received', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'd2', event: 'Documents Required', pushTitle: 'Documents Needed ðŸ“„', pushBody: 'Please upload {{documentType}} to complete registration.', smsBody: 'DashDrive: Upload {{documentType}} to proceed.', emailSubject: 'Documents Required', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'd3', event: 'Approved', pushTitle: 'You\'re Approved! ðŸŽ‰', pushBody: 'Congratulations! You can now start accepting rides.', smsBody: 'DashDrive: You\'re approved! Start driving now.', emailSubject: 'Driver Application Approved', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'd4', event: 'Rejected', pushTitle: 'Application Update âŒ', pushBody: 'Your application needs attention. Reason: {{reason}}', smsBody: 'DashDrive: Application issue â€” {{reason}}.', emailSubject: 'Driver Application Update', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'd5', event: 'Document Expiring', pushTitle: 'Document Expiring âš ï¸', pushBody: 'Your {{documentType}} expires in {{days}} days.', smsBody: 'DashDrive: {{documentType}} expires in {{days}} days.', emailSubject: 'Document Expiring Soon', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'd1', event: 'Registration Received', pushTitle: 'Welcome to DashDrive 🚗', pushBody: 'Your driver registration has been received. We\'ll review it shortly.', smsBody: 'DashDrive: Registration received. Under review.', emailSubject: 'Driver Registration Received', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'd2', event: 'Documents Required', pushTitle: 'Documents Needed 📄', pushBody: 'Please upload {{documentType}} to complete registration.', smsBody: 'DashDrive: Upload {{documentType}} to proceed.', emailSubject: 'Documents Required', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'd3', event: 'Approved', pushTitle: 'You\'re Approved! 🎉', pushBody: 'Congratulations! You can now start accepting rides.', smsBody: 'DashDrive: You\'re approved! Start driving now.', emailSubject: 'Driver Application Approved', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'd4', event: 'Rejected', pushTitle: 'Application Update ❌', pushBody: 'Your application needs attention. Reason: {{reason}}', smsBody: 'DashDrive: Application issue — {{reason}}.', emailSubject: 'Driver Application Update', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'd5', event: 'Document Expiring', pushTitle: 'Document Expiring ⚠️', pushBody: 'Your {{documentType}} expires in {{days}} days.', smsBody: 'DashDrive: {{documentType}} expires in {{days}} days.', emailSubject: 'Document Expiring Soon', pushEnabled: true, smsEnabled: true, emailEnabled: true },
 ];
 
 const userMessages: NotificationMessage[] = [
-  { key: 'u1', event: 'Welcome', pushTitle: 'Welcome to DashDrive! ðŸŽ‰', pushBody: 'Your account is ready. Explore rides, food, shopping & more.', smsBody: 'Welcome to DashDrive! Download: {{appUrl}}', emailSubject: 'Welcome to DashDrive', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'u1', event: 'Welcome', pushTitle: 'Welcome to DashDrive! 🎉', pushBody: 'Your account is ready. Explore rides, food, shopping & more.', smsBody: 'Welcome to DashDrive! Download: {{appUrl}}', emailSubject: 'Welcome to DashDrive', pushEnabled: true, smsEnabled: true, emailEnabled: true },
   { key: 'u2', event: 'OTP Verification', pushTitle: '', pushBody: '', smsBody: 'DashDrive: Your code is {{otp}}. Valid for 5 minutes.', emailSubject: 'Your Verification Code', pushEnabled: false, smsEnabled: true, emailEnabled: true },
   { key: 'u3', event: 'Password Reset', pushTitle: '', pushBody: '', smsBody: 'DashDrive: Reset code is {{code}}. Expires in 15 min.', emailSubject: 'Password Reset Request', pushEnabled: false, smsEnabled: true, emailEnabled: true },
-  { key: 'u4', event: 'Profile Updated', pushTitle: 'Profile Updated âœ…', pushBody: 'Your profile information has been updated.', smsBody: '', emailSubject: 'Profile Updated', pushEnabled: true, smsEnabled: false, emailEnabled: true },
-  { key: 'u5', event: 'Wallet Top-Up', pushTitle: 'Wallet Credited ðŸ’°', pushBody: '{{currency}}{{amount}} added to your wallet. Balance: {{currency}}{{balance}}', smsBody: 'DashDrive: Wallet +{{currency}}{{amount}}. Balance: {{currency}}{{balance}}', emailSubject: 'Wallet Top-Up Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'u4', event: 'Profile Updated', pushTitle: 'Profile Updated ✅', pushBody: 'Your profile information has been updated.', smsBody: '', emailSubject: 'Profile Updated', pushEnabled: true, smsEnabled: false, emailEnabled: true },
+  { key: 'u5', event: 'Wallet Top-Up', pushTitle: 'Wallet Credited 💰', pushBody: '{{currency}}{{amount}} added to your wallet. Balance: {{currency}}{{balance}}', smsBody: 'DashDrive: Wallet +{{currency}}{{amount}}. Balance: {{currency}}{{balance}}', emailSubject: 'Wallet Top-Up Confirmation', pushEnabled: true, smsEnabled: true, emailEnabled: true },
 ];
 
 const otherMessages: NotificationMessage[] = [
-  { key: 'o1', event: 'Promotion', pushTitle: 'ðŸ”¥ Special Offer!', pushBody: '{{promoMessage}}. Use code: {{promoCode}}', smsBody: 'DashDrive: {{promoMessage}}. Code: {{promoCode}}', emailSubject: 'Special Offer For You', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'o2', event: 'Referral Reward', pushTitle: 'Referral Reward ðŸŽ', pushBody: 'You earned {{currency}}{{amount}} for referring {{friendName}}!', smsBody: 'DashDrive: Referral reward of {{currency}}{{amount}}!', emailSubject: 'Referral Reward Earned', pushEnabled: true, smsEnabled: true, emailEnabled: true },
-  { key: 'o3', event: 'System Maintenance', pushTitle: 'Scheduled Maintenance ðŸ”§', pushBody: 'DashDrive will be briefly unavailable on {{date}} at {{time}}.', smsBody: 'DashDrive: Maintenance on {{date}} {{time}}.', emailSubject: 'Scheduled Maintenance Notice', pushEnabled: true, smsEnabled: false, emailEnabled: true },
-  { key: 'o4', event: 'App Update', pushTitle: 'New Version Available ðŸ“±', pushBody: 'Update DashDrive to v{{version}} for the latest features.', smsBody: '', emailSubject: 'DashDrive App Update Available', pushEnabled: true, smsEnabled: false, emailEnabled: true },
-  { key: 'o5', event: 'Survey Request', pushTitle: 'We Value Your Feedback ðŸ“', pushBody: 'Help us improve! Take a 2-minute survey.', smsBody: '', emailSubject: 'We\'d Love Your Feedback', pushEnabled: true, smsEnabled: false, emailEnabled: true },
+  { key: 'o1', event: 'Promotion', pushTitle: '🔥 Special Offer!', pushBody: '{{promoMessage}}. Use code: {{promoCode}}', smsBody: 'DashDrive: {{promoMessage}}. Code: {{promoCode}}', emailSubject: 'Special Offer For You', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'o2', event: 'Referral Reward', pushTitle: 'Referral Reward 🎁', pushBody: 'You earned {{currency}}{{amount}} for referring {{friendName}}!', smsBody: 'DashDrive: Referral reward of {{currency}}{{amount}}!', emailSubject: 'Referral Reward Earned', pushEnabled: true, smsEnabled: true, emailEnabled: true },
+  { key: 'o3', event: 'System Maintenance', pushTitle: 'Scheduled Maintenance 🔧', pushBody: 'DashDrive will be briefly unavailable on {{date}} at {{time}}.', smsBody: 'DashDrive: Maintenance on {{date}} {{time}}.', emailSubject: 'Scheduled Maintenance Notice', pushEnabled: true, smsEnabled: false, emailEnabled: true },
+  { key: 'o4', event: 'App Update', pushTitle: 'New Version Available 📱', pushBody: 'Update DashDrive to v{{version}} for the latest features.', smsBody: '', emailSubject: 'DashDrive App Update Available', pushEnabled: true, smsEnabled: false, emailEnabled: true },
+  { key: 'o5', event: 'Survey Request', pushTitle: 'We Value Your Feedback 📝', pushBody: 'Help us improve! Take a 2-minute survey.', smsBody: '', emailSubject: 'We\'d Love Your Feedback', pushEnabled: true, smsEnabled: false, emailEnabled: true },
 ];
 
 // ============================================================
@@ -300,7 +300,7 @@ const ThirdPartyTab: React.FC = () => {
       key: 'google_maps', name: 'Google Maps', category: 'Maps & Location', icon: <GoogleOutlined />,
       status: 'connected',
       fields: [
-        { label: 'API Key', key: 'apiKey', type: 'password', value: 'AIzaâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'API Key', key: 'apiKey', type: 'password', value: 'AIza••••••••••••••••••••' },
         { label: 'Map ID', key: 'mapId', type: 'text', value: 'dashdrive-map-001' },
       ],
     },
@@ -308,17 +308,17 @@ const ThirdPartyTab: React.FC = () => {
       key: 'stripe', name: 'Stripe', category: 'Payment Gateway', icon: <CreditCardOutlined />,
       status: 'connected',
       fields: [
-        { label: 'Publishable Key', key: 'pubKey', type: 'password', value: 'pk_live_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
-        { label: 'Secret Key', key: 'secretKey', type: 'password', value: 'sk_live_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
-        { label: 'Webhook Secret', key: 'webhookSecret', type: 'password', value: 'whsec_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'Publishable Key', key: 'pubKey', type: 'password', value: 'pk_live_••••••••' },
+        { label: 'Secret Key', key: 'secretKey', type: 'password', value: 'sk_live_••••••••' },
+        { label: 'Webhook Secret', key: 'webhookSecret', type: 'password', value: 'whsec_••••••••' },
       ],
     },
     {
       key: 'paystack', name: 'Paystack', category: 'Payment Gateway', icon: <CreditCardOutlined style={{ color: '#00C3F7' }} />,
       status: 'connected',
       fields: [
-        { label: 'Public Key', key: 'pubKey', type: 'password', value: 'pk_live_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
-        { label: 'Secret Key', key: 'secretKey', type: 'password', value: 'sk_live_â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'Public Key', key: 'pubKey', type: 'password', value: 'pk_live_••••••••' },
+        { label: 'Secret Key', key: 'secretKey', type: 'password', value: 'sk_live_••••••••' },
       ],
     },
     {
@@ -326,7 +326,7 @@ const ThirdPartyTab: React.FC = () => {
       status: 'connected',
       fields: [
         { label: 'Client ID', key: 'clientId', type: 'text', value: '102938.apps.googleusercontent.com' },
-        { label: 'Client Secret', key: 'clientSecret', type: 'password', value: 'GOCSPX-â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'Client Secret', key: 'clientSecret', type: 'password', value: 'GOCSPX-••••••••' },
       ],
     },
     {
@@ -350,8 +350,8 @@ const ThirdPartyTab: React.FC = () => {
       key: 'aws_s3', name: 'AWS S3 Storage', category: 'Cloud Storage', icon: <CloudOutlined style={{ color: '#FF9900' }} />,
       status: 'connected',
       fields: [
-        { label: 'Access Key', key: 'accessKey', type: 'password', value: 'AKIAâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
-        { label: 'Secret Key', key: 'secretKey', type: 'password', value: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'Access Key', key: 'accessKey', type: 'password', value: 'AKIA••••••••••••' },
+        { label: 'Secret Key', key: 'secretKey', type: 'password', value: '••••••••••••••••' },
         { label: 'Bucket Name', key: 'bucket', type: 'text', value: 'dashdrive-uploads' },
         { label: 'Region', key: 'region', type: 'text', value: 'af-south-1' },
       ],
@@ -360,8 +360,8 @@ const ThirdPartyTab: React.FC = () => {
       key: 'recaptcha', name: 'Google reCAPTCHA', category: 'Security', icon: <SafetyCertificateOutlined style={{ color: '#4285F4' }} />,
       status: 'connected',
       fields: [
-        { label: 'Site Key', key: 'siteKey', type: 'text', value: '6Lfâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
-        { label: 'Secret Key', key: 'secretKey', type: 'password', value: '6Lfâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'Site Key', key: 'siteKey', type: 'text', value: '6Lf••••••••••••••••••••' },
+        { label: 'Secret Key', key: 'secretKey', type: 'password', value: '6Lf••••••••••••••••••••' },
       ],
     },
     {
@@ -369,8 +369,8 @@ const ThirdPartyTab: React.FC = () => {
       status: 'connected',
       fields: [
         { label: 'Provider', key: 'provider', type: 'text', value: 'Twilio' },
-        { label: 'Account SID', key: 'accountSid', type: 'password', value: 'ACâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
-        { label: 'Auth Token', key: 'authToken', type: 'password', value: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'Account SID', key: 'accountSid', type: 'password', value: 'AC••••••••••••••••' },
+        { label: 'Auth Token', key: 'authToken', type: 'password', value: '••••••••••••••••' },
         { label: 'From Number', key: 'fromNumber', type: 'text', value: '+1234567890' },
       ],
     },
@@ -378,10 +378,10 @@ const ThirdPartyTab: React.FC = () => {
       key: 'firebase_otp', name: 'Firebase OTP', category: 'Authentication', icon: <MobileOutlined style={{ color: '#FFCA28' }} />,
       status: 'connected',
       fields: [
-        { label: 'FCM Server Key', key: 'fcmServerKey', type: 'password', value: 'AAAAâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'FCM Server Key', key: 'fcmServerKey', type: 'password', value: 'AAAA••••••••••••••••••••••••' },
         { label: 'Sender ID', key: 'senderId', type: 'text', value: '102938475610' },
         { label: 'Project ID', key: 'projectId', type: 'text', value: 'dashdrive-prod' },
-        { label: 'Web API Key', key: 'webApiKey', type: 'password', value: 'AIzaâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'Web API Key', key: 'webApiKey', type: 'password', value: 'AIza••••••••••••••••••••' },
       ],
     },
     {
@@ -392,7 +392,7 @@ const ThirdPartyTab: React.FC = () => {
         { label: 'Host', key: 'mailHost', type: 'text', value: 'smtp.gmail.com' },
         { label: 'Port', key: 'mailPort', type: 'text', value: '587' },
         { label: 'Username', key: 'mailUsername', type: 'text', value: 'noreply@dashdrive.app' },
-        { label: 'Password', key: 'mailPassword', type: 'password', value: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' },
+        { label: 'Password', key: 'mailPassword', type: 'password', value: '••••••••' },
         { label: 'Encryption', key: 'mailEncryption', type: 'text', value: 'TLS' },
         { label: 'From Name', key: 'mailFromName', type: 'text', value: 'DashDrive' },
         { label: 'From Address', key: 'mailFromAddress', type: 'text', value: 'noreply@dashdrive.app' },
@@ -498,8 +498,8 @@ const FaceVerificationTab: React.FC = () => {
         livenessDetection: true,
         confidenceThreshold: 85,
         maxRetries: 3,
-        apiKey: 'AKIAâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
-        apiSecret: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+        apiKey: 'AKIA••••••••••••',
+        apiSecret: '••••••••••••••••',
         region: 'af-south-1',
         webhookUrl: 'https://api.dashdrive.app/webhooks/face-verify',
       }}>
@@ -649,7 +649,7 @@ const AISetupTab: React.FC = () => {
       <Form form={form} layout="vertical" initialValues={{
         llmProvider: 'openai',
         llmModel: 'gpt-4o',
-        llmApiKey: 'sk-â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+        llmApiKey: 'sk-••••••••••••••••••••',
         llmTemperature: 0.3,
         llmMaxTokens: 2048,
         dispatchAI: true,
@@ -709,13 +709,13 @@ const AISetupTab: React.FC = () => {
         >
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
-              { key: 'dispatchAI', label: 'Smart Dispatch', desc: 'AI-powered driver assignment & batching', icon: 'ðŸš—' },
-              { key: 'fraudAI', label: 'Fraud Detection', desc: 'Real-time anomaly detection on transactions', icon: 'ðŸ›¡ï¸' },
-              { key: 'demandForecast', label: 'Demand Forecasting', desc: 'Predict peak hours and driver demand', icon: 'ðŸ“ˆ' },
-              { key: 'chatbotEnabled', label: 'AI Chatbot', desc: 'Automated customer & driver support', icon: 'ðŸ’¬' },
-              { key: 'dynamicPricing', label: 'Dynamic Pricing', desc: 'ML-based surge pricing engine', icon: 'ðŸ’°' },
-              { key: 'sentimentAnalysis', label: 'Sentiment Analysis', desc: 'Analyze reviews and support tickets', icon: 'ðŸ§ ' },
-              { key: 'routeOptimization', label: 'Route Optimization', desc: 'TSP solver for multi-stop deliveries', icon: 'ðŸ—ºï¸' },
+              { key: 'dispatchAI', label: 'Smart Dispatch', desc: 'AI-powered driver assignment & batching', icon: '🚗' },
+              { key: 'fraudAI', label: 'Fraud Detection', desc: 'Real-time anomaly detection on transactions', icon: '🛡️' },
+              { key: 'demandForecast', label: 'Demand Forecasting', desc: 'Predict peak hours and driver demand', icon: '📈' },
+              { key: 'chatbotEnabled', label: 'AI Chatbot', desc: 'Automated customer & driver support', icon: '💬' },
+              { key: 'dynamicPricing', label: 'Dynamic Pricing', desc: 'ML-based surge pricing engine', icon: '💰' },
+              { key: 'sentimentAnalysis', label: 'Sentiment Analysis', desc: 'Analyze reviews and support tickets', icon: '🧠' },
+              { key: 'routeOptimization', label: 'Route Optimization', desc: 'TSP solver for multi-stop deliveries', icon: '🗺️' },
             ].map(item => (
               <div key={item.key} style={{ padding: 12, border: '1px solid #f1f5f9', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Space>
@@ -802,3 +802,4 @@ export const ConfigurationPage: React.FC = () => {
     </div>
   );
 };
+

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Typography, Row, Col, Card, Table, Tag, 
   Button, Space, Statistic, Tabs, Badge, Avatar,
@@ -163,7 +163,7 @@ export const MarketplaceManagementPage: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([
     { id: 'B-1001', listingTitle: 'Luxury Penthouse', customerName: 'James Bond', hostName: 'Sarah Jenkins', checkIn: '2024-04-01', checkOut: '2024-04-05', totalPrice: 1000, status: 'upcoming' },
     { id: 'B-1002', listingTitle: 'Cozy Studio', customerName: 'Elena Gilbert', hostName: 'Michael Chen', checkIn: '2024-03-15', checkOut: '2024-03-18', totalPrice: 255, status: 'active' },
-    { id: 'B-1003', listingTitle: 'Lakeside Villa', customerName: 'Damon Salvatore', hostName: 'Anna MÃ¼ller', checkIn: '2024-03-01', checkOut: '2024-03-05', totalPrice: 1800, status: 'completed' },
+    { id: 'B-1003', listingTitle: 'Lakeside Villa', customerName: 'Damon Salvatore', hostName: 'Anna Müller', checkIn: '2024-03-01', checkOut: '2024-03-05', totalPrice: 1800, status: 'completed' },
   ]);
 
   const [reviews, setReviews] = useState<UserReview[]>([
@@ -262,9 +262,9 @@ export const MarketplaceManagementPage: React.FC = () => {
       render: (t: string, r: Listing) => (
         <Space>
           <Avatar shape="square" size={48} icon={<ShopOutlined />} src={`https://api.dicebear.com/7.x/initials/svg?seed=${t}`} />
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Text strong>{t}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>{r.type} â€¢ {r.id}</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>{r.type} • {r.id}</Text>
           </Space>
         </Space>
       )
@@ -333,7 +333,7 @@ export const MarketplaceManagementPage: React.FC = () => {
       render: (t: string, r: Host) => (
         <Space>
           <Avatar icon={<UserOutlined />} />
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Text strong>{t}</Text>
             <Text type="secondary" style={{ fontSize: 12 }}>{r.email}</Text>
           </Space>
@@ -397,7 +397,7 @@ export const MarketplaceManagementPage: React.FC = () => {
       dataIndex: 'listingTitle',
       key: 'listingTitle',
       render: (t: string, r: Booking) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{t}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>Host: {r.hostName}</Text>
         </Space>
@@ -412,7 +412,7 @@ export const MarketplaceManagementPage: React.FC = () => {
       title: 'DATES',
       key: 'dates',
       render: (_: any, r: Booking) => (
-        <Text style={{ fontSize: 13 }}>{r.checkIn} â†’ {r.checkOut}</Text>
+        <Text style={{ fontSize: 13 }}>{r.checkIn} → {r.checkOut}</Text>
       )
     },
     {
@@ -461,7 +461,7 @@ export const MarketplaceManagementPage: React.FC = () => {
       key: 'comment',
       ellipsis: true,
       render: (c: string, r: UserReview) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text italic>"{c}"</Text>
           <Text type="secondary" style={{ fontSize: 11 }}>{r.customerName} on {r.date}</Text>
         </Space>
@@ -698,7 +698,7 @@ export const MarketplaceManagementPage: React.FC = () => {
               </div>
             </div>
             
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
               <Descriptions title={<span><UserOutlined /> Identity Verification</span>} bordered column={1} size="small">
                 <Descriptions.Item label="ID Verification">
                   <Badge status={selectedHost.identity.idVerified ? 'success' : 'error'} text={selectedHost.identity.idVerified ? 'Verified' : 'Pending'} />
@@ -709,8 +709,8 @@ export const MarketplaceManagementPage: React.FC = () => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Phone / Email">
                   <Space split={<Text type="secondary">|</Text>}>
-                    <Text type={selectedHost.identity.phoneVerified ? 'success' : 'danger'}>{selectedHost.identity.phoneVerified ? 'Phone âœ“' : 'Phone âœ—'}</Text>
-                    <Text type={selectedHost.identity.emailVerified ? 'success' : 'danger'}>{selectedHost.identity.emailVerified ? 'Email âœ“' : 'Email âœ—'}</Text>
+                    <Text type={selectedHost.identity.phoneVerified ? 'success' : 'danger'}>{selectedHost.identity.phoneVerified ? 'Phone ✓' : 'Phone ✗'}</Text>
+                    <Text type={selectedHost.identity.emailVerified ? 'success' : 'danger'}>{selectedHost.identity.emailVerified ? 'Email ✓' : 'Email ✗'}</Text>
                   </Space>
                 </Descriptions.Item>
                 {selectedHost.identity.backgroundCheck && (
@@ -874,3 +874,4 @@ export const MarketplaceManagementPage: React.FC = () => {
     </div>
   );
 };
+

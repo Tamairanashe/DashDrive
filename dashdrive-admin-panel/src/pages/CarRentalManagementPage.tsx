@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Typography, Row, Col, Card, Statistic, Table, Tag, Button, Space, Badge, Input, Select, Progress, Avatar } from 'antd';
 import { 
     KeyOutlined, 
@@ -97,7 +97,7 @@ export const CarRentalManagementPage: React.FC = () => {
                         { 
                             title: 'Rental Period', 
                             render: (record) => (
-                                <Space direction="vertical" size={0}>
+                                <Space orientation="vertical" size={0}>
                                     <Text style={{ fontSize: 12 }}>{record.start} to</Text>
                                     <Text style={{ fontSize: 12 }}>{record.end}</Text>
                                 </Space>
@@ -127,3 +127,4 @@ export const CarRentalManagementPage: React.FC = () => {
         </div>
     );
 };
+

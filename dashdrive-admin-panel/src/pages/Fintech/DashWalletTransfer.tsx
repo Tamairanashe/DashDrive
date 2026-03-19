@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Card, 
   Typography, 
@@ -160,7 +160,7 @@ export const DashWalletTransfer: React.FC = () => {
           {currentStep === 0 && (
             <Card title="Identify Sender" variant="borderless">
               <Paragraph>Locate the source wallet by phone number, email, or ID.</Paragraph>
-              <Space direction="vertical" style={{ width: '100%' }} size="large">
+              <Space orientation="vertical" style={{ width: '100%' }} size="large">
                 <Input 
                   size="large" 
                   placeholder="e.g. +263777123456 or driver@dashdrive.app" 
@@ -214,7 +214,7 @@ export const DashWalletTransfer: React.FC = () => {
           {currentStep === 1 && (
             <Card title="Identify Recipient" variant="borderless">
               <Paragraph>Who are we sending to? Enter their phone, email, or ID.</Paragraph>
-              <Space direction="vertical" style={{ width: '100%' }} size="large">
+              <Space orientation="vertical" style={{ width: '100%' }} size="large">
                 <Input 
                   size="large" 
                   placeholder="Recipient phone or email" 
@@ -260,7 +260,7 @@ export const DashWalletTransfer: React.FC = () => {
           {currentStep === 2 && (
             <Card title="Transfer Details" variant="borderless">
               <Paragraph>Enter the amount and reason for this transfer.</Paragraph>
-              <Space direction="vertical" style={{ width: '100%' }} size="large">
+              <Space orientation="vertical" style={{ width: '100%' }} size="large">
                 <Row gutter={16}>
                   <Col span={12}>
                     <Statistic title="Sender Balance" value={senderData.wallet.balance} precision={2} suffix={currency} />
@@ -344,7 +344,7 @@ export const DashWalletTransfer: React.FC = () => {
 
         <Col span={8}>
           <Card title="Security Protocol" variant="borderless">
-             <Space direction="vertical" size="middle">
+             <Space orientation="vertical" size="middle">
                 <Text type="secondary">This portal is restricted to DashDrive Treasury and Fintech Admin users.</Text>
                 <Divider style={{ margin: '12px 0' }} />
                 <div>
@@ -376,3 +376,4 @@ export const DashWalletTransfer: React.FC = () => {
     </div>
   );
 };
+

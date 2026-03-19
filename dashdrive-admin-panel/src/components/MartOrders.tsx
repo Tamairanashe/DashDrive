@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
  Search,
  Filter,
@@ -155,6 +155,7 @@ export const MartOrders: React.FC = () => {
  customerName: order.customer.name
  }}
  label={`Mart Order ${order.id}`}
+ variant="mini"
  />
  <div>
  <span className="text-sm font-display font-extrabold text-slate-900 tracking-tight">{order.id}</span>

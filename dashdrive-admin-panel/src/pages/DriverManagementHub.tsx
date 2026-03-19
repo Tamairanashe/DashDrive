@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Table, Tag, Space, Button, Input, Card, Typography, Tabs, 
   Row, Col, Statistic, Avatar, Tooltip, Badge, Dropdown, 
@@ -38,6 +38,24 @@ export const DriverManagementHub: React.FC = () => {
   const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<any>(null);
   const [incidentForm] = Form.useForm();
+  const [reasonForm] = Form.useForm();
+
+  // Governance & Trash State
+  const [isTrashDrawerOpen, setIsTrashDrawerOpen] = useState(false);
+  const [trashedDrivers, setTrashedDrivers] = useState<any[]>([]);
+  const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
+  const [reasonTarget, setReasonTarget] = useState<any>(null);
+  const [searchText, setSearchText] = useState('');
+  const [filterCity, setFilterCity] = useState<string | undefined>(undefined);
+  const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
+  const [filterCategory, setFilterCategory] = useState<string | undefined>(undefined);
+
+  const handleResetFilters = () => {
+    setSearchText('');
+    setFilterCity(undefined);
+    setFilterStatus(undefined);
+    setFilterCategory(undefined);
+  };
 
   // Mock Data for Driver List
   const [drivers, setDrivers] = useState([
@@ -93,36 +111,75 @@ export const DriverManagementHub: React.FC = () => {
     <div style={{ marginTop: 20 }}>
       <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
         <Row gutter={16} style={{ marginBottom: 16 }}>
-          <Col span={8}>
-            <Input placeholder="Search name, phone or ID..." prefix={<SearchOutlined />} />
+          <Col span={7}>
+            <Input 
+              placeholder="Search name, phone or ID..." 
+              prefix={<SearchOutlined />} 
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+            />
           </Col>
           <Col span={4}>
-            <Select placeholder="City" style={{ width: '100%' }} allowClear>
+            <Select 
+              placeholder="City" 
+              style={{ width: '100%' }} 
+              allowClear 
+              value={filterCity}
+              onChange={setFilterCity}
+            >
               <Select.Option value="Harare">Harare</Select.Option>
               <Select.Option value="Bulawayo">Bulawayo</Select.Option>
             </Select>
           </Col>
           <Col span={4}>
-            <Select placeholder="Status" style={{ width: '100%' }} allowClear>
+            <Select 
+              placeholder="Status" 
+              style={{ width: '100%' }} 
+              allowClear 
+              value={filterStatus}
+              onChange={setFilterStatus}
+            >
               <Select.Option value="Active">Active</Select.Option>
-              <Select.Option value="Pending">Pending</Select.Option>
+              <Select.Option value="Offline">Offline</Select.Option>
               <Select.Option value="Suspended">Suspended</Select.Option>
             </Select>
           </Col>
           <Col span={4}>
-            <Select placeholder="Category" style={{ width: '100%' }} allowClear>
+            <Select 
+              placeholder="Category" 
+              style={{ width: '100%' }} 
+              allowClear 
+              value={filterCategory}
+              onChange={setFilterCategory}
+            >
               <Select.Option value="Economy">Economy</Select.Option>
               <Select.Option value="Premium">Premium</Select.Option>
               <Select.Option value="XL">XL</Select.Option>
               <Select.Option value="Delivery">Delivery</Select.Option>
             </Select>
           </Col>
-          <Col span={4} style={{ textAlign: 'right' }}>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsDrawerOpen(true)}>Add New Driver</Button>
+          <Col span={5} style={{ textAlign: 'right' }}>
+            <Space>
+              <Tooltip title="Reset Filters">
+                <Button icon={<SyncOutlined />} onClick={handleResetFilters} />
+              </Tooltip>
+              <Button icon={<HistoryOutlined />} onClick={() => setIsTrashDrawerOpen(true)}>Trash</Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsDrawerOpen(true)}>Add New</Button>
+            </Space>
           </Col>
         </Row>
         <Table 
-          dataSource={drivers}
+          dataSource={drivers.filter(d => {
+            const matchesSearch = !searchText || 
+              d.name.toLowerCase().includes(searchText.toLowerCase()) || 
+              d.id.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.phone.includes(searchText);
+            const matchesCity = !filterCity || d.city === filterCity;
+            const matchesStatus = !filterStatus || d.status === filterStatus;
+            const matchesCategory = !filterCategory || d.category === filterCategory;
+            return matchesSearch && matchesCity && matchesStatus && matchesCategory;
+          })}
           rowKey="id"
           columns={[
             { title: 'Driver ID', dataIndex: 'id', key: 'id', width: 100, fixed: 'left', render: (t) => <Text strong style={{ whiteSpace: 'nowrap' }}>{t}</Text> },
@@ -231,9 +288,9 @@ export const DriverManagementHub: React.FC = () => {
                   <Switch 
                     checked={!record.isFrozen} 
                     onChange={() => {
-                      const action = record.isFrozen ? 'Activated' : 'Frozen';
-                      setDrivers(prev => prev.map(d => d.id === record.id ? { ...d, isFrozen: !d.isFrozen } : d));
-                      antdMessage.success(`Driver ${action} successfully`);
+                      setReasonTarget(record);
+                      setIsReasonModalOpen(true);
+                      reasonForm.setFieldsValue({ reason: '' });
                     }}
                     checkedChildren="Active"
                     unCheckedChildren="Frozen"
@@ -473,7 +530,7 @@ export const DriverManagementHub: React.FC = () => {
           columns={[
             { title: 'Trip ID', dataIndex: 'id', key: 'id', width: 100, render: (t) => <Text strong>{t}</Text> },
             { title: 'Rider', dataIndex: 'rider', key: 'rider', width: 140 },
-            { title: 'Route', key: 'route', width: 220, render: (_, r) => <Space size={0} direction="vertical"><Text style={{ fontSize: 12 }}>{r.pickup}</Text><SwapOutlined style={{ fontSize: 10, alignSelf: 'center' }} /><Text style={{ fontSize: 12 }}>{r.dropoff}</Text></Space> },
+            { title: 'Route', key: 'route', width: 220, render: (_, r) => <Space size={0} orientation="vertical"><Text style={{ fontSize: 12 }}>{r.pickup}</Text><SwapOutlined style={{ fontSize: 10, alignSelf: 'center' }} /><Text style={{ fontSize: 12 }}>{r.dropoff}</Text></Space> },
             { title: 'Fare', dataIndex: 'fare', key: 'fare', width: 100, render: (v) => `$${v.toFixed(2)}` },
             { 
               title: 'Status', 
@@ -1295,10 +1352,13 @@ export const DriverManagementHub: React.FC = () => {
           <Text type="secondary" style={{ fontSize: 13 }}>This action will permanently remove the driver from the management hub.</Text>
         </div>
         <Form form={deleteForm} layout="vertical" onFinish={(values) => {
+          setTrashedDrivers(prev => [...prev, { 
+            ...driverToDelete, 
+            deletedAt: new Date().toISOString(), 
+            deleteReason: values.reason 
+          }]);
           setDrivers(prev => prev.filter(d => d.id !== driverToDelete.id));
-          antdMessage.success(`Driver ${driverToDelete.name} deleted successfully`);
-          // In a real app, we would log the values.reason to the activity log here
-          console.log(`Driver deleted for reason: ${values.reason}`);
+          antdMessage.success(`Driver ${driverToDelete.name} moved to trash`);
           setIsDeleteModalOpen(false);
           deleteForm.resetFields();
           setDriverToDelete(null);
@@ -1375,6 +1435,87 @@ export const DriverManagementHub: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <Modal
+        title={<Space><AuditOutlined /> Status Change Justification</Space>}
+        open={isReasonModalOpen}
+        onCancel={() => { setIsReasonModalOpen(false); reasonForm.resetFields(); }}
+        onOk={() => reasonForm.submit()}
+        okText="Confirm Change"
+        centered
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text>You are about to <strong>{reasonTarget?.isFrozen ? 'Activate' : 'Freeze'}</strong> the account for {reasonTarget?.name}.</Text>
+        </div>
+        <Form form={reasonForm} layout="vertical" onFinish={(values) => {
+          const action = reasonTarget.isFrozen ? 'Activated' : 'Frozen';
+          setDrivers(prev => prev.map(d => d.id === reasonTarget.id ? { ...d, isFrozen: !d.isFrozen } : d));
+          antdMessage.success(`Driver ${action} successfully`);
+          // Here we would typically log values.reason to the audit log
+          setIsReasonModalOpen(false);
+          reasonForm.resetFields();
+          setReasonTarget(null);
+        }}>
+          <Form.Item 
+            name="reason" 
+            label="Reason for Status Change" 
+            rules={[{ required: true, message: 'Please provide a reason' }]}
+          >
+            <Input.TextArea placeholder="Describe why this account status is being changed..." rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Drawer
+        title={<Space><HistoryOutlined /> Manage Trashed Drivers</Space>}
+        open={isTrashDrawerOpen}
+        onClose={() => setIsTrashDrawerOpen(false)}
+        width={720}
+      >
+        <Table 
+          dataSource={trashedDrivers}
+          rowKey="id"
+          columns={[
+            { title: 'Driver ID', dataIndex: 'id', key: 'id', width: 100 },
+            { title: 'Name', dataIndex: 'name', key: 'name' },
+            { title: 'Deletion Reason', dataIndex: 'deleteReason', key: 'reason' },
+            { title: 'Deleted At', dataIndex: 'deletedAt', key: 'date', render: (d) => new Date(d).toLocaleString() },
+            { 
+              title: 'Actions', 
+              key: 'actions', 
+              align: 'right',
+              render: (_, record) => (
+                <Space>
+                  <Button 
+                    size="small" 
+                    icon={<SyncOutlined />} 
+                    onClick={() => {
+                      setDrivers(prev => [...prev, record]);
+                      setTrashedDrivers(prev => prev.filter(d => d.id !== record.id));
+                      antdMessage.success('Driver restored successfully');
+                    }}
+                  >
+                    Restore
+                  </Button>
+                  <Button 
+                    size="small" 
+                    danger 
+                    icon={<CloseCircleOutlined />}
+                    onClick={() => {
+                      setTrashedDrivers(prev => prev.filter(d => d.id !== record.id));
+                      antdMessage.warning('Driver permanently deleted');
+                    }}
+                  >
+                    Purge
+                  </Button>
+                </Space>
+              )
+            }
+          ]}
+          locale={{ emptyText: <Empty description="Trash is empty" /> }}
+        />
+      </Drawer>
     </div>
   );
 };
+

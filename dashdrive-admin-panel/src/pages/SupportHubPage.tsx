@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, Tag, Button, Space, Typography, Card, Badge, Input, Select, 
   message, Avatar, Row, Col, List, Divider, Empty, Drawer,
@@ -457,7 +457,7 @@ export const SupportHubPage: React.FC = () => {
                 >
                   <Row align="middle" gutter={24}>
                     <Col span={16}>
-                      <Space direction="vertical" size={0}>
+                      <Space orientation="vertical" size={0}>
                         <Text strong style={{ color: isDark ? '#a5b4fc' : '#4338ca', fontSize: 13 }}>SENIOR RESOLUTION CONSOLE</Text>
                         <Title level={5} style={{ margin: 0 }}>Active Escalations & High-Impact Disputes</Title>
                         <Text type="secondary" style={{ fontSize: 12 }}>Specialized workspace for management-level intervention and financial audit.</Text>
@@ -470,7 +470,7 @@ export const SupportHubPage: React.FC = () => {
                           value={disputes.filter(d => d.priority === 'Urgent').length} 
                           valueStyle={{ fontSize: 18, color: '#ef4444' }} 
                         />
-                        <Divider type="vertical" style={{ height: 40 }} />
+                        <Divider orientation="vertical" style={{ height: 40 }} />
                         <Statistic 
                           title={<Text style={{ fontSize: 11 }}>Wait Time (Avg)</Text>} 
                           value="12m" 
@@ -644,7 +644,7 @@ export const SupportHubPage: React.FC = () => {
         placement="right"
         onClose={() => setSavedAnswersVisible(false)}
         open={savedAnswersVisible}
-        width={400}
+        size={400 as any}
         styles={{
           header: { background: isDark ? '#1e1e1e' : '#fff' },
           body: { background: isDark ? '#121212' : '#f8fafc' }
@@ -702,7 +702,7 @@ export const SupportHubPage: React.FC = () => {
         }
       >
         {selectedTicket && (
-          <Space direction="vertical" size="large" style={{ width: '100%', padding: '12px 0' }}>
+          <Space orientation="vertical" size="large" style={{ width: '100%', padding: '12px 0' }}>
             <Descriptions bordered column={2} size="small">
               <Descriptions.Item label="Ticket ID">{selectedTicket.ticketId}</Descriptions.Item>
               <Descriptions.Item label="Created">{selectedTicket.created}</Descriptions.Item>
@@ -777,7 +777,7 @@ export const SupportHubPage: React.FC = () => {
         }
       >
         {selectedDispute && (
-          <Space direction="vertical" size="middle" style={{ width: '100%', padding: '12px 0' }}>
+          <Space orientation="vertical" size="middle" style={{ width: '100%', padding: '12px 0' }}>
             <Descriptions bordered column={2} size="small">
               <Descriptions.Item label="Ticket ID">{selectedDispute.ticketId}</Descriptions.Item>
               <Descriptions.Item label="Date">{selectedDispute.date}</Descriptions.Item>
@@ -873,7 +873,7 @@ export const SupportHubPage: React.FC = () => {
                 key: '3',
                 label: 'Evidence & Logs',
                 children: (
-                  <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                     <div style={{ background: isDark ? '#141414' : '#fafafa', padding: 16, borderRadius: 12, border: isDark ? '1px solid #333' : '1px solid #e2e8f0' }}>
                       <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 12 }}><AuditOutlined /> Investigation Support View</Text>
                       <div style={{ height: 160, background: isDark ? '#2d2d2d' : '#e2e8f0', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20 }}>
@@ -975,3 +975,4 @@ export const SupportHubPage: React.FC = () => {
     </div>
   );
 };
+

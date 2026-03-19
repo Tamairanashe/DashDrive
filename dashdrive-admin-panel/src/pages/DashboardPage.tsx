@@ -37,7 +37,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { analyticsApi } from '../api/analyticsApi';
 import { BaseMap } from '../components/BaseMap';
-import { Marker, Popup } from 'react-leaflet';
+import { MarkerF, InfoWindowF } from '@react-google-maps/api';
 
 const { Title, Text } = Typography;
 
@@ -153,7 +153,7 @@ export const DashboardPage: React.FC = () => {
           <Col>
             <Space align="center" size="middle">
               <Title level={4} style={{ margin: 0 }}>Global Command Center</Title>
-              <Divider type="vertical" />
+              <Divider orientation="vertical" />
               <Space>
                 <Select 
                   value={selectedCountry} 
@@ -328,18 +328,21 @@ export const DashboardPage: React.FC = () => {
             extra={<Button type="link" onClick={() => navigate('/dashboard/fleet')}>Expand View</Button>}
           >
             <BaseMap center={[-17.8248, 31.0530]} zoom={13} height={450}>
-                <Marker position={[-17.8248, 31.0530]}>
-                  <Popup>
-                    <Text strong>RIDE-8821</Text><br/>
-                    <Tag color="processing">In Transit</Tag>
-                  </Popup>
-                </Marker>
-                <Marker position={[-17.8100, 31.0400]}>
-                  <Popup>
-                    <Text strong>D-202 (Sarah)</Text><br/>
-                    <Tag color="success">Online</Tag>
-                  </Popup>
-                </Marker>
+                <MarkerF position={{ lat: -17.8248, lng: 31.0530 }} />
+                <InfoWindowF position={{ lat: -17.8248, lng: 31.0530 }}>
+                    <div style={{ padding: '4px' }}>
+                      <Text strong>RIDE-8821</Text><br/>
+                      <Tag color="processing" style={{ marginTop: 4 }}>In Transit</Tag>
+                    </div>
+                </InfoWindowF>
+                
+                <MarkerF position={{ lat: -17.8100, lng: 31.0400 }} />
+                <InfoWindowF position={{ lat: -17.8100, lng: 31.0400 }}>
+                    <div style={{ padding: '4px' }}>
+                      <Text strong>D-202 (Sarah)</Text><br/>
+                      <Tag color="success" style={{ marginTop: 4 }}>Online</Tag>
+                    </div>
+                </InfoWindowF>
             </BaseMap>
           </Card>
         </Col>

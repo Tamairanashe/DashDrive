@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
     Table, 
     Tag, 
@@ -142,7 +142,7 @@ export const ParcelOrders: React.FC = () => {
             key: 'pickup',
             render: (name: string, record: ParcelOrder) => (
                 <Tooltip title={record.sender.location}>
-                    <Space direction="vertical" size={0}>
+                    <Space orientation="vertical" size={0}>
                         <Text strong style={{ fontSize: 13 }}>{name}</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>{record.sender.location}</Text>
                     </Space>
@@ -155,7 +155,7 @@ export const ParcelOrders: React.FC = () => {
             key: 'dropoff',
             render: (name: string, record: ParcelOrder) => (
                 <Tooltip title={record.receiver.location}>
-                    <Space direction="vertical" size={0}>
+                    <Space orientation="vertical" size={0}>
                         <Text strong style={{ fontSize: 13 }}>{name}</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>{record.receiver.location}</Text>
                     </Space>
@@ -166,7 +166,7 @@ export const ParcelOrders: React.FC = () => {
             title: 'Package / Weight',
             key: 'attributes',
             render: (_: any, record: ParcelOrder) => (
-                <Space direction="vertical" size={0}>
+                <Space orientation="vertical" size={0}>
                     <Tag color="cyan" style={{ margin: 0 }}>{record.category}</Tag>
                     <Text type="secondary" style={{ fontSize: 11 }}>{record.weight}</Text>
                 </Space>
@@ -176,7 +176,7 @@ export const ParcelOrders: React.FC = () => {
             title: 'Proposed Fare',
             key: 'fare',
             render: (_: any, record: ParcelOrder) => (
-                <Space direction="vertical" size={0}>
+                <Space orientation="vertical" size={0}>
                     <Text strong style={{ color: '#10b981' }}>${record.proposedFare.toFixed(2)}</Text>
                     <Text delete type="secondary" style={{ fontSize: 10 }}>${record.sysRecFare.toFixed(2)}</Text>
                 </Space>
@@ -266,7 +266,7 @@ export const ParcelOrders: React.FC = () => {
                 open={!!selectedOrder && !isBidsModalOpen}
             >
                 {selectedOrder && (
-                    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                         <div style={{ height: 250, borderRadius: 12, overflow: 'hidden' }}>
                             <MapPreview
                                 type="order-route"
@@ -277,6 +277,7 @@ export const ParcelOrders: React.FC = () => {
                                     customerName: selectedOrder.receiver.name
                                 }}
                                 label={`Parcel ID ${selectedOrder.id}`}
+                                variant="contained"
                             />
                         </div>
 
@@ -372,7 +373,7 @@ export const ParcelOrders: React.FC = () => {
                 width={700}
             >
                 {selectedOrder && (
-                    <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                    <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                         <Alert 
                             message="Bidding Model Active" 
                             description={`Rider has proposed $${selectedOrder.proposedFare.toFixed(2)}. System recommendation was $${selectedOrder.sysRecFare.toFixed(2)}.`}
@@ -402,4 +403,5 @@ export const ParcelOrders: React.FC = () => {
         </div>
     );
 };
+
 

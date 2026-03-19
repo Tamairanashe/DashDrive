@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Typography, Row, Col, Card, Table, Tag, Switch, 
   Button, Space, InputNumber, Select, Divider, Statistic, message, Tooltip, Badge 
@@ -58,7 +58,7 @@ export const MarketplaceConfigPage: React.FC = () => {
       dataIndex: 'name',
       key: 'name',
       render: (t: string, r: FinancialProduct) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{t}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>{r.provider}</Text>
         </Space>
@@ -190,3 +190,4 @@ export const MarketplaceConfigPage: React.FC = () => {
     </div>
   );
 };
+

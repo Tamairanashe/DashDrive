@@ -118,6 +118,10 @@ export const CustomerLevelManagement: React.FC = () => {
     { id: 'TRSH-2', name: 'Alpha Test', deletedAt: '2023-11-20 09:15', reason: 'Temporary testing tier' },
   ]);
 
+  const handleResetFilters = () => {
+    setSearchQuery('');
+  };
+
   const handleRefresh = () => {
     setRefreshing(true);
     message.loading({ content: 'Syncing tier data...', key: 'refresh' });
@@ -273,7 +277,7 @@ export const CustomerLevelManagement: React.FC = () => {
       title: 'Current Utilization', 
       key: 'usage',
       render: (_: any, record: any) => (
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
               <Text style={{ fontSize: 12 }}><Users className="w-3 h-3 inline mr-2 text-slate-400" /> {record.totalCustomer} Customers</Text>
               <Text style={{ fontSize: 12 }}><TrendingUp className="w-3 h-3 inline mr-2 text-slate-400" /> {record.totalTrip} Total Trips</Text>
           </Space>
@@ -388,7 +392,7 @@ export const CustomerLevelManagement: React.FC = () => {
       </Row>
 
       {/* Tier List */}
-      <Card bordered={false} className="shadow-md rounded-2xl overflow-hidden">
+      <Card variant="borderless" className="shadow-md rounded-2xl overflow-hidden">
         <div className="mb-6 flex flex-wrap justify-between items-center gap-4">
           <div className="flex items-center gap-6">
             <Title level={5} style={{ margin: 0 }}>Active Tier Configuration</Title>
@@ -403,13 +407,19 @@ export const CustomerLevelManagement: React.FC = () => {
             />
           </div>
           
-          <Input 
-            prefix={<Search className="w-4 h-4 text-slate-400" />} 
-            placeholder="Search tiers by name..." 
-            style={{ width: 300, borderRadius: 10 }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <Space>
+            <Tooltip title="Reset Filters">
+              <Button icon={<ReloadOutlined />} onClick={handleResetFilters} />
+            </Tooltip>
+            <Input 
+              prefix={<Search className="w-4 h-4 text-slate-400" />} 
+              placeholder="Search tiers by name..." 
+              style={{ width: 300, borderRadius: 10 }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              allowClear
+            />
+          </Space>
         </div>
 
         <Table 
@@ -459,7 +469,7 @@ export const CustomerLevelManagement: React.FC = () => {
                 title: 'Deletion Context', 
                 key: 'context', 
                 render: (_, record) => (
-                    <Space direction="vertical" size={0}>
+                    <Space orientation="vertical" size={0}>
                          <Text type="secondary" style={{ fontSize: 11 }}>Reason: {record.reason || 'Not specified'}</Text>
                          <Text type="secondary" style={{ fontSize: 10 }}>Date: {record.deletedAt}</Text>
                     </Space>
@@ -661,3 +671,4 @@ const Alert: React.FC<{message: string, description: string, type: 'info' | 'war
         </div>
     </div>
 );
+

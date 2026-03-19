@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Table, 
   Card, 
@@ -283,7 +283,7 @@ export const DriverVerification: React.FC = () => {
       title: 'Vehicle',
       key: 'vehicle',
       render: (record: Application) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Tag color="blue" icon={<CarOutlined />}>{record.vehicleType}</Tag>
           <Text type="secondary" style={{ fontSize: 10 }}>{record.plate}</Text>
         </Space>
@@ -491,7 +491,7 @@ export const DriverVerification: React.FC = () => {
               )}
 
               <Card size="small" title="Validation Checklist">
-                <Space direction="vertical" style={{ width: '100%' }}>
+                <Space orientation="vertical" style={{ width: '100%' }}>
                   <Checkbox>License number matches document</Checkbox>
                   <Checkbox>Identification (ID/Passport) is valid</Checkbox>
                   <Checkbox>Proof of Residency verified</Checkbox>
@@ -580,7 +580,7 @@ export const DriverVerification: React.FC = () => {
                           </div>
                         }
                         description={
-                          <Space direction="vertical" size={2} style={{ marginTop: 4 }}>
+                          <Space orientation="vertical" size={2} style={{ marginTop: 4 }}>
                             <Text type="secondary" style={{ fontSize: 11 }}>
                               <ClockCircleOutlined /> Uploaded: 2 hours ago
                             </Text>
@@ -625,7 +625,7 @@ export const DriverVerification: React.FC = () => {
         <Text strong>Select Rejection Reason:</Text>
         <div style={{ marginTop: 12 }}>
           <Radio.Group value={rejectionReason} onChange={(e) => handleReasonChange(e.target.value)} style={{ width: '100%' }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               <Radio value="Image is blurry or unreadable">Image is blurry or unreadable</Radio>
               <Radio value="Identification document has expired">Identification document has expired</Radio>
               <Radio value="Details do not match profile information">Details do not match profile information</Radio>
@@ -679,3 +679,4 @@ export const DriverVerification: React.FC = () => {
     </div>
   );
 };
+

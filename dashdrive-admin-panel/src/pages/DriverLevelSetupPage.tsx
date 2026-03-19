@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Table, 
   Tag, 
@@ -123,7 +123,7 @@ export const DriverLevelSetupPage: React.FC = () => {
       title: 'Requirements',
       key: 'requirements',
       render: (_: any, record: any) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           <Text style={{ fontSize: 12 }}><strong>{record.reqTrips === 0 ? 'Base' : record.reqTrips}</strong> Trips/mo</Text>
           <Text style={{ fontSize: 12 }}><strong>{record.minAcceptance === 0 ? 'Any' : `${record.minAcceptance}%`}</strong> Acceptance</Text>
           <Text style={{ fontSize: 12 }}><strong>{record.minHours === 0 ? 'Any' : `${record.minHours}h`}</strong> Active/mo</Text>
@@ -278,7 +278,7 @@ export const DriverLevelSetupPage: React.FC = () => {
               render: (_: any, record: any) => (
                 <Space>
                   <Text type="secondary">{record.from}</Text>
-                  <Text>â†’</Text>
+                  <Text>→</Text>
                   <Text strong>{record.to}</Text>
                 </Space>
               )
@@ -346,3 +346,4 @@ export const DriverLevelSetupPage: React.FC = () => {
     </div>
   );
 };
+

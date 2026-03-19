@@ -181,7 +181,7 @@ export const DriverListPage: React.FC = () => {
          title: 'Governance',
          key: 'governance',
          render: (_: any, record: any) => (
-           <Space direction="vertical" size={0}>
+           <Space orientation="vertical" size={0}>
              <Text style={{ fontSize: 10, color: '#64748b' }}>Added: {new Date(record.createdAt).toLocaleDateString()}</Text>
              <Text style={{ fontSize: 10, color: '#64748b' }}>Sync: {new Date(record.updatedAt).toLocaleTimeString()}</Text>
            </Space>
@@ -342,3 +342,4 @@ export const DriverListPage: React.FC = () => {
     </div>
   );
 };
+

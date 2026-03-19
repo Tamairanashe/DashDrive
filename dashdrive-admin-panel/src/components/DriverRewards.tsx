@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Typography, 
   Row, 
@@ -116,7 +116,7 @@ export const DriverRewards: React.FC<DriverRewardsProps> = ({ activeTab }) => {
 
             <Divider dashed>AUTOMATIC FRAUD CONTROLS</Divider>
             
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <Space orientation="vertical" style={{ width: '100%' }} size="middle">
               {[
                 { label: 'Ghost Trip Detection', desc: 'Instantly disqualify campaigns if GPS deviation > 20%', status: true },
                 { label: 'Multiple Account Link', desc: 'Freeze rewards if driver login detected on 2+ devices', status: true },
@@ -138,7 +138,7 @@ export const DriverRewards: React.FC<DriverRewardsProps> = ({ activeTab }) => {
       </Col>
       <Col span={8}>
         <Card className="shadow-sm border-none text-white" style={{ background: '#001529' }}>
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             <Space size="middle">
               <SyncIcon style={{ fontSize: 24, color: '#0089D1' }} spin />
               <Text style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>SYSTEM SYNCHRONIZER</Text>
@@ -217,7 +217,7 @@ export const DriverRewards: React.FC<DriverRewardsProps> = ({ activeTab }) => {
       title: 'Period',
       key: 'period',
       render: (_: any, record: any) => (
-        <Text type="secondary" style={{ fontSize: 11 }}>{record.startDate} â†’ {record.endDate}</Text>
+        <Text type="secondary" style={{ fontSize: 11 }}>{record.startDate} → {record.endDate}</Text>
       )
     },
     {
@@ -254,7 +254,7 @@ export const DriverRewards: React.FC<DriverRewardsProps> = ({ activeTab }) => {
 
   const renderCampaigns = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Summary Stats â€” matching standard DashDrive Statistic card pattern */}
+      {/* Summary Stats — matching standard DashDrive Statistic card pattern */}
       <Row gutter={[24, 24]}>
         {[
           { title: 'Active Campaigns', value: 4, icon: <RocketOutlined />, color: '#3b82f6' },
@@ -301,7 +301,7 @@ export const DriverRewards: React.FC<DriverRewardsProps> = ({ activeTab }) => {
       <Card bordered={false} className="shadow-sm">
         <Row gutter={24} align="middle">
           <Col span={8}>
-            <Space direction="vertical" size={12}>
+            <Space orientation="vertical" size={12}>
               <div style={{ width: 48, height: 48, background: '#faad1415', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <TrophyOutlined style={{ fontSize: 24, color: '#faad14' }} />
               </div>
@@ -345,3 +345,4 @@ export const DriverRewards: React.FC<DriverRewardsProps> = ({ activeTab }) => {
     </div>
   );
 };
+

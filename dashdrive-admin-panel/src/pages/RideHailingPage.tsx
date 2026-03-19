@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Typography, Card, Tabs, Table, Tag,
   Button, Space, Form, Input, InputNumber, Divider,
@@ -383,7 +383,7 @@ export const RideHailingPage: React.FC = () => {
       key: 'surge',
       label: 'Surge Settings',
       children: (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
           {/* Dynamic Surge Toggles */}
           <Card bordered={false} className="shadow-sm">
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
@@ -708,3 +708,4 @@ export const RideHailingPage: React.FC = () => {
     </div>
   );
 };
+

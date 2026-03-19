@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Typography, Card, Table, Button, Space, Tag, Input, Select, Badge } from 'antd';
 import { FileSearch, Search, Filter, Download, Terminal, AlertCircle, Info, ShieldAlert } from 'lucide-react';
 
@@ -75,7 +75,7 @@ export function SystemLogs() {
  key: 'timestamp',
  width: 180,
  render: (text: string) => (
- <Space direction="vertical" size={0}>
+ <Space orientation="vertical" size={0}>
  <Text className="text-sm font-mono text-zinc-700">{new Date(text).toLocaleDateString()}</Text>
  <Text type="secondary" className="text-xs font-mono">{new Date(text).toLocaleTimeString()}</Text>
  </Space>
@@ -100,7 +100,7 @@ export function SystemLogs() {
  key: 'service',
  width: 200,
  render: (_: any, record: any) => (
- <Space direction="vertical" size={2}>
+ <Space orientation="vertical" size={2}>
  <Text strong className="text-zinc-800 text-sm font-mono">{record.service}</Text>
  <Text type="secondary" className="text-xs font-mono">{record.source}</Text>
  </Space>
@@ -207,3 +207,4 @@ export function SystemLogs() {
  </div>
  );
 }
+

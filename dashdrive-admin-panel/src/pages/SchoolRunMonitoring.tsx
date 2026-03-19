@@ -1,53 +1,40 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Table, Card, Tag, Space, Typography, Row, Col, Statistic, Progress, Drawer, Modal, Button, List, Timeline, Badge, Avatar } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Card, Tag, Space, Typography, Row, Col, Statistic, Progress, Drawer, Modal, Button, List, Timeline, Badge, Avatar, message } from 'antd';
 import { SafetyCertificateOutlined, TeamOutlined, CheckCircleOutlined, AlertOutlined, CarOutlined, PhoneOutlined, BankOutlined, HomeOutlined, EyeOutlined, CompassOutlined, UserOutlined, ClockCircleOutlined, SyncOutlined } from '@ant-design/icons';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { MarkerF, PolylineF, OverlayViewF, OverlayView } from '@react-google-maps/api';
+import { BaseMap, useBaseMap } from '../components/BaseMap';
 
-// Fix Leaflet icon issue
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+const DriverMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
+    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+        <div style={{ transform: 'translate(-50%, -50%)', width: '32px', height: '32px', background: '#fff', border: '3px solid #10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+        </div>
+    </OverlayViewF>
+);
 
-const driverIcon = new L.DivIcon({
-    className: 'driver-marker',
-    html: `<div style="width: 32px; height: 32px; background: #fff; border: 3px solid #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-           </div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-});
+const PickupMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
+    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+        <div style={{ transform: 'translate(-50%, -50%)', width: '24px', height: '24px', background: '#0f172a', border: '2px solid #fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+    </OverlayViewF>
+);
 
-const pickupIcon = new L.DivIcon({
-    className: 'pickup-marker',
-    html: `<div style="width: 24px; height: 24px; background: #0f172a; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-           </div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-});
+const SchoolMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
+    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+        <div style={{ transform: 'translate(-50%, -50%)', width: '24px', height: '24px', background: '#3b82f6', border: '2px solid #fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+    </OverlayViewF>
+);
 
-const schoolIcon = new L.DivIcon({
-    className: 'school-marker',
-    html: `<div style="width: 24px; height: 24px; background: #3b82f6; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-           </div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-});
-
-const MapFitter = ({ bounds }: { bounds: L.LatLngBoundsExpression | null }) => {
-    const map = useMap();
+const MapFitter = ({ bounds }: { bounds: google.maps.LatLngLiteral[] | null }) => {
+    const { map } = useBaseMap();
     useEffect(() => {
-        if (bounds) {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
-            // Invalidate size to fix rendering issues in Modals
-            setTimeout(() => map.invalidateSize(), 300);
+        if (map && bounds && bounds.length > 0) {
+            const gBounds = new google.maps.LatLngBounds();
+            bounds.forEach(p => gBounds.extend(p));
+            map.fitBounds(gBounds, { top: 50, right: 50, bottom: 50, left: 50 });
         }
     }, [bounds, map]);
     return null;
@@ -133,7 +120,7 @@ const SchoolRunMonitoring = () => {
             pickup: { lat: -17.8200, lng: 31.0500 },
             schoolLoc: { lat: -17.8300, lng: 31.0600 },
             driver: { lat: -17.8220, lng: 31.0520 },
-            route: [[-17.8200, 31.0500], [-17.8210, 31.0510], [-17.8220, 31.0520], [-17.8300, 31.0600]]
+            route: [{lat: -17.8200, lng: 31.0500}, {lat: -17.8210, lng: 31.0510}, {lat: -17.8220, lng: 31.0520}, {lat: -17.8300, lng: 31.0600}]
         },
         {
             key: '2',
@@ -145,7 +132,7 @@ const SchoolRunMonitoring = () => {
             pickup: { lat: -17.8200, lng: 31.0500 },
             schoolLoc: { lat: -17.8300, lng: 31.0600 },
             driver: { lat: -17.8250, lng: 31.0550 },
-            route: [[-17.8200, 31.0500], [-17.8220, 31.0520], [-17.8250, 31.0550], [-17.8300, 31.0600]]
+            route: [{lat: -17.8200, lng: 31.0500}, {lat: -17.8220, lng: 31.0520}, {lat: -17.8250, lng: 31.0550}, {lat: -17.8300, lng: 31.0600}]
         },
         {
             key: '3',
@@ -157,14 +144,14 @@ const SchoolRunMonitoring = () => {
             pickup: { lat: -17.8000, lng: 31.0333 },
             schoolLoc: { lat: -17.7500, lng: 31.1000 },
             driver: { lat: -17.7505, lng: 31.1005 },
-            route: [[-17.8000, 31.0333], [-17.7750, 31.0700], [-17.7505, 31.1005], [-17.7500, 31.1000]]
+            route: [{lat: -17.8000, lng: 31.0333}, {lat: -17.7750, lng: 31.0700}, {lat: -17.7505, lng: 31.1005}, {lat: -17.7500, lng: 31.1000}]
         },
     ];
 
-    const mapBounds: L.LatLngBoundsExpression | null = selectedRun ? [
-        [selectedRun.pickup.lat, selectedRun.pickup.lng],
-        [selectedRun.schoolLoc.lat, selectedRun.schoolLoc.lng],
-        [selectedRun.driver.lat, selectedRun.driver.lng]
+    const mapBounds: google.maps.LatLngLiteral[] | null = selectedRun ? [
+        { lat: selectedRun.pickup.lat, lng: selectedRun.pickup.lng },
+        { lat: selectedRun.schoolLoc.lat, lng: selectedRun.schoolLoc.lng },
+        { lat: selectedRun.driver.lat, lng: selectedRun.driver.lng }
     ] : null;
 
     return (
@@ -227,7 +214,7 @@ const SchoolRunMonitoring = () => {
                 open={detailsVisible}
             >
                 {selectedRun && (
-                    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                         <Card size="small" title="Trip Information">
                             <List size="small">
                                 <List.Item><Text type="secondary"><UserOutlined /> Student:</Text> <Text strong>{selectedRun.studentName}</Text></List.Item>
@@ -278,14 +265,21 @@ const SchoolRunMonitoring = () => {
                 <div style={{ padding: '20px', background: '#f0f2f5', borderRadius: '12px', textAlign: 'center' }}>
                     <div style={{ height: '400px', background: '#e6f7ff', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
                         {selectedRun && (
-                            <MapContainer center={[selectedRun.driver.lat, selectedRun.driver.lng]} zoom={13} style={{ height: '100%', width: '100%' }}>
-                                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" />
+                            <BaseMap center={[selectedRun.driver.lat, selectedRun.driver.lng]} zoom={13} height={400}>
                                 <MapFitter bounds={mapBounds} />
-                                <Marker position={[selectedRun.driver.lat, selectedRun.driver.lng]} icon={driverIcon} />
-                                <Marker position={[selectedRun.pickup.lat, selectedRun.pickup.lng]} icon={pickupIcon} />
-                                <Marker position={[selectedRun.schoolLoc.lat, selectedRun.schoolLoc.lng]} icon={schoolIcon} />
-                                <Polyline positions={selectedRun.route} color="#3b82f6" weight={3} opacity={0.6} dashArray="10, 10" />
-                            </MapContainer>
+                                <DriverMarker position={{ lat: selectedRun.driver.lat, lng: selectedRun.driver.lng }} />
+                                <PickupMarker position={{ lat: selectedRun.pickup.lat, lng: selectedRun.pickup.lng }} />
+                                <SchoolMarker position={{ lat: selectedRun.schoolLoc.lat, lng: selectedRun.schoolLoc.lng }} />
+                                <PolylineF 
+                                    path={selectedRun.route} 
+                                    options={{ 
+                                        strokeColor: "#3b82f6", 
+                                        strokeWeight: 3, 
+                                        strokeOpacity: 0.6,
+                                        icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 }, offset: '0', repeat: '20px' }]
+                                    }} 
+                                />
+                            </BaseMap>
                         )}
                         <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }}>
                             <Tag color="blue" icon={<SyncOutlined spin />}>Live GPS Streaming</Tag>
@@ -310,3 +304,4 @@ const SchoolRunMonitoring = () => {
 };
 
 export default SchoolRunMonitoring;
+

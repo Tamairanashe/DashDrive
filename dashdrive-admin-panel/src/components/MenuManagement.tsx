@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Table, Card, Button, Input, Space, Tag, Typography, Row, Col, Dropdown, MenuProps, Empty, Tabs } from 'antd';
 import { PlusOutlined, SearchOutlined, FilterOutlined, MoreOutlined, EditOutlined, EyeOutlined, CloudUploadOutlined, AppstoreAddOutlined } from '@ant-design/icons';
 import { Package, Utensils, Clock, Tag as TagIcon, Layers } from 'lucide-react';
@@ -85,7 +85,7 @@ export const MenuManagement: React.FC = () => {
       title: 'Assignment',
       key: 'assignment',
       render: (_: any, record: MenuItem) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           <Space>
             <Utensils className="w-4 h-4 text-slate-400" />
             <Text strong>{record.restaurant}</Text>
@@ -101,7 +101,7 @@ export const MenuManagement: React.FC = () => {
       title: 'Price & Data',
       key: 'price',
       render: (_: any, record: MenuItem) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           <Text strong style={{ fontSize: 15 }}>{record.price}</Text>
           <Space>
             <Clock className="w-3.5 h-3.5 text-slate-400" />
@@ -212,3 +212,4 @@ export const MenuManagement: React.FC = () => {
     </div>
   );
 };
+

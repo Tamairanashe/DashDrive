@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { 
@@ -397,7 +397,7 @@ export const CreateBlogPage: React.FC = () => {
       <Row gutter={[24, 24]}>
         {/* Main Content */}
         <Col span={16}>
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             
             {/* Title & Description Section */}
             <Card 
@@ -457,7 +457,7 @@ export const CreateBlogPage: React.FC = () => {
                       <RadiusSettingOutlined /> <CaretDownOutlined style={{ fontSize: 10 }} />
                     </Button>
                   </Dropdown>
-                  <Divider type="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
+                  <Divider orientation="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
 
                   {/* Formatting */}
                   <AntTooltip title="Bold (Ctrl+B)">
@@ -509,7 +509,7 @@ export const CreateBlogPage: React.FC = () => {
                       <BgColorsOutlined /> <CaretDownOutlined style={{ fontSize: 10 }} />
                     </Button>
                   </Dropdown>
-                  <Divider type="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
+                  <Divider orientation="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
 
                   {/* Lists */}
                   <AntTooltip title="Unordered list">
@@ -535,7 +535,7 @@ export const CreateBlogPage: React.FC = () => {
                       <AlignLeftOutlined /> <CaretDownOutlined style={{ fontSize: 10 }} />
                     </Button>
                   </Dropdown>
-                  <Divider type="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
+                  <Divider orientation="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
 
                   {/* Indent / Outdent */}
                   <AntTooltip title="Outdent">
@@ -544,7 +544,7 @@ export const CreateBlogPage: React.FC = () => {
                   <AntTooltip title="Indent">
                     <Button size="small" type="text" icon={<MenuUnfoldOutlined />} onClick={() => handleFormat('indent', '+1')} />
                   </AntTooltip>
-                  <Divider type="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
+                  <Divider orientation="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
 
                   {/* Tables */}
                   <Dropdown dropdownRender={() => (
@@ -557,7 +557,7 @@ export const CreateBlogPage: React.FC = () => {
                       <TableOutlined /> <CaretDownOutlined style={{ fontSize: 10 }} />
                     </Button>
                   </Dropdown>
-                  <Divider type="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
+                  <Divider orientation="vertical" style={{ height: 20, borderColor: isDark ? '#333' : '#d9d9d9' }} />
 
                   {/* Media & Tools */}
                   <AntTooltip title="Link (Ctrl+K)">
@@ -707,7 +707,7 @@ export const CreateBlogPage: React.FC = () => {
 
         {/* Info & Settings Sidebar */}
         <Col span={8}>
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             
             {/* General Settings */}
             <Card 
@@ -883,7 +883,7 @@ export const CreateBlogPage: React.FC = () => {
                   I'm your personal assistance to easy your long task smile. Just select below how you give me instruction to get your Blog all Data.
                 </Paragraph>
 
-                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                   <Button 
                     block 
                     size="large" 
@@ -1130,3 +1130,4 @@ export const CreateBlogPage: React.FC = () => {
     </div>
   );
 };
+

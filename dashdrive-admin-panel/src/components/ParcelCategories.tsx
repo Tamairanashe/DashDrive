@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Table,
     Tag,
@@ -105,7 +105,7 @@ export const ParcelCategories: React.FC = () => {
             title: 'Category Name',
             key: 'name',
             render: (_: any, record: ParcelCategory) => (
-                <Space direction="vertical" size={0}>
+                <Space orientation="vertical" size={0}>
                     <Text strong>{record.name}</Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>{record.id}</Text>
                 </Space>
@@ -167,7 +167,7 @@ export const ParcelCategories: React.FC = () => {
     ];
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                 <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px', color: '#0f172a' }}>Logistics Taxonomy</Title>
@@ -249,4 +249,5 @@ export const ParcelCategories: React.FC = () => {
         </Space>
     );
 };
+
 

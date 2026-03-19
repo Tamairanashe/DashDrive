@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Tabs, 
   Card, 
@@ -153,7 +153,7 @@ export const FintechManagement: React.FC = () => {
         <Col span={16}>
           <Card title="Approval Velocity & Trends" bordered={false} className="shadow-sm" extra={<Button type="link">View Report</Button>}>
             <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: 8 }}>
-              <Space direction="vertical" align="center">
+              <Space orientation="vertical" align="center">
                 <LineChartOutlined style={{ fontSize: 48, color: '#bfbfbf' }} />
                 <Text type="secondary">Product Usage Analytics (Chart Placeholder)</Text>
               </Space>
@@ -207,7 +207,7 @@ export const FintechManagement: React.FC = () => {
         title: 'Rent-to-Buy Req.', 
         dataIndex: 'historyReq',
         render: (text: string, record: any) => record.type === 'Financing' ? (
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Tag color="orange">Deposit: {record.deposit}</Tag>
             <Tag color="purple" style={{ marginTop: 4 }}>History: {text || '6m+'}</Tag>
           </Space>
@@ -577,7 +577,7 @@ export const FintechManagement: React.FC = () => {
         title: 'User', 
         key: 'user',
         render: (record: FintechApplication) => (
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Text strong>{record.userId}</Text>
             <Tag color={record.userType === 'Driver' ? 'blue' : 'orange'} style={{ fontSize: 10 }}>{record.userType}</Tag>
           </Space>
@@ -782,7 +782,7 @@ export const FintechManagement: React.FC = () => {
         <Col span={12}>
           <Card title="Usage Distribution" bordered={false} className="shadow-sm">
             <div style={{ height: 280, background: '#f9f9f9', borderRadius: 8, padding: 24 }}>
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space orientation="vertical" style={{ width: '100%' }}>
                 <Text type="secondary">Early Payout Adoption</Text>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 160, paddingTop: 20 }}>
                   <div style={{ flex: 1, height: '40%', background: '#1677ff', borderRadius: '4px 4px 0 0' }} />
@@ -857,7 +857,7 @@ export const FintechManagement: React.FC = () => {
               </Col>
             </Row>
             <div style={{ marginTop: 24, height: 300, background: '#fafafa', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Space direction="vertical" align="center">
+              <Space orientation="vertical" align="center">
                 <BarChartOutlined style={{ fontSize: 48, color: '#bfbfbf' }} />
                 <Text type="secondary">Monthly Revenue Breakdown (Chart Placeholder)</Text>
               </Space>
@@ -962,3 +962,4 @@ export const FintechManagement: React.FC = () => {
     </div>
   );
 };
+

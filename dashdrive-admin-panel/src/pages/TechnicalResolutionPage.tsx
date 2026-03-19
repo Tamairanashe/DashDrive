@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, Tag, Button, Space, Typography, Card, Badge, Row, Col, 
   Tabs, Statistic, Drawer, Descriptions, Alert, Input, Form,
@@ -69,7 +69,7 @@ export const TechnicalResolutionPage: React.FC = () => {
         status: 'Hotfix Pending',
         systemLogs: [
           '[11:30:22] INFO: Socket.io connection stable at 45ms latency',
-          '[11:32:01] WARN: High GPS variance (Ïƒ=14.2m) reported from driver device_id: DRV_99',
+          '[11:32:01] WARN: High GPS variance (σ=14.2m) reported from driver device_id: DRV_99',
           '[11:32:15] DEBUG: Recalculating route using OSMR engine'
         ]
       }
@@ -231,7 +231,7 @@ export const TechnicalResolutionPage: React.FC = () => {
 
         <Col span={8}>
           <Card variant="borderless" className="shadow-sm" title={<Space><DatabaseOutlined /> System State Tools</Space>} style={{ borderRadius: 16 }}>
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <Space orientation="vertical" style={{ width: '100%' }} size="middle">
               <div style={{ padding: 12, border: '1px solid #d9d9d933', borderRadius: 8 }}>
                 <Text strong style={{ fontSize: 13 }}>Force State Correction</Text>
                 <br />
@@ -297,7 +297,7 @@ export const TechnicalResolutionPage: React.FC = () => {
              <Text strong>{selectedTicket?.ticketId || 'N/A'}</Text>
           </Form.Item>
           <Form.Item label="Resolution Scenario">
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               {SCENARIOS.map(s => (
                 <Card 
                   key={s.value}
@@ -333,3 +333,4 @@ const Empty: React.FC<{ description: string }> = ({ description }) => (
     <Text type="secondary">{description}</Text>
   </div>
 );
+
