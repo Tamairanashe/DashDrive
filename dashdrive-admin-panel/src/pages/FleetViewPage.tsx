@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Row, Col, Card, Typography, Select, Input, Button, Avatar, Space, Tag, List, Statistic, Divider, Alert, message, Badge, Switch, Drawer, Tabs, Table, Progress, Modal
+  Row, Col, Card, Typography, Select, Input, Button, Avatar, Space, Tag, List, Statistic, Divider, Alert, Badge, Switch, Drawer, Tabs, Table, Progress, Modal, App, Flex
 } from 'antd';
 import { 
     SearchOutlined, PhoneOutlined, MessageOutlined, StarOutlined, 
@@ -11,8 +11,8 @@ import {
 } from '@ant-design/icons';
 import { MarkerF, InfoWindowF, PolylineF, CircleF, OverlayViewF, OverlayView } from '@react-google-maps/api';
 import { BaseMap, useBaseMap } from '../components/BaseMap';
-import carMarker from '../assets/car-marker.png';
-import carMarkerHandicap from '../assets/car-marker-handicap.png';
+import carMarker from '../assets/car-marker-topview.png';
+import carMarkerHandicap from '../assets/car-marker-WAV.png';
 // import L from 'leaflet';
 import { useLocation } from 'react-router-dom';
 
@@ -105,9 +105,8 @@ interface Customer {
 const MOCK_DRIVERS: Driver[] = [
     { 
         id: 'D-201', name: 'John Makoni', status: 'On Trip', service: 'Food Delivery', 
-        lat: -17.824858, lng: 31.053028, type: 'Motorcycle', plate: 'AB-123', 
-        rating: 4.8, tripsToday: 14, 
-        currentTrip: { id: 'ORD-991', pickup: {lat: -17.8200, lng: 31.0500}, dropoff: {lat: -17.8300, lng: 31.0600}, eta: '12 min' },
+        lat: -17.824858, lng: 31.053028, type: 'Motorcycle', plate: 'AB-123', heading: 45, 
+        rating: 4.8, tripsToday: 14,         currentTrip: { id: 'ORD-991', pickup: {lat: -17.8200, lng: 31.0500}, dropoff: {lat: -17.8300, lng: 31.0600}, eta: '12 min' },
         alerts: [],
         phone: '+263 771 222 333',
         email: 'john.m@dashdrive.com',
@@ -196,6 +195,7 @@ const MapController = ({ selectedPos, selectedCity }: { selectedPos: {lat: numbe
 
 
 export const FleetViewPage: React.FC = () => {
+    const { message, notification, modal } = App.useApp();
     const [selectedCountry, setSelectedCountry] = useState('Zimbabwe');
     const [selectedRegion, setSelectedRegion] = useState('Mashonaland');
     const [selectedCity, setSelectedCity] = useState('Harare');
@@ -235,7 +235,6 @@ export const FleetViewPage: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const zoneId = params.get('zone');
     if (zoneId) {
-      // Mock logic: Assuming zone z1 maps to CBD containing D-201 and D-205
       if (zoneId === 'z1') {
          setSearchQuery('CBD'); 
          message.info('Filtered active drivers in CBD Zone');
@@ -348,7 +347,7 @@ export const FleetViewPage: React.FC = () => {
     };
 
     const handleUnsuspend = (type: 'driver' | 'customer') => {
-        confirm({
+        modal.confirm({
             title: `Are you sure you want to reinstate this ${type}?`,
             onOk() {
                 if (type === 'driver') {
@@ -366,7 +365,7 @@ export const FleetViewPage: React.FC = () => {
     <div style={{ paddingBottom: 24, height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
         
       {/* Header & Fleet Summary */}
-        <Card bordered={false} className="shadow-sm" style={{ marginBottom: 16, borderRadius: 12 }}>
+        <Card variant="borderless" className="shadow-sm" style={{ marginBottom: 16, borderRadius: 12 }}>
             <Row justify="space-between" align="middle" gutter={[0, 16]}>
                 <Col span={24}>
                     <Row justify="space-between" align="middle">
@@ -378,7 +377,7 @@ export const FleetViewPage: React.FC = () => {
                                     <Select 
                                         value={selectedCountry} 
                                         style={{ width: 140 }} 
-                                        bordered={false}
+                                        variant="borderless"
                                         onChange={(val) => {
                                             setSelectedCountry(val);
                                             const firstRegion = Object.keys(LOCATION_DATA[val].regions)[0];
@@ -391,7 +390,7 @@ export const FleetViewPage: React.FC = () => {
                                     <Select 
                                         value={selectedRegion} 
                                         style={{ width: 140 }} 
-                                        bordered={false}
+                                        variant="borderless"
                                         onChange={(val) => {
                                             setSelectedRegion(val);
                                             setSelectedCity(LOCATION_DATA[selectedCountry].regions[val][0]);
@@ -402,7 +401,7 @@ export const FleetViewPage: React.FC = () => {
                                     <Select 
                                         value={selectedCity} 
                                         style={{ width: 120 }} 
-                                        bordered={false}
+                                        variant="borderless"
                                         onChange={setSelectedCity}
                                         suffixIcon={<EnvironmentOutlined />}
                                     >
@@ -421,12 +420,12 @@ export const FleetViewPage: React.FC = () => {
                 </Col>
                 <Col span={24}>
                     <Row justify="space-around" align="middle" style={{ textAlign: 'center' }}>
-                        <Col><Statistic title="Online" value={312} valueStyle={{ color: '#10b981', fontSize: 18 }}/></Col>
-                        <Col><Statistic title="Busy" value={210} valueStyle={{ color: '#f59e0b', fontSize: 18 }}/></Col>
-                        <Col><Statistic title="Idle" value={102} valueStyle={{ color: '#3b82f6', fontSize: 18 }}/></Col>
+                        <Col><Statistic title="Online" value={312} styles={{ content: { color: '#10b981', fontSize: 18 } }}/></Col>
+                        <Col><Statistic title="Busy" value={210} styles={{ content: { color: '#f59e0b', fontSize: 18 } }}/></Col>
+                        <Col><Statistic title="Idle" value={102} styles={{ content: { color: '#3b82f6', fontSize: 18 } }}/></Col>
                         <Col><Divider orientation="vertical" style={{ height: 32 }} /></Col>
-                        <Col><Statistic title="Active Trips" value={184} valueStyle={{ fontSize: 18 }}/></Col>
-                        <Col><Statistic title="Avg ETA" value="6.5m" valueStyle={{ fontSize: 18 }}/></Col>
+                        <Col><Statistic title="Active Trips" value={184} styles={{ content: { fontSize: 18 } }}/></Col>
+                        <Col><Statistic title="Avg ETA" value="6.5m" styles={{ content: { fontSize: 18 } }}/></Col>
                     </Row>
                 </Col>
             </Row>
@@ -481,7 +480,7 @@ export const FleetViewPage: React.FC = () => {
       <Row gutter={16} style={{ flex: 1, minHeight: 0 }}>
         {/* Map Column */}
         <Col span={17} style={{ height: '100%' }}>
-            <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 0, height: '100%', minHeight: 600, position: 'relative', overflow: 'hidden' }}>
+            <Card variant="borderless" className="shadow-sm" styles={{ body: { padding: 0, height: '100%', minHeight: 600, position: 'relative', overflow: 'hidden' } }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
                     <BaseMap center={[-17.824858, 31.053028]} zoom={12} height="100%">
                     
@@ -529,9 +528,27 @@ export const FleetViewPage: React.FC = () => {
                                     position: 'relative'
                                 }}>
                                     {d.alerts.length > 0 && <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid white' }} className="animate-pulse"></div>}
+                                    
+                                    {/* Halo Effect */}
+                                    <div style={{ 
+                                        position: 'absolute', 
+                                        width: '60px', 
+                                        height: '60px', 
+                                        background: 'rgba(59, 130, 246, 0.2)', 
+                                        borderRadius: '50%', 
+                                        border: '1px solid rgba(59, 130, 246, 0.4)',
+                                        zIndex: -1
+                                    }} className="animate-pulse" />
+
                                     <img 
                                         src={d.id.includes('HANDICAP') ? carMarkerHandicap : carMarker} 
-                                        style={{ width: '24px', height: '24px', objectFit: 'contain' }} 
+                                        style={{ 
+                                            width: '80px', height: '80px', 
+                                            objectFit: 'contain', 
+                                            filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.35))',
+                                            transform: `rotate(${d.heading || 0}deg)`,
+                                            transition: 'transform 0.5s ease'
+                                        }} 
                                         alt="car" 
                                     />
                                 </div>
@@ -612,10 +629,10 @@ export const FleetViewPage: React.FC = () => {
                         <span>{viewMode === 'customers' ? 'Market Demand Points' : 'Active Fleet'}</span>
                         <Badge count={displayItems.length} color="#3b82f6" />
                     </div>} 
-                    bordered={false} 
+                    variant="borderless" 
                     className="shadow-sm" 
                     style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-                    bodyStyle={{ flex: 1, overflowY: 'auto', padding: '12px' }}
+                    styles={{ body: { flex: 1, overflowY: 'auto', padding: '12px' } }}
                 >
                     <List
                         dataSource={displayItems}
@@ -707,7 +724,7 @@ export const FleetViewPage: React.FC = () => {
         width={900}
         onClose={() => setSelectedDriverId(null)}
         open={!!selectedDriver}
-        bodyStyle={{ padding: 0, background: '#f8fafc' }}
+        styles={{ body: { padding: 0, background: '#f8fafc' } }}
       >
           <Tabs
             defaultActiveKey="overview"
@@ -722,14 +739,14 @@ export const FleetViewPage: React.FC = () => {
                         <div style={{ padding: 24 }}>
                             <Row gutter={[24, 24]}>
                                 <Col span={16}>
-                                    <Card title="Performance Intelligence" bordered={false} className="shadow-sm">
+                                    <Card title="Performance Intelligence" variant="borderless" className="shadow-sm">
                                         <Row gutter={[16, 16]}>
-                                            <Col span={8}><Statistic title="Success Rate" value={selectedDriver?.successRate} suffix="%" valueStyle={{ color: '#10b981' }} /></Col>
+                                            <Col span={8}><Statistic title="Success Rate" value={selectedDriver?.successRate} suffix="%" styles={{ content: { color: '#10b981' } }} /></Col>
                                             <Col span={8}><Statistic title="Daily Earnings" value={selectedDriver?.earningsPerDay} prefix="$" /></Col>
-                                            <Col span={8}><Statistic title="Cancellation" value={selectedDriver?.cancellationRate} suffix="%" valueStyle={{ color: '#ef4444' }} /></Col>
+                                            <Col span={8}><Statistic title="Cancellation" value={selectedDriver?.cancellationRate} suffix="%" styles={{ content: { color: '#ef4444' } }} /></Col>
                                             <Col span={8}><Statistic title="Positive Reviews" value={selectedDriver?.posReviewRate} suffix="%" /></Col>
                                             <Col span={8}><Statistic title="Idle Hour Rate" value={selectedDriver?.idleHourRate} suffix="%" /></Col>
-                                            <Col span={8}><Statistic title="Join Date" value={selectedDriver?.joinDate} valueStyle={{ fontSize: 16 }} /></Col>
+                                            <Col span={8}><Statistic title="Join Date" value={selectedDriver?.joinDate} styles={{ content: { fontSize: 16 } }} /></Col>
                                         </Row>
                                         <Divider />
                                         <Row gutter={24}>
@@ -757,7 +774,7 @@ export const FleetViewPage: React.FC = () => {
                                     </Card>
                                 </Col>
                                 <Col span={8}>
-                                    <Card title="Contact Details" bordered={false} className="shadow-sm">
+                                    <Card title="Contact Details" variant="borderless" className="shadow-sm">
                                         <Space orientation="vertical" style={{ width: '100%' }}>
                                             <div><Text type="secondary" style={{ fontSize: 12 }}>Phone Number</Text><br /><Text strong>{selectedDriver?.phone}</Text></div>
                                             <div><Text type="secondary" style={{ fontSize: 12 }}>Email Address</Text><br /><Text strong>{selectedDriver?.email || 'N/A'}</Text></div>
@@ -981,14 +998,14 @@ export const FleetViewPage: React.FC = () => {
                         <div style={{ padding: 24 }}>
                             <Row gutter={[24, 24]}>
                                 <Col span={16}>
-                                    <Card title="Engagement Metrics" bordered={false} className="shadow-sm">
+                                    <Card title="Engagement Metrics" variant="borderless" className="shadow-sm">
                                         <Row gutter={[16, 16]}>
-                                            <Col span={8}><Statistic title="Total Trips" value={selectedCustomer?.trips} valueStyle={{ color: '#3b82f6' }} /></Col>
+                                            <Col span={8}><Statistic title="Total Trips" value={selectedCustomer?.trips} styles={{ content: { color: '#3b82f6' } }} /></Col>
                                             <Col span={8}><Statistic title="Total Spend" value={selectedCustomer?.totalSpend} prefix="$" /></Col>
-                                            <Col span={8}><Statistic title="Wallet Balance" value={selectedCustomer?.walletBalance} prefix="$" valueStyle={{ color: '#10b981' }} /></Col>
-                                            <Col span={8}><Statistic title="Member Since" value={selectedCustomer?.joinDate} valueStyle={{ fontSize: 16 }} /></Col>
-                                            <Col span={8}><Statistic title="Preferred vertical" value={selectedCustomer?.preferredVertical} valueStyle={{ fontSize: 14 }} /></Col>
-                                            <Col span={8}><Statistic title="Last Order" value={selectedCustomer?.lastOrderDate} valueStyle={{ fontSize: 14 }} /></Col>
+                                            <Col span={8}><Statistic title="Wallet Balance" value={selectedCustomer?.walletBalance} prefix="$" styles={{ content: { color: '#10b981' } }} /></Col>
+                                            <Col span={8}><Statistic title="Member Since" value={selectedCustomer?.joinDate} styles={{ content: { fontSize: 16 } }} /></Col>
+                                            <Col span={8}><Statistic title="Preferred vertical" value={selectedCustomer?.preferredVertical} styles={{ content: { fontSize: 14 } }} /></Col>
+                                            <Col span={8}><Statistic title="Last Order" value={selectedCustomer?.lastOrderDate} styles={{ content: { fontSize: 14 } }} /></Col>
                                         </Row>
                                         <Divider />
                                         <Row gutter={24}>
@@ -1022,7 +1039,7 @@ export const FleetViewPage: React.FC = () => {
                                     </Card>
                                 </Col>
                                 <Col span={8}>
-                                    <Card title="User Contact" bordered={false} className="shadow-sm">
+                                    <Card title="User Contact" variant="borderless" className="shadow-sm">
                                         <Space orientation="vertical" style={{ width: '100%' }}>
                                             <div><Text type="secondary" style={{ fontSize: 12 }}>Phone Number</Text><br /><Text strong>{selectedCustomer?.phone}</Text></div>
                                             <div><Text type="secondary" style={{ fontSize: 12 }}>Email Address</Text><br /><Text strong>{selectedCustomer?.email}</Text></div>
@@ -1072,7 +1089,7 @@ export const FleetViewPage: React.FC = () => {
                     children: (
                         <div style={{ padding: 24 }}>
                              <Row gutter={24} style={{ marginBottom: 24 }}>
-                                <Col span={8}><Card size="small" className="shadow-sm"><Statistic title="Available Balance" value={selectedCustomer?.walletBalance} prefix="$" valueStyle={{ color: '#10b981' }} /></Card></Col>
+                                <Col span={8}><Card size="small" className="shadow-sm"><Statistic title="Available Balance" value={selectedCustomer?.walletBalance} prefix="$" styles={{ content: { color: '#10b981' } }} /></Card></Col>
                                 <Col span={8}><Card size="small" className="shadow-sm"><Statistic title="Total Lifetime Spend" value={selectedCustomer?.totalSpend} prefix="$" /></Card></Col>
                                 <Col span={8}><Card size="small" className="shadow-sm"><Statistic title="Pending Refunds" value={0.00} prefix="$" /></Card></Col>
                             </Row>
@@ -1110,7 +1127,7 @@ export const FleetViewPage: React.FC = () => {
                                     </Card>
                                 </Col>
                                 <Col span={16}>
-                                    <Card title="Reviews Given by User" bordered={false} className="shadow-sm">
+                                    <Card title="Reviews Given by User" variant="borderless" className="shadow-sm">
                                         <List
                                             itemLayout="horizontal"
                                             dataSource={[
@@ -1239,7 +1256,7 @@ export const FleetViewPage: React.FC = () => {
       >
           <div style={{ marginBottom: 24 }}>
               <Alert
-                  message="Security Override"
+                  title="Security Override"
                   description={`You are about to ${governanceAction} this ${governanceTargetType}. This action will be logged in the system audit trail.`}
                   type="warning"
                   showIcon

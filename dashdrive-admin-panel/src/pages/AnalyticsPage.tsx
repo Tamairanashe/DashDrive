@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
     Typography, Row, Col, Card, Statistic, Table, Progress, 
     Space, Divider, Button, DatePicker, Tooltip, Drawer, 
-    Form, Select, Input, Checkbox, notification, Skeleton,
-    Empty, Badge, Tag
+    Form, Select, Input, Checkbox, Skeleton,
+    Empty, Badge, Tag, App, Flex
 } from 'antd';
 import { 
     LineChartOutlined, UserOutlined, CarOutlined, 
@@ -41,6 +41,7 @@ const VERTICAL_DATA = [
 ];
 
 export const AnalyticsPage: React.FC = () => {
+    const { message, notification, modal } = App.useApp();
     const [loading, setLoading] = useState(true);
     const [reportDrawerVisible, setReportDrawerVisible] = useState(false);
     const [generatingReport, setGeneratingReport] = useState(false);
@@ -114,7 +115,7 @@ export const AnalyticsPage: React.FC = () => {
                     { title: 'Success Rate', value: '98.4%', prefix: <RiseOutlined />, color: '#8b5cf6', trend: '+0.4%', info: 'Percentage of orders completed without disputes or technical failures.' }
                 ].map((kpi, index) => (
                     <Col xs={24} sm={12} lg={6} key={index}>
-                        <Card bordered={false} className="shadow-sm" style={{ borderRadius: 12 }}>
+                        <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 12 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <Text type="secondary" strong>{kpi.title}</Text>
                                 <Tooltip title={kpi.info}>
@@ -140,12 +141,12 @@ export const AnalyticsPage: React.FC = () => {
                 <Col xs={24} lg={16}>
                     <Card 
                         title="Revenue & Order Volume Trend" 
-                        bordered={false} 
+                        variant="borderless" 
                         className="shadow-sm"
                         style={{ borderRadius: 12 }}
                         extra={<Space><Badge color="#3b82f6" text="Revenue" /><Badge color="#f59e0b" text="Orders" /></Space>}
                     >
-                        <div style={{ height: 350, width: '100%' }}>
+                        <div style={{ height: 350, width: '100%', minWidth: 0 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={REVENUE_DATA}>
                                     <defs>
@@ -172,7 +173,7 @@ export const AnalyticsPage: React.FC = () => {
                 <Col xs={24} lg={8}>
                     <Card 
                         title="Platform Vertical Mix" 
-                        bordered={false} 
+                        variant="borderless" 
                         className="shadow-sm" 
                         style={{ borderRadius: 12, height: '100%' }}
                         extra={
@@ -181,7 +182,7 @@ export const AnalyticsPage: React.FC = () => {
                             </Tooltip>
                         }
                     >
-                        <div style={{ height: 250 }}>
+                        <div style={{ height: 250, minWidth: 0 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -219,7 +220,7 @@ export const AnalyticsPage: React.FC = () => {
                 <Col xs={24}>
                     <Card 
                         title="Market Leaders (Top Merchants)" 
-                        bordered={false} 
+                        variant="borderless" 
                         className="shadow-sm"
                         style={{ borderRadius: 12 }}
                         extra={<Button type="link">View All Merchants</Button>}

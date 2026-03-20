@@ -3,7 +3,7 @@ import {
   Table, Tag, Space, Button, Input, Card, Typography, Tabs, 
   Row, Col, Statistic, Avatar, Tooltip, Badge, Dropdown, 
   Drawer, Form, Select, DatePicker, List, Rate, Empty, Divider,
-  Modal, InputNumber, Radio, message as antdMessage, Descriptions, Switch
+  Modal, InputNumber, Radio, Descriptions, Switch, App, Flex
 } from 'antd';
 import { 
   SearchOutlined, PlusOutlined, UserOutlined, FileTextOutlined,
@@ -26,10 +26,12 @@ interface CourierManagementHubProps {
 }
 
 export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ initialTab = '1' }) => {
+  const { message, notification, modal } = App.useApp();
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingCourier, setEditingCourier] = useState<any>(null);
   const [selectedCourier, setSelectedCourier] = useState<any>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
   
   // Standardization State
@@ -63,14 +65,14 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
     setIsRefreshing(true);
     setTimeout(() => {
       setIsRefreshing(false);
-      antdMessage.success('Courier synchronization complete');
+      message.success('Courier synchronization complete');
     }, 1000);
   };
 
   const handleStatusChange = (id: string, newStatus: string, reason?: string) => {
     setCouriers(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));
-    antdMessage.success(`Courier ${id} is now ${newStatus}`);
-    if (reason) antdMessage.info(`Reason: ${reason}`);
+    message.success(`Courier ${id} is now ${newStatus}`);
+    if (reason) message.info(`Reason: ${reason}`);
     setRejectionModalVisible(false);
     setPendingAction(null);
   };
@@ -83,7 +85,7 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
 
   const handleConfirmSuspension = () => {
     if (!rejectionReason.trim()) {
-      antdMessage.warning('Please provide a suspension reason');
+      message.warning('Please provide a suspension reason');
       return;
     }
     handleStatusChange(pendingAction!.id, 'Suspended', rejectionReason);
@@ -228,7 +230,7 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
         </Col>
         <Col span={6}>
           <Card className="shadow-sm">
-            <Statistic title="Total Commission" value={2508} prefix="$" precision={2} valueStyle={{ color: '#10b981' }} />
+            <Statistic title="Total Commission" value={2508} prefix="$" precision={2} styles={{ content: { color: '#10b981' } }} />
           </Card>
         </Col>
         <Col span={6}>
@@ -238,7 +240,7 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
         </Col>
         <Col span={6}>
           <Card className="shadow-sm">
-            <Statistic title="Pending Payouts" value={1450} prefix="$" precision={2} valueStyle={{ color: '#f59e0b' }} />
+            <Statistic title="Pending Payouts" value={1450} prefix="$" precision={2} styles={{ content: { color: '#f59e0b' } }} />
           </Card>
         </Col>
       </Row>
@@ -440,7 +442,7 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
         width={640}
         onClose={() => { setIsDrawerOpen(false); setEditingCourier(null); }}
         open={isDrawerOpen}
-        bodyStyle={{ paddingBottom: 80 }}
+        styles={{ body: { paddingBottom: 80 } }}
       >
         <Form layout="vertical" form={form}>
           <Row gutter={16}>
@@ -524,17 +526,17 @@ export const CourierManagementHub: React.FC<CourierManagementHubProps> = ({ init
             <Row gutter={16}>
               <Col span={8}>
                 <Card size="small" style={{ background: '#f0f9ff' }}>
-                  <Statistic title="Deliveries" value={selectedCourier.deliveriesCompleted} valueStyle={{ fontSize: 18 }} />
+                  <Statistic title="Deliveries" value={selectedCourier.deliveriesCompleted} styles={{ content: { fontSize: 18 } }} />
                 </Card>
               </Col>
               <Col span={8}>
                 <Card size="small" style={{ background: '#f0fdf4' }}>
-                  <Statistic title="Avg Time" value={selectedCourier.avgDeliveryTime} valueStyle={{ fontSize: 18 }} />
+                  <Statistic title="Avg Time" value={selectedCourier.avgDeliveryTime} styles={{ content: { fontSize: 18 } }} />
                 </Card>
               </Col>
               <Col span={8}>
                 <Card size="small" style={{ background: '#fef2f2' }}>
-                  <Statistic title="Cancellation" value={selectedCourier.cancellationRate} valueStyle={{ fontSize: 18 }} />
+                  <Statistic title="Cancellation" value={selectedCourier.cancellationRate} styles={{ content: { fontSize: 18 } }} />
                 </Card>
               </Col>
             </Row>
@@ -624,7 +626,9 @@ const CourierIncidentModal: React.FC<{
   isOpen: boolean, 
   onClose: () => void, 
   form: any 
-}> = ({ isOpen, onClose, form }) => (
+}> = ({ isOpen, onClose, form }) => {
+  const { message } = App.useApp();
+  return (
   <Modal
     title={<Space><WarningOutlined style={{ color: '#ff4d4f' }} /> Report Courier Incident</Space>}
     open={isOpen}
@@ -635,7 +639,7 @@ const CourierIncidentModal: React.FC<{
     centered
   >
     <Form form={form} layout="vertical" onFinish={(values) => {
-      antdMessage.success(`Incident reported for ${values.courierName}`);
+      message.success(`Incident reported for ${values.courierName}`);
       onClose();
       form.resetFields();
     }}>
@@ -676,6 +680,7 @@ const CourierIncidentModal: React.FC<{
     </Form>
   </Modal>
 );
+};
 
 export default CourierManagementHub;
 

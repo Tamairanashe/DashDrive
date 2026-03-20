@@ -40,6 +40,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from '@nestjs/bullmq';
+import { GoogleMapsModule } from './common/providers/google-maps/google-maps.module';
 
 const useMockRedis = process.env.USE_MOCK_REDIS === 'true';
 
@@ -92,6 +93,7 @@ const appModules = [
       ]),
   ScheduleModule.forRoot(),
   PrismaModule,
+  GoogleMapsModule,
   AuthModule,
   CountriesModule,
   MerchantsModule,

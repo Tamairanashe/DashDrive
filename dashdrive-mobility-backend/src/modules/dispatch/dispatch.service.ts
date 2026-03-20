@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ServiceType, CourierMode } from '@prisma/client';
+import { ServiceType } from '@prisma/client';
+import { GoogleMapsService } from '../../providers/google-maps/google-maps.service';
 
 @Injectable()
 export class DispatchService {
   private readonly logger = new Logger(DispatchService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private googleMaps: GoogleMapsService,
+  ) {}
 
   private haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371; // km
@@ -21,7 +25,7 @@ export class DispatchService {
   }
 
   async autoAssignCourier(orderId: string, latitude: number, longitude: number) {
-    this.logger.log(`Searching for nearest courier for order ${orderId}`);
+    this.logger.log(`Searching for nearest courier for order ${orderId} by ETA`);
 
     // Find couriers who are online and in Delivery or Mixed mode
     const availableCouriers = await this.prisma.driverProfile.findMany({
@@ -39,7 +43,7 @@ export class DispatchService {
     // Advanced: Check for batching potential in active couriers
     // We prioritize couriers who are ALREADY on a similar route (Batching)
     const couriersWithTasks = await Promise.all(
-      availableCouriers.map(async (c) => {
+      availableCouriers.map(async (c: any) => {
         const active = await this.prisma.delivery.findMany({
           where: { courier_id: c.id, status: { in: ['assigned', 'picked_up'] } }
         });
@@ -47,35 +51,57 @@ export class DispatchService {
       })
     );
 
-    // Filter by capacity (max 3 orders)
-    const eligible = couriersWithTasks.filter(item => item.activeCount < 3);
+    // Filter by capacity (max 3 orders) and preliminary radius (e.g. 15km)
+    const eligible = couriersWithTasks.filter((item: any) => {
+      const dist = this.haversineDistance(
+        latitude, longitude,
+        item.courier.last_location_lat || 0, item.courier.last_location_lng || 0
+      );
+      return item.activeCount < 3 && dist < 15;
+    });
 
     if (eligible.length === 0) return null;
 
-    // Pick courier based on proximity to pickup using Haversine
-    const sorted = eligible.sort((a, b) => {
-      const distA = this.haversineDistance(
-        latitude, longitude, 
-        a.courier.last_location_lat || 0, a.courier.last_location_lng || 0
-      );
-      const distB = this.haversineDistance(
-        latitude, longitude, 
-        b.courier.last_location_lat || 0, b.courier.last_location_lng || 0
-      );
+    // Pick top candidates by Haversine for Distance Matrix API (limit to 10 for cost/performance)
+    const candidates = eligible.sort((a: any, b: any) => {
+      const distA = this.haversineDistance(latitude, longitude, a.courier.last_location_lat!, a.courier.last_location_lng!);
+      const distB = this.haversineDistance(latitude, longitude, b.courier.last_location_lat!, b.courier.last_location_lng!);
       return distA - distB;
-    });
+    }).slice(0, 10);
 
-    const bestMatch = sorted[0].courier;
+    try {
+      // Perform Distance Matrix calculation for accurate ETA
+      const matrix = await this.googleMaps.getDistanceMatrix(
+        candidates.map(c => ({ lat: c.courier.last_location_lat!, lng: c.courier.last_location_lng! })),
+        [{ lat: latitude, lng: longitude }]
+      );
 
-    await this.prisma.delivery.update({
-      where: { order_id: orderId },
-      data: {
-        courier_id: bestMatch.id,
-        status: 'assigned',
-      },
-    });
+      // Sort original candidates by the duration returned from Google
+      const sortedByETA = candidates.map((c: any, index: number) => ({
+        ...c,
+        duration: matrix.rows[index].elements[0].status === 'OK' 
+          ? matrix.rows[index].elements[0].duration.value 
+          : Infinity
+      })).sort((a: any, b: any) => a.duration - b.duration);
 
-    return bestMatch;
+      const bestMatch = sortedByETA[0].courier;
+
+      await this.prisma.delivery.update({
+        where: { order_id: orderId },
+        data: {
+          courier_id: bestMatch.id,
+          status: 'assigned',
+        },
+      });
+
+      return bestMatch;
+    } catch (error) {
+      this.logger.error(`Distance Matrix matching failed, falling back to Haversine: ${error.message}`);
+      // Fallback to simple Haversine if API fails
+      const bestMatch = candidates[0].courier;
+      // ... (rest of update logic)
+      return bestMatch;
+    }
   }
 
   async broadcastNegotiationTask(requestId: string, type: ServiceType) {

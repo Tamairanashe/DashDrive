@@ -858,8 +858,8 @@ export const VehicleManagementPage: React.FC = () => {
                      </Row>
                      
                      <Card size="small" title="Trip Volume (Last 7 Days)">
-                        <div style={{ height: 200, width: '100%' }}>
-                           <ResponsiveContainer>
+                        <div style={{ height: 200, width: '100%', minWidth: 0 }}>
+                           <ResponsiveContainer width="100%" height="100%">
                               <AreaChart data={[
                                 {day: 'Mon', trips: 12}, {day: 'Tue', trips: 15}, {day: 'Wed', trips: 10},
                                 {day: 'Thu', trips: 18}, {day: 'Fri', trips: 22}, {day: 'Sat', trips: 25}, {day: 'Sun', trips: 14}

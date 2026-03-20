@@ -3,7 +3,7 @@ import {
   Table, Tag, Space, Button, Input, Card, Typography, Tabs, 
   Row, Col, Statistic, Avatar, Tooltip, Badge, Dropdown, 
   Drawer, Form, Select, DatePicker, List, Rate, Empty, Divider,
-  Modal, InputNumber, Radio, message as antdMessage, Descriptions, Switch, Segmented
+  Modal, InputNumber, Radio, Descriptions, Switch, Segmented, App, Flex
 } from 'antd';
 import { 
   SearchOutlined, PlusOutlined, UserOutlined, FileTextOutlined,
@@ -25,6 +25,7 @@ import {
 const { Title, Text, Paragraph } = Typography;
 
 export const DriverManagementHub: React.FC = () => {
+  const { message, notification, modal } = App.useApp();
   const [activeTab, setActiveTab] = useState('1');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<any>(null);
@@ -416,7 +417,7 @@ export const DriverManagementHub: React.FC = () => {
 
     const handleVerify = (id: string, status: string) => {
       setDocData(prev => prev.map(d => d.id === id ? { ...d, status } : d));
-      antdMessage.success(`Document marked as ${status}`);
+      message.success(`Document marked as ${status}`);
     };
 
     return (
@@ -483,9 +484,9 @@ export const DriverManagementHub: React.FC = () => {
     <div style={{ marginTop: 20 }}>
         <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
             <Col span={6}><Card className="shadow-sm"><Statistic title="Total Payouts" value={142500} prefix="$" /></Card></Col>
-            <Col span={6}><Card className="shadow-sm"><Statistic title="Pending Settlements" value={12400} prefix="$" valueStyle={{ color: '#faad14' }} /></Card></Col>
+            <Col span={6}><Card className="shadow-sm"><Statistic title="Pending Settlements" value={12400} prefix="$" styles={{ content: { color: '#faad14' } }} /></Card></Col>
             <Col span={6}><Card className="shadow-sm"><Statistic title="Avg Driver Earnings" value={850} prefix="$" /></Card></Col>
-            <Col span={6}><Card className="shadow-sm"><Statistic title="Admin Commission" value={28500} prefix="$" valueStyle={{ color: '#10b981' }} /></Card></Col>
+            <Col span={6}><Card className="shadow-sm"><Statistic title="Admin Commission" value={28500} prefix="$" styles={{ content: { color: '#10b981' } }} /></Card></Col>
         </Row>
         <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 16 }}>
             <Table 
@@ -774,10 +775,10 @@ export const DriverManagementHub: React.FC = () => {
     return (
       <div style={{ marginTop: 20 }}>
         <Row gutter={[24, 24]}>
-          <Col span={6}><Card className="shadow-sm"><Statistic title="Driver Utilization" value={78} suffix="%" valueStyle={{ color: '#3b82f6' }} /></Card></Col>
+          <Col span={6}><Card className="shadow-sm"><Statistic title="Driver Utilization" value={78} suffix="%" styles={{ content: { color: '#3b82f6' } }} /></Card></Col>
           <Col span={6}><Card className="shadow-sm"><Statistic title="Avg Trips/Day" value={14.5} /></Card></Col>
-          <Col span={6}><Card className="shadow-sm"><Statistic title="Cancellation Rate" value={3.2} suffix="%" valueStyle={{ color: '#ff4d4f' }} /></Card></Col>
-          <Col span={6}><Card className="shadow-sm"><Statistic title="Acceptance Rate" value={98} suffix="%" valueStyle={{ color: '#10b981' }} /></Card></Col>
+          <Col span={6}><Card className="shadow-sm"><Statistic title="Cancellation Rate" value={3.2} suffix="%" styles={{ content: { color: '#ff4d4f' } }} /></Card></Col>
+          <Col span={6}><Card className="shadow-sm"><Statistic title="Acceptance Rate" value={98} suffix="%" styles={{ content: { color: '#10b981' } }} /></Card></Col>
         </Row>
         
         <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
@@ -939,7 +940,7 @@ export const DriverManagementHub: React.FC = () => {
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
               <Col span={8}>
                 <Card size="small" style={{ borderRadius: 12 }}>
-                  <Statistic title="Avg active rate/day" value={selectedDriver.avgActiveRate || '0%'} valueStyle={{ color: '#64748b' }} />
+                  <Statistic title="Avg active rate/day" value={selectedDriver.avgActiveRate || '0%'} styles={{ content: { color: '#64748b' } }} />
                   <div style={{ height: 4, background: '#f1f5f9', borderRadius: 2, marginTop: 8 }}>
                     <div style={{ width: selectedDriver.avgActiveRate || '0%', height: '100%', background: '#3b82f6', borderRadius: 2 }} />
                   </div>
@@ -947,27 +948,27 @@ export const DriverManagementHub: React.FC = () => {
               </Col>
               <Col span={8}>
                 <Card size="small" style={{ borderRadius: 12 }}>
-                  <Statistic title="Avg. earning value" value={selectedDriver.avgEarningValue || 0} prefix="$" precision={2} valueStyle={{ color: '#3b82f6' }} />
+                  <Statistic title="Avg. earning value" value={selectedDriver.avgEarningValue || 0} prefix="$" precision={2} styles={{ content: { color: '#3b82f6' } }} />
                 </Card>
               </Col>
               <Col span={8}>
                 <Card size="small" style={{ borderRadius: 12 }}>
-                  <Statistic title="Positive review rate" value={selectedDriver.positiveReviewRate || '0%'} valueStyle={{ color: '#10b981' }} />
+                  <Statistic title="Positive review rate" value={selectedDriver.positiveReviewRate || '0%'} styles={{ content: { color: '#10b981' } }} />
                 </Card>
               </Col>
               <Col span={8}>
                 <Card size="small" style={{ borderRadius: 12 }}>
-                  <Statistic title="Success rate" value={selectedDriver.successRate || '0%'} valueStyle={{ color: '#10b981' }} />
+                  <Statistic title="Success rate" value={selectedDriver.successRate || '0%'} styles={{ content: { color: '#10b981' } }} />
                 </Card>
               </Col>
               <Col span={8}>
                 <Card size="small" style={{ borderRadius: 12 }}>
-                  <Statistic title="Cancelation rate" value={selectedDriver.cancellationRate || '0%'} valueStyle={{ color: '#ef4444' }} />
+                  <Statistic title="Cancelation rate" value={selectedDriver.cancellationRate || '0%'} styles={{ content: { color: '#ef4444' } }} />
                 </Card>
               </Col>
               <Col span={8}>
                 <Card size="small" style={{ borderRadius: 12 }}>
-                  <Statistic title="Today Idle Hour Rate" value={selectedDriver.todayIdleHourRate || '0%'} valueStyle={{ color: '#f59e0b' }} />
+                  <Statistic title="Today Idle Hour Rate" value={selectedDriver.todayIdleHourRate || '0%'} styles={{ content: { color: '#f59e0b' } }} />
                 </Card>
               </Col>
             </Row>
@@ -979,27 +980,27 @@ export const DriverManagementHub: React.FC = () => {
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
               <Col span={4.8} style={{ width: '20%' }}>
                 <Card size="small" style={{ borderRadius: 12, textAlign: 'center', background: '#f8fafc' }}>
-                  <Statistic title="Collectable cash" value={selectedDriver.collectableCash || 0} prefix="$" precision={2} valueStyle={{ color: '#64748b', fontSize: 16 }} />
+                  <Statistic title="Collectable cash" value={selectedDriver.collectableCash || 0} prefix="$" precision={2} styles={{ content: { color: '#64748b', fontSize: 16 } }} />
                 </Card>
               </Col>
               <Col span={4.8} style={{ width: '20%' }}>
                 <Card size="small" style={{ borderRadius: 12, textAlign: 'center', background: '#fff7ed' }}>
-                  <Statistic title="Pending withdraw" value={selectedDriver.pendingWithdraw || 0} prefix="$" precision={2} valueStyle={{ color: '#ea580c', fontSize: 16 }} />
+                  <Statistic title="Pending withdraw" value={selectedDriver.pendingWithdraw || 0} prefix="$" precision={2} styles={{ content: { color: '#ea580c', fontSize: 16 } }} />
                 </Card>
               </Col>
               <Col span={4.8} style={{ width: '20%' }}>
                 <Card size="small" style={{ borderRadius: 12, textAlign: 'center', background: '#f0f9ff' }}>
-                  <Statistic title="Already withdrawn" value={selectedDriver.alreadyWithdrawn || 0} prefix="$" precision={2} valueStyle={{ color: '#0284c7', fontSize: 16 }} />
+                  <Statistic title="Already withdrawn" value={selectedDriver.alreadyWithdrawn || 0} prefix="$" precision={2} styles={{ content: { color: '#0284c7', fontSize: 16 } }} />
                 </Card>
               </Col>
               <Col span={4.8} style={{ width: '20%' }}>
                 <Card size="small" style={{ borderRadius: 12, textAlign: 'center', background: '#f0fdf4', borderColor: '#bbf7d0' }}>
-                  <Statistic title="Withdrawable" value={selectedDriver.withdrawableAmount || 0} prefix="$" precision={2} valueStyle={{ color: '#16a34a', fontSize: 18, fontWeight: 700 }} />
+                  <Statistic title="Withdrawable" value={selectedDriver.withdrawableAmount || 0} prefix="$" precision={2} styles={{ content: { color: '#16a34a', fontSize: 18, fontWeight: 700 } }} />
                 </Card>
               </Col>
               <Col span={4.8} style={{ width: '20%' }}>
                 <Card size="small" style={{ borderRadius: 12, textAlign: 'center', background: '#ecfdf5', borderColor: '#6ee7b7' }}>
-                  <Statistic title="Total earning" value={selectedDriver.totalEarning || 0} prefix="$" precision={2} valueStyle={{ color: '#059669', fontSize: 18, fontWeight: 700 }} />
+                  <Statistic title="Total earning" value={selectedDriver.totalEarning || 0} prefix="$" precision={2} styles={{ content: { color: '#059669', fontSize: 18, fontWeight: 700 } }} />
                 </Card>
               </Col>
             </Row>
@@ -1176,7 +1177,7 @@ export const DriverManagementHub: React.FC = () => {
               tier: 'Bronze'
             };
             setDrivers(prev => [...prev, newDriver]);
-            antdMessage.success('New driver onboarded successfully');
+            message.success('New driver onboarded successfully');
             setIsDrawerOpen(false);
             form.resetFields();
           }}
@@ -1318,7 +1319,7 @@ export const DriverManagementHub: React.FC = () => {
         <Form form={walletForm} layout="vertical" onFinish={(values) => {
           const amount = values.type === 'increase' ? values.amount : -values.amount;
           setDrivers(prev => prev.map(d => d.id === selectedDriver.id ? { ...d, walletBalance: d.walletBalance + amount } : d));
-          antdMessage.success(`Wallet adjusted by ${values.type === 'increase' ? '+' : '-'}$${values.amount}`);
+          message.success(`Wallet adjusted by ${values.type === 'increase' ? '+' : '-'}$${values.amount}`);
           setIsWalletModalOpen(false);
           walletForm.resetFields();
         }}>
@@ -1358,7 +1359,7 @@ export const DriverManagementHub: React.FC = () => {
             deleteReason: values.reason 
           }]);
           setDrivers(prev => prev.filter(d => d.id !== driverToDelete.id));
-          antdMessage.success(`Driver ${driverToDelete.name} moved to trash`);
+          message.success(`Driver ${driverToDelete.name} moved to trash`);
           setIsDeleteModalOpen(false);
           deleteForm.resetFields();
           setDriverToDelete(null);
@@ -1384,7 +1385,7 @@ export const DriverManagementHub: React.FC = () => {
         width={600}
       >
         <Form form={incidentForm} layout="vertical" onFinish={(values) => {
-          antdMessage.success(`Incident ${values.type} reported for ${values.driverName}`);
+          message.success(`Incident ${values.type} reported for ${values.driverName}`);
           setIsIncidentModalOpen(false);
           incidentForm.resetFields();
         }}>
@@ -1450,7 +1451,7 @@ export const DriverManagementHub: React.FC = () => {
         <Form form={reasonForm} layout="vertical" onFinish={(values) => {
           const action = reasonTarget.isFrozen ? 'Activated' : 'Frozen';
           setDrivers(prev => prev.map(d => d.id === reasonTarget.id ? { ...d, isFrozen: !d.isFrozen } : d));
-          antdMessage.success(`Driver ${action} successfully`);
+          message.success(`Driver ${action} successfully`);
           // Here we would typically log values.reason to the audit log
           setIsReasonModalOpen(false);
           reasonForm.resetFields();
@@ -1492,7 +1493,7 @@ export const DriverManagementHub: React.FC = () => {
                     onClick={() => {
                       setDrivers(prev => [...prev, record]);
                       setTrashedDrivers(prev => prev.filter(d => d.id !== record.id));
-                      antdMessage.success('Driver restored successfully');
+                      message.success('Driver restored successfully');
                     }}
                   >
                     Restore
@@ -1503,7 +1504,7 @@ export const DriverManagementHub: React.FC = () => {
                     icon={<CloseCircleOutlined />}
                     onClick={() => {
                       setTrashedDrivers(prev => prev.filter(d => d.id !== record.id));
-                      antdMessage.warning('Driver permanently deleted');
+                      message.warning('Driver permanently deleted');
                     }}
                   >
                     Purge

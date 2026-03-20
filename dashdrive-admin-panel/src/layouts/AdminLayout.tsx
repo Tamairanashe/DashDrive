@@ -82,8 +82,8 @@ export const AdminLayout: React.FC = () => {
 
   const menuItems: any[] = [
     {
-      key: 'MAIN DASHBOARD',
-      label: 'MAIN DASHBOARD',
+      key: 'MAIN',
+      label: 'MAIN',
       type: 'group',
       children: [
         { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
@@ -102,7 +102,7 @@ export const AdminLayout: React.FC = () => {
         { key: '/services/mart', icon: <ShopOutlined />, label: 'Mart Delivery' },
         { key: '/services/shopping', icon: <ShoppingOutlined />, label: 'Shopping' },
         { key: '/services/parcel', icon: <PushpinOutlined />, label: 'Parcel Delivery' },
-        { key: '/services/hotels', icon: <ShopOutlined />, label: 'Marketplace & Stays' },
+        { key: '/services/marketplace', icon: <ShopOutlined />, label: 'Marketplace & Stays' },
         { key: '/services/events', icon: <CalendarOutlined />, label: 'Events Booking' },
         { key: '/services/rental', icon: <KeyOutlined />, label: 'Car Rental' },
         { key: '/services/transport', icon: <CompassOutlined />, label: 'City to City' },
@@ -110,55 +110,19 @@ export const AdminLayout: React.FC = () => {
       ],
     },
     {
-      key: 'PARTNERS',
-      label: 'PARTNERS',
+      key: 'PARTNERS & FLEET',
+      label: 'PARTNERS & FLEET',
       type: 'group',
       children: [
-        { 
-          key: 'drivers', 
-          icon: <TeamOutlined />, 
-          label: 'Drivers',
-          children: [
-            { key: '/drivers/list', label: 'Master Management Hub' },
-            { key: '/drivers/leaderboard', label: 'Engagement Hub' },
-            { key: '/drivers/bundles', label: 'Ride Bundles' },
-          ]
-        },
-        {
-          key: 'couriers',
-          icon: <RocketOutlined />,
-          label: 'Couriers',
-          children: [
-            { key: '/partners/couriers/list', label: 'Courier List' },
-            { key: '/partners/couriers/requests', label: 'Courier Requests' },
-            { key: '/partners/couriers/earnings', label: 'Courier Earnings' },
-          ]
-        },
-        {
-          key: 'fleets',
-          icon: <BankOutlined />,
-          label: 'Fleet Operators',
-          children: [
-            { key: '/partners/fleets/list', label: 'Fleet List' },
-            { key: '/partners/fleets/requests', label: 'Fleet Requests' },
-            { key: '/partners/fleets/earnings', label: 'Fleet Earnings' },
-          ]
-        },
-        {
-          key: 'vehicles',
-          icon: <CarOutlined />,
-          label: 'Vehicle Management',
-          children: [
-            { key: '/vehicles/list', label: 'Vehicle List' },
-            { key: '/vehicles/requests', label: 'Vehicle Requests' },
-            { key: '/vehicles/attributes', label: 'Vehicle Attributes' },
-          ]
-        },
+        { key: '/drivers/list', icon: <TeamOutlined />, label: 'Drivers' },
+        { key: '/partners/couriers/list', icon: <RocketOutlined />, label: 'Couriers' },
+        { key: '/partners/fleets/list', icon: <BankOutlined />, label: 'Fleet Operators' },
+        { key: '/vehicles/list', icon: <CarOutlined />, label: 'Vehicle Management' },
       ],
     },
     {
-      key: 'USER MANAGEMENT',
-      label: 'USER MANAGEMENT',
+      key: 'USERS',
+      label: 'USERS',
       type: 'group',
       children: [
         { key: '/users/management', icon: <TeamOutlined />, label: 'User Management' },
@@ -175,13 +139,32 @@ export const AdminLayout: React.FC = () => {
         { key: '/ops/tracking', icon: <GlobalOutlined />, label: 'Live Tracking' },
         { key: '/ops/alerts', icon: <BellOutlined />, label: 'Active Alerts' },
         { key: '/ops/surge', icon: <RiseOutlined />, label: 'Surge Control' },
-        { key: '/ops/analytics', icon: <LineChartOutlined />, label: 'Performance Analytics' },
         { key: '/ops/logs', icon: <ToolOutlined />, label: 'History Logs' },
       ],
     },
     {
-      key: 'PROMOTION & MARKETING',
-      label: 'PROMOTION & MARKETING',
+      key: 'ANALYTICS & PERFORMANCE',
+      label: 'ANALYTICS & PERFORMANCE',
+      type: 'group',
+      children: [
+        { key: '/ops/analytics', icon: <LineChartOutlined />, label: 'Performance Analytics' },
+        { key: '/finance/analytics', icon: <PieChartOutlined />, label: 'Reports' },
+      ],
+    },
+    {
+      key: 'FINANCE',
+      label: 'FINANCE',
+      type: 'group',
+      children: [
+        { key: '/finance/fares', icon: <DollarOutlined />, label: 'Fare Management' },
+        { key: '/finance/earnings', icon: <BankOutlined />, label: 'Financial Reports Hub' },
+        { key: '/finance/settlements', icon: <DollarOutlined />, label: 'Settlement & Payouts' },
+        { key: '/finance/partners', icon: <ApiOutlined />, label: 'Fintech Partner Hub' },
+      ],
+    },
+    {
+      key: 'MARKETING & GROWTH',
+      label: 'MARKETING & GROWTH',
       type: 'group',
       children: [
         { key: '/marketing/banners', icon: <PictureOutlined />, label: 'Banner Setup' },
@@ -193,36 +176,25 @@ export const AdminLayout: React.FC = () => {
       ],
     },
     {
-      key: 'FARE MANAGEMENT',
-      label: 'FARE MANAGEMENT',
+      key: 'MARKETPLACE & INTEGRATIONS',
+      label: 'MARKETPLACE & INTEGRATIONS',
       type: 'group',
       children: [
-        { key: '/finance/fares', icon: <DollarOutlined />, label: 'Fare Management' },
-      ],
-    },
-    {
-      key: 'FINANCIAL HUB',
-      label: 'FINANCIAL HUB',
-      type: 'group',
-      children: [
-        {key: '/finance/earnings', icon: <BankOutlined />, label: 'Financial Reports Hub' },
-        { key: '/finance/settlements', icon: <DollarOutlined />, label: 'Settlement & Payouts' },
-        { key: '/finance/partners', icon: <ApiOutlined />, label: 'Fintech Partner Hub' },
         { key: '/finance/marketplace', icon: <AppstoreOutlined />, label: 'Product Marketplace' },
         { key: '/finance/utility', icon: <ThunderboltOutlined />, label: 'Utility Aggregator' },
       ],
     },
     {
-      key: 'CONTENT MANAGEMENT',
-      label: 'CONTENT MANAGEMENT',
+      group: 'CONTENT',
+      label: 'CONTENT',
       type: 'group',
       children: [
         { key: '/content/blog', icon: <ReadOutlined />, label: 'Blog Setup' },
       ],
     },
     {
-      key: 'QUALITY',
-      label: 'QUALITY & REPUTATION',
+      key: 'QUALITY & TRUST',
+      label: 'QUALITY & TRUST',
       type: 'group',
       children: [
         { key: '/quality/reviews', icon: <StarOutlined />, label: 'Reviews & Ratings' },
@@ -241,8 +213,8 @@ export const AdminLayout: React.FC = () => {
       ],
     },
     {
-      key: 'ENTERPRISE & GOVERNANCE',
-      label: 'ENTERPRISE & GOVERNANCE',
+      key: 'ENTERPRISE',
+      label: 'ENTERPRISE',
       type: 'group',
       children: [
         { key: '/enterprise/setup', icon: <BankOutlined />, label: 'Enterprise Business Setup' },

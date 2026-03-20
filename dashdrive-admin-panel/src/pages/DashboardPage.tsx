@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Row, Col, Card, Statistic, Table, Tag, Typography, 
-  Button, Space, message, Select, Badge, Divider, Skeleton,
-  Tooltip, Avatar, notification
+  Button, Space, Select, Badge, Divider, Skeleton,
+  Tooltip, Avatar, notification, App
 } from 'antd';
 import { 
   ArrowUpOutlined, 
@@ -37,7 +37,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { analyticsApi } from '../api/analyticsApi';
 import { BaseMap } from '../components/BaseMap';
-import { MarkerF, InfoWindowF } from '@react-google-maps/api';
+import { MarkerF, InfoWindowF, OverlayViewF, OverlayView } from '@react-google-maps/api';
+import carMarker from '../assets/car-marker-topview.png';
 
 const { Title, Text } = Typography;
 
@@ -61,6 +62,7 @@ const LOCATION_DATA: any = {
 };
 
 export const DashboardPage: React.FC = () => {
+  const { message, notification, modal } = App.useApp();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState('Zimbabwe');
@@ -148,7 +150,7 @@ export const DashboardPage: React.FC = () => {
   return (
     <div style={{ paddingBottom: 24 }}>
       {/* Header with Hierarchical Filters */}
-      <Card bordered={false} className="shadow-sm" style={{ marginBottom: 24, borderRadius: 12 }}>
+      <Card variant="borderless" className="shadow-sm" style={{ marginBottom: 24, borderRadius: 12 }}>
         <Row justify="space-between" align="middle">
           <Col>
             <Space align="center" size="middle">
@@ -214,14 +216,14 @@ export const DashboardPage: React.FC = () => {
       <Row gutter={[24, 24]}>
         {loading ? Array(4).fill(0).map((_, i) => (
           <Col xs={24} sm={12} lg={6} key={i}>
-            <Card bordered={false} className="shadow-sm"><Skeleton active paragraph={{ rows: 1 }} /></Card>
+            <Card variant="borderless" className="shadow-sm"><Skeleton active paragraph={{ rows: 1 }} /></Card>
           </Col>
         )) : stats.map((stat) => (
           <Col xs={24} sm={12} lg={6} key={stat.title}>
             <Badge.Ribbon text={stat.badge || ''} color={stat.color} style={{ display: stat.badge ? 'block' : 'none' }}>
               <Card 
                 hoverable 
-                bordered={false} 
+                variant="borderless" 
                 className="shadow-sm" 
                 onClick={() => navigate(stat.link)}
                 style={{ borderRadius: 12 }}
@@ -235,7 +237,7 @@ export const DashboardPage: React.FC = () => {
                   }
                   value={stat.value}
                   prefix={React.cloneElement(stat.icon as any, { style: { color: stat.color, marginRight: 8 } })}
-                  valueStyle={{ fontWeight: 800, fontSize: 24 }}
+                  styles={{ content: { fontWeight: 800, fontSize: 24 } }}
                 />
                 <div style={{ marginTop: 8 }}>
                   <Tag color={stat.trend.startsWith('+') ? 'success' : 'warning'} icon={stat.trend.startsWith('+') ? <ArrowUpOutlined /> : <WarningOutlined />} style={{ borderRadius: 4, border: 'none' }}>
@@ -266,7 +268,7 @@ export const DashboardPage: React.FC = () => {
           <Col xs={24} sm={12} md={8} lg={4.8} key={service.id} style={{ flex: '0 0 20%', maxWidth: '20%' }}>
             <Card 
               className="service-stat-card shadow-sm"
-              bodyStyle={{ padding: '16px 12px' }}
+              styles={{ body: { padding: '16px 12px' } }}
               hoverable
               style={{ borderRadius: 12, border: '1px solid #f1f5f9' }}
             >
@@ -321,14 +323,23 @@ export const DashboardPage: React.FC = () => {
                     <Badge status="processing" text="Real-time Feed" />
                 </Space>
             }
-            bordered={false}
+            variant="borderless"
             className="shadow-sm"
             style={{ borderRadius: 12, overflow: 'hidden' }}
-            bodyStyle={{ padding: 0 }}
+            styles={{ body: { padding: 0 } }}
             extra={<Button type="link" onClick={() => navigate('/dashboard/fleet')}>Expand View</Button>}
           >
             <BaseMap center={[-17.8248, 31.0530]} zoom={13} height={450}>
-                <MarkerF position={{ lat: -17.8248, lng: 31.0530 }} />
+                <OverlayViewF position={{ lat: -17.8248, lng: 31.0530 }} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+                    <div style={{ transform: 'translate(-50%, -50%)', width: '100px', height: '100px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ position: 'absolute', width: '60px', height: '60px', background: 'rgba(59, 130, 246, 0.2)', borderRadius: '50%', border: '1px solid rgba(59, 130, 246, 0.3)' }} className="animate-pulse" />
+                        <img 
+                            src={carMarker} 
+                            style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 6px 15px rgba(0,0,0,0.4))', transform: 'rotate(45deg)' }} 
+                            alt="car" 
+                        />
+                    </div>
+                </OverlayViewF>
                 <InfoWindowF position={{ lat: -17.8248, lng: 31.0530 }}>
                     <div style={{ padding: '4px' }}>
                       <Text strong>RIDE-8821</Text><br/>
@@ -336,7 +347,16 @@ export const DashboardPage: React.FC = () => {
                     </div>
                 </InfoWindowF>
                 
-                <MarkerF position={{ lat: -17.8100, lng: 31.0400 }} />
+                <OverlayViewF position={{ lat: -17.8100, lng: 31.0400 }} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+                    <div style={{ transform: 'translate(-50%, -50%)', width: '100px', height: '100px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ position: 'absolute', width: '60px', height: '60px', background: 'rgba(59, 130, 246, 0.2)', borderRadius: '50%', border: '1px solid rgba(59, 130, 246, 0.3)' }} className="animate-pulse" />
+                        <img 
+                            src={carMarker} 
+                            style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 6px 15px rgba(0,0,0,0.4))', transform: 'rotate(180deg)' }} 
+                            alt="car" 
+                        />
+                    </div>
+                </OverlayViewF>
                 <InfoWindowF position={{ lat: -17.8100, lng: 31.0400 }}>
                     <div style={{ padding: '4px' }}>
                       <Text strong>D-202 (Sarah)</Text><br/>
@@ -351,7 +371,7 @@ export const DashboardPage: React.FC = () => {
         <Col lg={10} xs={24}>
           <Card 
             title="Revenue & Growth" 
-            bordered={false} 
+            variant="borderless" 
             className="shadow-sm"
             style={{ borderRadius: 12, marginBottom: 24 }}
             extra={
@@ -360,7 +380,7 @@ export const DashboardPage: React.FC = () => {
               </Tooltip>
             }
           >
-            <div style={{ height: 180 }}>
+            <div style={{ height: 180, minWidth: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
@@ -384,7 +404,7 @@ export const DashboardPage: React.FC = () => {
 
           <Card 
             title="Order Velocity" 
-            bordered={false} 
+            variant="borderless" 
             className="shadow-sm"
             style={{ borderRadius: 12 }}
             extra={
@@ -393,7 +413,7 @@ export const DashboardPage: React.FC = () => {
               </Tooltip>
             }
           >
-            <div style={{ height: 156 }}>
+            <div style={{ height: 156, minWidth: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <XAxis dataKey="name" hide />
@@ -410,7 +430,7 @@ export const DashboardPage: React.FC = () => {
       {/* Bottom Table: Real-time Incidents/Activity */}
       <Card 
         title="Operations Log" 
-        bordered={false} 
+        variant="borderless" 
         className="shadow-sm" 
         style={{ marginTop: 24, borderRadius: 12 }}
         extra={<Button type="link" onClick={() => navigate('/ops/logs')}>View Detailed Logs</Button>}

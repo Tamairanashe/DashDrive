@@ -9,28 +9,53 @@ import {
   CompassOutlined, SyncOutlined, SwapOutlined, WarningOutlined,
   PlayCircleOutlined, PauseCircleOutlined, ExpandOutlined
 } from '@ant-design/icons';
-import { MarkerF, InfoWindowF, PolylineF, OverlayViewF, OverlayView } from '@react-google-maps/api';
+import { MarkerF, InfoWindowF, PolylineF, OverlayViewF, OverlayView, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
 import { BaseMap, useBaseMap } from '../components/BaseMap';
-import carMarker from '../assets/car-marker.png';
-import carMarkerHandicap from '../assets/car-marker-handicap.png';
+import { useAdminSocketStore } from '../lib/adminSocketStore';
+import { useMarkerClusterer, ClusterableMarker } from '../hooks/useMarkerClusterer';
+import carMarker from '../assets/car-marker-topview.png';
+import carMarkerHandicap from '../assets/car-marker-WAV.png';
 
 const { Title, Text } = Typography;
 
-const DriverMarker = ({ position, isHandicap }: { position: google.maps.LatLngLiteral, isHandicap?: boolean }) => (
+const DriverMarker = ({ position, isHandicap, heading = 0, onClick }: { position: google.maps.LatLngLiteral, isHandicap?: boolean, heading?: number, onClick?: () => void }) => (
   <OverlayViewF
     position={position}
     mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
   >
-    <div style={{ 
-      transform: 'translate(-50%, -50%)',
-      width: '40px', height: '40px', 
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <img 
-        src={isHandicap ? carMarkerHandicap : carMarker} 
-        style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }} 
-        alt="car" 
-      />
+    <div 
+        onClick={onClick}
+        style={{ 
+            transform: 'translate(-50%, -50%)',
+            width: '120px', height: '120px', 
+            position: 'relative',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: onClick ? 'pointer' : 'default'
+        }}
+    >
+        {/* Halo Effect */}
+        <div style={{ 
+            position: 'absolute', 
+            width: '70px', 
+            height: '70px', 
+            background: 'rgba(59, 130, 246, 0.15)', 
+            borderRadius: '50%', 
+            border: '2px solid rgba(59, 130, 246, 0.3)',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
+        }} className="animate-pulse" />
+
+        <img 
+            src={isHandicap ? carMarkerHandicap : carMarker} 
+            style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'contain', 
+                filter: 'drop-shadow(0 6px 15px rgba(0,0,0,0.4))',
+                transform: `rotate(${heading}deg)`,
+                transition: 'transform 0.5s ease-out'
+            }} 
+            alt="car" 
+        />
     </div>
   </OverlayViewF>
 );
@@ -78,6 +103,26 @@ const MapFitter = ({ bounds }: { bounds: google.maps.LatLngBoundsLiteral | null 
     return null;
 };
 
+// Clustered markers for overview when no trip is selected
+const ClusteredOverviewMarkers: React.FC<{ trips: any[], onClickTrip: (id: string) => void }> = ({ trips, onClickTrip }) => {
+    const { map } = useBaseMap();
+
+    const clusterableDrivers: ClusterableMarker[] = React.useMemo(() => 
+        trips.map(trip => ({
+            id: trip.id,
+            lat: trip.driver.lat,
+            lng: trip.driver.lng,
+            heading: trip.driver.heading || 0,
+            isHandicap: trip.id.includes('HANDICAP'),
+            onClick: () => onClickTrip(trip.id),
+        })),
+    [trips, onClickTrip]);
+
+    useMarkerClusterer(map, clusterableDrivers, carMarker, carMarkerHandicap, true);
+
+    return null;
+};
+
 // Mock Individual Trip Data
 const MOCK_TRIPS = [
     {
@@ -86,7 +131,7 @@ const MOCK_TRIPS = [
         status: 'Delivering',
         merchant: { name: 'Pizza Hub CBD', lat: -17.8200, lng: 31.0500 },
         customer: { name: 'John Makoni', phone: '+263 77 123 4567', avatar: 'https://i.pravatar.cc/150?u=1' },
-        driver: { id: 'D-201', name: 'Alex T.', phone: '+263 71 987 6543', vehicle: 'Motorcycle', plate: 'AB-123', lat: -17.8220, lng: 31.0520 },
+        driver: { id: 'D-201', name: 'Alex T.', phone: '+263 71 987 6543', vehicle: 'Motorcycle', plate: 'AB-123', lat: -17.8220, lng: 31.0520, heading: 45 },
         dropoff: { address: '14 Samora Machel Ave', lat: -17.8300, lng: 31.0600 },
         route: [{lat: -17.8200, lng: 31.0500}, {lat: -17.8210, lng: 31.0510}, {lat: -17.8220, lng: 31.0520}, {lat: -17.8300, lng: 31.0600}],
         timeline: [
@@ -108,7 +153,7 @@ const MOCK_TRIPS = [
         status: 'In Transit',
         merchant: null,
         customer: { name: 'Sarah Chipo', phone: '+263 73 555 4444', avatar: 'https://i.pravatar.cc/150?u=2' },
-        driver: { id: 'D-405', name: 'Mike N.', phone: '+263 77 111 2222', vehicle: 'Toyota Belta', plate: 'AEE-9901', lat: -17.8050, lng: 31.0400 },
+        driver: { id: 'D-405', name: 'Mike N.', phone: '+263 77 111 2222', vehicle: 'Toyota Belta', plate: 'AEE-9901', lat: -17.8050, lng: 31.0400, heading: 180 },
         pickup: { address: 'Avondale Shopping Center', lat: -17.8000, lng: 31.0333 },
         dropoff: { address: 'Borrowdale Village', lat: -17.7500, lng: 31.1000 },
         route: [{lat: -17.8000, lng: 31.0333}, {lat: -17.8050, lng: 31.0400}, {lat: -17.7500, lng: 31.1000}],
@@ -127,11 +172,38 @@ const MOCK_TRIPS = [
 ];
 
 export const LiveTrackingPage: React.FC = () => {
+    const { socket, isConnected } = useAdminSocketStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTrip, setActiveTrip] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
     const [playbackMode, setPlaybackMode] = useState(false);
     const [showInfoWindow, setShowInfoWindow] = useState<string | null>(null);
+    const [directionsResponse, setDirectionsResponse] = useState<any | null>(null);
+    const [routePath, setRoutePath] = useState<google.maps.LatLngLiteral[]>([]);
+    const [animatedPos, setAnimatedPos] = useState<google.maps.LatLngLiteral | null>(null);
+    const [animIndex, setAnimIndex] = useState(0);
+
+    // WebSocket Integration for Live Updates
+    useEffect(() => {
+        if (!socket || !isConnected || !activeTrip) return;
+
+        const handlePlatformEvent = (data: any) => {
+            if (data.event === 'DRIVER_LOCATION_UPDATED' && data.payload.tripId === activeTrip.id) {
+                const newPos = { lat: data.payload.lat, lng: data.payload.lng };
+                setAnimatedPos(newPos);
+                // Also update the activeTrip driver position for consistent UI
+                setActiveTrip(prev => ({
+                    ...prev,
+                    driver: { ...prev.driver, lat: newPos.lat, lng: newPos.lng, heading: data.payload.heading ?? prev.driver.heading }
+                }));
+            }
+        };
+
+        socket.on('platform_event', handlePlatformEvent);
+        return () => {
+            socket.off('platform_event', handlePlatformEvent);
+        };
+    }, [socket, isConnected, activeTrip?.id]);
 
     const handleSearch = (value: string) => {
         setLoading(true);
@@ -148,24 +220,66 @@ export const LiveTrackingPage: React.FC = () => {
         }, 600);
     };
 
-    // Simulate driver movement on active trip
+    // Directions Fetching logic (Live ETA refresh) - MODERN ROUTES API
     useEffect(() => {
-        if (!activeTrip || activeTrip.status !== 'Delivering') return;
-        const interval = setInterval(() => {
-            setActiveTrip(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    driver: {
-                        ...prev.driver,
-                        lat: prev.driver.lat + (Math.random() - 0.5) * 0.0005,
-                        lng: prev.driver.lng + (Math.random() - 0.5) * 0.0005,
-                    }
+        if (!activeTrip || !window.google) return;
+        
+        const fetchRoute = async () => {
+            try {
+                // Import the Routes library.
+                const { Route } = await google.maps.importLibrary('routes') as any;
+                
+                // Define a computeRoutes request with Field Masking
+                const request = {
+                    origin: { lat: activeTrip.driver.lat, lng: activeTrip.driver.lng },
+                    destination: { lat: activeTrip.dropoff.lat, lng: activeTrip.dropoff.lng },
+                    travelMode: 'DRIVING' as any,
+                    fields: ['path', 'distanceMeters', 'durationMillis']
                 };
-            });
-        }, 4000);
+
+                // Call the computeRoutes() method to get routes.
+                const { routes } = await Route.computeRoutes(request);
+                
+                if (routes && routes.length > 0) {
+                    const mainRoute = routes[0];
+                    setDirectionsResponse(mainRoute);
+                    
+                    const path = mainRoute.path || [];
+                    setRoutePath(path);
+
+                    // If not already animating, or if it's a first load
+                    if (!animatedPos && path.length > 0) {
+                        setAnimIndex(0);
+                        setAnimatedPos({ lat: path[0].lat, lng: path[0].lng });
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to compute routes via Routes API:", err);
+            }
+        };
+
+        fetchRoute();
+        const interval = setInterval(fetchRoute, 10000); // Uber-style 10s refresh
         return () => clearInterval(interval);
-    }, [activeTrip]);
+    }, [activeTrip?.id]);
+
+    // Smooth Animation Loop
+    useEffect(() => {
+        if (!playbackMode || !routePath || routePath.length === 0) return;
+        
+        if (animIndex >= routePath.length) {
+            setPlaybackMode(false);
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            const nextPoint = routePath[animIndex];
+            setAnimatedPos({ lat: nextPoint.lat, lng: nextPoint.lng });
+            setAnimIndex(prev => prev + 1);
+        }, 150); // Speed of playback
+
+        return () => clearTimeout(timer);
+    }, [playbackMode, animIndex, routePath]);
 
     const fitBoundsTrigger = useMemo(() => {
         if (!activeTrip) return MOCK_TRIPS.map(t => ({ lat: t.driver.lat, lng: t.driver.lng }));
@@ -173,8 +287,6 @@ export const LiveTrackingPage: React.FC = () => {
             { lat: activeTrip.driver.lat, lng: activeTrip.driver.lng },
             { lat: activeTrip.dropoff.lat, lng: activeTrip.dropoff.lng }
         ];
-        if (activeTrip.merchant) points.push({ lat: activeTrip.merchant.lat, lng: activeTrip.merchant.lng });
-        if (activeTrip.pickup) points.push({ lat: activeTrip.pickup.lat, lng: activeTrip.pickup.lng });
         return points;
     }, [activeTrip]);
 
@@ -231,8 +343,18 @@ export const LiveTrackingPage: React.FC = () => {
                                 </Col>
                                 <Col>
                                     <Space>
-                                        <Statistic title="Elapsed" value={activeTrip.elapsed} valueStyle={{ fontSize: 16, color: '#ef4444' }} />
-                                        <Statistic title="ETA" value={activeTrip.eta} valueStyle={{ fontSize: 16, color: '#10b981' }} />
+                                        <Statistic 
+                                            title="Distance" 
+                                            value={directionsResponse ? (directionsResponse.distanceMeters / 1000).toFixed(1) : activeTrip.distance.replace(' km', '')} 
+                                            suffix="km"
+                                            valueStyle={{ fontSize: 16, color: '#ef4444' }} 
+                                        />
+                                        <Statistic 
+                                            title="Real-time ETA" 
+                                            value={directionsResponse ? Math.ceil(parseInt(directionsResponse.durationMillis || 0) / 60000) : activeTrip.eta.split(' ')[0]} 
+                                            suffix="mins"
+                                            valueStyle={{ fontSize: 16, color: '#10b981' }} 
+                                        />
                                     </Space>
                                 </Col>
                             </Row>
@@ -245,52 +367,50 @@ export const LiveTrackingPage: React.FC = () => {
                             <BaseMap center={[-17.824858, 31.053028]} zoom={13} onLoad={handleMapLoad}>
                                 {activeTrip ? (
                                     <>
-                                        <DriverMarker position={{ lat: activeTrip.driver.lat, lng: activeTrip.driver.lng }} />
+                                        <DriverMarker 
+                                            position={animatedPos || { lat: activeTrip.driver.lat, lng: activeTrip.driver.lng }} 
+                                            heading={activeTrip.driver.heading || 0}
+                                            isHandicap={activeTrip.id.includes('HANDICAP')}
+                                        />
+                                        
+                                        {/* Render the route using PolylineF for modern Routes API response */}
+                                        {routePath.length > 0 && (
+                                            <PolylineF 
+                                                path={routePath} 
+                                                options={{
+                                                    strokeColor: '#2ECC71',
+                                                    strokeWeight: 6,
+                                                    strokeOpacity: 0.8,
+                                                    lineJoin: 'round'
+                                                }}
+                                            />
+                                        )}
+
+                                        {!directionsResponse && (
+                                            <PolylineF 
+                                                path={activeTrip.route} 
+                                                options={{
+                                                    strokeColor: "#0f172a",
+                                                    strokeOpacity: 0.6,
+                                                    strokeWeight: 4
+                                                }}
+                                            />
+                                        )}
+
                                         {(activeTrip.merchant || activeTrip.pickup) && (
                                             <PickupMarker position={{ lat: activeTrip.merchant?.lat || activeTrip.pickup?.lat, lng: activeTrip.merchant?.lng || activeTrip.pickup?.lng }} />
                                         )}
                                         <DropoffMarker position={{ lat: activeTrip.dropoff.lat, lng: activeTrip.dropoff.lng }} />
-                                        <PolylineF 
-                                            path={activeTrip.route} 
-                                            options={{
-                                                strokeColor: "#0f172a",
-                                                strokeOpacity: activeTrip.status === 'Delivering' ? 0 : 0.6,
-                                                strokeWeight: 4,
-                                                icons: activeTrip.status === 'Delivering' ? [{
-                                                  icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 },
-                                                  offset: '0',
-                                                  repeat: '10px'
-                                                }] : undefined
-                                            }}
-                                        />
                                     </>
                                 ) : (
-                                    // Show all active trips when none selected
-                                    MOCK_TRIPS.map(trip => (
-                                        <React.Fragment key={trip.id}>
-                                            <MarkerF 
-                                                position={{ lat: trip.driver.lat, lng: trip.driver.lng }} 
-                                                onClick={() => setShowInfoWindow(trip.id)}
-                                                icon={{
-                                                    url: trip.id.includes('HANDICAP') ? carMarkerHandicap : carMarker,
-                                                    scaledSize: new google.maps.Size(32, 32),
-                                                    anchor: new google.maps.Point(16, 16)
-                                                }}
-                                            />
-                                            {showInfoWindow === trip.id && (
-                                                <InfoWindowF 
-                                                    position={{ lat: trip.driver.lat, lng: trip.driver.lng }}
-                                                    onCloseClick={() => setShowInfoWindow(null)}
-                                                >
-                                                    <div onClick={() => setActiveTrip(trip)} style={{ cursor: 'pointer' }}>
-                                                        <strong>{trip.id}</strong><br/>
-                                                        Driver: {trip.driver.name}<br/>
-                                                        Status: {trip.status}
-                                                    </div>
-                                                </InfoWindowF>
-                                            )}
-                                        </React.Fragment>
-                                    ))
+                                    // Show all active trips with clustering when none selected
+                                    <ClusteredOverviewMarkers 
+                                        trips={MOCK_TRIPS} 
+                                        onClickTrip={(id) => {
+                                            const found = MOCK_TRIPS.find(t => t.id === id);
+                                            if (found) setActiveTrip(found);
+                                        }}
+                                    />
                                 )}
                             </BaseMap>
                         </div>

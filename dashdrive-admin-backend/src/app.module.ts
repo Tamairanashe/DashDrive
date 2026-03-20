@@ -26,8 +26,8 @@ import { FintechModule } from './modules/fintech/fintech.module';
     RidersModule,
     AlertsModule,
     FintechModule,
-    // EventBusModule,
-    // RealTimeModule
+    EventBusModule,
+    RealTimeModule
   ],
   controllers: [AppController],
   providers: [AppService],

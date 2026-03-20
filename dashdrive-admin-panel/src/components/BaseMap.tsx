@@ -1,7 +1,7 @@
 import React, { useEffect, useState, createContext, useContext, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCxwlIiOcrI_yBrehP9CKr-CoIoPusShh0";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyCxwlIiOcrI_yBrehP9CKr-CoIoPusShh0";
 
 interface MapContextType {
   map: google.maps.Map | null;
@@ -21,7 +21,7 @@ interface BaseMapProps {
   onLoad?: (map: google.maps.Map) => void;
 }
 
-const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry")[] = ['places', 'drawing', 'visualization', 'geometry'];
+const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry" | "marker")[] = ['places', 'drawing', 'visualization', 'geometry', 'marker'];
 
 export const BaseMap: React.FC<BaseMapProps> = ({ 
   center, 
@@ -48,7 +48,7 @@ export const BaseMap: React.FC<BaseMapProps> = ({
     setMap(null);
   }, []);
 
-  if (!isLoaded) return <div style={{ height, width: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyCenter: 'center' }}>Loading Maps...</div>;
+  if (!isLoaded) return <div style={{ height, width: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading Maps...</div>;
 
   return (
     <MapContext.Provider value={{ map, setMap }}>
@@ -66,7 +66,8 @@ export const BaseMap: React.FC<BaseMapProps> = ({
             scaleControl: true,
             streetViewControl: false,
             rotateControl: false,
-            fullscreenControl: false
+            fullscreenControl: false,
+            mapId: 'DEMO_MAP_ID'
           }}
         >
           {children}

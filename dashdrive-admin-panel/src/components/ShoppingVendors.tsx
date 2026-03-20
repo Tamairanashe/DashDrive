@@ -247,7 +247,7 @@ export const ShoppingVendors: React.FC = () => {
         </Space>
       </div>
 
-      <Card bordered={false} styles={{ body: { padding: 0 } }}>
+      <Card variant="borderless" styles={{ body: { padding: 0 } }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
           <Space size="large" style={{ fontWeight: 500 }}>
             {['All', 'Pending Approval', 'Active', 'Suspended'].map(tab => (
@@ -405,10 +405,10 @@ export const ShoppingVendors: React.FC = () => {
                                         <Statistic title="Merchant Balance" value={4850.25} precision={2} prefix="$" />
                                     </Col>
                                     <Col span={8}>
-                                        <Statistic title="Platform Cut" value={4850.25 * (editedCommission/100)} precision={2} prefix="$" valueStyle={{ color: '#1677ff' }} />
+                                        <Statistic title="Platform Cut" value={4850.25 * (editedCommission/100)} precision={2} prefix="$" styles={{ content: { color: '#1677ff' } }} />
                                     </Col>
                                     <Col span={8}>
-                                        <Statistic title="Next Payout" value="Mar 15" valueStyle={{ fontSize: 18 }} />
+                                        <Statistic title="Next Payout" value="Mar 15" styles={{ content: { fontSize: 18 } }} />
                                     </Col>
                                 </Row>
                                 <Button type="primary" ghost block style={{ marginTop: 16 }}>View Details</Button>

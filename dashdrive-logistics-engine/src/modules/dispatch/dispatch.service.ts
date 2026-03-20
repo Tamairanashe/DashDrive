@@ -18,6 +18,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { DispatchGateway } from './dispatch.gateway';
 import { EarningsService } from './earnings.service';
+import { GoogleMapsService } from '../../common/providers/google-maps/google-maps.service';
 
 @Injectable()
 export class DispatchService {
@@ -30,6 +31,7 @@ export class DispatchService {
     @Optional() @InjectQueue('dispatch_queue') private dispatchQueue: Queue,
     @Inject(forwardRef(() => DispatchGateway))
     private dispatchGateway: DispatchGateway,
+    private googleMaps: GoogleMapsService,
   ) {}
 
   async startDispatchFlow(orderId: string) {
@@ -426,42 +428,64 @@ export class DispatchService {
       throw new Error('No riders available for dispatch in this region');
     }
 
+    // 3. Pre-sort by Haversine for performance (only use Distance Matrix for top 10)
+    const candidates = availableRiders.map(rider => ({
+      rider,
+      haversineDistance: this.geoService.calculateDistance(
+        rider.latitude || 0,
+        rider.longitude || 0,
+        pickupLat,
+        pickupLng,
+      )
+    })).sort((a, b) => a.haversineDistance - b.haversineDistance).slice(0, 10);
+
+    let travelTimes: { riderId: string; durationSeconds: number }[] = [];
+    try {
+      const response = await this.googleMaps.computeDistanceMatrix(
+        candidates.map(c => ({ lat: c.rider.latitude || 0, lng: c.rider.longitude || 0 })),
+        [{ lat: pickupLat, lng: pickupLng }]
+      );
+      
+      travelTimes = candidates.map((c, idx) => ({
+        riderId: c.rider.id,
+        durationSeconds: response.rows[idx].elements[0].duration?.value || (c.haversineDistance * 120) // Fallback: 2 mins per km
+      }));
+    } catch (error) {
+      this.logger.error(`Distance Matrix failed: ${error.message}. Using Haversine fallback.`);
+      travelTimes = candidates.map(c => ({
+        riderId: c.rider.id,
+        durationSeconds: c.haversineDistance * 120 // 2 mins per km
+      }));
+    }
+
     const scoredRiders = await Promise.all(
-      availableRiders.map(async (rider: any) => {
-        const distance = this.geoService.calculateDistance(
-          rider.latitude || 0,
-          rider.longitude || 0,
-          pickupLat,
-          pickupLng,
-        );
+      candidates.map(async (candidate) => {
+        const rider = candidate.rider;
+        const travelTime = travelTimes.find(t => t.riderId === rider.id)?.durationSeconds || 0;
+        
+        // Duration-based score (Inverse of duration, max 10 points)
+        // Assume 10 mins (600s) as "poor" and 0 mins as "perfect"
+        const durationScore = Math.max(0, 10 - (travelTime / 60));
 
-        // Distance Score (Inverse of distance, max 10 points)
-        const distanceScore = Math.max(0, 10 - distance);
-
-        const ratingScore = rider.rating * 2; // Max 10 if rating is 5
-        const loadScore = Math.max(0, 10 - rider.currentLoad); // Max 10 if load is 0
+        const ratingScore = (rider as any).rating * 2; // Max 10 if rating is 5
+        const loadScore = Math.max(0, 10 - (rider as any).currentLoad); // Max 10 if load is 0
 
         // Idle Time Calculation
-        const idleMs = Date.now() - new Date(rider.lastActiveAt).getTime();
+        const lastActive = (rider as any).lastActiveAt ? new Date((rider as any).lastActiveAt).getTime() : Date.now();
+        const idleMs = Date.now() - lastActive;
         const idleMinutes = Math.floor(idleMs / 60000);
 
-        // Integrate Earnings Optimizer (includes earnings gap + idle boost)
-        const earningsScore =
-          await this.earningsService.getEarningsPriorityScore(
-            rider.id,
-            idleMinutes,
-          );
+        // Integrate Earnings Optimizer
+        const earningsScore = await this.earningsService.getEarningsPriorityScore(
+          rider.id,
+          idleMinutes,
+        );
 
-        // Total Score is a blend of operational efficiency and driver fairness
-        let totalScore =
-          distanceScore + ratingScore + loadScore + earningsScore;
+        let totalScore = durationScore + ratingScore + loadScore + earningsScore;
 
-        // 3. Founding Driver Boost (Priority during Soft Launch)
-        if (softLaunchZone && rider.isFoundingDriver) {
-          totalScore += 10; // Significant boost to reward loyalty
-          this.logger.debug(
-            `Boosting founding rider ${rider.id} in soft launch zone`,
-          );
+        // Founding Driver Boost
+        if (softLaunchZone && (rider as any).isFoundingDriver) {
+          totalScore += 10;
         }
 
         return { rider, score: totalScore };

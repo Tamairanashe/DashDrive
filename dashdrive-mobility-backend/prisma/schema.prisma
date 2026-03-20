@@ -481,6 +481,11 @@ model RideRequest {
   dropoffLng        Float
   dropoffAddress    String
   status            RideStatus      @default(REQUESTED)
+  
+  estimatedDistance Float?
+  estimatedDuration Int?
+  polylinePoints    String?         @db.Text
+  
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   RideServiceType   RideServiceType @relation(fields: [serviceTypeId], references: [id])
@@ -650,6 +655,8 @@ model CityRoute {
   destinationCity   String
   distanceKm        Decimal?     @db.Decimal(10, 2)
   estimatedDuration String?      // ISO 8601 or descriptive
+  estimatedDurationSeconds Int?
+  polylinePoints    String?       @db.Text
   minPrice          Decimal?     @db.Decimal(10, 2)
   maxPrice          Decimal?     @db.Decimal(10, 2)
   status            String       @default("active")
@@ -759,6 +766,10 @@ model LocalRideRequest {
   proposed_price  Decimal          @db.Decimal(10, 2)
   passenger_count Int              @default(1)
   status          String           @default("requested") // requested, driver_selected, cancelled, completed
+  
+  estimated_duration_seconds Int?
+  polyline_points            String? @db.Text
+  
   created_at      DateTime         @default(now())
   
   offers          LocalRideOffer[]

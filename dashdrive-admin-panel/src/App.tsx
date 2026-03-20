@@ -1,4 +1,5 @@
 import React from 'react';
+import { App as AntdApp } from 'antd';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
@@ -76,9 +77,10 @@ export default function App() {
   // }
 
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
+    <AntdApp>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<AdminLayout />}>
             <Route index element={<DashboardPage />} />
             
@@ -87,6 +89,7 @@ export default function App() {
             <Route path="dashboard/fleet" element={<FleetViewPage />} />
             <Route path="dashboard/analytics" element={<AnalyticsPage />} />
             <Route path="dashboard/dispatch" element={<DispatchManagementPage />} />
+            <Route path="dashboard/live-tracking" element={<LiveTrackingPage />} />
 
             {/* Services */}
             <Route path="services/ride" element={<RideHailingPage />} />
@@ -196,5 +199,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
+    </AntdApp>
   );
 }

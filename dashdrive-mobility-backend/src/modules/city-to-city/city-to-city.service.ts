@@ -1,9 +1,11 @@
 import { Injectable, ConflictException, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateCityRideDto } from './dto/create-ride.dto';
 import { SubmitOfferDto } from './dto/submit-offer.dto';
 import { CreateDriverTripDto } from './dto/create-driver-trip.dto';
 import { CityToCityGateway } from './city-to-city.gateway';
+import { GoogleMapsService } from '../../providers/google-maps/google-maps.service';
 
 @Injectable()
 export class CityToCityService {
@@ -11,7 +13,36 @@ export class CityToCityService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => CityToCityGateway))
     private gateway: CityToCityGateway,
+    private googleMaps: GoogleMapsService,
   ) {}
+
+  private async syncRouteData(routeId: string) {
+    const route = await this.prisma.cityRoute.findUnique({ where: { id: routeId } });
+    // @ts-ignore
+    if (!route || route.polylinePoints) return route;
+
+    try {
+      // Use origin and destination city names for Directions API
+      const googleRoute = await this.googleMaps.computeRoute(
+        route.originCity as any,
+        route.destinationCity as any
+      );
+
+      return await this.prisma.cityRoute.update({
+        where: { id: routeId },
+        data: {
+          distanceKm: new Prisma.Decimal(googleRoute.distanceMeters / 1000),
+          // @ts-ignore
+          estimatedDurationSeconds: googleRoute.durationSeconds,
+          // @ts-ignore
+          polylinePoints: googleRoute.polyline,
+        },
+      });
+    } catch (error) {
+      console.error(`Failed to sync city route ${routeId}:`, error.message);
+      return route;
+    }
+  }
 
   // --- Passenger Negotiation Flow ---
 
@@ -117,8 +148,13 @@ export class CityToCityService {
       },
     });
 
+    // Sync route data for the found trips
+    await Promise.all(
+      trips.map((t: any) => this.syncRouteData(t.routeId))
+    );
+
     // Production Scoring Logic: (1 / price) + available_seats
-    return trips.sort((a, b) => {
+    return trips.sort((a: any, b: any) => {
       const scoreA = (1 / a.pricePerSeat.toNumber()) + a.availableSeats;
       const scoreB = (1 / b.pricePerSeat.toNumber()) + b.availableSeats;
       return scoreB - scoreA;

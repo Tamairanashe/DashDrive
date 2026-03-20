@@ -2,7 +2,7 @@ import React from 'react';
 import { GoogleMap, MarkerF, PolylineF, PolygonF, useJsApiLoader } from '@react-google-maps/api';
 import { cn } from '../utils';
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCxwlIiOcrI_yBrehP9CKr-CoIoPusShh0";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyCxwlIiOcrI_yBrehP9CKr-CoIoPusShh0";
 
 interface MapPreviewProps {
   type: 'polygon' | 'order-route';
@@ -30,7 +30,7 @@ const mapOptions: google.maps.MapOptions = {
   ]
 };
 
-const LIBRARIES: ("places" | "geometry")[] = ['places', 'geometry'];
+const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry")[] = ['places', 'drawing', 'visualization', 'geometry'];
 
 export const MapPreview: React.FC<MapPreviewProps> = ({ type, data, label, status = 'Active', variant = 'standard' }) => {
   const { isLoaded } = useJsApiLoader({

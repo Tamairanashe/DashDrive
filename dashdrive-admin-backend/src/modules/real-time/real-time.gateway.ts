@@ -9,7 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 
-@WebSocketGateway({
+@WebSocketGateway(8000, {
   cors: {
     origin: '*',
   },

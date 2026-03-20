@@ -17,12 +17,14 @@ import { LocalRidesModule } from './modules/local-rides/local-rides.module';
 import { TrustModule } from './modules/trust/trust.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { DispatchModule } from './modules/dispatch/dispatch.module';
+import { GoogleMapsModule } from './providers/google-maps/google-maps.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     FirebaseModule,
+    GoogleMapsModule,
     AuthModule,
     VehiclesModule,
     TripsModule,

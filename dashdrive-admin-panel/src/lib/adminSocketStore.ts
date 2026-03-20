@@ -18,7 +18,7 @@ export const useAdminSocketStore = create<AdminSocketState>((set, get) => ({
     connect: () => {
         if (get().socket?.connected) return;
 
-        const socket = io('http://localhost:8000', {
+        const socket = io('http://localhost:3002', {
             transports: ['websocket'],
             reconnection: true,
         });

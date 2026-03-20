@@ -37,6 +37,39 @@
   box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.04), 0 12px 32px -8px rgba(0, 0, 0, 0.06);
 }
 
+.font-small-caps {
+  font-variant: small-caps;
+  text-transform: lowercase;
+}
+
+.font-display {
+  font-family: inherit;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+body[data-theme='dark'] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -127,9 +160,41 @@
   font-size: 14px !important;
 }
 
-.premium-tabs .ant-tabs-ink-bar {
+.premium-tabs .ant-tabs-ink-bar,
+.trip-tabs .ant-tabs-ink-bar {
   display: none !important;
 }
+
+.trip-tabs .ant-tabs-nav::before {
+  display: none !important;
+}
+
+.trip-tabs .ant-tabs-tab {
+  padding: 8px 0 !important;
+  margin: 0 16px 0 0 !important;
+  border-bottom: 2px solid transparent !important;
+  transition: all 0.2s ease;
+}
+
+.trip-tabs .ant-tabs-tab:hover .ant-tabs-tab-btn {
+  color: var(--color-primary) !important;
+}
+
+.trip-tabs .ant-tabs-tab-active {
+  border-bottom: 2px solid var(--color-primary) !important;
+}
+
+.trip-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--color-primary) !important;
+  font-weight: 800 !important;
+}
+
+.trip-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+  color: #94a3b8;
+  font-size: 13px !important;
+  transition: all 0.2s ease;
+}
+
 
 /* Dark Mode Overrides for Premium Tabs */
 body[data-theme='dark'] .premium-tabs .ant-tabs-nav::before {

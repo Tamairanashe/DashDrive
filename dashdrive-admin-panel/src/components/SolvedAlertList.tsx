@@ -165,7 +165,7 @@ export function SolvedAlertList() {
  </Space>
  </div>
 
- <StyledCard className="rounded-3xl shadow-sm border-zinc-100 overflow-hidden" bodyStyle={{ padding: 0 }}>
+ <StyledCard className="rounded-3xl shadow-sm border-zinc-100 overflow-hidden" styles={{ body: { padding: 0 } }}>
  <div className="p-5 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50 flex-wrap gap-4">
  <Input
  placeholder="Search by ID, Type, or description..."

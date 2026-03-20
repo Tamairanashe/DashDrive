@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Table, 
   Card, 
@@ -207,27 +207,27 @@ export const Transactions: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <Row gutter={[24, 24]}>
         <Col span={8}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic title="Total Transacted" value={42805120} prefix="$" valueStyle={{ color: '#52c41a', fontWeight: 800 }} />
+          <Card variant="borderless" className="shadow-sm">
+            <Statistic title="Total Transacted" value={42805120} prefix="$" styles={{ content: { color: '#52c41a', fontWeight: 800 } }} />
             <Text type="success" style={{ fontSize: 12 }}>+12% from last period</Text>
           </Card>
         </Col>
         <Col span={8}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic title="Platform Commission" value={3842500} prefix="$" valueStyle={{ color: '#1677ff', fontWeight: 800 }} />
+          <Card variant="borderless" className="shadow-sm">
+            <Statistic title="Platform Commission" value={3842500} prefix="$" styles={{ content: { color: '#1677ff', fontWeight: 800 } }} />
             <Text type="success" style={{ fontSize: 12 }}>+8% growth</Text>
           </Card>
         </Col>
         <Col span={8}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic title="Failed Payments" value={428} valueStyle={{ color: '#ff4d4f', fontWeight: 800 }} />
+          <Card variant="borderless" className="shadow-sm">
+            <Statistic title="Failed Payments" value={428} styles={{ content: { color: '#ff4d4f', fontWeight: 800 } }} />
             <Text type="danger" style={{ fontSize: 12 }}>-2% improvement</Text>
           </Card>
         </Col>
       </Row>
 
       <Card 
-        bordered={false} 
+        variant="borderless" 
         className="shadow-sm"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

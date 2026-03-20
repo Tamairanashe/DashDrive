@@ -83,7 +83,6 @@ export const FleetOperatorHub: React.FC<FleetOperatorHubProps> = ({ initialTab =
     }
     handleStatusChange(pendingAction!.id, 'Suspended', rejectionReason);
   };
- Jonah
 
   const ListTab = () => (
     <div style={{ marginTop: 20 }}>

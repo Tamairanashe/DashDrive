@@ -1,7 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { GeoService } from '../geo/geo.service';
-import { DeliveryStatus } from '@prisma/client';
+import { GoogleMapsService } from '../../common/providers/google-maps/google-maps.service';
 
 @Injectable()
 export class RoutingService {
@@ -10,14 +7,14 @@ export class RoutingService {
   constructor(
     private prisma: PrismaService,
     private geoService: GeoService,
+    private googleMaps: GoogleMapsService,
   ) {}
 
   /**
-   * Calculates the optimal route for a batch of deliveries using a greedy TSP (Nearest Neighbor) approach.
-   * Returns the ordered array of deliveries.
+   * Calculates the optimal route for a batch of deliveries using Google Maps Routes API.
+   * Falls back to Greedy TSP if Google Maps is unavailable or fails.
    */
   async optimizeBatch(riderId: string) {
-    // Fetch active deliveries for the rider
     const deliveries = await this.prisma.delivery.findMany({
       where: {
         riderId,
@@ -36,57 +33,76 @@ export class RoutingService {
       },
     });
 
-    if (deliveries.length <= 1) {
-      // Nothing to optimize if 1 or 0 deliveries
+    if (deliveries.length <= 1) return deliveries;
+
+    const rider = await this.prisma.rider.findUnique({ where: { id: riderId } });
+    if (!rider || !rider.latitude || !rider.longitude) {
+      this.logger.warn(`No location for rider ${riderId}`);
       return deliveries;
     }
 
-    const rider = await this.prisma.rider.findUnique({
-      where: { id: riderId },
+    const origin = { lat: rider.latitude, lng: rider.longitude };
+    
+    // Map deliveries to their current target location
+    const waypoints = deliveries.map(d => {
+      if (d.status === DeliveryStatus.ASSIGNED || d.status === DeliveryStatus.ACCEPTED) {
+        return {
+          lat: (d.order.store as any).latitude || (d.order.store as any).lat || 0,
+          lng: (d.order.store as any).longitude || (d.order.store as any).lng || 0,
+        };
+      } else {
+        return {
+          lat: (d.order as any).destLat || (d.order as any).latitude || 0,
+          lng: (d.order as any).destLng || (d.order as any).longitude || 0,
+        };
+      }
     });
-    if (!rider || !rider.latitude || !rider.longitude) {
-      this.logger.warn(
-        `Cannot optimize route for rider ${riderId} - no location data`,
-      );
-      return deliveries; // Return unoptimized
-    }
 
+    try {
+      const result = await this.googleMaps.optimizeRoute(origin, waypoints);
+      
+      // Reorder deliveries based on Google's optimized waypoint order
+      // result.optimizedOrder is an array of indices into our waypoints/deliveries array
+      const optimizedDeliveries = result.optimizedOrder.map(index => deliveries[index]);
+      
+      // Handle the case where Google's optimized order might be shorter than waypoint list
+      // (Google returns indices of waypoints EXCEPT origin/destination if specified separately)
+      // Our implementation in GoogleMapsService uses destination = waypoints[last] if not provided.
+      
+      await this.prisma.$transaction(
+        optimizedDeliveries.map((delivery, index) =>
+          this.prisma.delivery.update({
+            where: { id: delivery.id },
+            data: { sequence: index + 1 },
+          }),
+        ),
+      );
+
+      return optimizedDeliveries;
+    } catch (error) {
+      this.logger.error(`Google Route Optimization failed, falling back to Greedy: ${error.message}`);
+      return this.greedyOptimize(rider, deliveries);
+    }
+  }
+
+  private async greedyOptimize(rider: any, deliveries: any[]) {
     let currentLocation = { lat: rider.latitude, lng: rider.longitude };
     const unvisited = [...deliveries];
-    const routeSequence: typeof deliveries = [];
+    const routeSequence: any[] = [];
 
-    // Greedy TSP: Find the nearest next stop
     while (unvisited.length > 0) {
       let nearestIndex = 0;
       let minDistance = Number.MAX_VALUE;
 
       for (let i = 0; i < unvisited.length; i++) {
         const delivery = unvisited[i];
-        let targetLocation;
-
-        // If not picked up, next stop is the store. Otherwise, next stop is the delivery address.
-        if (
-          delivery.status === DeliveryStatus.ASSIGNED ||
-          delivery.status === DeliveryStatus.ACCEPTED
-        ) {
-          // We need store lat/lng. Using 0,0 fallback if missing for compilation
-          targetLocation = {
-            lat: (delivery.order.store as any).lat || 0,
-            lng: (delivery.order.store as any).lng || 0,
-          };
-        } else {
-          // We need destination lat/lng. Using 0,0 fallback
-          targetLocation = {
-            lat: (delivery.order as any).destLat || 0,
-            lng: (delivery.order as any).destLng || 0,
-          };
-        }
+        const target = this.getDeliveryTarget(delivery);
 
         const dist = this.geoService.calculateDistance(
           currentLocation.lat,
           currentLocation.lng,
-          targetLocation.lat,
-          targetLocation.lng,
+          target.lat,
+          target.lng,
         );
 
         if (dist < minDistance) {
@@ -97,25 +113,9 @@ export class RoutingService {
 
       const nextStop = unvisited.splice(nearestIndex, 1)[0];
       routeSequence.push(nextStop);
-
-      // Update current location to this stop's location
-      if (
-        nextStop.status === DeliveryStatus.ASSIGNED ||
-        nextStop.status === DeliveryStatus.ACCEPTED
-      ) {
-        currentLocation = {
-          lat: (nextStop.order.store as any).lat || 0,
-          lng: (nextStop.order.store as any).lng || 0,
-        };
-      } else {
-        currentLocation = {
-          lat: (nextStop.order as any).destLat || 0,
-          lng: (nextStop.order as any).destLng || 0,
-        };
-      }
+      currentLocation = this.getDeliveryTarget(nextStop);
     }
 
-    // Save sequence to DB
     await this.prisma.$transaction(
       routeSequence.map((delivery, index) =>
         this.prisma.delivery.update({
@@ -126,5 +126,19 @@ export class RoutingService {
     );
 
     return routeSequence;
+  }
+
+  private getDeliveryTarget(delivery: any) {
+    if (delivery.status === DeliveryStatus.ASSIGNED || delivery.status === DeliveryStatus.ACCEPTED) {
+      return {
+        lat: (delivery.order.store as any).latitude || (delivery.order.store as any).lat || 0,
+        lng: (delivery.order.store as any).longitude || (delivery.order.store as any).lng || 0,
+      };
+    } else {
+      return {
+        lat: (delivery.order as any).destLat || (delivery.order as any).latitude || 0,
+        lng: (delivery.order as any).destLng || (delivery.order as any).longitude || 0,
+      };
+    }
   }
 }

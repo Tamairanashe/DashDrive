@@ -1,20 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateLocalRideRequestDto, CreateLocalOfferDto } from './dto/local-rides.dto';
+import { GoogleMapsService } from '../../providers/google-maps/google-maps.service';
 
 @Injectable()
 export class LocalRidesService {
   private readonly logger = new Logger(LocalRidesService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private googleMaps: GoogleMapsService,
+  ) {}
 
   async createRideRequest(userId: string, dto: CreateLocalRideRequestDto) {
-    const distanceKm = this.calculateDistance(
-      dto.pickupLat,
-      dto.pickupLng,
-      dto.dropoffLat,
-      dto.dropoffLng,
-    );
+    let googleRoute;
+    try {
+      googleRoute = await this.googleMaps.computeRoute(
+        { lat: dto.pickupLat, lng: dto.pickupLng },
+        { lat: dto.dropoffLat, lng: dto.dropoffLng },
+      );
+    } catch (error) {
+      this.logger.warn(`Failed to compute Google route, falling back to Haversine: ${error.message}`);
+    }
+
+    const distanceKm = googleRoute 
+      ? googleRoute.distanceMeters / 1000 
+      : this.calculateDistance(dto.pickupLat, dto.pickupLng, dto.dropoffLat, dto.dropoffLng);
 
     return this.prisma.localRideRequest.create({
       data: {
@@ -28,6 +39,8 @@ export class LocalRidesService {
         distance_km: distanceKm,
         proposed_price: dto.proposedPrice,
         passenger_count: dto.passengerCount || 1,
+        estimated_duration_seconds: googleRoute?.durationSeconds,
+        polyline_points: googleRoute?.polyline,
       },
     });
   }
@@ -74,10 +87,16 @@ export class LocalRidesService {
     ]);
   }
 
-  calculateSuggestedPrice(distanceKm: number): { min: number; max: number; suggested: number } {
+  calculateSuggestedPrice(distanceKm: number, durationSeconds?: number): { min: number; max: number; suggested: number } {
     const baseFare = 1.0;
     const ratePerKm = 0.5;
-    const suggested = baseFare + distanceKm * ratePerKm;
+    const ratePerMin = 0.2; // Add traffic/time component
+    
+    let suggested = baseFare + distanceKm * ratePerKm;
+    
+    if (durationSeconds) {
+      suggested += (durationSeconds / 60) * ratePerMin;
+    }
     
     return {
       min: Math.max(baseFare, suggested * 0.8),

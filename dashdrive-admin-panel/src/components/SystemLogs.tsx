@@ -152,7 +152,7 @@ export function SystemLogs() {
  </Space>
  </div>
 
- <StyledCard className="rounded-3xl shadow-sm border-zinc-100 overflow-hidden" bodyStyle={{ padding: 0 }}>
+ <StyledCard className="rounded-3xl shadow-sm border-zinc-100 overflow-hidden" styles={{ body: { padding: 0 } }}>
  <div className="p-5 border-b border-zinc-100 flex flex-wrap gap-4 justify-between items-center bg-zinc-50/50">
  <Input
  placeholder="Search logs by message, service, or ID..."

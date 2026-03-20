@@ -27,4 +27,9 @@ export class EventConsumer {
   handleInventoryEvents(@Payload() data: any) {
     this.realTimeGateway.broadcastEvent('INVENTORY_ALERT', data);
   }
+  
+  @EventPattern('driver.location_updated')
+  handleDriverLocation(@Payload() data: any) {
+    this.realTimeGateway.broadcastEvent('DRIVER_LOCATION_UPDATED', data);
+  }
 }

@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Typography, Row, Col, Card, Select, Button, Space, 
-    Tag, Statistic, Divider, message, Alert, Switch, Skeleton,
-    Badge, List, Drawer, Progress, Tabs, Avatar, Input, Table, DatePicker, InputNumber,
-    Calendar, Form, TimePicker, Slider, Timeline
+    Tag, Statistic, Divider, Alert, Switch, Skeleton,
+    Badge, Drawer, Progress, Tabs, Avatar, Input, Table, DatePicker, InputNumber,
+    Calendar, Form, TimePicker, Slider, Timeline, App, Flex, List
 } from 'antd';
 import { 
     CircleF, InfoWindowF, 
     PolygonF, PolylineF, MarkerF, OverlayViewF, OverlayView
 } from '@react-google-maps/api';
 import { BaseMap, useBaseMap } from '../components/BaseMap';
+import { RoutePreview } from '../components/RoutePreview';
 import { 
     SyncOutlined, 
     GlobalOutlined, 
@@ -230,6 +231,7 @@ const MapEffect = ({ center, zoom = 12 }: { center: { lat: number, lng: number }
 
 export const HeatMapPage: React.FC = () => {
     const navigate = useNavigate();
+    const { message, notification, modal } = App.useApp();
     const [selectedCountry, setSelectedCountry] = useState('Zimbabwe');
     const [selectedRegion, setSelectedRegion] = useState('Mashonaland');
     const [selectedCity, setSelectedCity] = useState('Harare');
@@ -374,7 +376,7 @@ export const HeatMapPage: React.FC = () => {
 
     return (
         <div style={{ paddingBottom: 24 }}>
-            <Card bordered={false} className="shadow-sm" style={{ marginBottom: 24, borderRadius: 12 }}>
+            <Card variant="borderless" className="shadow-sm" style={{ marginBottom: 24, borderRadius: 12 }}>
                 <Row gutter={[0, 16]}>
                     <Col span={24}>
                         <Row justify="space-between" align="middle">
@@ -386,7 +388,7 @@ export const HeatMapPage: React.FC = () => {
                                         <Select 
                                             value={selectedCountry} 
                                             style={{ width: 140 }} 
-                                            bordered={false}
+                                            variant="borderless"
                                             onChange={(val) => {
                                                 setSelectedCountry(val);
                                                 const firstRegion = Object.keys(LOCATION_DATA[val].regions)[0];
@@ -400,7 +402,7 @@ export const HeatMapPage: React.FC = () => {
                                         <Select 
                                             value={selectedRegion} 
                                             style={{ width: 140 }} 
-                                            bordered={false}
+                                            variant="borderless"
                                             onChange={(val) => {
                                                 setSelectedRegion(val);
                                                 setSelectedCity(LOCATION_DATA[selectedCountry].regions[val][0]);
@@ -411,7 +413,7 @@ export const HeatMapPage: React.FC = () => {
                                         <Select 
                                             value={selectedCity} 
                                             style={{ width: 120 }} 
-                                            bordered={false}
+                                            variant="borderless"
                                             onChange={setSelectedCity}
                                             suffixIcon={<EnvironmentOutlined />}
                                         >
@@ -504,9 +506,9 @@ export const HeatMapPage: React.FC = () => {
             <Row gutter={[24, 24]}>
                 <Col xs={24} lg={16}>
                     <Card 
-                        bordered={false} 
+                        variant="borderless" 
                         className="shadow-sm" 
-                        bodyStyle={{ padding: 0, height: 600, position: 'relative', borderRadius: 12 }}
+                        styles={{ body: { padding: 0, height: 600, position: 'relative', borderRadius: 12 } }}
                         id="heatmap-container"
                     >
                         <div style={{ height: '100%', width: '100%', overflow: 'hidden', borderRadius: isFullscreen ? 0 : 12 }}>
@@ -575,6 +577,15 @@ export const HeatMapPage: React.FC = () => {
                                         service={service === 'ALL' ? 'ride' : service}
                                     />
                                 ))}
+
+                                {/* LIVE ROUTE DEMONSTRATION: Showcasing a traffic-aware route for a critical zone */}
+                                {isDrilldownActive && selectedZone?.demand === 'critical' && (
+                                    <RoutePreview 
+                                        encodedPolyline="~qve@e~w_Fe@o@{@e@u@e@s@e@q@e@p@e@o@e@n@e@m@e@l@e@k@e@j@e@i@e@h@e@g@e@f@e@e@e@d@e@c@e@b@e@a@e@`@e@_@e@^@e@]@e@\@e@[@e@Z@e@Y@e@X@e@W@e@V@e@U@e@T@e@S@e@R@e@Q@e@P@e@O@e@N@e@M@e@L@e@K@e@J@e@I@e@H@e@G@e@F@e@E@e@D@e@C@e@B@e@A@e@@"
+                                        color="#f43f5e"
+                                        weight={8}
+                                    />
+                                )}
                             </BaseMap>
                         </div>
 
@@ -689,10 +700,10 @@ export const HeatMapPage: React.FC = () => {
 
                 <Col xs={24} lg={8}>
                     {loading ? (
-                        <Card bordered={false} className="shadow-sm" style={{ borderRadius: 12 }}><Skeleton active paragraph={{ rows: 12 }} /></Card>
+                        <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 12 }}><Skeleton active paragraph={{ rows: 12 }} /></Card>
                     ) : selectedZone ? (
                         <Card
-                            bordered={false}
+                            variant="borderless"
                             className="shadow-sm"
                             style={{ borderRadius: 12 }}
                             title={
@@ -705,7 +716,7 @@ export const HeatMapPage: React.FC = () => {
 
                             {selectedZone.demand === 'critical' && (
                                 <Alert
-                                    message="Under-Supplied Market"
+                                    title="Under-Supplied Market"
                                     description="Demand outweighs active drivers by 400%. Action recommended."
                                     type="error"
                                     showIcon
@@ -719,7 +730,7 @@ export const HeatMapPage: React.FC = () => {
                                         title="Rider Supply"
                                         value={selectedZone.drivers}
                                         prefix={<CarOutlined />}
-                                        valueStyle={{ color: '#3b82f6', fontWeight: 800 }}
+                                        styles={{ content: { color: '#3b82f6', fontWeight: 800 } }}
                                     />
                                 </Col>
                                 <Col span={12}>
@@ -727,7 +738,7 @@ export const HeatMapPage: React.FC = () => {
                                         title={SERVICE_TYPES.find(s => s.id === service)?.kpiName || 'Active Bids'}
                                         value={selectedZone.orders}
                                         prefix={<ArrowUpOutlined />}
-                                        valueStyle={{ color: getZoneColor(selectedZone.demand), fontWeight: 800 }}
+                                        styles={{ content: { color: getZoneColor(selectedZone.demand), fontWeight: 800 } }}
                                     />
                                 </Col>
                                 <Col span={12}>
@@ -738,7 +749,7 @@ export const HeatMapPage: React.FC = () => {
                                         title="Surge Strategy"
                                         value={`${selectedZone.surge}x`}
                                         prefix={<ThunderboltOutlined />}
-                                        valueStyle={{ color: '#eab308', fontWeight: 800 }}
+                                        styles={{ content: { color: '#eab308', fontWeight: 800 } }}
                                     />
                                 </Col>
                             </Row>
@@ -777,7 +788,7 @@ export const HeatMapPage: React.FC = () => {
 
                             <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                                 <Alert
-                                    message="AI Tactics Engine"
+                                    title="AI Tactics Engine"
                                     description={(() => {
                                         const globalEvent = events.find(e => e.isGlobal);
                                         const localEvent = events.find(e =>
@@ -975,23 +986,23 @@ export const HeatMapPage: React.FC = () => {
 
                             <Card 
                                 title={<Space><CalendarOutlined style={{ color: '#3b82f6' }} /> <Text strong style={{ fontSize: 14 }}>Scheduled Operations</Text></Space>}
-                                bordered={false}
+                                variant="borderless"
                                 className="shadow-sm"
                                 style={{ borderRadius: 12, flexGrow: 1 }}
-                                bodyStyle={{ padding: '12px' }}
+                                styles={{ body: { padding: '12px' } }}
                             >
                                 <Timeline 
-                                    mode="left"
+                                    mode="start"
                                     items={events.map(event => ({
                                         color: event.type === 'Holiday' ? '#ef4444' : '#eab308',
-                                        children: (
+                                        content: (
                                             <div style={{ paddingBottom: 8 }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <Text strong style={{ fontSize: 13 }}>{event.name}</Text>
                                                     <Tag color={event.type === 'Holiday' ? 'error' : 'warning'} style={{ fontSize: 10 }}>{event.impact}</Tag>
                                                 </div>
                                                 <Text type="secondary" style={{ fontSize: 11 }}>
-                                                    {event.isGlobal ? 'Global' : 'Regional'} â€¢ {event.type}
+                                                    {event.isGlobal ? 'Global' : 'Regional'} • {event.type}
                                                 </Text>
                                             </div>
                                         )
@@ -1000,26 +1011,24 @@ export const HeatMapPage: React.FC = () => {
                                 {events.length === 0 && <Text type="secondary" style={{ display: 'block', textAlign: 'center', padding: '20px 0' }}>No scheduled events.</Text>}
                             </Card>
 
-                            <Card 
+                             <Card 
                                 title={<Space><NotificationOutlined style={{ color: '#10b981' }} /> <Text strong style={{ fontSize: 14 }}>Command Log</Text></Space>}
-                                bordered={false}
+                                variant="borderless"
                                 className="shadow-sm"
                                 style={{ borderRadius: 12 }}
-                                bodyStyle={{ padding: '12px' }}
+                                styles={{ body: { padding: '12px' } }}
                                 extra={<Button size="small" type="text" onClick={() => setCommandLog([])}>Clear</Button>}
                             >
-                                <List
-                                    dataSource={commandLog.slice(0, 3)}
-                                    size="small"
-                                    renderItem={item => (
-                                        <List.Item style={{ padding: '8px 0' }}>
-                                            <List.Item.Meta
-                                                title={<Text strong style={{ fontSize: 11 }}>{item.time} - {item.type}</Text>}
-                                                description={<Text italic style={{ fontSize: 11 }}>"{item.msg}"</Text>}
-                                            />
-                                        </List.Item>
-                                    )}
-                                />
+                                <Flex vertical gap={8}>
+                                    {commandLog.slice(0, 3).map((item, idx) => (
+                                        <div key={idx} style={{ padding: '8px 0', borderBottom: idx === 2 ? 'none' : '1px solid #f1f5f9' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <Text strong style={{ fontSize: 11 }}>{item.time} - {item.type}</Text>
+                                                <Text italic style={{ fontSize: 11 }}>"{item.msg}"</Text>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </Flex>
                             </Card>
                         </div>
                     )}
@@ -1031,8 +1040,8 @@ export const HeatMapPage: React.FC = () => {
                 placement="left"
                 onClose={() => setIsZoneListVisible(false)}
                 open={isZoneListVisible}
-                width={420}
-                bodyStyle={{ padding: '0px' }}
+                size="default"
+                styles={{ body: { padding: '0px' } }}
             >
                 <Tabs
                     defaultActiveKey="1"
@@ -1089,9 +1098,9 @@ export const HeatMapPage: React.FC = () => {
                                                         <Col><Tag color={getZoneColor(item.demand)}>{item.demand.toUpperCase()}</Tag></Col>
                                                     </Row>
                                                     <Row gutter={16}>
-                                                        <Col span={8}><Statistic title="Drivers" value={item.drivers} valueStyle={{ fontSize: 14 }} /></Col>
-                                                        <Col span={8}><Statistic title={SERVICE_TYPES.find(s => s.id === service)?.kpiName || 'Orders'} value={item.orders} valueStyle={{ fontSize: 14 }} /></Col>
-                                                        <Col span={8}><Statistic title="Surge" value={item.surge} suffix="x" valueStyle={{ fontSize: 14, color: '#eab308' }} /></Col>
+                                                        <Col span={8}><Statistic title="Drivers" value={item.drivers} styles={{ content: { fontSize: 14 } }} /></Col>
+                                                        <Col span={8}><Statistic title={SERVICE_TYPES.find(s => s.id === service)?.kpiName || 'Orders'} value={item.orders} styles={{ content: { fontSize: 14 } }} /></Col>
+                                                        <Col span={8}><Statistic title="Surge" value={item.surge} suffix="x" styles={{ content: { fontSize: 14, color: '#eab308' } }} /></Col>
                                                     </Row>
                                                 </div>
                                             </List.Item>

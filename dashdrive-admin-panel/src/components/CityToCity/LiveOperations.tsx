@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Tag, Button, Space, Card, Typography, Avatar, Row, Col, Progress, Badge, List, Alert, Empty } from 'antd';
+import { Table, Tag, Button, Space, Card, Typography, Avatar, Row, Col, Progress, Badge, Alert, Empty, App, Flex, Divider } from 'antd';
 import { 
     EnvironmentOutlined, 
     SafetyOutlined, 
@@ -9,9 +9,11 @@ import {
     MessageOutlined,
     ExclamationCircleOutlined,
     CheckCircleOutlined,
-    GlobalOutlined
+    GlobalOutlined,
+    InfoCircleOutlined
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -24,7 +26,8 @@ const activeTrips = [
         location: 'Chegutu (En-route)',
         status: 'on_track',
         lastUpdate: '2 mins ago',
-        alerts: []
+        alerts: [],
+        position: { lat: -18.1302, lng: 30.1407 }
     },
     { 
         id: 'TRP-1005', 
@@ -34,7 +37,8 @@ const activeTrips = [
         location: 'Melfort',
         status: 'delayed',
         lastUpdate: '1 min ago',
-        alerts: ['Speeding Alert (110km/h)']
+        alerts: ['Speeding Alert (110km/h)'],
+        position: { lat: -17.9667, lng: 31.3833 }
     },
     { 
         id: 'TRP-1008', 
@@ -44,12 +48,21 @@ const activeTrips = [
         location: 'Hwange',
         status: 'critical',
         lastUpdate: 'Just now',
-        alerts: ['SOS Alert Triggered']
+        alerts: ['SOS Alert Triggered'],
+        position: { lat: -18.3693, lng: 26.5019 }
     }
 ];
 
 export const LiveOperations: React.FC = () => {
+    const { isLoaded } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
+    });
+
     const [trips] = useState(activeTrips);
+    const [selectedTrip, setSelectedTrip] = useState<any | null>(null);
+
+    const mapCenter = { lat: -19.0154, lng: 29.1549 }; // Central Zimbabwe
 
     return (
         <div style={{ padding: '24px 0' }}>
@@ -60,20 +73,69 @@ export const LiveOperations: React.FC = () => {
                         style={{ borderRadius: 20, marginBottom: 24 }} 
                         title={<Space><GlobalOutlined style={{ color: '#3b82f6' }} /> Real-time Fleet Tracking</Space>}
                     >
-                        <div style={{ height: 400, background: '#f8fafc', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #cbd5e1', position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <CompassOutlined style={{ fontSize: 48, color: '#94a3b8', marginBottom: 16 }} />
-                                <Title level={5}>Inter-City Network Map</Title>
-                                <Text type="secondary">GPS integration active with 42 vehicles pinging</Text>
-                            </div>
-                            
-                            {/* Mock markers */}
-                            <div style={{ position: 'absolute', top: '20%', left: '30%', padding: '4px 8px', background: 'white', borderRadius: 8, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', border: '1px solid #e2e8f0' }}>
-                                <Badge status="success" /> <Text strong style={{ fontSize: 11 }}>TRP-1001</Text>
-                            </div>
-                            <div style={{ position: 'absolute', top: '50%', left: '60%', padding: '4px 8px', background: 'white', borderRadius: 8, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', border: '1px solid #ef4444' }}>
-                                <Badge status="error" /> <Text strong style={{ fontSize: 11 }}>TRP-1008 (SOS!)</Text>
-                            </div>
+                        <div style={{ height: 450, background: '#f8fafc', borderRadius: 16, position: 'relative', overflow: 'hidden' }}>
+                            {isLoaded ? (
+                                <GoogleMap
+                                    mapContainerStyle={{ width: '100%', height: '100%' }}
+                                    center={mapCenter}
+                                    zoom={7}
+                                    options={{
+                                        disableDefaultUI: false,
+                                        zoomControl: true,
+                                        styles: [
+                                            {
+                                                featureType: 'all',
+                                                elementType: 'labels.text.fill',
+                                                stylers: [{ color: '#64748b' }]
+                                            }
+                                        ]
+                                    }}
+                                >
+                                    {trips.map(trip => (
+                                        <MarkerF
+                                            key={trip.id}
+                                            position={trip.position}
+                                            onClick={() => setSelectedTrip(trip)}
+                                            icon={{
+                                                path: google.maps.SymbolPath.CIRCLE,
+                                                fillColor: trip.status === 'critical' ? '#ef4444' : trip.status === 'delayed' ? '#f59e0b' : '#3b82f6',
+                                                fillOpacity: 0.9,
+                                                strokeWeight: 2,
+                                                strokeColor: '#fff',
+                                                scale: 8,
+                                            }}
+                                        />
+                                    ))}
+
+                                    <AnimatePresence>
+                                        {selectedTrip && (
+                                            <InfoWindowF
+                                                position={selectedTrip.position}
+                                                onCloseClick={() => setSelectedTrip(null)}
+                                            >
+                                                <div style={{ padding: 8, maxWidth: 200 }}>
+                                                    <Text strong style={{ display: 'block' }}>{selectedTrip.id} - {selectedTrip.driver}</Text>
+                                                    <Text type="secondary" style={{ fontSize: 11 }}>{selectedTrip.route}</Text>
+                                                    <Divider style={{ margin: '8px 0' }} />
+                                                    <Text style={{ fontSize: 12 }}>Loc: {selectedTrip.location}</Text>
+                                                    {selectedTrip.alerts.length > 0 && (
+                                                        <div style={{ marginTop: 4 }}>
+                                                            {selectedTrip.alerts.map((a: string) => <Tag key={a} color="error" style={{ fontSize: 10 }}>{a}</Tag>)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </InfoWindowF>
+                                        )}
+                                    </AnimatePresence>
+                                </GoogleMap>
+                            ) : (
+                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <CompassOutlined style={{ fontSize: 48, color: '#94a3b8', marginBottom: 16 }} className="animate-spin" />
+                                        <Title level={5}>Loading Inter-City Network Map...</Title>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div style={{ marginTop: 24 }}>
@@ -141,11 +203,9 @@ export const LiveOperations: React.FC = () => {
                         style={{ borderRadius: 20, border: '2px solid #fee2e2' }} 
                         title={<Space><SafetyOutlined style={{ color: '#ef4444' }} /> Emergency & Incident Hub</Space>}
                     >
-                        <List
-                            itemLayout="vertical"
-                            dataSource={trips.filter(t => t.alerts.length > 0)}
-                            renderItem={item => (
-                                <div style={{ padding: 16, background: item.status === 'critical' ? '#fef2f2' : '#fffbeb', borderRadius: 12, marginBottom: 16, border: `1px solid ${item.status === 'critical' ? '#fecaca' : '#fef3c7'}` }}>
+                        <Flex vertical gap={16}>
+                            {trips.filter(t => t.alerts.length > 0).map(item => (
+                                <div key={item.id} style={{ padding: 16, background: item.status === 'critical' ? '#fef2f2' : '#fffbeb', borderRadius: 12, border: `1px solid ${item.status === 'critical' ? '#fecaca' : '#fef3c7'}` }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                                         <Space>
                                             <ExclamationCircleOutlined style={{ color: '#ef4444', fontSize: 20 }} />
@@ -162,11 +222,11 @@ export const LiveOperations: React.FC = () => {
                                         <Button size="small" type="primary" style={{ background: '#ef4444', border: 'none' }}>Dispatch Help</Button>
                                     </Space>
                                 </div>
+                            ))}
+                            {trips.filter(t => t.alerts.length > 0).length === 0 && (
+                                <Empty description="No active safety incidents" />
                             )}
-                        />
-                        {trips.filter(t => t.alerts.length > 0).length === 0 && (
-                            <Empty description="No active safety incidents" />
-                        )}
+                        </Flex>
                         
                         <div style={{ marginTop: 24, padding: 16, background: '#f0fdf4', borderRadius: 12 }}>
                             <Space align="start">
@@ -182,18 +242,20 @@ export const LiveOperations: React.FC = () => {
                     </Card>
 
                     <Card variant="borderless" style={{ borderRadius: 20, marginTop: 24 }} title="Incident History">
-                        <List
-                            size="small"
-                            dataSource={[
+                        <Flex vertical gap={12}>
+                            {[
                                 { type: 'Mechanical', time: 'Yesterday', status: 'Resolved' },
                                 { type: 'Passenger Dispute', time: '2 days ago', status: 'Compensated' }
-                            ]}
-                            renderItem={item => (
-                                <List.Item extra={<Tag color="success">{item.status}</Tag>}>
-                                    <List.Item.Meta title={item.type} description={item.time} />
-                                </List.Item>
-                            )}
-                        />
+                            ].map((item, idx) => (
+                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: idx === 1 ? 'none' : '1px solid #f1f5f9' }}>
+                                    <div>
+                                        <Text strong style={{ display: 'block' }}>{item.type}</Text>
+                                        <Text type="secondary" style={{ fontSize: 11 }}>{item.time}</Text>
+                                    </div>
+                                    <Tag color="success">{item.status}</Tag>
+                                </div>
+                            ))}
+                        </Flex>
                     </Card>
                 </Col>
             </Row>

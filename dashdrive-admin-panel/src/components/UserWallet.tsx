@@ -184,7 +184,7 @@ export function UserWallet() {
  value={124500.50}
  precision={2}
  prefix="$"
- valueStyle={{ fontWeight: 800, color: '#18181b', fontSize: '28px' }}
+ styles={{ content: { fontWeight: 800, color: '#18181b', fontSize: '28px' } }}
  />
  <div className="mt-2 flex items-center gap-1 text-sm text-green-600 font-medium">
  <ArrowUpRight className="w-4 h-4" />
@@ -199,7 +199,7 @@ export function UserWallet() {
  value={3240.00}
  precision={2}
  prefix="$"
- valueStyle={{ fontWeight: 800, color: '#2563eb', fontSize: '28px' }}
+ styles={{ content: { fontWeight: 800, color: '#2563eb', fontSize: '28px' } }}
  />
  <div className="mt-2 flex items-center gap-1 text-sm text-green-600 font-medium">
  <ArrowUpRight className="w-4 h-4" />
@@ -214,7 +214,7 @@ export function UserWallet() {
  value={1850.25}
  precision={2}
  prefix="$"
- valueStyle={{ fontWeight: 800, color: '#f59e0b', fontSize: '28px' }}
+ styles={{ content: { fontWeight: 800, color: '#f59e0b', fontSize: '28px' } }}
  />
  <div className="mt-2 flex items-center gap-1 text-sm text-zinc-500 font-medium">
  <RefreshCcw className="w-4 h-4" />
@@ -229,7 +229,7 @@ export function UserWallet() {
  value={8920.00}
  precision={2}
  prefix="$"
- valueStyle={{ fontWeight: 800, color: '#9333ea', fontSize: '28px' }}
+ styles={{ content: { fontWeight: 800, color: '#9333ea', fontSize: '28px' } }}
  />
  <div className="mt-2 flex items-center gap-1 text-sm text-red-500 font-medium">
  <ArrowDownRight className="w-4 h-4" />

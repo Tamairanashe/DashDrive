@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Typography, Row, Col, Card, Space, Statistic, Tabs, 
-  Table, Tag, Button, Badge, Divider, List, Avatar,
+  Table, Tag, Button, Badge, Divider, Avatar,
   Progress, Segmented, Select, Input, DatePicker,
-  message, Empty, Alert, Tooltip, Dropdown, MenuProps,
-  Form, Drawer, Switch, InputNumber, Descriptions, Modal, notification
+  Empty, Alert, Tooltip, Dropdown, MenuProps, List,
+  Form, Drawer, Switch, InputNumber, Descriptions, Modal, notification,
+  App, Flex, Skeleton
 } from 'antd';
 import { 
   RocketOutlined, EnvironmentOutlined, ThunderboltOutlined, 
@@ -19,15 +20,18 @@ import {
   InfoCircleOutlined, CompassOutlined, BorderOutlined, ApartmentOutlined,
   CopyOutlined
 } from '@ant-design/icons';
-import { GoogleMap, MarkerF, InfoWindowF, CircleF, PolygonF, PolylineF, OverlayViewF, OverlayView } from '@react-google-maps/api';
+import { GoogleMap, MarkerF, InfoWindowF, CircleF, PolygonF, PolylineF, OverlayViewF, OverlayView, useJsApiLoader } from '@react-google-maps/api';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
   ResponsiveContainer, AreaChart, Area, Cell, PieChart, Pie, LineChart, Line,
   Legend
 } from 'recharts';
-import { BaseMap, useBaseMap } from '../components/BaseMap';
-import carMarker from '../assets/car-marker.png';
-import carMarkerHandicap from '../assets/car-marker-handicap.png';
+import { adminApi } from '../api/adminApi';
+import { analyticsApi } from '../api/analyticsApi';
+import { RoutePreview } from '../components/RoutePreview';
+import carMarker from '../assets/car-marker-topview.png';
+import carMarkerHandicap from '../assets/car-marker-WAV.png';
+import { useMarkerClusterer, ClusterableMarker } from '../hooks/useMarkerClusterer';
 // import L from 'leaflet';
 // import 'leaflet/dist/leaflet.css';
 
@@ -143,6 +147,47 @@ const MOCK_BROADCASTS: Broadcast[] = [
   { id: 'BC-002', title: 'System Maintenance', content: 'In-app wallet services will be briefly unavailable between 02:00 and 02:30 AM.', target: 'Customers', priority: 'Normal', status: 'Sent', timestamp: '2024-03-17 22:00', sender: 'DevOps Team', reason: 'Scheduled database optimization' }
 ];
 
+const BaseMapContext = React.createContext<{ map: google.maps.Map | null }>({ map: null });
+const useBaseMap = () => React.useContext(BaseMapContext);
+
+const BaseMap: React.FC<{ 
+    children?: React.ReactNode, 
+    center: {lat: number, lng: number} | [number, number], 
+    zoom: number, 
+    height?: string | number,
+    isLoaded?: boolean
+}> = ({ children, center, zoom, height = 400, isLoaded = false }) => {
+    const [map, setMap] = useState<google.maps.Map | null>(null);
+    const mapCenter = Array.isArray(center) ? { lat: center[0], lng: center[1] } : center;
+
+    if (!isLoaded) return <Skeleton active style={{ height: typeof height === 'number' ? height : 400 }} />;
+
+    return (
+        <BaseMapContext.Provider value={{ map }}>
+            <GoogleMap
+                mapContainerStyle={{ width: '100%', height: typeof height === 'number' ? `${height}px` : height, minHeight: '100px' }}
+                center={mapCenter}
+                zoom={zoom}
+                onLoad={setMap}
+                options={{
+                    disableDefaultUI: false,
+                    zoomControl: true,
+                    mapId: 'DEMO_MAP_ID',
+                    styles: [
+                        {
+                            featureType: 'all',
+                            elementType: 'labels.text.fill',
+                            stylers: [{ color: '#64748b' }]
+                        }
+                    ]
+                }}
+            >
+                {children}
+            </GoogleMap>
+        </BaseMapContext.Provider>
+    );
+};
+
 const MapEvents = ({ onMapClick }: { onMapClick: (latlng: {lat: number, lng: number}) => void }) => {
   const { map } = useBaseMap();
   useEffect(() => {
@@ -170,12 +215,30 @@ const MapFitter = ({ bounds }: { bounds: {lat: number, lng: number}[] | null }) 
 };
 
 
-const DriverMarker = ({ position, isHandicap }: { position: google.maps.LatLngLiteral, isHandicap?: boolean }) => (
+const DriverMarker = ({ position, isHandicap, heading = 0 }: { position: google.maps.LatLngLiteral, isHandicap?: boolean, heading?: number }) => (
     <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-        <div style={{ transform: 'translate(-50%, -50%)', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ transform: 'translate(-50%, -50%)', width: '100px', height: '100px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* Halo Effect */}
+            <div style={{ 
+                position: 'absolute', 
+                width: '60px', 
+                height: '60px', 
+                background: 'rgba(16, 185, 129, 0.15)', 
+                borderRadius: '50%', 
+                border: '2px solid rgba(16, 185, 129, 0.3)',
+                boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)'
+            }} className="animate-pulse" />
+            
             <img 
                 src={isHandicap ? carMarkerHandicap : carMarker} 
-                style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }} 
+                style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'contain', 
+                    filter: 'drop-shadow(0 6px 15px rgba(0,0,0,0.4))',
+                    transform: `rotate(${heading}deg)`,
+                    transition: 'transform 0.5s ease-out'
+                }} 
                 alt="car" 
             />
         </div>
@@ -202,6 +265,39 @@ const DropoffMarker = ({ position }: { position: google.maps.LatLngLiteral }) =>
     </OverlayViewF>
 );
 
+// --- Clustered Driver Markers ---
+
+const ClusteredDriverMarkers: React.FC<{ drivers: any[], enabled: boolean }> = ({ drivers, enabled }) => {
+    const { map } = useBaseMap();
+    
+    const clusterableDrivers: ClusterableMarker[] = React.useMemo(() => {
+        if (drivers.length > 0) {
+            return drivers.map((driver: any) => ({
+                id: driver.id || `d-${Math.random()}`,
+                lat: Number(driver.lat) || -17.8248,
+                lng: Number(driver.lng) || 31.0530,
+                heading: driver.heading || 0,
+                isHandicap: driver.isHandicap || false,
+            }));
+        }
+        // Fallback demo markers
+        return [
+            { id: 'demo-1', lat: -17.824858, lng: 31.053028, heading: 45 },
+            { id: 'demo-2', lat: -17.8100, lng: 31.0400, heading: 120 },
+            { id: 'demo-3', lat: -17.8180, lng: 31.0480, heading: 200 },
+            { id: 'demo-4', lat: -17.8050, lng: 31.0550, heading: 90 },
+            { id: 'demo-5', lat: -17.8300, lng: 31.0420, heading: 310 },
+            { id: 'demo-6', lat: -17.8150, lng: 31.0350, heading: 60 },
+            { id: 'demo-7', lat: -17.8220, lng: 31.0580, heading: 150 },
+            { id: 'demo-8', lat: -17.8280, lng: 31.0380, heading: 270 },
+        ];
+    }, [drivers]);
+
+    useMarkerClusterer(map, clusterableDrivers, carMarker, carMarkerHandicap, enabled);
+
+    return null; // Markers are managed imperatively by the hook
+};
+
 // --- Shared Components ---
 
 const CustomTimeline = ({items}: {items: any[]}) => (
@@ -227,23 +323,39 @@ const OperationsDashboard: React.FC<{
     onFix: (id: string) => void,
     isManualDispatch: boolean,
     onToggleDispatch: () => void,
-    onNewBroadcast: () => void
-}> = ({ onViewAll, filter, onFilterChange, alerts, onFix, isManualDispatch, onToggleDispatch, onNewBroadcast }) => {
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    onNewBroadcast: () => void,
+    drivers: any[],
+    stats: any,
+    onRefresh: () => void,
+    refreshing: boolean,
+    isLoaded: boolean
+}> = ({ onViewAll, filter, onFilterChange, alerts, onFix, isManualDispatch, onToggleDispatch, onNewBroadcast, drivers, stats, onRefresh, refreshing, isLoaded }) => {
+    const { message } = App.useApp();
+    const [isPulseActive, setIsPulseActive] = useState(false);
 
     const handleLiveSync = () => {
-        setIsRefreshing(true);
-        setTimeout(() => setIsRefreshing(false), 1000);
+        setIsPulseActive(true);
+        onRefresh();
         message.loading({ content: 'Synchronizing with platform mobility stream...', key: 'map-sync' });
-        setTimeout(() => message.success({ content: 'Network data synchronized.', key: 'map-sync' }), 1200);
+        setTimeout(() => {
+            setIsPulseActive(false);
+            message.success({ content: 'Network data synchronized.', key: 'map-sync' });
+        }, 1200);
     };
+
+    const dynamicKpis = [
+      { ...KpiData[0], value: stats?.activeTrips || KpiData[0].value },
+      { ...KpiData[1], value: stats?.activeDeliveries || KpiData[1].value },
+      { ...KpiData[2], value: stats?.pendingOrders || KpiData[2].value },
+      { ...KpiData[3], value: drivers?.length || KpiData[3].value },
+    ];
 
     return (
       <div style={{ marginTop: 16 }}>
         <Row gutter={[24, 24]}>
           <Col span={24}>
             <Row gutter={16}>
-              {KpiData.map((kpi, idx) => (
+              {dynamicKpis.map((kpi, idx) => (
                 <Col key={idx} xs={24} sm={12} lg={6}>
                   <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 12 }}>
                     <Statistic 
@@ -273,7 +385,7 @@ const OperationsDashboard: React.FC<{
               extra={
                 <Space>
                    <Button icon={<PlusOutlined />} size="small" type="primary" ghost onClick={onNewBroadcast}>Quick Broadcast</Button>
-                   <Button icon={<SyncOutlined spin={isRefreshing} />} size="small" onClick={handleLiveSync}>Pulse</Button>
+                   <Button icon={<SyncOutlined spin={isPulseActive || refreshing} />} size="small" onClick={handleLiveSync}>Pulse</Button>
                    <Button icon={<HistoryOutlined />} size="small" onClick={() => message.info('Opening mobility audit logs...')}>Logs</Button>
                    <Segmented 
                      options={['All', 'Rides', 'Deliveries', 'Customers']} 
@@ -286,18 +398,11 @@ const OperationsDashboard: React.FC<{
               styles={{ body: { padding: 0, height: 450, position: 'relative' } }}
               style={{ borderRadius: 16, overflow: 'hidden' }}
             >
-               <BaseMap center={[-17.824858, 31.053028]} zoom={13} height="100%">
-                  {(filter === 'All' || filter === 'Rides') && (
-                    <>
-                        <DriverMarker position={{lat: -17.824858, lng: 31.053028}} />
-                        <DriverMarker position={{lat: -17.8100, lng: 31.0400}} />
-                    </>
+               <BaseMap center={[-17.824858, 31.053028]} zoom={13} height="100%" isLoaded={isLoaded}>
+                  {(filter === 'All' || filter === 'Rides' || filter === 'Deliveries') && (
+                    <ClusteredDriverMarkers drivers={drivers} enabled={true} />
                   )}
                   
-                  {(filter === 'All' || filter === 'Deliveries') && (
-                    <DriverMarker position={{lat: -17.8300, lng: 31.0600}} />
-                  )}
-
                   {(filter === 'All' || filter === 'Customers') && (
                     <>
                         <CustomerMarker position={{lat: -17.8200, lng: 31.0600}} />
@@ -312,8 +417,8 @@ const OperationsDashboard: React.FC<{
                <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 1000 }}>
                   <Card size="small" style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)' }}>
                      <Space orientation="vertical" size="small">
-                        <Badge status="success" text={`Available (${filter === 'Customers' ? '0' : '620'})`} />
-                        <Badge status="processing" text={`On Trip (${filter === 'Customers' ? '0' : '1,245'})`} />
+                        <Badge status="success" text={`Available (${drivers.length || 620})`} />
+                        <Badge status="processing" text={`On Trip (${stats?.activeTrips || 1245})`} />
                         {filter === 'Customers' && <Badge color="blue" text="Active Customers (2,450)" />}
                         <Badge status="error" text="Incidents (5)" />
                      </Space>
@@ -331,25 +436,22 @@ const OperationsDashboard: React.FC<{
                 className="shadow-sm"
                 size="small"
               >
-                <List
-                  dataSource={secondaryKpiData}
-                  renderItem={item => (
-                    <List.Item style={{ padding: '12px 0' }}>
-                      <div style={{ width: '100%' }}>
-                        <div style={{ display: 'flex', justifySelf: 'space-between', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <Text type="secondary" style={{ fontSize: 13 }}>{item.title}</Text>
-                          <Text strong style={{ fontSize: 14 }}>{item.value}{item.suffix}</Text>
-                        </div>
-                        <Progress 
-                          percent={item.trend === 'down' ? 85 : 15} 
-                          showInfo={false} 
-                          size="small" 
-                          strokeColor={item.trend === 'down' ? '#10b981' : '#ef4444'} 
-                        />
+                <Flex vertical gap={12}>
+                  {secondaryKpiData.map((item, idx) => (
+                    <div key={idx} style={{ padding: '4px 0' }}>
+                      <div style={{ display: 'flex', justifySelf: 'space-between', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <Text type="secondary" style={{ fontSize: 13 }}>{item.title}</Text>
+                        <Text strong style={{ fontSize: 14 }}>{item.value}{item.suffix}</Text>
                       </div>
-                    </List.Item>
-                  )}
-                />
+                      <Progress 
+                        percent={item.trend === 'down' ? 85 : 15} 
+                        showInfo={false} 
+                        size="small" 
+                        strokeColor={item.trend === 'down' ? '#10b981' : '#ef4444'} 
+                      />
+                    </div>
+                  ))}
+                </Flex>
               </Card>
 
               <Card 
@@ -359,21 +461,19 @@ const OperationsDashboard: React.FC<{
                 className="shadow-sm"
                 size="small"
               >
-                  <List
-                    dataSource={alerts}
-                    renderItem={item => (
-                      <List.Item style={{ padding: '8px 0', border: 'none' }}>
-                        <Alert
-                          title={<Space><Text strong style={{ fontSize: 12 }}>{item.type}</Text> <Tag color={item.severity === 'High' ? 'error' : 'warning'} style={{ fontSize: 10 }}>{item.severity}</Tag></Space>}
-                          description={<div style={{ fontSize: 11 }}>{item.info || item.detail} <br/> <Text type="secondary">{item.time}</Text></div>}
-                          type={item.severity === 'High' ? 'error' : 'warning'}
-                          showIcon
-                          style={{ width: '100%' }}
-                          action={<Button size="small" type="link" onClick={() => onFix(item.id)}>Fix</Button>}
-                        />
-                      </List.Item>
-                    )}
-                  />
+                  <Flex vertical gap={12}>
+                    {alerts.map((item, idx) => (
+                      <Alert
+                        key={idx}
+                        title={<Space><Text strong style={{ fontSize: 12 }}>{item.type}</Text> <Tag color={item.severity === 'High' ? 'error' : 'warning'} style={{ fontSize: 10 }}>{item.severity}</Tag></Space>}
+                        description={<div style={{ fontSize: 11 }}>{item.info || item.detail} <br/> <Text type="secondary">{item.time}</Text></div>}
+                        type={item.severity === 'High' ? 'error' : 'warning'}
+                        showIcon
+                        style={{ width: '100%' }}
+                        action={<Button size="small" type="link" onClick={() => onFix(item.id)}>Fix</Button>}
+                      />
+                    ))}
+                  </Flex>
               </Card>
 
               <Card variant="borderless" className="shadow-sm" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
@@ -399,7 +499,8 @@ const OperationsDashboard: React.FC<{
     );
 };
 
-const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[]) => void, mapBounds: any }> = ({ onLocate, mapBounds }) => {
+const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[]) => void, mapBounds: any, isLoaded: boolean }> = ({ onLocate, mapBounds, isLoaded }) => {
+    const { message, notification } = App.useApp();
     const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
     const [trashedZones, setTrashedZones] = useState<Zone[]>([]);
     const [logs, setLogs] = useState<ZoneLog[]>(INITIAL_LOGS);
@@ -575,7 +676,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[
       },
     ];
 
-    const handleMapClick = (latlng: [number, number]) => {
+    const handleMapClick = (latlng: {lat: number, lng: number}) => {
       if (drawingMode === 'Circle' && drawingPoints.length >= 2) return;
       if (drawingMode === 'Triangle' && drawingPoints.length >= 3) return;
       setDrawingPoints(prev => [...prev, latlng]);
@@ -665,6 +766,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[
                 center={[-17.8248, 31.0530]}
                 zoom={13}
                 height="100%"
+                isLoaded={isLoaded}
               >
                 <MapEvents onMapClick={handleMapClick} />
                 <MapFitter bounds={mapBounds} />
@@ -859,10 +961,9 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[
           width={450}
           className="premium-drawer"
         >
-          <List
-            dataSource={logs}
-            renderItem={log => (
-              <List.Item>
+          <Flex vertical gap={0}>
+            {logs.map((log, idx) => (
+              <div key={idx} style={{ padding: '12px 0', borderBottom: idx === logs.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
                 <div style={{ width: '100%' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Text strong>{log.action}</Text>
@@ -873,9 +974,9 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[
                   </Text>
                   <Text type="secondary" style={{ fontSize: 11 }}>By: {log.user}</Text>
                 </div>
-              </List.Item>
-            )}
-          />
+              </div>
+            ))}
+          </Flex>
         </Drawer>
 
         <Drawer
@@ -888,26 +989,20 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[
           {trashedZones.length === 0 ? (
             <Empty description="No trashed zones found" style={{ marginTop: 100 }} />
           ) : (
-            <List
-              dataSource={trashedZones}
-              renderItem={(z: any) => (
-                <List.Item
-                  actions={[
-                    <Button type="link" icon={<RollbackOutlined />} onClick={() => handleRestoreZone(z)}>Restore</Button>,
+            <Flex vertical>
+              {trashedZones.map((z: any) => (
+                <div key={z.id} style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Space direction="vertical" size={2}>
+                    <Text strong>{z.name}</Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>ID: {z.id} • Reason: <Text type="danger" style={{ fontSize: 11 }}>{z.deleteReason || 'No reason provided'}</Text></Text>
+                  </Space>
+                  <Space>
+                    <Button type="link" icon={<RollbackOutlined />} onClick={() => handleRestoreZone(z)}>Restore</Button>
                     <Button type="link" danger icon={<DeleteFilled />} onClick={() => handlePermanentDelete(z)}>Erase</Button>
-                  ]}
-                >
-                  <List.Item.Meta
-                    title={<Text strong>{z.name}</Text>}
-                    description={
-                        <Space orientation="vertical" size={2}>
-                            <Text type="secondary" style={{ fontSize: 11 }}>ID: {z.id} • Reason: <Text type="danger" style={{ fontSize: 11 }}>{z.deleteReason || 'No reason provided'}</Text></Text>
-                        </Space>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
+                  </Space>
+                </div>
+              ))}
+            </Flex>
           )}
         </Drawer>
 
@@ -943,6 +1038,7 @@ const RenderZoneSetup: React.FC<{ onLocate: (points: {lat: number, lng: number}[
 };
 
 const RenderDispatchManagement: React.FC = () => {
+    const { message } = App.useApp();
     const [queue, setQueue] = useState([
       { id: 'ORD-1021', type: 'Ride', customer: 'Alice J.', zone: 'Harare CBD', waitTime: '02:15', status: 'Waiting', priority: 'Normal' },
       { id: 'ORD-1022', type: 'Food', customer: 'Bob S.', zone: 'Avondale', waitTime: '01:45', status: 'Assigning', priority: 'High' },
@@ -1121,7 +1217,8 @@ const RenderDispatchManagement: React.FC = () => {
     );
 };
 
-const RenderLiveTracking: React.FC = () => {
+const RenderLiveTracking: React.FC<{ isLoaded: boolean }> = ({ isLoaded }) => {
+    const { message } = App.useApp();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTrip, setActiveTrip] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
@@ -1179,7 +1276,7 @@ const RenderLiveTracking: React.FC = () => {
                 styles={{ body: { padding: 0, height: '100%', position: 'relative', overflow: 'hidden' } }} 
                 style={{ borderRadius: 16, height: '100%', minHeight: 600 }}
               >
-                   <BaseMap 
+                   <BaseMap isLoaded={isLoaded} 
                       center={[-17.8248, 31.0530]} 
                       zoom={13} 
                       height={600}
@@ -1193,10 +1290,14 @@ const RenderLiveTracking: React.FC = () => {
                                   <PickupMarker position={{ lat: activeTrip.merchant?.lat || activeTrip.pickup?.lat, lng: activeTrip.merchant?.lng || activeTrip.pickup?.lng }} />
                               )}
                               <DropoffMarker position={{ lat: activeTrip.dropoff.lat, lng: activeTrip.dropoff.lng }} />
-                              <PolylineF 
-                                path={activeTrip.route} 
-                                options={{ strokeColor: "#0f172a", strokeWeight: 4, strokeOpacity: 0.6, icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 }, offset: '0', repeat: '20px' }] }} 
-                              />
+                              {activeTrip.encodedPolyline ? (
+                                <RoutePreview encodedPolyline={activeTrip.encodedPolyline} color="#0f172a" weight={4} opacity={0.6} />
+                              ) : (
+                                <PolylineF 
+                                  path={activeTrip.route} 
+                                  options={{ strokeColor: "#0f172a", strokeWeight: 4, strokeOpacity: 0.6, icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 }, offset: '0', repeat: '20px' }] }} 
+                                />
+                              )}
                           </>
                       ) : (
                           MOCK_TRIPS.map(trip => (
@@ -1274,6 +1375,7 @@ const RenderLiveTracking: React.FC = () => {
 };
 
 const RenderActiveAlerts: React.FC<{ alerts: any[], onFix: (id: string) => void }> = ({ alerts, onFix }) => {
+    const { message } = App.useApp();
     const columns = [
       { 
         title: 'ID', 
@@ -1358,8 +1460,10 @@ const RenderSolvedAlerts: React.FC = () => {
 const RenderSurgeAndDemand: React.FC<{ 
     zones: any[], 
     onOverride: (id: string, val: number, reason: string) => void,
-    onApplyRec: () => void 
-}> = ({ zones, onOverride, onApplyRec }) => {
+    onApplyRec: () => void,
+    isLoaded: boolean
+}> = ({ zones, onOverride, onApplyRec, isLoaded }) => {
+    const { message } = App.useApp();
     const [selectedZone, setSelectedZone] = useState<any>(null);
     const [overrideValue, setOverrideValue] = useState(1.0);
     const [loading, setLoading] = useState(false);
@@ -1376,7 +1480,7 @@ const RenderSurgeAndDemand: React.FC<{
                 style={{ borderRadius: 16, overflow: 'hidden' }}
                 title={<Space><ThunderboltOutlined /> Dynamic Demand Heatmap</Space>}
               >
-                  <BaseMap center={[-17.8248, 31.0530]} zoom={13} height={600}>
+                  <BaseMap isLoaded={isLoaded} center={[-17.8248, 31.0530]} zoom={13} height={600}>
                       {zones.map(dz => (
                           <CircleF 
                             key={dz.id}
@@ -1414,36 +1518,33 @@ const RenderSurgeAndDemand: React.FC<{
                        </div>
                     </div>
 
-                    <List
-                      dataSource={zones}
-                      renderItem={item => (
-                        <List.Item>
-                           <div style={{ width: '100%' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                 <Text strong>{item.name}</Text>
-                                 <Tag color={item.demand === 'Extreme' ? 'error' : 'warning'}>{item.currentMulti}x</Tag>
-                              </div>
-                              <Text type="secondary" style={{ fontSize: 11 }}>Calculated based on live platform demand pings</Text>
-                              <div style={{ marginTop: 8 }}>
-                                 <Button 
-                                    size="small" 
-                                    type="primary" 
-                                    ghost 
-                                    icon={<ThunderboltOutlined />}
-                                    onClick={() => {
-                                        setSelectedZone(item);
-                                        setOverrideValue(item.currentMulti);
-                                        setIsModalVisible(true);
-                                        form.setFieldsValue({ multiplier: item.currentMulti, reason: '' });
-                                    }}
-                                  >
-                                    Override Multiplier
-                                  </Button>
-                               </div>
+                    <Flex vertical gap={12}>
+                      {zones.map((item, idx) => (
+                         <div key={idx} style={{ padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                               <Text strong>{item.name}</Text>
+                               <Tag color={item.demand === 'Extreme' ? 'error' : 'warning'}>{item.currentMulti}x</Tag>
                             </div>
-                         </List.Item>
-                      )}
-                    />
+                            <Text type="secondary" style={{ fontSize: 11 }}>Calculated based on live platform demand pings</Text>
+                            <div style={{ marginTop: 8 }}>
+                               <Button 
+                                  size="small" 
+                                  type="primary" 
+                                  ghost 
+                                  icon={<ThunderboltOutlined />}
+                                  onClick={() => {
+                                      setSelectedZone(item);
+                                      setOverrideValue(item.currentMulti);
+                                      setIsModalVisible(true);
+                                      form.setFieldsValue({ multiplier: item.currentMulti, reason: '' });
+                                  }}
+                                >
+                                  Override Multiplier
+                                </Button>
+                             </div>
+                          </div>
+                      ))}
+                    </Flex>
                  </Card>
 
                  <Card bordered={false} className="shadow-sm" style={{ borderRadius: 16, background: '#f8fafc' }}>
@@ -1574,6 +1675,7 @@ const RenderBroadcastCommand: React.FC<{
 };
 
 const RenderOperationsAnalytics: React.FC = () => {
+    const { message } = App.useApp();
     const hourlyData = [
       { time: '08:00', trips: 120, waitTime: 4.5 },
       { time: '10:00', trips: 340, waitTime: 5.2 },
@@ -1616,7 +1718,7 @@ const RenderOperationsAnalytics: React.FC = () => {
               <Row gutter={16} style={{ marginTop: 24 }}>
                  <Col span={12}>
                     <Card title="Operational Efficiency" bordered={false} className="shadow-sm" style={{ borderRadius: 16 }}>
-                       <div style={{ height: 250 }}>
+                       <div style={{ height: 350, width: '100%', minWidth: 0 }}>
                           <ResponsiveContainer width="100%" height="100%">
                              <LineChart data={hourlyData}>
                                 <XAxis dataKey="time" hide />
@@ -1712,9 +1814,19 @@ const RenderOperationsAnalytics: React.FC = () => {
 };
 
 export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTab: propInitialTab = '1' }) => {
+    const { message, notification, modal } = App.useApp();
+    const { isLoaded } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+        libraries: ['places', 'drawing', 'visualization', 'geometry', 'marker']
+    });
+
     const [activeTab, setActiveTab] = useState(propInitialTab);
     const [hubMapFilter, setHubMapFilter] = useState('All');
     const [mapBounds, setMapBounds] = useState<{lat: number, lng: number}[] | null>(null);
+    const [drivers, setDrivers] = useState<any[]>([]);
+    const [stats, setStats] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
     const [alerts, setAlerts] = useState([
         { id: 'AL-101', type: 'Driver Unresponsive', severity: 'High', service: 'Ride', location: 'Harare CBD', time: '10:45 AM', driver: 'Alex T.', detail: 'Driver assigned to RID-1055 but has not moved for 5 minutes.' },
         { id: 'AL-102', type: 'Delay in Pickup', severity: 'Medium', service: 'Food', location: 'Avondale', time: '10:50 AM', driver: 'Mike N.', detail: 'Pickup time exceeded by 8 minutes at Pizza Hub.' },
@@ -1730,6 +1842,7 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
     const [bcLoading, setBcLoading] = useState(false);
     const [bcForm] = Form.useForm();
     const [bcPreview, setBcPreview] = useState('');
+
 
     const handleLocateZone = (points: {lat: number, lng: number}[]) => {
         if (!points || points.length === 0) return;
@@ -1789,6 +1902,30 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
         }, 1500);
     };
 
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [driversRes, statsRes] = await Promise.all([
+                adminApi.users.getDrivers(),
+                analyticsApi.getGlobalStats()
+            ]);
+            setDrivers(driversRes.data);
+            setStats(statsRes.data);
+        } catch (error) {
+            console.error('Failed to fetch operational data:', error);
+            message.error('Data synchronization failed. Using fallback data.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+        // Set up real-time polling interval (simulated for now)
+        const interval = setInterval(fetchData, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     useEffect(() => {
         if (propInitialTab) {
             setActiveTab(propInitialTab);
@@ -1808,12 +1945,17 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
                     isManualDispatch={isManualDispatch}
                     onToggleDispatch={handleToggleDispatch}
                     onNewBroadcast={() => setIsBCModalOpen(true)}
+                    drivers={drivers}
+                    stats={stats}
+                    onRefresh={fetchData}
+                    refreshing={loading}
+                    isLoaded={isLoaded}
                   />
       },
        {
         key: '2',
         label: <Space><EnvironmentOutlined /> Zone Setup</Space>,
-        children: <RenderZoneSetup onLocate={handleLocateZone} mapBounds={mapBounds} />
+        children: <RenderZoneSetup onLocate={handleLocateZone} mapBounds={mapBounds} isLoaded={isLoaded} />
       },
       {
         key: '3',
@@ -1823,7 +1965,7 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
       {
         key: '4',
         label: <Space><RocketOutlined /> Live Tracking</Space>,
-        children: <RenderLiveTracking />
+        children: <RenderLiveTracking isLoaded={isLoaded} />
       },
       {
         key: '5',
@@ -1842,6 +1984,7 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
                     zones={demandZones} 
                     onOverride={handleOverrideSurge}
                     onApplyRec={handleApplyRecommendation}
+                    isLoaded={isLoaded}
                   />
       },
       {
@@ -2023,4 +2166,3 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
     );
 };
 
-                                                                                                                           
