@@ -30,7 +30,7 @@ const mapOptions: google.maps.MapOptions = {
   ]
 };
 
-const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry")[] = ['places', 'drawing', 'visualization', 'geometry'];
+const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry" | "marker")[] = ['places', 'drawing', 'visualization', 'geometry', 'marker'];
 
 export const MapPreview: React.FC<MapPreviewProps> = ({ type, data, label, status = 'Active', variant = 'standard' }) => {
   const { isLoaded } = useJsApiLoader({

@@ -19,6 +19,9 @@ interface BaseMapProps {
   style?: React.CSSProperties;
   height?: string | number;
   onLoad?: (map: google.maps.Map) => void;
+  mapTypeId?: string;
+  mapId?: string;
+  options?: google.maps.MapOptions;
 }
 
 const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry" | "marker")[] = ['places', 'drawing', 'visualization', 'geometry', 'marker'];
@@ -29,7 +32,10 @@ export const BaseMap: React.FC<BaseMapProps> = ({
   children, 
   style, 
   height = '100%',
-  onLoad: externalOnLoad
+  onLoad: externalOnLoad,
+  mapTypeId = 'roadmap',
+  mapId,
+  options: externalOptions
 }) => {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -59,6 +65,7 @@ export const BaseMap: React.FC<BaseMapProps> = ({
           zoom={zoom}
           onLoad={onLoad}
           onUnmount={onUnmount}
+          mapTypeId={mapTypeId}
           options={{
             disableDefaultUI: false,
             zoomControl: true,
@@ -67,7 +74,8 @@ export const BaseMap: React.FC<BaseMapProps> = ({
             streetViewControl: false,
             rotateControl: false,
             fullscreenControl: false,
-            mapId: 'DEMO_MAP_ID'
+            mapId,
+            ...externalOptions
           }}
         >
           {children}

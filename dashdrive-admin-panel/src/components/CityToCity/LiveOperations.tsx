@@ -56,7 +56,8 @@ const activeTrips = [
 export const LiveOperations: React.FC = () => {
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyCxwlIiOcrI_yBrehP9CKr-CoIoPusShh0",
+        libraries: ['places', 'drawing', 'visualization', 'geometry', 'marker']
     });
 
     const [trips] = useState(activeTrips);

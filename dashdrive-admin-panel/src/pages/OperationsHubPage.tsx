@@ -173,13 +173,6 @@ const BaseMap: React.FC<{
                     disableDefaultUI: false,
                     zoomControl: true,
                     mapId: 'DEMO_MAP_ID',
-                    styles: [
-                        {
-                            featureType: 'all',
-                            elementType: 'labels.text.fill',
-                            stylers: [{ color: '#64748b' }]
-                        }
-                    ]
                 }}
             >
                 {children}

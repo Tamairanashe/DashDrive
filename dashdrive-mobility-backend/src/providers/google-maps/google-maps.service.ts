@@ -4,9 +4,15 @@ import { Client, TravelMode, UnitSystem } from '@googlemaps/google-maps-services
 import axios from 'axios';
 
 // ── Types for Routes API v2 ──────────────────────────────
+export interface WaypointV2 {
+  location?: { latLng: { latitude: number; longitude: number } };
+  address?: string;
+  placeId?: string;
+}
+
 export interface RoutesV2Request {
-  origin: { lat: number; lng: number };
-  destination: { lat: number; lng: number };
+  origin: WaypointV2 | { lat: number; lng: number } | string;
+  destination: WaypointV2 | { lat: number; lng: number } | string;
   travelMode?: 'DRIVE' | 'BICYCLE' | 'WALK' | 'TWO_WHEELER';
   computeAlternativeRoutes?: boolean;
   routingPreference?: 'TRAFFIC_UNAWARE' | 'TRAFFIC_AWARE' | 'TRAFFIC_AWARE_OPTIMAL';
@@ -40,6 +46,8 @@ export class GoogleMapsService {
   private readonly logger = new Logger(GoogleMapsService.name);
 
   private static readonly ROUTES_API_URL = 'https://routes.googleapis.com/v1/computeRoutes';
+  private static readonly ROUTES_V2_API_URL = 'https://routes.googleapis.com/directions/v2:computeRoutes';
+  
   private static readonly FIELD_MASK = [
     'routes.duration',
     'routes.distanceMeters',
@@ -55,6 +63,17 @@ export class GoogleMapsService {
   }
 
   // ── Modern Routes API v2 ─────────────────────────────────
+  
+  private toWaypoint(point: WaypointV2 | { lat: number; lng: number } | string): WaypointV2 {
+    if (typeof point === 'string') {
+      return { address: point };
+    }
+    if ('lat' in point && 'lng' in point) {
+      return { location: { latLng: { latitude: point.lat, longitude: point.lng } } };
+    }
+    return point;
+  }
+
   async computeRoutesV2(request: RoutesV2Request): Promise<ComputeRoutesV2Response> {
     const {
       origin,
@@ -68,12 +87,8 @@ export class GoogleMapsService {
     } = request;
 
     const body = {
-      origin: {
-        location: { latLng: { latitude: origin.lat, longitude: origin.lng } },
-      },
-      destination: {
-        location: { latLng: { latitude: destination.lat, longitude: destination.lng } },
-      },
+      origin: this.toWaypoint(origin),
+      destination: this.toWaypoint(destination),
       travelMode,
       routingPreference,
       computeAlternativeRoutes,
@@ -87,9 +102,10 @@ export class GoogleMapsService {
     };
 
     try {
-      this.logger.log(`Computing routes from (${origin.lat},${origin.lng}) to (${destination.lat},${destination.lng})`);
+      const logOrigin = typeof origin === 'string' ? origin : ('lat' in origin ? `${origin.lat},${origin.lng}` : 'address' in origin ? origin.address : 'complex waypoint');
+      this.logger.log(`Computing routes from ${logOrigin}`);
 
-      const response = await axios.post(GoogleMapsService.ROUTES_API_URL, body, {
+      const response = await axios.post(GoogleMapsService.ROUTES_V2_API_URL, body, {
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': this.apiKey,
@@ -137,6 +153,26 @@ export class GoogleMapsService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Simple method matching the user's demonstrated curl request
+   */
+  async computeRoutesSimple(origin: string, destination: string) {
+    const body = {
+      origin: { address: origin },
+      destination: { address: destination }
+    };
+
+    const response = await axios.post(GoogleMapsService.ROUTES_V2_API_URL, body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': this.apiKey,
+        'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters',
+      },
+    });
+
+    return response.data;
   }
 
   // ── Legacy Directions API (kept for backward compat) ─────
@@ -197,6 +233,47 @@ export class GoogleMapsService {
       return response.data;
     } catch (error) {
       this.logger.error(`Failed to get distance matrix: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getStaticMap(params: {
+    center?: string;
+    zoom?: number;
+    size?: string;
+    maptype?: string;
+    markers?: string[];
+    paths?: string[];
+  }): Promise<Buffer> {
+    const { center, zoom = 12, size = '600x400', maptype = 'roadmap', markers = [], paths = [] } = params;
+    
+    let url = `https://maps.googleapis.com/maps/api/staticmap?size=${size}&maptype=${maptype}&key=${this.apiKey}`;
+    
+    if (center) {
+      url += `&center=${encodeURIComponent(center)}`;
+    }
+    
+    if (zoom) {
+      url += `&zoom=${zoom}`;
+    }
+
+    if (markers.length > 0) {
+      markers.forEach(marker => {
+        url += `&markers=${encodeURIComponent(marker)}`;
+      });
+    }
+
+    if (paths.length > 0) {
+      paths.forEach(path => {
+        url += `&path=${encodeURIComponent(path)}`;
+      });
+    }
+
+    try {
+      const response = await axios.get(url, { responseType: 'arraybuffer' });
+      return Buffer.from(response.data);
+    } catch (error) {
+      this.logger.error(`Failed to fetch static map: ${error.message}`);
       throw error;
     }
   }

@@ -12,7 +12,7 @@ import { GoogleMap, PolylineF, MarkerF, useJsApiLoader, InfoWindowF } from '@rea
 const { Title, Text } = Typography;
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyCxwlIiOcrI_yBrehP9CKr-CoIoPusShh0";
-const LIBRARIES: ("places" | "geometry")[] = ['places', 'geometry'];
+const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry" | "marker")[] = ['places', 'drawing', 'visualization', 'geometry', 'marker'];
 
 interface RouteData {
   routeIndex: number;
@@ -178,7 +178,7 @@ export const RouteMapDrawer: React.FC<RouteMapDrawerProps> = ({ visible, onClose
       placement="right"
       onClose={onClose}
       open={visible}
-      width="100%"
+      size="large"
       closeIcon={<CloseOutlined />}
       styles={{
         body: { padding: 0, position: 'relative', height: '100%' },
@@ -212,7 +212,7 @@ export const RouteMapDrawer: React.FC<RouteMapDrawerProps> = ({ visible, onClose
       <div style={{ height: 'calc(100% - 140px)', position: 'relative' }}>
         {loading && (
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.8)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Spin tip="Computing routes..." size="large" />
+            <Spin description="Computing routes..." size="large" />
           </div>
         )}
 
@@ -298,7 +298,7 @@ export const RouteMapDrawer: React.FC<RouteMapDrawerProps> = ({ visible, onClose
 
       {/* Route Selector Cards */}
       <div style={{ padding: '12px 16px', borderTop: '1px solid #f0f0f0', background: '#fafafa', overflowX: 'auto' }}>
-        {error && <Alert message={error} type="warning" showIcon closable style={{ marginBottom: 8 }} />}
+        {error && <Alert title={error} type="warning" showIcon closable style={{ marginBottom: 8 }} />}
 
         <Flex gap={10}>
           {routes.map((route, i) => (
@@ -330,7 +330,7 @@ export const RouteMapDrawer: React.FC<RouteMapDrawerProps> = ({ visible, onClose
                   <Text strong style={{ fontSize: 13 }}>{formatDistance(route.distanceMeters)}</Text>
                 </Space>
                 {route.estimatedFuelCostUSD != null && (
-                  <Space size={4} direction="vertical">
+                  <Space size={4} orientation="vertical">
                     <Text type="secondary" style={{ fontSize: 10 }}><FireOutlined /> Fuel</Text>
                     <Text strong style={{ fontSize: 13, color: '#52c41a' }}>${route.estimatedFuelCostUSD}</Text>
                   </Space>

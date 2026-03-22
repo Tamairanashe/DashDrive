@@ -138,6 +138,7 @@ export const AdminLayout: React.FC = () => {
         { key: '/ops/dispatch', icon: <RocketOutlined />, label: 'Dispatch Management' },
         { key: '/ops/tracking', icon: <GlobalOutlined />, label: 'Live Tracking' },
         { key: '/ops/alerts', icon: <BellOutlined />, label: 'Active Alerts' },
+        { key: '/ops/traffic-insights', icon: <DesktopOutlined />, label: 'Roads Management Insights' },
         { key: '/ops/surge', icon: <RiseOutlined />, label: 'Surge Control' },
         { key: '/ops/logs', icon: <ToolOutlined />, label: 'History Logs' },
       ],

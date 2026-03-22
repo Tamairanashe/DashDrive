@@ -18,6 +18,9 @@ import { TrustModule } from './modules/trust/trust.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { DispatchModule } from './modules/dispatch/dispatch.module';
 import { GoogleMapsModule } from './providers/google-maps/google-maps.module';
+import { RoadsInsightsExportModule } from './modules/roads-insights-export/roads-insights-export.module';
+import { BullModule } from '@nestjs/bullmq';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -38,6 +41,17 @@ import { GoogleMapsModule } from './providers/google-maps/google-maps.module';
     TrustModule,
     OrdersModule,
     DispatchModule,
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST', 'localhost'),
+          port: configService.get('REDIS_PORT', 6379),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    RoadsInsightsExportModule,
   ],
 
   controllers: [AppController],

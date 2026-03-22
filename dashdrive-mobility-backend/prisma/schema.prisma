@@ -961,3 +961,29 @@ model Delivery {
 
   @@schema("mobility")
 }
+
+model ExportJob {
+  id                  String   @id @db.Uuid @default(uuid())
+  module              String   @default("roads_insights")
+  requested_by        String   @db.Uuid
+  format              String
+  status              String   @default("queued") // queued, processing, completed, failed
+  progress            Int      @default(0)
+  request_payload     Json     @default("{}")
+  filters             Json?
+  layers              Json?
+  file_name           String?
+  file_path           String?
+  content_type        String?
+  file_size_bytes     Int?
+  error_code          String?
+  error_message       String?
+  is_cancelled        Boolean  @default(false)
+  cancelled_at        DateTime?
+  created_at          DateTime @default(now())
+  started_at          DateTime?
+  completed_at        DateTime?
+  expires_at          DateTime?
+
+  @@schema("mobility")
+}

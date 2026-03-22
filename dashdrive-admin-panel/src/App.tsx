@@ -62,7 +62,9 @@ import { UtilityPaymentHub } from './pages/Fintech/UtilityPaymentHub';
 import { DashWalletTransfer } from './pages/Fintech/DashWalletTransfer';
 import { MarketingGrowthEngine } from './pages/GrowthEnginePage';
 import { OperationsHubPage } from './pages/OperationsHubPage';
+import { TrafficInsightsPage } from './pages/TrafficInsightsPage';
 import { DriverManagementHub } from './pages/DriverManagementHub';
+
 import { DriverRetentionHub } from './pages/DriverRetentionHub';
 import { CourierManagementHub } from './pages/CourierManagementHub';
 import { FleetOperatorHub } from './pages/FleetOperatorHub';
@@ -143,6 +145,8 @@ export default function App() {
             <Route path="ops/logs" element={<OperationsHubPage initialTab="6" />} />
             <Route path="ops/surge" element={<OperationsHubPage initialTab="7" />} />
             <Route path="ops/analytics" element={<OperationsHubPage initialTab="8" />} />
+            <Route path="ops/traffic-insights" element={<TrafficInsightsPage />} />
+
 
             {/* Vehicle Management */}
             <Route path="vehicles/attributes" element={<VehicleManagementPage />} />

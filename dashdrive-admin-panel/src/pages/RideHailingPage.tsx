@@ -493,7 +493,7 @@ export const RideHailingPage: React.FC = () => {
                 <Select 
                     value={selectedCountry} 
                     style={{ width: 140 }} 
-                    bordered={false}
+                    variant="borderless"
                     onChange={(val) => {
                         setSelectedCountry(val);
                         const firstRegion = Object.keys(LOCATION_DATA[val].regions)[0];
@@ -507,7 +507,7 @@ export const RideHailingPage: React.FC = () => {
                 <Select 
                     value={selectedRegion} 
                     style={{ width: 140 }} 
-                    bordered={false}
+                    variant="borderless"
                     onChange={(val) => {
                         setSelectedRegion(val);
                         setSelectedCity(LOCATION_DATA[selectedCountry].regions[val][0]);
@@ -518,7 +518,7 @@ export const RideHailingPage: React.FC = () => {
                 <Select 
                     value={selectedCity} 
                     style={{ width: 120 }} 
-                    bordered={false}
+                    variant="borderless"
                     onChange={setSelectedCity}
                     suffixIcon={<EnvironmentOutlined />}
                 >
