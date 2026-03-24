@@ -75,7 +75,7 @@ export const UnifiedMapControls: React.FC<UnifiedMapControlsProps> = ({
                 {/* Visual Intelligence Legend Section */}
                 <div>
                     <Text strong style={{ fontSize: '12px', color: '#64748b', display: 'block', marginBottom: 12 }}>VISUAL LAYERS</Text>
-                    <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                         {enabledLayers.includes('demand') && (
                             <Row justify="space-between">
                                 <Space><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} /> <Text style={{ fontSize: '12px' }}>High Demand</Text></Space>

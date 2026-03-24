@@ -154,14 +154,14 @@ export const roadsInsightsService = {
     signal?: AbortSignal,
   ): Promise<RoadsSummaryResponse> => {
     const query = filters ? buildQueryString(filters as Record<string, unknown>) : '';
-    return request<RoadsSummaryResponse>(`/roads/insights/summary${query}`, { signal });
+    return request<RoadsSummaryResponse>(`/roads-insights/summary${query}`, { signal });
   },
 
   getMapData: async (
     params: GetMapDataParams,
     signal?: AbortSignal,
   ): Promise<RoadsMapResponse> => {
-    return request<RoadsMapResponse>('/roads/insights/map-data', {
+    return request<RoadsMapResponse>('/roads-insights/map-data', {
       method: 'POST',
       body: params,
       signal,
@@ -173,7 +173,7 @@ export const roadsInsightsService = {
     signal?: AbortSignal,
   ): Promise<RoadsRoadDetailsResponse> => {
     return request<RoadsRoadDetailsResponse>(
-      `/roads/insights/road/${encodeURIComponent(roadId)}`,
+      `/roads-insights/road/${encodeURIComponent(roadId)}`,
       { signal },
     );
   },
@@ -182,7 +182,7 @@ export const roadsInsightsService = {
     input: RouteSearchInput,
     signal?: AbortSignal,
   ): Promise<RoadsRouteCompareResponse> => {
-    return request<RoadsRouteCompareResponse>('/roads/insights/routes/compare', {
+    return request<RoadsRouteCompareResponse>('/roads-insights/routes/compare', {
       method: 'POST',
       body: input,
       signal,
@@ -194,7 +194,7 @@ export const roadsInsightsService = {
     signal?: AbortSignal,
   ): Promise<RoadsSafetyResponse> => {
     const query = filters ? buildQueryString(filters as Record<string, unknown>) : '';
-    return request<RoadsSafetyResponse>(`/roads/insights/safety${query}`, { signal });
+    return request<RoadsSafetyResponse>(`/roads-insights/safety${query}`, { signal });
   },
 
   getAnalytics: async (
@@ -202,18 +202,18 @@ export const roadsInsightsService = {
     signal?: AbortSignal,
   ): Promise<RoadsAnalyticsResponse> => {
     const query = filters ? buildQueryString(filters as Record<string, unknown>) : '';
-    return request<RoadsAnalyticsResponse>(`/roads/insights/analytics${query}`, { signal });
+    return request<RoadsAnalyticsResponse>(`/roads-insights/analytics${query}`, { signal });
   },
 
   getSavedViews: async (signal?: AbortSignal): Promise<RoadsSavedViewsResponse> => {
-    return request<RoadsSavedViewsResponse>('/roads/insights/saved-views', { signal });
+    return request<RoadsSavedViewsResponse>('/roads-insights/saved-views', { signal });
   },
 
   createSavedView: async (
     payload: Omit<SavedViewItem, 'id'>,
     signal?: AbortSignal,
   ): Promise<SavedViewItem> => {
-    return request<SavedViewItem>('/roads/insights/saved-views', {
+    return request<SavedViewItem>('/roads-insights/saved-views', {
       method: 'POST',
       body: payload,
       signal,
@@ -225,7 +225,7 @@ export const roadsInsightsService = {
     payload: Partial<Omit<SavedViewItem, 'id'>>,
     signal?: AbortSignal,
   ): Promise<SavedViewItem> => {
-    return request<SavedViewItem>(`/roads/insights/saved-views/${encodeURIComponent(id)}`, {
+    return request<SavedViewItem>(`/roads-insights/saved-views/${encodeURIComponent(id)}`, {
       method: 'PUT',
       body: payload,
       signal,
@@ -234,7 +234,7 @@ export const roadsInsightsService = {
 
   deleteSavedView: async (id: string, signal?: AbortSignal): Promise<{ success: boolean }> => {
     return request<{ success: boolean }>(
-      `/roads/insights/saved-views/${encodeURIComponent(id)}`,
+      `/roads-insights/saved-views/${encodeURIComponent(id)}`,
       {
         method: 'DELETE',
         signal,
@@ -246,7 +246,7 @@ export const roadsInsightsService = {
     payload: RoadsExportRequest,
     signal?: AbortSignal,
   ): Promise<RoadsExportResponse> => {
-    return request<RoadsExportResponse>('/roads/insights/export', {
+    return request<RoadsExportResponse>('/roads-insights/export-report', {
       method: 'POST',
       body: payload,
       signal,
@@ -254,7 +254,7 @@ export const roadsInsightsService = {
   },
 
   getExportJobStatus: async (jobId: string, signal?: AbortSignal): Promise<ExportJobStatus> => {
-    return request<ExportJobStatus>(`/roads/insights/export-jobs/${encodeURIComponent(jobId)}`, {
+    return request<ExportJobStatus>(`/roads-insights/export-jobs/${encodeURIComponent(jobId)}`, {
       signal,
     });
   },
@@ -267,17 +267,17 @@ export const roadsInsightsService = {
     signal?: AbortSignal,
   ): Promise<RoadsExportJobsListResponse> => {
     const query = buildQueryString(params);
-    return request<RoadsExportJobsListResponse>(`/roads/insights/export-jobs${query}`, { signal });
+    return request<RoadsExportJobsListResponse>(`/roads-insights/export-jobs${query}`, { signal });
   },
 
   retryExportJob: async (jobId: string): Promise<{ success: boolean }> => {
-    return request<{ success: boolean }>(`/roads/insights/export-jobs/${encodeURIComponent(jobId)}/retry`, {
+    return request<{ success: boolean }>(`/roads-insights/export-jobs/${encodeURIComponent(jobId)}/retry`, {
       method: 'POST',
     });
   },
 
   cancelExportJob: async (jobId: string): Promise<{ success: boolean }> => {
-    return request<{ success: boolean }>(`/roads/insights/export-jobs/${encodeURIComponent(jobId)}/cancel`, {
+    return request<{ success: boolean }>(`/roads-insights/export-jobs/${encodeURIComponent(jobId)}/cancel`, {
       method: 'POST',
     });
   },

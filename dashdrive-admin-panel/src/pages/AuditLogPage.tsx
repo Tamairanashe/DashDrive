@@ -23,6 +23,7 @@ import {
   DownloadOutlined
 } from '@ant-design/icons';
 import { StateWrapper } from '../components/common/StateWrapper';
+import { useSocket } from '../context/SocketContext';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -73,6 +74,34 @@ const mockAuditLogs = [
 
 export const AuditLogPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [logs, setLogs] = useState(mockAuditLogs);
+  const { socket, isConnected } = useSocket();
+
+  React.useEffect(() => {
+    if (!socket) return;
+
+    socket.on('platform_event', (data: any) => {
+      const { event, payload } = data;
+
+      if (event === 'ADMIN_ACTION' || event === 'SECURITY_ALERT' || event === 'SYSTEM_UPDATE') {
+        const newLog = {
+          key: payload.id || Date.now().toString(),
+          timestamp: new Date().toISOString(),
+          admin: payload.admin || 'System',
+          event: event,
+          module: payload.module || 'General',
+          context: payload.context || 'Platform event detected',
+          ip: payload.ip || '0.0.0.0',
+          status: payload.status || 'Success'
+        };
+        setLogs(prev => [newLog, ...prev]);
+      }
+    });
+
+    return () => {
+      socket.off('platform_event');
+    };
+  }, [socket]);
   
   const columns = [
     {
@@ -162,7 +191,12 @@ export const AuditLogPage: React.FC = () => {
           <Title level={2} style={{ margin: 0, letterSpacing: -0.5 }}>
             <HistoryOutlined style={{ marginRight: 8, color: '#10b981' }} /> Audit Logs & Governance
           </Title>
-          <Text type="secondary">Trace platform activities, administrative changes, and security events.</Text>
+          <Space>
+            <Text type="secondary">Trace platform activities, administrative changes, and security events.</Text>
+            <Tag color={isConnected ? 'success' : 'warning'}>
+                {isConnected ? 'Live Audit Stream Active' : 'Connecting to Security Gateway...'}
+            </Tag>
+          </Space>
         </div>
         <Space>
           <Button icon={<DownloadOutlined />}>Export CSV</Button>
@@ -195,10 +229,10 @@ export const AuditLogPage: React.FC = () => {
         </Space>
       </Card>
 
-      <StateWrapper loading={loading} isEmpty={mockAuditLogs.length === 0}>
+      <StateWrapper loading={loading} isEmpty={logs.length === 0}>
         <Table 
           columns={columns} 
-          dataSource={mockAuditLogs}
+          dataSource={logs}
           pagination={{
             total: mockAuditLogs.length,
             pageSize: 10,

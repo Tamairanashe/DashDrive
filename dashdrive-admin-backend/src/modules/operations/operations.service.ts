@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RealTimeGateway } from '../real-time/real-time.gateway';
+import { PlatformEvent, AdminEntityUpdatePayload } from '../../common/events/platform-events';
 
 @Injectable()
 export class OperationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private realTimeGateway: RealTimeGateway
+  ) {}
 
   async getLiveOrders() {
     return this.prisma.order.findMany({
@@ -47,17 +52,29 @@ export class OperationsService {
       throw new NotFoundException('Delivery record not found for this order');
     }
 
-    return this.prisma.delivery.update({
+    const updatedDelivery = await this.prisma.delivery.update({
       where: { orderId },
       data: {
         riderId: newRiderId,
         status: 'ASSIGNED',
       },
     });
+
+    const eventPayload: AdminEntityUpdatePayload = {
+      entityType: 'ORDER',
+      entityId: orderId,
+      action: 'PATCH',
+      diff: { riderId: newRiderId, status: 'RIDER_REASSIGNED' },
+      timestamp: new Date().toISOString(),
+    };
+
+    this.realTimeGateway.broadcastEvent(PlatformEvent.ENTITY_DIFF_UPDATED, eventPayload);
+
+    return updatedDelivery;
   }
 
   async cancelOrder(orderId: string, reason: string) {
-    return this.prisma.$transaction([
+    const result = await this.prisma.$transaction([
       this.prisma.order.update({
         where: { id: orderId },
         data: { status: 'CANCELLED' },
@@ -75,5 +92,17 @@ export class OperationsService {
         data: { status: 'CANCELLED' },
       }),
     ]);
+
+    const eventPayload: AdminEntityUpdatePayload = {
+      entityType: 'ORDER',
+      entityId: orderId,
+      action: 'UPDATE',
+      diff: { status: 'CANCELLED', cancellationReason: reason },
+      timestamp: new Date().toISOString(),
+    };
+
+    this.realTimeGateway.broadcastEvent(PlatformEvent.ENTITY_DIFF_UPDATED, eventPayload);
+
+    return result;
   }
 }

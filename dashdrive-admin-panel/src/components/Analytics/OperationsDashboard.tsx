@@ -1,6 +1,8 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, Typography, Row, Col, Space, Badge, Statistic, Tag } from 'antd';
+const { Title, Text } = Typography;
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { useSocket } from '../../context/SocketContext';
 
 const mockData = [
   { name: '08:00', rides: 45, cancels: 2 },
@@ -12,49 +14,91 @@ const mockData = [
 ];
 
 export const OperationsDashboard = () => {
+  const { isConnected, socket } = useSocket();
+  const [data, setData] = React.useState(mockData);
+  const [kpis, setKpis] = React.useState({
+    activeRides: 242,
+    matchingTime: 1.4,
+    cancelRate: 4.2
+  });
+  const [demandData, setDemandData] = React.useState([
+    { location: 'Borrowdale', demand: 120 },
+    { location: 'Avondale', demand: 95 },
+    { location: 'CBD', demand: 210 },
+    { location: 'Hatfield', demand: 60 },
+  ]);
+
+  React.useEffect(() => {
+    if (!socket) return;
+
+    socket.on('platform_event', (eventData: any) => {
+      const { event, payload } = eventData;
+
+      if (event === 'RIDE_STARTED' || event === 'RIDE_COMPLETED') {
+        const timeLabel = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setData(prev => {
+          const newData = [...prev.slice(1), { name: timeLabel, rides: payload.currentActive || 0, cancels: prev[prev.length-1].cancels }];
+          return newData;
+        });
+        setKpis(prev => ({ ...prev, activeRides: payload.currentActive || prev.activeRides }));
+      } else if (event === 'MARKET_DEMAND_SHIFT') {
+        setDemandData(prev => prev.map(d => 
+          d.location === payload.zoneName ? { ...d, demand: d.demand + (payload.increase || 0) } : d
+        ));
+      }
+    });
+
+    return () => {
+      socket.off('platform_event');
+    };
+  }, [socket]);
+
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Operations Dashboard</h1>
+    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <Title level={2}>Operations Dashboard</Title>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-green-50 shadow-sm border-green-100">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-green-700">Active Rides</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">242</div>
-            <p className="text-xs text-green-600">+12.5% from last hour</p>
-          </CardContent>
-        </Card>
+      <Row gutter={[16, 16]}>
+        <Col span={8}>
+          <Card bordered={false} className="shadow-sm" style={{ background: '#f0fdf4' }}>
+            <Statistic 
+              title={<Text strong style={{ color: '#15803d' }}>Active Rides</Text>}
+              value={kpis.activeRides}
+              valueStyle={{ fontWeight: 800 }}
+              suffix={isConnected && <Badge status="processing" color="green" className="animate-pulse" />}
+            />
+            <Text type="success" style={{ fontSize: 12 }}>+12.5% from last hour</Text>
+          </Card>
+        </Col>
         
-        <Card className="bg-blue-50 shadow-sm border-blue-100">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-blue-700">Avg. Matching Time</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1.4 min</div>
-            <p className="text-xs text-blue-600">-0.2 min target</p>
-          </CardContent>
-        </Card>
+        <Col span={8}>
+          <Card bordered={false} className="shadow-sm" style={{ background: '#eff6ff' }}>
+            <Statistic 
+              title={<Text strong style={{ color: '#1d4ed8' }}>Avg. Matching Time</Text>}
+              value={kpis.matchingTime}
+              suffix="min"
+              valueStyle={{ fontWeight: 800 }}
+            />
+            <Text type="secondary" style={{ fontSize: 12 }}>-0.2 min target</Text>
+          </Card>
+        </Col>
 
-        <Card className="bg-red-50 shadow-sm border-red-100">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-red-700">Overall Cancel Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">4.2%</div>
-            <p className="text-xs text-red-600">+0.8% alert threshold</p>
-          </CardContent>
-        </Card>
-      </div>
+        <Col span={8}>
+          <Card bordered={false} className="shadow-sm" style={{ background: '#fef2f2' }}>
+            <Statistic 
+              title={<Text strong style={{ color: '#b91c1c' }}>Overall Cancel Rate</Text>}
+              value={kpis.cancelRate}
+              suffix="%"
+              valueStyle={{ fontWeight: 800 }}
+            />
+            <Text type="danger" style={{ fontSize: 12 }}>+0.8% alert threshold</Text>
+          </Card>
+        </Col>
+      </Row>
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>Ride Velocity (24h)</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px]">
+      <Card title="Ride Velocity (24h)" bordered={false} className="shadow-lg">
+        <div style={{ height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={mockData}>
+            <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" />
               <YAxis />
@@ -63,53 +107,44 @@ export const OperationsDashboard = () => {
               <Line type="monotone" dataKey="cancels" stroke="#ef4444" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
-        </CardContent>
+        </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Peak Demand Centers</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[250px]">
-             <ResponsiveContainer width="100%" height="100%">
-               <BarChart data={[
-                 { location: 'Borrowdale', demand: 120 },
-                 { location: 'Avondale', demand: 95 },
-                 { location: 'CBD', demand: 210 },
-                 { location: 'Hatfield', demand: 60 },
-               ]}>
-                 <XAxis dataKey="location" />
-                 <YAxis />
-                 <Tooltip />
-                 <Bar dataKey="demand" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-               </BarChart>
-             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <Row gutter={[24, 24]}>
+        <Col span={12}>
+          <Card title="Peak Demand Centers" bordered={false} className="shadow-sm">
+            <div style={{ height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={demandData}>
+                  <XAxis dataKey="location" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="demand" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </Col>
 
-        <Card>
-           <CardHeader>
-             <CardTitle>System Health</CardTitle>
-           </CardHeader>
-           <CardContent>
-             <ul className="space-y-3">
-               <li className="flex justify-between items-center">
-                 <span className="text-sm text-gray-600">WebSocket Connections</span>
-                 <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">Healthy (1.2k)</span>
+        <Col span={12}>
+          <Card title="System Health" bordered={false} className="shadow-sm">
+             <ul className="space-y-3" style={{ listStyle: 'none', padding: 0 }}>
+               <li className="flex justify-between items-center" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                 <Text type="secondary">WebSocket Connections</Text>
+                 <Tag color="success">Healthy (1.2k)</Tag>
                </li>
-               <li className="flex justify-between items-center">
-                 <span className="text-sm text-gray-600">Geo-Indexing Lag</span>
-                 <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">12ms</span>
+               <li className="flex justify-between items-center" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                 <Text type="secondary">Geo-Indexing Lag</Text>
+                 <Tag color="success">12ms</Tag>
                </li>
-               <li className="flex justify-between items-center">
-                 <span className="text-sm text-gray-600">Payment Gateway</span>
-                 <span className="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded">Degraded (Retrying)</span>
+               <li className="flex justify-between items-center" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                 <Text type="secondary">Payment Gateway</Text>
+                 <Tag color="warning">Degraded (Retrying)</Tag>
                </li>
              </ul>
-           </CardContent>
-        </Card>
-      </div>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

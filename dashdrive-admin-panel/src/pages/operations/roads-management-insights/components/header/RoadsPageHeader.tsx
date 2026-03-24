@@ -26,7 +26,7 @@ const RoadsPageHeader: React.FC<RoadsPageHeaderProps> = ({
   exportJobsCount = 0,
 }) => {
   return (
-    <Space direction="vertical" size={12} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={12} style={{ width: '100%' }}>
       {error ? <Alert type="error" showIcon message={error} /> : null}
 
       <Card>

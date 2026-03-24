@@ -37,7 +37,7 @@ const OverviewTab: React.FC<{ data?: RoadsOverviewData; loading?: boolean }> = (
   data,
   loading,
 }) => (
-  <Space direction="vertical" style={{ width: '100%' }}>
+  <Space orientation="vertical" style={{ width: '100%' }}>
     <Card size="small" loading={loading}>
       <Statistic title="Network Health Score" value={data?.networkHealthScore ?? 0} suffix="/100" />
     </Card>
@@ -96,7 +96,7 @@ const RoadDetailsTab: React.FC<{
   }
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Card size="small" title={data?.roadName ?? 'Road Details'} loading={loading}>
         <p><strong>Classification:</strong> {data?.classification ?? '—'}</p>
         <p><strong>City:</strong> {data?.city ?? '—'}</p>
@@ -143,7 +143,7 @@ const RoutesTab: React.FC<{
   }
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Card size="small" title="Route Query" loading={loading}>
         <p><strong>Origin:</strong> {data?.query.origin ?? '—'}</p>
         <p><strong>Destination:</strong> {data?.query.destination ?? '—'}</p>
@@ -176,7 +176,7 @@ const SafetyTab: React.FC<{
   data?: RoadsSafetyData | null;
   loading?: boolean;
 }> = ({ data, loading }) => (
-  <Space direction="vertical" style={{ width: '100%' }}>
+  <Space orientation="vertical" style={{ width: '100%' }}>
     <Card size="small" title="High-Risk Intersections" loading={loading}>
       <List
         dataSource={data?.highRiskIntersections ?? []}
@@ -218,7 +218,7 @@ const AnalyticsTab: React.FC<{
   data?: RoadsPanelAnalyticsData | null;
   loading?: boolean;
 }> = ({ data, loading }) => (
-  <Space direction="vertical" style={{ width: '100%' }}>
+  <Space orientation="vertical" style={{ width: '100%' }}>
     <Card size="small" title="Travel Time Trend" loading={loading}>
       <List
         dataSource={data?.travelTimeTrend ?? []}

@@ -32,8 +32,7 @@ import { RoutePreview } from '../components/RoutePreview';
 import carMarker from '../assets/car-marker-topview.png';
 import carMarkerHandicap from '../assets/car-marker-WAV.png';
 import { useMarkerClusterer, ClusterableMarker } from '../hooks/useMarkerClusterer';
-// import L from 'leaflet';
-// import 'leaflet/dist/leaflet.css';
+import { useSocket } from '../context/SocketContext';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -1039,7 +1038,35 @@ const RenderDispatchManagement: React.FC = () => {
     ]);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isEnabled, setIsEnabled] = useState(true);
-    const [loading, setLoading] = useState(false);
+    const { socket } = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('platform_event', (data: any) => {
+            const { event, payload } = data;
+            if (event === 'admin.entity.diff_updated' && payload.entityType === 'ORDER') {
+                const { entityId, action, diff } = payload;
+                if (action === 'CREATED') {
+                    setQueue(prev => [{
+                        id: entityId,
+                        type: 'Ride', // Demo simplification
+                        customer: 'New Customer',
+                        zone: 'Detected Zone',
+                        waitTime: '00:00',
+                        status: 'Waiting',
+                        priority: 'Normal'
+                    }, ...prev]);
+                } else if (action === 'UPDATED') {
+                    setQueue(prev => prev.map(o => o.id === entityId ? { ...o, status: diff.status || o.status } : o));
+                }
+            }
+        });
+
+        return () => {
+            socket.off('platform_event');
+        };
+    }, [socket]);
 
 
     const queueColumns = [
@@ -1814,6 +1841,7 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
         libraries: ['places', 'drawing', 'visualization', 'geometry', 'marker']
     });
 
+    const { socket, isConnected } = useSocket();
     const [activeTab, setActiveTab] = useState(propInitialTab);
     const [hubMapFilter, setHubMapFilter] = useState('All');
     const [mapBounds, setMapBounds] = useState<{lat: number, lng: number}[] | null>(null);
@@ -1904,12 +1932,39 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
             ]);
             setDrivers(driversRes.data);
             setStats(statsRes.data);
-        } catch (error) {
-            console.error('Failed to fetch operational data:', error);
-            message.error('Data synchronization failed. Using fallback data.');
         } finally {
             setLoading(false);
         }
+    };
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('platform_event', (data: any) => {
+            const { event, payload } = data;
+            
+            if (event === 'admin.entity.diff_updated') {
+                handleLiveUpdate(payload);
+            }
+        });
+
+        return () => {
+            socket.off('platform_event');
+        };
+    }, [socket]);
+
+    const handleLiveUpdate = (payload: any) => {
+        const { entityType, entityId, action } = payload;
+        
+        notification.info({
+            message: 'Ops Hub Update',
+            description: `${entityType} ${entityId} was ${action.toLowerCase()}.`,
+            placement: 'topRight',
+            duration: 2
+        });
+
+        // Trigger a fresh data pull for complex state or manually update
+        fetchData();
     };
 
     useEffect(() => {
@@ -2004,10 +2059,12 @@ export const OperationsHubPage: React.FC<{ initialTab?: string }> = ({ initialTa
                <Text type="secondary">Central Real-time Command & Dispatch Engine for DashDrive Network.</Text>
             </Col>
             <Col>
-               <Space size="middle">
+                <Space size="middle">
                   <div style={{ textAlign: 'right' }}>
-                    <Text strong style={{ display: 'block' }}>Network Status: Optimal</Text>
-                    <Text style={{ fontSize: 12, color: '#10b981' }}><SyncOutlined spin /> Live Sync: 0.4ms latency</Text>
+                    <Text strong style={{ display: 'block' }}>Network Status: {isConnected ? 'Optimal' : 'Connecting...'}</Text>
+                    <Text style={{ fontSize: 12, color: isConnected ? '#10b981' : '#f59e0b' }}>
+                        {isConnected ? <><SyncOutlined spin /> Live Sync: active</> : 'Awaiting WebSocket connection...'}
+                    </Text>
                   </div>
                   <Divider orientation="vertical" style={{ height: 40 }} />
                   <Button type="primary" icon={<PlusOutlined />} size="large" style={{ borderRadius: 8, background: '#00b894', border: 'none' }} onClick={() => setIsBCModalOpen(true)}>

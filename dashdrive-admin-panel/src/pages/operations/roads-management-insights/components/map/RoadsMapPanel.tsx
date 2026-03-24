@@ -9,7 +9,7 @@ import type {
   RoadsSelectionState,
   RouteMapItem,
 } from '../../types/roadsInsights.types';
-import RoadsMapCanvas from './RoadsMapCanvas';
+import RoadsModernMapCanvas from './RoadsModernMapCanvas';
 
 export interface RoadsMapPanelProps {
   layers: RoadsMapLayers;
@@ -135,7 +135,7 @@ const RoadsMapPanel = forwardRef<HTMLDivElement, RoadsMapPanelProps>(({
       </div>
 
       <div ref={ref} style={{ position: 'relative' }}>
-        <RoadsMapCanvas
+        <RoadsModernMapCanvas
           apiKey={(import.meta as unknown as { env: { VITE_GOOGLE_MAPS_API_KEY: string } }).env.VITE_GOOGLE_MAPS_API_KEY}
           mapData={mapData}
           layers={layers}
@@ -146,7 +146,7 @@ const RoadsMapPanel = forwardRef<HTMLDivElement, RoadsMapPanelProps>(({
         />
 
         <div style={{ position: 'absolute', top: 16, right: 16 }}>
-          <Space direction="vertical" align="end">
+          <Space orientation="vertical" align="end">
             <Card size="small" style={{ width: 220 }}>
               <p><strong>Center:</strong> {mapData?.center.lat ?? 0}, {mapData?.center.lng ?? 0}</p>
               <p><strong>Zoom:</strong> {mapData?.zoom ?? 0}</p>

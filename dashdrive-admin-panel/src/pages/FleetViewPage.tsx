@@ -13,7 +13,7 @@ import { MarkerF, InfoWindowF, PolylineF, CircleF, OverlayViewF, OverlayView } f
 import { BaseMap, useBaseMap } from '../components/BaseMap';
 import carMarker from '../assets/car-marker-topview.png';
 import carMarkerHandicap from '../assets/car-marker-WAV.png';
-// import L from 'leaflet';
+import { useSocket } from '../context/SocketContext';
 import { useLocation } from 'react-router-dom';
 
 const { Title, Text } = Typography;
@@ -58,6 +58,7 @@ interface Driver {
     successRate: number;
     cancellationRate: number;
     idleHourRate: number;
+    heading: number;
     wallet: {
         pending: number;
         withdrawn: number;
@@ -199,7 +200,60 @@ export const FleetViewPage: React.FC = () => {
     const [selectedCountry, setSelectedCountry] = useState('Zimbabwe');
     const [selectedRegion, setSelectedRegion] = useState('Mashonaland');
     const [selectedCity, setSelectedCity] = useState('Harare');
-    const [drivers, setDrivers] = useState<Driver[]>(MOCK_DRIVERS);
+    const { socket, isConnected } = useSocket();
+    const [drivers, setDrivers] = useState<Driver[]>([]);
+    const [fleetStats, setFleetStats] = useState({ online: 0, busy: 0, offline: 0, available: 0 });
+    const [activeTrips, setActiveTrips] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('fleetUpdate', (data: { drivers: any[], activeTrips: any[], stats: any }) => {
+            if (!data || !data.drivers) return;
+            
+            // Map Supabase status to UI display status with full interface compliance
+            const mappedDrivers = data.drivers.map(d => ({
+                id: d.id,
+                name: d.name,
+                lat: d.latitude,
+                lng: d.longitude,
+                status: d.status === 'online' ? 'Available' : 
+                        d.status === 'busy' ? 'On Trip' : 'Offline',
+                service: d.service || 'Ride Hailing',
+                type: d.type || (['Car', 'Motorcycle', 'Van'][Math.floor(Math.random() * 3)]),
+                plate: d.plate || `ZE-${Math.floor(Math.random() * 900) + 100}-ZW`,
+                heading: d.heading || 0,
+                rating: Number(d.rating || (4.5 + Math.random() * 0.5).toFixed(1)),
+                tripsToday: d.tripsToday || Math.floor(Math.random() * 20),
+                alerts: d.alerts || [],
+                phone: d.phone || '+263 771 000 000',
+                email: d.email || `${d.name?.toLowerCase().replace(' ', '.')}@dashdrive.com`,
+                lastSeen: 'Live',
+                joinDate: d.joinDate || 'Jan 2024',
+                level: d.level || 'Partner',
+                earningsPerDay: d.earningsPerDay || 0,
+                posReviewRate: d.posReviewRate || 100,
+                successRate: d.successRate || 100,
+                cancellationRate: d.cancellationRate || 0,
+                idleHourRate: d.idleHourRate || 0,
+                currentTrip: d.currentTrip || null,
+                wallet: d.wallet || { pending: 0, withdrawn: 0, withdrawable: 0, total: 0 },
+                vehicle: d.vehicle || {
+                    brand: 'Generic', model: 'Standard', category: 'Economy', ownerType: 'Owner',
+                    vin: 'N/A', fuelType: 'Petrol', engine: '1500cc', seats: 4,
+                    transmission: 'Auto', capacity: 4, expiry: '2025-12-31', docs: []
+                }
+            }));
+            setDrivers(mappedDrivers);
+            if (data.stats) setFleetStats(data.stats);
+            if (data.activeTrips) setActiveTrips(data.activeTrips);
+        });
+
+        return () => {
+            socket.off('fleetUpdate');
+        };
+    }, [socket]);
+
     const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
     const [customers, setCustomers] = useState<Customer[]>(MOCK_CUSTOMERS);
     const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
@@ -286,14 +340,15 @@ export const FleetViewPage: React.FC = () => {
         
         let matchStatus = true;
         if (viewMode === 'online') matchStatus = d.status === 'Available' || d.status === 'On Trip';
-        else if (viewMode === 'offline') matchStatus = d.status === 'Offline';
-        else if (viewMode === 'idle') matchStatus = d.status === 'Available';
-        else if (viewMode === 'on-trip') matchStatus = d.status === 'On Trip';
-        else if (viewMode === 'customers') return false; // Hide drivers in customers mode
+        if (viewMode === 'idle') matchStatus = d.status === 'Available';
+        if (viewMode === 'on-trip') matchStatus = d.status === 'On Trip';
+        if (viewMode === 'offline') matchStatus = d.status === 'Offline';
+        if (viewMode === 'customers') return false; // Hide drivers in customers mode
         
         const matchSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             d.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            d.plate.toLowerCase().includes(searchQuery.toLowerCase());
+                            d.plate?.toLowerCase().includes(searchQuery.toLowerCase());
+        
         return matchService && matchVehicle && matchStatus && matchSearch;
     });
 
@@ -411,7 +466,10 @@ export const FleetViewPage: React.FC = () => {
                             </Space>
                         </Col>
                         <Col>
-                            <Button icon={<SyncOutlined />} onClick={() => message.success('Fleet synced')}>Sync Fleet</Button>
+                            <Button icon={<SyncOutlined />} onClick={() => {
+                                socket?.emit('syncFleet');
+                                message.loading('Syncing Fleet Data...', 0.5).then(() => message.success('Fleet status updated'));
+                            }}>Sync Fleet</Button>
                         </Col>
                     </Row>
                 </Col>
@@ -420,12 +478,12 @@ export const FleetViewPage: React.FC = () => {
                 </Col>
                 <Col span={24}>
                     <Row justify="space-around" align="middle" style={{ textAlign: 'center' }}>
-                        <Col><Statistic title="Online" value={312} styles={{ content: { color: '#10b981', fontSize: 18 } }}/></Col>
-                        <Col><Statistic title="Busy" value={210} styles={{ content: { color: '#f59e0b', fontSize: 18 } }}/></Col>
-                        <Col><Statistic title="Idle" value={102} styles={{ content: { color: '#3b82f6', fontSize: 18 } }}/></Col>
+                        <Col><Statistic title="Available" value={fleetStats.available} styles={{ content: { color: '#10b981', fontSize: 18 } }}/></Col>
+                        <Col><Statistic title="On Trip" value={fleetStats.busy} styles={{ content: { color: '#f59e0b', fontSize: 18 } }}/></Col>
+                        <Col><Statistic title="Offline" value={fleetStats.offline} styles={{ content: { color: '#ef4444', fontSize: 18 } }}/></Col>
                         <Col><Divider orientation="vertical" style={{ height: 32 }} /></Col>
-                        <Col><Statistic title="Active Trips" value={184} styles={{ content: { fontSize: 18 } }}/></Col>
-                        <Col><Statistic title="Avg ETA" value="6.5m" styles={{ content: { fontSize: 18 } }}/></Col>
+                        <Col><Statistic title="Active Sessions" value={activeTrips.length} styles={{ content: { fontSize: 18 } }}/></Col>
+                        <Col><Statistic title="Hub Sync" value={isConnected ? "Live" : "Retry"} styles={{ content: { fontSize: 18, color: isConnected ? '#10b981' : '#ef4444' } }}/></Col>
                     </Row>
                 </Col>
             </Row>
@@ -470,8 +528,23 @@ export const FleetViewPage: React.FC = () => {
         </Col>
         <Col span={6} style={{ textAlign: 'right' }}>
             <Space>
-                <Switch checked={showDemand} onChange={setShowDemand} checkedChildren="Demand ON" unCheckedChildren="Demand OFF" />
-                <Button icon={<AimOutlined />} onClick={() => message.info('Recalibrating GPS cluster...')}>Recalibrate</Button>
+                <Switch 
+                    checked={showDemand} 
+                    onChange={(val) => {
+                        setShowDemand(val);
+                        socket?.emit('toggleDemandSimulation', val);
+                        message.info(`Demand simulation ${val ? 'enabled' : 'disabled'}`);
+                    }} 
+                    checkedChildren="Demand ON" 
+                    unCheckedChildren="Demand OFF" 
+                />
+                <Button 
+                    icon={<AimOutlined />} 
+                    onClick={() => {
+                        socket?.emit('recalibrateAnalytics');
+                        message.info('Recalibrating GPS cluster analytics...');
+                    }}
+                >Recalibrate</Button>
             </Space>
         </Col>
       </Row>

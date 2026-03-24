@@ -1,15 +1,13 @@
-
 import React from 'react';
-import { Button, Tooltip, Space, Divider, Badge } from 'antd';
+import { Button, Tooltip, Space, Divider, Badge, Flex } from 'antd';
 import { 
     MenuOutlined,
     ThunderboltOutlined,
-    CarOutlined,
-    CloudOutlined,
-    EnvironmentOutlined,
+    TeamOutlined,
+    SwapOutlined,
+    RiseOutlined,
     GlobalOutlined,
-    AppstoreOutlined,
-    HeatMapOutlined
+    AppstoreOutlined
 } from '@ant-design/icons';
 
 interface GoogleMapsSidebarProps {
@@ -97,63 +95,53 @@ export const GoogleMapsSidebar: React.FC<GoogleMapsSidebarProps> = ({
             maxHeight: isMinimized ? '280px' : 'none',
             overflow: 'hidden'
         }}>
-            <Space direction="vertical" size={isMinimized ? 8 : 16} align="center" style={{ width: '100%' }}>
+            <Flex vertical gap={isMinimized ? 8 : 16} align="center" style={{ width: '100%' }}>
                 {/* Menu Button */}
                 <SidebarButton 
                     icon={<MenuOutlined />} 
-                    tooltip="Menu" 
+                    tooltip="Market Explorer" 
                     onClick={onMenuClick || (() => {})} 
                 />
                 
                 <Divider style={{ margin: isMinimized ? '4px 0' : '8px 0', borderBlockStartColor: 'rgba(0,0,0,0.06)' }} />
 
-                {/* Main Layer Toggles (Always visible) */}
+                {/* Main Enterprise Layers */}
                 <SidebarButton 
                     icon={<ThunderboltOutlined />} 
-                    tooltip="Demand Heatmap" 
+                    tooltip="Demand Intensity" 
                     onClick={() => toggleLayer('demand')}
                     active={isLayerEnabled('demand')}
                 />
                 
                 <SidebarButton 
-                    icon={<CarOutlined />} 
-                    tooltip="Traffic Layers" 
-                    onClick={() => toggleLayer('traffic')}
-                    active={isLayerEnabled('traffic')}
-                    badge={isLayerEnabled('traffic')}
+                    icon={<TeamOutlined />} 
+                    tooltip="Active Supply" 
+                    onClick={() => toggleLayer('supply')}
+                    active={isLayerEnabled('supply')}
                 />
 
                 {!isMinimized && (
                     <>
                         <SidebarButton 
-                            icon={<CloudOutlined />} 
-                            tooltip="Weather & Precipitation" 
-                            onClick={() => toggleLayer('rain')}
-                            active={isLayerEnabled('rain')}
+                            icon={<SwapOutlined />} 
+                            tooltip="Market Imbalance" 
+                            onClick={() => toggleLayer('imbalance')}
+                            active={isLayerEnabled('imbalance')}
+                            badge={isLayerEnabled('imbalance')} // Highlight if actively monitoring matrix
                         />
 
                         <SidebarButton 
-                            icon={<EnvironmentOutlined />} 
-                            tooltip="Regional Events" 
-                            onClick={() => toggleLayer('events')}
-                            active={isLayerEnabled('events')}
+                            icon={<RiseOutlined />} 
+                            tooltip="Surge Multipliers" 
+                            onClick={() => toggleLayer('surge')}
+                            active={isLayerEnabled('surge')}
                         />
                     </>
                 )}
-            </Space>
+            </Flex>
 
             {!isMinimized && (
                 <div style={{ marginTop: 'auto', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                    <Divider style={{ margin: '8px 0', borderBlockStartColor: 'rgba(0,0,0,0.06)' }} />
-                    
-                    {/* Additional View Toggles */}
-                    <SidebarButton 
-                        icon={<HeatMapOutlined />} 
-                        tooltip="Driver Supply" 
-                        onClick={() => toggleLayer('supply')}
-                        active={isLayerEnabled('supply')}
-                    />
-
                     <Divider style={{ margin: '8px 0', borderBlockStartColor: 'rgba(0,0,0,0.06)' }} />
                     
                     {/* Map Type Toggle */}

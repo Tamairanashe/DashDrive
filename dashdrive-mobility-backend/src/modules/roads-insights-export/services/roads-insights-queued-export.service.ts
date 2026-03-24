@@ -38,6 +38,7 @@ export class RoadsInsightsQueuedExportService {
         dto,
       },
       {
+        jobId: dbJob.id, // Explicitly set BullMQ Job ID to match DB ID for easy cancellation
         attempts: 3,
         priority,
         backoff: { type: 'exponential', delay: 2000 },
@@ -62,5 +63,33 @@ export class RoadsInsightsQueuedExportService {
       status: 'queued' as const,
       message: 'Export job queued successfully.',
     };
+  }
+
+  async enqueueRetry(jobId: string, dto: any) {
+    // Priority mapping: lower numeral = higher priority
+    const priority = dto.format === 'pdf' || dto.format === 'png' ? 5 : 1;
+
+    await this.exportQueue.add(
+      'generate-roads-insights-export',
+      {
+        exportJobId: jobId,
+        dto,
+      },
+      {
+        jobId: jobId,
+        attempts: 3,
+        priority,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: 100,
+        removeOnFail: 100,
+      },
+    );
+  }
+
+  async cancel(jobId: string) {
+    const job = await this.exportQueue.getJob(jobId);
+    if (job) {
+      await job.remove();
+    }
   }
 }

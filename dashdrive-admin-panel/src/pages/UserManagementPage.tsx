@@ -15,11 +15,15 @@ import { useLocation } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
-export const UserManagementPage: React.FC = () => {
+export const UserManagementPage: React.FC<{ initialTab?: string }> = ({ initialTab }) => {
     const location = useLocation();
-    const [activeTab, setActiveTab] = useState('1');
+    const [activeTab, setActiveTab] = useState(initialTab || '1');
 
     useEffect(() => {
+        if (initialTab) {
+            setActiveTab(initialTab);
+            return;
+        }
         // Map paths to tab keys
         const pathMap: Record<string, string> = {
             '/users/management': '1',

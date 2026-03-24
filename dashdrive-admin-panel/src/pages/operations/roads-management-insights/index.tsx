@@ -255,7 +255,7 @@ const RoadsManagementInsightsPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <RoadsPageHeader
           loading={loadingPage || capturing}
           error={error}

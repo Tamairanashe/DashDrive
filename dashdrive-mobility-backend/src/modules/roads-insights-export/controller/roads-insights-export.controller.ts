@@ -21,16 +21,21 @@ const mockCurrentUser = () => ({
   email: 'admin@dashdrive.com',
 });
 
-@Controller('roads/insights')
+@Controller('roads-insights')
 @UseGuards(FirebaseAuthGuard)
 export class RoadsInsightsExportController {
   constructor(
     private readonly exportService: RoadsInsightsExportService,
   ) {}
 
-  @Post('export')
+  @Post('export-report')
   async createExport(@Body() dto: RoadsExportDto) {
     return this.exportService.createExport(dto, mockCurrentUser());
+  }
+
+  @Post('map-data')
+  async getMapData(@Body() dto: any) {
+    return this.exportService.getMapData(dto, mockCurrentUser());
   }
 
   @Get('export-jobs')

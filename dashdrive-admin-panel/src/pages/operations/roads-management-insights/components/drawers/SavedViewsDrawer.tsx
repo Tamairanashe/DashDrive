@@ -127,10 +127,10 @@ const SavedViewsDrawer: React.FC<SavedViewsDrawerProps> = ({
         title="Saved Views"
         open={open}
         onClose={onClose}
-        width={440}
-        destroyOnClose={false}
+        size={440}
+        destroyOnHidden={false}
       >
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
           <div>
             <Text strong>Save current configuration</Text>
             <div style={{ marginTop: 8, marginBottom: 12 }}>
@@ -209,7 +209,7 @@ const SavedViewsDrawer: React.FC<SavedViewsDrawerProps> = ({
                   <List.Item.Meta
                     title={item.name}
                     description={
-                      <Space direction="vertical" size={6}>
+                      <Space orientation="vertical" size={6}>
                         {item.description ? <Text type="secondary">{item.description}</Text> : null}
                         <Space wrap>
                           {compactFilters(item.filters).map((tag) => (
@@ -243,7 +243,7 @@ const SavedViewsDrawer: React.FC<SavedViewsDrawerProps> = ({
         }}
         onOk={handleRename}
         confirmLoading={Boolean(editingId)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={renameForm} layout="vertical">
           <Form.Item

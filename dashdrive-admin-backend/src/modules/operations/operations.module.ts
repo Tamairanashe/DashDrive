@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { OperationsController } from './operations.controller';
 import { OperationsService } from './operations.service';
-import { PrismaModule } from '../../prisma/prisma.module';
+import { OperationsController } from './operations.controller';
+import { RealTimeModule } from '../real-time/real-time.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [OperationsController],
+  imports: [RealTimeModule],
   providers: [OperationsService],
+  controllers: [OperationsController],
+  exports: [OperationsService],
 })
 export class OperationsModule {}

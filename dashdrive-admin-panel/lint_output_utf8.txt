@@ -1,0 +1,36 @@
+﻿src/components/Analytics/OperationsDashboard.tsx(2,58): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/components/ParcelDashboard.tsx(100,2): error TS2322: Type '"heat-map"' is not assignable to type '"polygon" | "order-route"'.
+src/components/WalletBonusManagement.tsx(259,26): error TS2304: Cannot find name 'SyncOutlined'.
+src/features/heatmap/components/HeatMapFiltersSider.tsx(30,34): error TS2322: Type '{ children: Element[]; size: "large"; wrap: true; block: true; style: { width: string; justifyContent: "space-between"; }; }' is not assignable to type 'IntrinsicAttributes & SpaceProps & RefAttributes<HTMLDivElement>'.
+  Property 'block' does not exist on type 'IntrinsicAttributes & SpaceProps & RefAttributes<HTMLDivElement>'.
+src/pages/FleetViewPage.tsx(108,79): error TS2353: Object literal may only specify known properties, and 'heading' does not exist in type 'Driver'.
+src/pages/FleetViewPage.tsx(549,68): error TS2339: Property 'heading' does not exist on type 'Driver'.
+src/pages/MarketingHubPage.tsx(384,7): error TS2552: Cannot find name 'form'. Did you mean 'Form'?
+src/pages/MarketingHubPage.tsx(429,5): error TS2552: Cannot find name 'form'. Did you mean 'Form'?
+src/pages/MarketingHubPage.tsx(490,7): error TS2304: Cannot find name 'couponForm'.
+src/pages/MarketingHubPage.tsx(497,5): error TS2304: Cannot find name 'couponForm'.
+src/pages/MarketingHubPage.tsx(508,5): error TS2304: Cannot find name 'couponForm'.
+src/pages/MarketingHubPage.tsx(615,15): error TS2304: Cannot find name 'form'.
+src/pages/MarketingHubPage.tsx(881,5): error TS2304: Cannot find name 'discountForm'.
+src/pages/MarketingHubPage.tsx(921,7): error TS2304: Cannot find name 'discountForm'.
+src/pages/MarketingHubPage.tsx(1013,5): error TS2304: Cannot find name 'notificationForm'.
+src/pages/MarketingHubPage.tsx(1051,7): error TS2304: Cannot find name 'notificationForm'.
+src/pages/MarketingHubPage.tsx(1366,23): error TS2304: Cannot find name 'discountForm'.
+src/pages/MarketingHubPage.tsx(1428,23): error TS2304: Cannot find name 'notificationForm'.
+src/pages/MarketingHubPage.tsx(1685,11): error TS2304: Cannot find name 'form'.
+src/pages/MarketingHubPage.tsx(1691,51): error TS2304: Cannot find name 'form'.
+src/pages/MarketingHubPage.tsx(1697,21): error TS2304: Cannot find name 'form'.
+src/pages/MarketingHubPage.tsx(1731,11): error TS2304: Cannot find name 'couponForm'.
+src/pages/MarketingHubPage.tsx(1737,51): error TS2304: Cannot find name 'couponForm'.
+src/pages/MarketingHubPage.tsx(1743,21): error TS2304: Cannot find name 'couponForm'.
+src/pages/MarketingHubPage.tsx(1874,11): error TS2304: Cannot find name 'discountForm'.
+src/pages/MarketingHubPage.tsx(1880,51): error TS2304: Cannot find name 'discountForm'.
+src/pages/MarketingHubPage.tsx(1886,21): error TS2304: Cannot find name 'discountForm'.
+src/pages/MarketingHubPage.tsx(1945,11): error TS2304: Cannot find name 'notificationForm'.
+src/pages/MarketingHubPage.tsx(1951,51): error TS2304: Cannot find name 'notificationForm'.
+src/pages/MarketingHubPage.tsx(1957,21): error TS2304: Cannot find name 'notificationForm'.
+src/pages/MerchantListPage.tsx(201,12): error TS2304: Cannot find name 'record'.
+src/pages/MerchantListPage.tsx(203,107): error TS2304: Cannot find name 'record'.
+src/pages/MerchantListPage.tsx(207,129): error TS2304: Cannot find name 'record'.
+src/pages/MerchantListPage.tsx(211,94): error TS2304: Cannot find name 'record'.
+src/pages/RoutingOptimizationPage.tsx(85,36): error TS2561: Object literal may only specify known properties, but 'lat' does not exist in type '[number, number]'. Did you mean to write 'flat'?

@@ -13,6 +13,7 @@ import {
   FileTextOutlined, GlobalOutlined
 } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
+import { useSocket } from '../context/SocketContext';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -54,6 +55,7 @@ export const SupportHubPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [chatMessage, setChatMessage] = useState('');
+  const { socket, isConnected } = useSocket();
   
   // Live Chat State
   const [selectedChat, setSelectedChat] = useState<any>(null);
@@ -120,6 +122,56 @@ export const SupportHubPage: React.FC = () => {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('platform_event', (data: any) => {
+      const { event, payload } = data;
+
+      if (event === 'SUPPORT_TICKET_CREATED') {
+        const newTicket: TicketRecord = {
+          key: payload.ticketId,
+          ticketId: payload.ticketId,
+          customer: payload.customerName,
+          service: payload.serviceType,
+          category: payload.category,
+          priority: payload.priority,
+          status: 'Open',
+          assignedAgent: 'Unassigned',
+          created: new Date().toLocaleString()
+        };
+        setTickets(prev => [newTicket, ...prev]);
+        message.info(`New Support Ticket: ${payload.ticketId}`);
+      }
+
+      if (event === 'SUPPORT_TICKET_UPDATED') {
+        setTickets(prev => prev.map(t => t.ticketId === payload.ticketId ? { ...t, ...payload.changes } : t));
+      }
+
+      if (event === 'CHAT_MESSAGE_RECEIVED') {
+        setChats(prev => prev.map(c => {
+          if (c.id === payload.chatId) {
+            return {
+              ...c,
+              lastMessage: payload.message.text,
+              unread: payload.sender === 'admin' ? c.unread : c.unread + 1,
+              messages: [...c.messages, payload.message]
+            };
+          }
+          return c;
+        }));
+        
+        if (selectedChat?.id === payload.chatId) {
+            // Logic to scroll or just update view
+        }
+      }
+    });
+
+    return () => {
+      socket.off('platform_event');
+    };
+  }, [socket, selectedChat?.id]);
 
   const fetchInitialData = () => {
     setLoading(true);
@@ -409,7 +461,12 @@ export const SupportHubPage: React.FC = () => {
     <div style={{ padding: '0 24px 24px 24px' }}>
       <div style={{ marginBottom: 24 }}>
         <Title level={4}>Customer Support Hub</Title>
-        <Text type="secondary">Centralized management for tickets, chats, disputes, and complaints</Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text type="secondary">Centralized management for tickets, chats, disputes, and complaints</Text>
+            <Tag color={isConnected ? 'success' : 'warning'}>
+                {isConnected ? 'Real-time Sync Active' : 'Connecting to Live Stream...'}
+            </Tag>
+        </div>
       </div>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>

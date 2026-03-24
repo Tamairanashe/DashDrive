@@ -1,289 +1,356 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import { 
-    Button, Input, Space, Divider, DatePicker 
-} from 'antd';
-import { 
-    CircleF, 
-    PolygonF, 
-    PolylineF, 
-    OverlayViewF, 
-    OverlayView,
-    TrafficLayerF,
-    TransitLayerF,
-    BicyclingLayerF
+    GoogleMap, 
+    useJsApiLoader,
+    Autocomplete,
+    Polygon
 } from '@react-google-maps/api';
-import { 
-    EnvironmentOutlined, 
-    CalendarOutlined, 
-    FullscreenOutlined, 
-    FullscreenExitOutlined, 
-    SyncOutlined,
-    CarOutlined,
-    ThunderboltOutlined,
-    TeamOutlined,
-    StarFilled
-} from '@ant-design/icons';
-import { BaseMap, useBaseMap } from '../../../components/BaseMap';
-import { RoutePreview } from '../../../components/RoutePreview';
-import { 
-    Zone, 
-    WeatherCluster, 
-    TrafficCluster, 
-    EventCluster, 
-    ServiceAsset, 
-    DemandPoint 
-} from '../types';
-import { 
-    LOCATION_COORDS, 
-    SERVICE_TYPES, 
-    MOCK_RAIN_CLUSTERS, 
-    MOCK_TRAFFIC_CLUSTERS, 
-    MOCK_SERVICE_ASSETS, 
-    MOCK_DEMAND_POINTS 
-} from '../mocks/heatmapMocks';
+import { Button, Card, Typography, Space, Badge } from 'antd';
+import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { GridCell } from './../hooks/useMarketGrid';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 
-// --- Sub-components ---
-
-const DemandPointMarker = ({ position, serviceColor }: { position: google.maps.LatLngLiteral, serviceColor: string }) => (
-    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-        <div style={{ transform: 'translate(-50%, -50%)' }}>
-            <div className="pulse-marker" style={{ background: serviceColor, width: '12px', height: '12px', border: '2px solid white', borderRadius: '50%', boxShadow: `0 0 10px ${serviceColor}` }}></div>
-        </div>
-    </OverlayViewF>
-);
-
-const ServiceAssetMarker = ({ position, service, color }: { position: google.maps.LatLngLiteral, service: string, color: string }) => {
-    let iconHtml: React.ReactNode = null;
-    if (service === 'ride') iconHtml = <CarOutlined style={{ fontSize: 18 }} />;
-    else if (service === 'food') iconHtml = <ThunderboltOutlined style={{ fontSize: 18 }} />;
-    else if (service === 'parcel') iconHtml = <EnvironmentOutlined style={{ fontSize: 18 }} />;
-    else iconHtml = <TeamOutlined style={{ fontSize: 18 }} />;
-
-    return (
-        <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-            <div style={{ transform: 'translate(-50%, -50%)' }}>
-                <div style={{ background: 'white', border: `2px solid ${color}`, color: color, width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-                    {iconHtml}
-                </div>
-            </div>
-        </OverlayViewF>
-    );
-};
-
-const EventMarker = ({ position }: { position: google.maps.LatLngLiteral }) => (
-    <OverlayViewF position={position} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-        <div style={{ transform: 'translate(-50%, -50%)' }}>
-            <div className="pulse-marker" style={{ background: '#eab308', width: '14px', height: '14px', border: '2px solid white', borderRadius: '50%', boxShadow: '0 0 15px #eab308', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <StarFilled style={{ fontSize: 8, color: 'white' }} />
-            </div>
-        </div>
-    </OverlayViewF>
-);
-
-const MapEffect = ({ center, zoom = 12 }: { center: { lat: number, lng: number }, zoom?: number }) => {
-    const { map } = useBaseMap();
-    useEffect(() => {
-        if (map) {
-            map.panTo(center);
-            map.setZoom(zoom);
-        }
-    }, [center, zoom, map]);
-    return null;
-};
-
-// --- Main Canvas Component ---
+const LIBRARIES: ("places" | "drawing" | "visualization" | "geometry" | "marker")[] = ["places", "drawing", "visualization", "geometry", "marker"];
 
 interface HeatMapCanvasProps {
-    selectedCity: string;
     mapCenter: [number, number];
-    isDrilldownActive: boolean;
     enabledLayers: string[];
-    zones: Zone[];
-    service: string;
-    events: EventCluster[];
-    setSelectedZone: (zone: Zone) => void;
+    cells: GridCell[];
+    selectedCell: GridCell | null;
+    setSelectedCell: (cell: GridCell | null) => void;
     setMapCenter: (center: [number, number]) => void;
-    setIsDrilldownActive: (active: boolean) => void;
-    handleMapSearch: (val: string) => void;
-    handleDateChange: (dates: any) => void;
-    setIsCalendarVisible: (visible: boolean) => void;
     isFullscreen: boolean;
     toggleFullscreen: () => void;
-    trafficMode: 'live' | 'typical';
     mapId?: string;
-    mapTypeId: string;
+    mapTypeId?: string;
 }
 
 export const HeatMapCanvas: React.FC<HeatMapCanvasProps> = ({
-    selectedCity,
     mapCenter,
-    isDrilldownActive,
     enabledLayers,
-    zones,
-    service,
-    events,
-    setSelectedZone,
+    cells,
+    selectedCell,
+    setSelectedCell,
     setMapCenter,
-    setIsDrilldownActive,
-    handleMapSearch,
-    handleDateChange,
-    setIsCalendarVisible,
     isFullscreen,
     toggleFullscreen,
-    trafficMode,
-    mapId,
-    mapTypeId
+    mapId = "2fdfcc6c57fba3cd",
+    mapTypeId = "roadmap"
 }) => {
-    const [map, setMap] = useState<google.maps.Map | null>(null);
-    const getZoneColor = (demand: string) => {
-        switch(demand) {
-            case 'low': return '#22c55e';
-            case 'medium': return '#eab308';
-            case 'high': return '#ef4444';
-            case 'critical': return '#a855f7';
-            default: return '#3b82f6';
+    const activeLayer = enabledLayers[0] || 'imbalance';
+    
+    // Google Maps API Hook (Unified Configuration)
+    const { isLoaded, loadError } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
+        libraries: LIBRARIES,
+    });
+
+    const mapRef = useRef<google.maps.Map | null>(null);
+    const clustererRef = useRef<MarkerClusterer | null>(null);
+    const markersRef = useRef<any[]>([]);
+    const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+    const onLoadMap = useCallback(function callback(map: google.maps.Map) {
+        mapRef.current = map;
+        map.setOptions({
+            disableDefaultUI: true,
+            zoomControl: true,
+            gestureHandling: 'cooperative',
+        });
+    }, []);
+
+    const onUnmountMap = useCallback(function callback() {
+        if (clustererRef.current) {
+            clustererRef.current.clearMarkers();
+            clustererRef.current = null;
+        }
+        mapRef.current = null;
+    }, []);
+
+    const onAutocompleteLoad = (autocomplete: google.maps.places.Autocomplete) => {
+        autocompleteRef.current = autocomplete;
+    };
+
+    const onPlaceChanged = () => {
+        if (autocompleteRef.current) {
+            const place = autocompleteRef.current.getPlace();
+            if (place.geometry && place.geometry.location) {
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                setMapCenter([lat, lng]);
+            }
         }
     };
 
-    const serviceColor = SERVICE_TYPES.find(s => s.id === service)?.color || '#3b82f6';
+    useEffect(() => {
+        if (mapRef.current && mapCenter) {
+            mapRef.current.panTo({ lat: mapCenter[0], lng: mapCenter[1] });
+        }
+    }, [mapCenter]);
+
+    // Apply User's MarkerClusterer Demo Architecture
+    useEffect(() => {
+        if (!mapRef.current) return;
+
+        // Clean up old markers
+        if (clustererRef.current) {
+            clustererRef.current.clearMarkers();
+        }
+        markersRef.current.forEach(m => {
+            if (m.setMap) m.setMap(null);
+        });
+        markersRef.current = [];
+
+        async function initClusters() {
+            try {
+                const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+                const { InfoWindow } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
+
+                const infoWindow = new InfoWindow({
+                    content: "",
+                    disableAutoPan: true,
+                });
+
+                // Extrapolate point locations from grid cell metrics based on ALL active layers
+                let locations: {lat: number, lng: number, cell: GridCell, layer: string}[] = [];
+                cells.forEach(cell => {
+                    enabledLayers.forEach(layer => {
+                        let count = 0;
+                        if (layer === 'demand') count = cell.metrics.demandCount;
+                        else if (layer === 'supply') count = cell.metrics.idleSupply;
+                        else if (layer === 'imbalance') count = Math.min(20, Math.floor(cell.derived.imbalanceRatio * 4));
+                        else if (layer === 'surge') count = Math.floor(cell.metrics.surgeSuggestion * 3);
+                        else if (layer === 'eta') count = 1; // Representative marker for ETA
+                        
+                        for(let i=0; i<count; i++) {
+                            locations.push({
+                                // Keep cluster markers within the physical zone
+                                lat: cell.center.lat + (Math.random() - 0.5) * 0.012,
+                                lng: cell.center.lng + (Math.random() - 0.5) * 0.012,
+                                cell,
+                                layer
+                            });
+                        }
+                    });
+                });
+
+                const labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+                const markers = locations.map((pos, i) => {
+                    const label = labels[i % labels.length];
+                    let pinColor = '#10b981';
+                    let glyphText = label;
+
+                    if (pos.layer === 'demand') pinColor = '#f59e0b';
+                    else if (pos.layer === 'supply') pinColor = '#3b82f6';
+                    else if (pos.layer === 'imbalance') pinColor = pos.cell.derived.imbalanceRatio > 2 ? '#ef4444' : '#10b981';
+                    else if (pos.layer === 'surge') pinColor = '#8b5cf6'; // Violet for surge
+                    else if (pos.layer === 'eta') {
+                        pinColor = '#ec4899'; // Pink for ETA
+                        glyphText = `${Math.round(pos.cell.metrics.etaCurrent)}m`;
+                    }
+
+                    const pinGlyph = new PinElement({
+                        glyphText: glyphText,
+                        glyphColor: "white",
+                        background: pinColor,
+                        borderColor: '#ffffff',
+                        scale: pos.layer === 'eta' ? 1.2 : 1.0
+                    } as any);
+                    
+                    const marker = new AdvancedMarkerElement({
+                        position: { lat: pos.lat, lng: pos.lng },
+                        content: pinGlyph.element,
+                    });
+
+                    marker.addListener("click", () => {
+                        setSelectedCell(pos.cell);
+                        infoWindow.setContent(`<strong>${pos.cell.name}</strong><br/>Layer: ${pos.layer.toUpperCase()}`);
+                        if (mapRef.current) infoWindow.open(mapRef.current, marker);
+                    });
+                    
+                    return marker;
+                });
+
+                markersRef.current = markers;
+
+                if (mapRef.current) {
+                    const renderer = {
+                        render: function (cluster: any) {
+                            const { count, position } = cluster;
+                            // Adaptive coloring for clusters
+                            let color = '#334155'; // Neutral charcoal for mixed clusters
+                            if (enabledLayers.length === 1) {
+                                const active = enabledLayers[0];
+                                if (active === 'demand') color = '#f59e0b';
+                                else if (active === 'supply') color = '#3b82f6';
+                                else if (active === 'imbalance') color = count > 15 ? '#ef4444' : '#10b981';
+                                else if (active === 'surge') color = '#8b5cf6';
+                                else if (active === 'eta') color = '#ec4899';
+                            }
+                            
+                            const size = count > 30 ? 56 : count > 10 ? 46 : 36;
+                            
+                            const bgColor = `rgba(51, 65, 85, 0.15)`;
+
+                            const div = document.createElement('div');
+                            div.style.cssText = `
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              width: ${size}px;
+                              height: ${size}px;
+                              border-radius: 50%;
+                              background: ${bgColor};
+                              border: 2px solid ${color};
+                              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                              cursor: pointer;
+                              transition: transform 0.2s ease;
+                            `;
+                            div.innerHTML = `
+                              <span style="
+                                font-size: ${size > 46 ? 15 : 13}px;
+                                font-weight: 700;
+                                color: ${color};
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                              ">${count}</span>
+                            `;
+                            
+                            return new AdvancedMarkerElement({
+                                position,
+                                content: div,
+                                zIndex: 999999 + count,
+                            });
+                        }
+                    };
+
+                    clustererRef.current = new MarkerClusterer({ markers, map: mapRef.current, renderer });
+                }
+            } catch (e) {
+                console.error("Clustering init failed:", e);
+            }
+        }
+
+        initClusters();
+
+        return () => {
+            if (clustererRef.current) {
+                clustererRef.current.clearMarkers();
+            }
+        }
+    }, [cells, activeLayer, isLoaded]);
+
+    if (loadError) return <div style={{height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Map load error: {loadError.message}</div>;
+    if (!isLoaded) return <div style={{height: '100%', background: '#f8fafc', borderRadius: 12}}></div>;
 
     return (
-        <div style={{ height: '100%', width: '100%', overflow: 'hidden', borderRadius: isFullscreen ? 0 : 12 }}>
-            <BaseMap 
-                center={mapCenter} 
-                zoom={13} 
-                height="100%"
+        <div style={{ position: 'relative', height: '100%', width: '100%', borderRadius: isFullscreen ? 0 : 12, overflow: 'hidden' }}>
+            <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%' }}
+                center={{ lat: mapCenter[0], lng: mapCenter[1] }}
+                zoom={12}
+                onLoad={onLoadMap}
+                onUnmount={onUnmountMap}
                 mapTypeId={mapTypeId}
-                mapId={mapId}
-                onLoad={setMap}
+                options={{
+                    mapId: mapId,
+                }}
+                onClick={() => setSelectedCell(null)}
             >
-                <MapEffect center={{ lat: mapCenter[0], lng: mapCenter[1] }} zoom={isDrilldownActive ? 15 : 12} />
-                
-                {(enabledLayers.includes('demand') || enabledLayers.includes('supply')) && zones.map(zone => (
-                    <CircleF 
-                        key={zone.id}
-                        center={{ lat: zone.lat, lng: zone.lng }}
-                        options={{ 
-                            fillColor: enabledLayers.includes('demand') ? getZoneColor(zone.demand) : '#3b82f6', 
-                            strokeColor: enabledLayers.includes('demand') ? getZoneColor(zone.demand) : '#3b82f6', 
-                            fillOpacity: enabledLayers.includes('demand') ? 0.5 : 0.3 
+                {/* H3 Grid Polygon Overlay (True Heatmap) */}
+                {cells.map(cell => {
+                    const isVisible = enabledLayers.length > 0;
+                    if (!isVisible) return null;
+
+                    // Composite heat score logic
+                    let color = '#3b82f6'; // Default Supply blue
+                    if (enabledLayers.includes('demand')) {
+                        const ratio = cell.metrics.demandCount / 20;
+                        color = ratio > 0.8 ? '#ef4444' : ratio > 0.4 ? '#f59e0b' : '#3b82f6';
+                    } else if (enabledLayers.includes('imbalance')) {
+                        color = cell.derived.imbalanceRatio > 2 ? '#ef4444' : '#10b981';
+                    } else if (enabledLayers.includes('surge')) {
+                        color = cell.metrics.surgeSuggestion > 1.2 ? '#8b5cf6' : '#10b981';
+                    }
+
+                    return (
+                        <Polygon
+                            key={`poly-${cell.id}`}
+                            paths={cell.baseBounds}
+                            options={{
+                                fillColor: color,
+                                fillOpacity: 0.25 + (cell.derived.heatScore * 0.45),
+                                strokeColor: color,
+                                strokeOpacity: 0.6,
+                                strokeWeight: 1,
+                                clickable: false
+                            }}
+                        />
+                    );
+                })}
+
+                {/* Floating Search Bar */}
+                <Autocomplete
+                    onLoad={onAutocompleteLoad}
+                    onPlaceChanged={onPlaceChanged}
+                >
+                    <input
+                        type="text"
+                        placeholder="Search for a location..."
+                        style={{
+                            boxSizing: 'border-box',
+                            border: '1px solid #e2e8f0',
+                            width: '400px',
+                            height: '40px',
+                            padding: '0 16px',
+                            borderRadius: '12px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                            fontSize: '14px',
+                            outline: 'none',
+                            position: 'absolute',
+                            left: '50%',
+                            marginLeft: '-200px',
+                            top: '16px',
+                            zIndex: 100,
+                            background: 'white'
                         }}
-                        radius={enabledLayers.includes('demand') ? (zone.demand === 'critical' ? 2000 : 3000) : (zone.drivers * 150)}
-                        onClick={() => {
-                            setSelectedZone(zone);
-                            setMapCenter([zone.lat, zone.lng]);
-                            setIsDrilldownActive(true);
-                        }}
                     />
-                ))}
+                </Autocomplete>
 
-                {enabledLayers.includes('rain') && MOCK_RAIN_CLUSTERS.map(rain => (
-                    <PolygonF 
-                        key={rain.id}
-                        path={rain.points}
-                        options={{ fillColor: '#0ea5e9', strokeColor: '#0ea5e9', fillOpacity: 0.25, strokeWeight: 1 }}
-                    />
-                ))}
-
-                {enabledLayers.includes('traffic') && trafficMode === 'live' && <TrafficLayerF />}
-                {enabledLayers.includes('transit') && <TransitLayerF />}
-                {enabledLayers.includes('biking') && <BicyclingLayerF />}
-
-                {enabledLayers.includes('events') && events.map(event => (
-                    <EventMarker 
-                        key={event.id} 
-                        position={{ lat: event.lat, lng: event.lng }} 
-                    />
-                ))}
-
-                {service !== 'ALL' && MOCK_SERVICE_ASSETS.filter(a => a.service === service).map(asset => (
-                    <ServiceAssetMarker 
-                        key={asset.id} 
-                        position={{ lat: asset.lat, lng: asset.lng }} 
-                        service={asset.service}
-                        color={serviceColor}
-                    />
-                ))}
-
-                {isDrilldownActive && MOCK_DEMAND_POINTS.map(point => (
-                    <DemandPointMarker 
-                        key={point.id} 
-                        position={{ lat: point.lat, lng: point.lng }} 
-                        serviceColor={serviceColor}
-                    />
-                ))}
-
-                {isDrilldownActive && zones.find(z => z.lat === mapCenter[0] && z.lng === mapCenter[1])?.demand === 'critical' && (
-                    <RoutePreview 
-                        encodedPolyline="~qve@e~w_Fe@o@{@e@u@e@s@e@q@e@p@e@o@e@n@e@m@e@l@e@k@e@j@e@i@e@h@e@g@e@f@e@e@e@d@e@c@e@b@e@a@e@`@e@_@e@^@e@]@e@\@e@[@e@Z@e@Y@e@X@e@W@e@V@e@U@e@T@e@S@e@R@e@Q@e@P@e@O@e@N@e@M@e@L@e@K@e@J@e@I@e@H@e@G@e@F@e@E@e@D@e@C@e@B@e@A@e@@"
-                        color="#f43f5e"
-                        weight={8}
-                    />
-                )}
-            </BaseMap>
-
-            {/* Global Map Controls */}
-            <div style={{
-                position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 60,
-                display: 'flex', gap: '12px', padding: '8px 16px', background: 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: 'blur(12px)', borderRadius: '50px', border: '1px solid rgba(255, 255, 255, 0.3)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-            }}>
-                <Input.Search
-                    placeholder="Search zone or location..."
-                    allowClear
-                    onSearch={handleMapSearch}
-                    style={{ width: 250 }}
-                    className="glass-search"
-                    prefix={<EnvironmentOutlined style={{ color: '#3b82f6' }} />}
-                />
-                <Divider orientation="vertical" style={{ height: 24, margin: '4px 0' }} />
-                <DatePicker.RangePicker
-                    onChange={handleDateChange}
-                    className="glass-picker"
-                    suffixIcon={<CalendarOutlined style={{ color: '#3b82f6' }} />}
-                    placeholder={['Start Date', 'End Date']}
-                />
-                <Button
-                    icon={<CalendarOutlined />}
-                    onClick={() => setIsCalendarVisible(true)}
-                    type="primary"
-                    shape="circle"
-                    style={{ background: '#1e293b', border: 'none' }}
-                />
-            </div>
-
-            {/* Fullscreen Button */}
-            <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 60 }}>
-                <Button
-                    icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-                    onClick={toggleFullscreen}
-                    shape="circle"
-                    size="large"
-                    className="shadow-sm"
-                    style={{ background: 'white', border: 'none' }}
-                />
-            </div>
-
-
-            {/* Reset Perspective Button */}
-            {isDrilldownActive && (
-                <div style={{ position: 'absolute', top: 16, left: 96, zIndex: 70 }}>
-                    <Button
-                        icon={<SyncOutlined />}
-
-                        onClick={() => {
-                            setIsDrilldownActive(false);
-                            setMapCenter([LOCATION_COORDS[selectedCity].lat, LOCATION_COORDS[selectedCity].lng]);
-                        }}
-                        type="primary"
-                        shape="round"
+                <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
+                    <Button 
+                        icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />} 
+                        onClick={toggleFullscreen}
                         className="shadow-sm"
-                    >
-                        Reset View
-                    </Button>
+                        style={{ borderRadius: 8, border: 'none' }}
+                    />
                 </div>
-            )}
+                <div style={{ position: 'absolute', bottom: 16, left: 16, zIndex: 10 }}>
+                    <Card size="small" variant="borderless" className="shadow-sm" style={{ borderRadius: 8, minWidth: 200, padding: 4 }}>
+                        <Typography.Text strong style={{ fontSize: 11, display: 'block', marginBottom: 8, letterSpacing: 0.5 }}>
+                            {activeLayer.toUpperCase()} REPRESENTATION
+                        </Typography.Text>
+                        <Space orientation="vertical" size={2} style={{ width: '100%' }}>
+                            {enabledLayers.includes('imbalance') && (
+                                <Badge color="#ef4444" text={<span style={{fontSize: 12}}>Critical Imbalance</span>} />
+                            )}
+                            {enabledLayers.includes('demand') && (
+                                <Badge color="#f59e0b" text={<span style={{fontSize: 12}}>Demand Load</span>} />
+                            )}
+                            {enabledLayers.includes('supply') && (
+                                <Badge color="#3b82f6" text={<span style={{fontSize: 12}}>Active Supply</span>} />
+                            )}
+                            {enabledLayers.includes('surge') && (
+                                <Badge color="#8b5cf6" text={<span style={{fontSize: 12}}>Surge Active</span>} />
+                            )}
+                            {enabledLayers.includes('eta') && (
+                                <Badge color="#ec4899" text={<span style={{fontSize: 12}}>Fulfillment ETA</span>} />
+                            )}
+                        </Space>
+                    </Card>
+                </div>
+            </GoogleMap>
         </div>
     );
 };

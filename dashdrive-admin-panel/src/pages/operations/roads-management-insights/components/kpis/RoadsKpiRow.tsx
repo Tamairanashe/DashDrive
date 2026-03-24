@@ -37,7 +37,7 @@ const RoadsKpiCard: React.FC<RoadsKpiCardProps> = ({
 }) => {
   const content = (
     <Card loading={loading} className="shadow-sm" style={{ height: '100%', borderRadius: '12px' }}>
-      <Space direction="vertical" size={4} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={4} style={{ width: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <Text type="secondary" style={{ fontSize: 12, lineHeight: '1.2', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {title}
@@ -49,7 +49,7 @@ const RoadsKpiCard: React.FC<RoadsKpiCardProps> = ({
         <Statistic 
           value={value} 
           suffix={suffix} 
-          valueStyle={{ fontSize: 22, fontWeight: 700, color: '#1f1f1f' }}
+          styles={{ content: { fontSize: 22, fontWeight: 700, color: '#1f1f1f' } }}
         />
       </Space>
     </Card>

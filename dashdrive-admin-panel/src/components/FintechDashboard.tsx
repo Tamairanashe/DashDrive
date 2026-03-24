@@ -1,18 +1,59 @@
-﻿import React from 'react';
+import React from 'react';
 import { 
   Row, Col, Card, Statistic, Button, Typography, 
   Badge, Tag, Table, Progress, Divider 
 } from 'antd';
 import { 
   RiseOutlined, ArrowUpOutlined, BarChartOutlined, WalletOutlined, 
-  CreditCardOutlined, HistoryOutlined, AlertOutlined, SafetyCertificateOutlined 
+  CreditCardOutlined, HistoryOutlined, AlertOutlined, SafetyCertificateOutlined,
+  SyncOutlined 
 } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
+import { useSocket } from '../context/SocketContext';
 
 const { Title, Text } = Typography;
 
 export const FintechDashboard: React.FC = () => {
   const { isDark } = useTheme();
+  const { isConnected, socket } = useSocket();
+  const [revenue, setRevenue] = React.useState(342800);
+  const [volume, setVolume] = React.useState(1284502);
+  const [disputes, setDisputes] = React.useState(14);
+  const [failures, setFailures] = React.useState([
+    { id: 'TX-9042', user: 'James Wilson', service: 'Food', amount: '$45.20', reason: 'Insufficient Funds', time: '2m ago' },
+    { id: 'TX-9041', user: 'Maria Garcia', service: 'Ride', amount: '$12.00', reason: 'Gateway Timeout', time: '5m ago' },
+    { id: 'TX-9040', user: 'Robert Chen', service: 'Mart', amount: '$156.40', reason: '3DS Failure', time: '12m ago' }
+  ]);
+
+  React.useEffect(() => {
+    if (!socket) return;
+
+    socket.on('platform_event', (eventData: any) => {
+      const { event, payload } = eventData;
+
+      if (event === 'TRANSACTION_COMPLETED') {
+        const amount = payload.amount || 0;
+        setVolume(prev => prev + amount);
+        setRevenue(prev => prev + (amount * 0.15)); // Assuming 15% commission
+      } else if (event === 'TRANSACTION_FAILED') {
+        setFailures(prev => [{
+          id: payload.id || `TX-${Date.now()}`,
+          user: payload.userName || 'Anonymous',
+          service: payload.service || 'General',
+          amount: `$${payload.amount || 0}`,
+          reason: payload.reason || 'Unexpected Error',
+          time: 'Just now'
+        }, ...prev.slice(0, 4)]);
+      } else if (event === 'DISPUTE_CREATED') {
+        setDisputes(prev => prev + 1);
+      }
+    });
+
+    return () => {
+      socket.off('platform_event');
+    };
+  }, [socket]);
+
   const serviceRevenue = [
     { label: 'Ride & Transport', value: '$120,400', percent: 30, color: '#1677ff' },
     { label: 'Food & Mart', value: '$92,800', percent: 23, color: '#52c41a' },
@@ -20,12 +61,6 @@ export const FintechDashboard: React.FC = () => {
     { label: 'Bill Payments', value: '$38,900', percent: 9, color: '#faad14' },
     { label: 'Merchant QR Payments', value: '$22,500', percent: 6, color: '#f5222d' },
     { label: 'Fintech Commissions', value: '$23,000', percent: 5, color: '#64748b' }
-  ];
-
-  const failedTransactions = [
-    { id: 'TX-9042', user: 'James Wilson', service: 'Food', amount: '$45.20', reason: 'Insufficient Funds', time: '2m ago' },
-    { id: 'TX-9041', user: 'Maria Garcia', service: 'Ride', amount: '$12.00', reason: 'Gateway Timeout', time: '5m ago' },
-    { id: 'TX-9040', user: 'Robert Chen', service: 'Mart', amount: '$156.40', reason: '3DS Failure', time: '12m ago' }
   ];
 
   const paymentMix = [
@@ -40,22 +75,23 @@ export const FintechDashboard: React.FC = () => {
       {/* KPI Cards */}
       <Row gutter={[24, 24]}>
         <Col span={6}>
-          <Card bordered={false} className="shadow-sm">
+          <Card bordered={false} className="shadow-sm relative overflow-hidden">
             <Statistic 
               title="Total Transaction Volume" 
-              value={1284502} 
+              value={volume} 
               prefix={<RiseOutlined style={{ color: '#52c41a' }} />} 
               suffix={<div style={{ fontSize: 12, color: '#52c41a' }}><ArrowUpOutlined /> 14.2%</div>}
               precision={0}
               valueStyle={{ fontWeight: 800 }}
             />
+            {isConnected && <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse" />}
           </Card>
         </Col>
         <Col span={6}>
           <Card bordered={false} className="shadow-sm">
             <Statistic 
               title="Total Revenue (Platform)" 
-              value={342800} 
+              value={revenue} 
               prefix={<BarChartOutlined style={{ color: '#1677ff' }} />} 
               suffix={<div style={{ fontSize: 12, color: '#1677ff' }}><ArrowUpOutlined /> 8.4%</div>}
               precision={0}
@@ -190,7 +226,7 @@ export const FintechDashboard: React.FC = () => {
         extra={<Button type="link">View All Failures</Button>}
       >
         <Table 
-          dataSource={failedTransactions}
+          dataSource={failures}
           pagination={false}
           size="middle"
           columns={[

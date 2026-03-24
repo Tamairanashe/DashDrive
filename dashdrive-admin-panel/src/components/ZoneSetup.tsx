@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
  Info, Map as MapIcon, Search, Layers, Maximize2, Plus, Minus, RefreshCw,
  Download, MoreVertical, Edit3, Trash2, CheckCircle2, XCircle, X, Filter,
@@ -948,7 +948,7 @@ export const ZoneSetup: React.FC = () => {
  <tr key={zone.id} className="hover:bg-slate-50/50 transition-colors group">
  <td className="px-6 py-4 text-xs font-medium text-slate-400">{idx + 1}</td>
  <td className="px-6 py-4">
- <MapPreview type=" polygon\ data={zone.points} status={zone.status} label={zone.name} variant=\mini\ />
+ <MapPreview type="polygon" data={zone.points} status={zone.status} label={zone.name} variant="mini" />
  </td>
  <td className="px-6 py-4">
  <div className="flex flex-col gap-0.5">

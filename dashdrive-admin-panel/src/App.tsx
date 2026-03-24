@@ -69,19 +69,20 @@ import { DriverRetentionHub } from './pages/DriverRetentionHub';
 import { CourierManagementHub } from './pages/CourierManagementHub';
 import { FleetOperatorHub } from './pages/FleetOperatorHub';
 import SchoolRunMonitoring from './pages/SchoolRunMonitoring';
+import { SocketProvider } from './context/SocketContext';
 
 export default function App() {
-  // Authentication check bypassed as requested
-  // const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  // if (!isAuthenticated) {
-  //   return <LoginPage />;
-  // }
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   return (
     <AntdApp>
       <ThemeProvider>
-        <BrowserRouter>
+        <SocketProvider>
+          <BrowserRouter>
           <Routes>
           <Route path="/" element={<AdminLayout />}>
             <Route index element={<DashboardPage />} />
@@ -131,10 +132,10 @@ export default function App() {
 
             {/* User Management */}
             <Route path="users/management" element={<UserManagementPage />} />
-            <Route path="users/customers" element={<Navigate to="/users/management" replace />} />
-            <Route path="users/tier-setup" element={<Navigate to="/users/management" replace />} />
-            <Route path="users/employees" element={<Navigate to="/users/management" replace />} />
-            <Route path="users/wallet" element={<Navigate to="/users/management" replace />} />
+            <Route path="users/customers" element={<UserManagementPage initialTab="1" />} />
+            <Route path="users/tier-setup" element={<UserManagementPage initialTab="2" />} />
+            <Route path="users/employees" element={<UserManagementPage initialTab="3" />} />
+            <Route path="users/wallet" element={<UserManagementPage initialTab="4" />} />
             
             {/* Operations */}
             <Route path="ops/hub" element={<OperationsHubPage initialTab="1" />} />
@@ -161,6 +162,7 @@ export default function App() {
             <Route path="marketing/notifications" element={<MarketingHubPage />} />
             <Route path="marketing/newsletter" element={<MarketingHubPage />} />
             <Route path="marketing/growth-engine" element={<MarketingGrowthEngine />} />
+            <Route path="marketing/promos" element={<Navigate to="/marketing/coupons" replace />} />
 
             {/* Finance */}
             <Route path="finance/fares" element={<FareManagementHub />} />
@@ -170,6 +172,7 @@ export default function App() {
             <Route path="finance/analytics" element={<FinancialReportsHub />} />
             <Route path="finance/settlements" element={<SettlementPage />} />
             <Route path="finance/partners" element={<FintechPartnerHub />} />
+            <Route path="finance/pricing" element={<FareManagementHub />} />
             <Route path="finance/marketplace" element={<MarketplaceConfigPage />} />
             <Route path="finance/utility" element={<UtilityPaymentHub />} />
             <Route path="finance/transfer" element={<DashWalletTransfer />} />
@@ -201,8 +204,9 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
+        </BrowserRouter>
+        </SocketProvider>
+      </ThemeProvider>
     </AntdApp>
   );
 }

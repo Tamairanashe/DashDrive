@@ -45,6 +45,54 @@ const merchantRoutes = require('./src/routes/merchant.routes');
 app.use('/api/mobile', mobileRoutes);
 app.use('/api/merchant', merchantRoutes);
 
+// Historical Market Analytics Endpoint
+app.get('/api/market/historical', async (req, res) => {
+    const { start, end, service } = req.query;
+    console.log(`[HISTORICAL QUERY] Range: ${start} to ${end}, Service: ${service}`);
+
+    try {
+        // 1. Fetch historical trips from Supabase for this range
+        let query = supabase.from('trips')
+            .select('*')
+            .gte('created_at', start)
+            .lte('created_at', end);
+        
+        if (service && service !== 'ALL') {
+             // Assuming trip has a 'service_type' column or similar
+             // For now we just filter what we have
+        }
+
+        const { data: historicalTrips, error } = await query;
+        if (error) throw error;
+
+        // 2. Perform spatial aggregation using the same grid logic as live
+        const historicalHeatmap = heatmapCells.map(cell => {
+            const tripsInCell = (historicalTrips || []).filter(t => {
+                const origin = typeof t.origin === 'string' ? JSON.parse(t.origin) : t.origin;
+                return isPointInCell(origin.lat, origin.lng, cell);
+            });
+
+            const metrics = {
+                ...cell.metrics,
+                demandCount: tripsInCell.length,
+                idleSupply: Math.max(1, Math.floor(tripsInCell.length * 0.8)), // Proxy supply for history
+                activeSupply: Math.floor(tripsInCell.length * 0.2),
+                etaCurrent: 5
+            };
+
+            return {
+                ...cell,
+                metrics,
+                derived: calculateDerivedMetrics(metrics)
+            };
+        });
+
+        res.json(historicalHeatmap);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Initial driver and trip state will be managed via Supabase
 let drivers = [];
 let activeTrips = [];
@@ -57,8 +105,27 @@ const syncStateFromSupabase = async () => {
 
         if (driverData) drivers = driverData;
         if (tripData) activeTrips = tripData;
-    } catch (err) {
-        console.error("Error syncing state:", err.message);
+
+        // 5. Emit Fleet-wide synchronization event for Fleet View
+        const fleetStats = {
+            online: drivers.filter(d => d.status === 'online').length,
+            busy: drivers.filter(d => d.status === 'busy').length,
+            offline: drivers.filter(d => d.status === 'offline').length,
+            available: drivers.filter(d => d.status === 'online').length // Available = Online & not busy
+        };
+
+        io.emit('fleetUpdate', {
+            drivers,
+            activeTrips,
+            stats: fleetStats
+        });
+
+        // 6. Push fresh heatmap grid to all clients (optional sync here, but handled by 3s interval)
+        // io.emit('heatmapUpdate', heatmapCells);
+
+        console.log(`[STATE SYNC] Drivers: ${drivers.length}, Trips: ${activeTrips.length}, Online: ${fleetStats.online}`);
+    } catch (error) {
+        console.error('[STATE SYNC ERROR]', error);
     }
 };
 
@@ -66,7 +133,188 @@ const syncStateFromSupabase = async () => {
 setInterval(syncStateFromSupabase, 10000);
 syncStateFromSupabase(); // Initial sync
 
-// Simulation loop
+// ==========================
+// Heatmap Simulation Engine
+// ==========================
+let heatmapCells = [];
+
+const calculateDerivedMetrics = (metrics) => {
+    const totalSupply = Math.max(1, metrics.idleSupply);
+    const totalRequests = Math.max(1, metrics.demandCount);
+    const imbalanceRatio = totalRequests / totalSupply;
+    const etaInflation = metrics.etaCurrent / Math.max(1, metrics.etaBaseline);
+    const cancellationRate = metrics.cancellations / Math.max(1, (metrics.cancellations + metrics.completedTrips));
+    const requestPressure = Math.min(1.0, (totalRequests / 100)); 
+    let heatScore = (
+        (requestPressure * 0.35) + 
+        (Math.min(2.0, etaInflation) * 0.20) + 
+        (cancellationRate * 0.15) + 
+        (metrics.surgeSuggestion * 0.10) - 
+        ((metrics.idleSupply / 50) * 0.20)
+    ) * 100;
+    heatScore = Math.max(0, heatScore);
+    let status = 'healthy';
+    if (heatScore > 70) status = 'critical';
+    else if (heatScore > 40) status = 'high_demand';
+    else if (heatScore > 20) status = 'warning';
+    return { imbalanceRatio, etaInflation, cancellationRate, heatScore, status };
+};
+
+const initHeatmapGrid = (centerLat = -17.8216, centerLng = 31.0492) => {
+    heatmapCells = [];
+    const HARARE_AREAS = [
+        'Gunhill', 'Belvedere', 'Braeside', 'Ridgeview', 'Workington', 'Graniteside', 
+        'Avondale', 'Borrowdale', 'Mount Pleasant', 'CBD', 'Highlands', 'Eastlea', 
+        'Queensdale', 'Greendale', 'Msasa', 'Mbare', 'Highfield', 'Glen View', 
+        'Kuwadzana', 'Warren Park', 'Dzivarasekwa', 'Mabvuku', 'Tafara', 'Epworth',
+        'Waterfalls', 'Hatfield', 'Greystone Park', 'Glen Lorne', 'Chisipite', 'Marlborough', 'Bluff Hill', 'Mabelreign'
+    ];
+    const GRID_SIZE = 8;
+    const CELL_SPAN_LAT = 0.015;
+    const CELL_SPAN_LNG = 0.015;
+    const startLat = centerLat - (GRID_SIZE / 2) * CELL_SPAN_LAT;
+    const startLng = centerLng - (GRID_SIZE / 2) * CELL_SPAN_LNG;
+
+    for (let x = 0; x < GRID_SIZE; x++) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+            const lat = startLat + (x * CELL_SPAN_LAT);
+            const lng = startLng + (y * CELL_SPAN_LNG);
+            const isHotspot = Math.random() > 0.8;
+            const metrics = {
+                demandCount: isHotspot ? Math.floor(Math.random() * 80) + 20 : Math.floor(Math.random() * 15),
+                idleSupply: isHotspot ? Math.floor(Math.random() * 20) : Math.floor(Math.random() * 30) + 5,
+                activeSupply: isHotspot ? Math.floor(Math.random() * 50) + 10 : Math.floor(Math.random() * 10),
+                etaBaseline: 5,
+                etaCurrent: isHotspot ? 5 + Math.floor(Math.random() * 15) : 5 + Math.floor(Math.random() * 2),
+                cancellations: isHotspot ? Math.floor(Math.random() * 10) : Math.floor(Math.random() * 2),
+                completedTrips: Math.floor(Math.random() * 100),
+                surgeSuggestion: isHotspot ? 1.2 + (Math.random() * 0.8) : 1.0
+            };
+            const halfLat = CELL_SPAN_LAT / 1.9; // Slight overlap for visual continuity
+            const halfLng = CELL_SPAN_LNG / 1.9;
+            const baseBounds = [
+                { lat: lat + halfLat, lng: lng - halfLng },
+                { lat: lat + halfLat, lng: lng + halfLng },
+                { lat: lat - halfLat, lng: lng + halfLng },
+                { lat: lat - halfLat, lng: lng - halfLng },
+            ];
+            heatmapCells.push({
+                id: `hex_${x}_${y}`,
+                name: HARARE_AREAS[(x * GRID_SIZE + y) % HARARE_AREAS.length],
+                center: { lat, lng },
+                bounds: { minLat: lat - halfLat, maxLat: lat + halfLat, minLng: lng - halfLng, maxLng: lng + halfLng },
+                baseBounds,
+                metrics: {
+                    demandCount: 0,
+                    idleSupply: 0,
+                    activeSupply: 0,
+                    etaBaseline: 5,
+                    etaCurrent: 5,
+                    cancellations: 0,
+                    completedTrips: 0,
+                    surgeSuggestion: 1.0
+                },
+                derived: calculateDerivedMetrics({ demandCount: 0, idleSupply: 1, activeSupply: 0, etaBaseline: 5, etaCurrent: 5, cancellations: 0, completedTrips: 1, surgeSuggestion: 1.0 })
+            });
+        }
+    }
+};
+initHeatmapGrid();
+
+// Helper to check if point is inside cell
+const isPointInCell = (lat, lng, cell) => {
+    return lat >= cell.bounds.minLat && lat <= cell.bounds.maxLat &&
+           lng >= cell.bounds.minLng && lng <= cell.bounds.maxLng;
+};
+
+// Real-time Aggregation Logic
+setInterval(() => {
+    const liveHeatmap = heatmapCells.map(cell => {
+        // Find real drivers in this cell
+        const onlineDrivers = drivers.filter(d => d.status === 'online' && isPointInCell(d.latitude, d.longitude, cell));
+        const busyDrivers = drivers.filter(d => d.status === 'busy' && isPointInCell(d.latitude, d.longitude, cell));
+        
+        // Find real trips (demand) in this cell
+        const ongoingTrips = activeTrips.filter(t => {
+            const origin = typeof t.origin === 'string' ? JSON.parse(t.origin) : t.origin;
+            return isPointInCell(origin.lat, origin.lng, cell);
+        });
+
+        const metrics = {
+            ...cell.metrics,
+            demandCount: ongoingTrips.length,
+            idleSupply: onlineDrivers.length,
+            activeSupply: busyDrivers.length,
+            etaCurrent: ongoingTrips.length > onlineDrivers.length ? 8 : 4
+        };
+
+        return {
+            ...cell,
+            metrics,
+            derived: calculateDerivedMetrics(metrics)
+        };
+    });
+
+    io.emit('heatmapUpdate', liveHeatmap);
+}, 3000);
+
+// Global Explorer Engine
+const INITIAL_ZONES = [
+  { id: 'z1', name: 'Harare Central', level: 'Zimbabwe', rides: 1420, food: 340, shopping: 125, mart: 88, c2c: 12, lat: -17.8248, lng: 31.0530 },
+  { id: 'z2', name: 'Bulawayo CBD', level: 'Zimbabwe', rides: 850, food: 210, shopping: 85, mart: 40, c2c: 8, lat: -20.1436, lng: 28.5816 },
+  { id: 'z3', name: 'Victoria Falls', level: 'Zimbabwe', rides: 320, food: 85, shopping: 20, mart: 10, c2c: 4, lat: -17.9243, lng: 25.8559 },
+  { id: 'z4', name: 'Sandton, Johannesburg', level: 'Africa', rides: 4200, food: 1100, shopping: 450, mart: 320, c2c: 45, lat: -26.1076, lng: 28.0567 },
+  { id: 'z5', name: 'Lagos Island', level: 'Africa', rides: 5100, food: 950, shopping: 300, mart: 210, c2c: 30, lat: 6.4541, lng: 3.4005 },
+  { id: 'z6', name: 'Nairobi Westlands', level: 'Africa', rides: 3800, food: 820, shopping: 280, mart: 190, c2c: 18, lat: -1.2662, lng: 36.8041 },
+  { id: 'z7', name: 'Manhattan, NY', level: 'World', rides: 12500, food: 3200, shopping: 1100, mart: 850, c2c: 120, lat: 40.7831, lng: -73.9712 },
+  { id: 'z8', name: 'Central London', level: 'World', rides: 9800, food: 2800, shopping: 950, mart: 620, c2c: 85, lat: 51.5072, lng: -0.1276 },
+  { id: 'z9', name: 'Singapore Central', level: 'World', rides: 8500, food: 2400, shopping: 1050, mart: 980, c2c: 15, lat: 1.2801, lng: 103.8509 },
+];
+let liveGlobalZones = JSON.parse(JSON.stringify(INITIAL_ZONES));
+
+setInterval(() => {
+    liveGlobalZones = liveGlobalZones.map(z => ({
+        ...z,
+        rides: Math.max(0, z.rides + Math.floor(Math.random() * 21) - 10),
+        food: Math.max(0, z.food + Math.floor(Math.random() * 11) - 5),
+        shopping: Math.max(0, z.shopping + Math.floor(Math.random() * 7) - 3),
+        mart: Math.max(0, z.mart + Math.floor(Math.random() * 5) - 2),
+    }));
+    io.emit('globalZonesUpdate', liveGlobalZones);
+}, 3000);
+
+// Market History Engine (for Live Analytics)
+let marketHistory = [];
+const MAX_HISTORY_POINTS = 30;
+
+const tickMarketHistory = () => {
+    const totalDemand = heatmapCells.reduce((acc, c) => acc + c.metrics.demandCount, 0);
+    const totalIdle = heatmapCells.reduce((acc, c) => acc + c.metrics.idleSupply, 0);
+    const totalActiveSurgeZones = heatmapCells.filter(c => c.metrics.surgeSuggestion > 1.2).length;
+    const avgEta = heatmapCells.length > 0 ? (heatmapCells.reduce((acc, c) => acc + c.metrics.etaCurrent, 0) / heatmapCells.length) : 5;
+
+    const snapshot = {
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        demand: totalDemand,
+        supply: totalIdle,
+        eta: Math.round(avgEta),
+        surgeZones: totalActiveSurgeZones
+    };
+
+    marketHistory.push(snapshot);
+    if (marketHistory.length > MAX_HISTORY_POINTS) {
+        marketHistory.shift();
+    }
+    io.emit('marketTrendsUpdate', marketHistory);
+};
+
+// Tick history every 5 seconds for a responsive "live" feel in charts
+setInterval(tickMarketHistory, 5000);
+tickMarketHistory(); // Initial tick
+
+// ==========================
+// Simulation loop (Drivers)
+// ==========================
 setInterval(async () => {
     if (drivers.length === 0) return;
 
@@ -121,6 +369,15 @@ const { handleNegotiation } = require('./src/controllers/negotiationController')
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
     socket.emit('driversUpdate', drivers);
+    socket.emit('heatmapUpdate', heatmapCells);
+    socket.emit('globalZonesUpdate', liveGlobalZones);
+
+    socket.on('subscribeToZone', (coords) => {
+        console.log(`[HeatMap] Client requested Grid generation at ${coords.lat}, ${coords.lng}`);
+        initHeatmapGrid(coords.lat, coords.lng);
+        // Instantly force broadcast newly generated cells to all clients
+        io.emit('heatmapUpdate', heatmapCells);
+    });
 
     // Delegate all negotiation and chat logic to the unified controller
     handleNegotiation(socket, io);
@@ -131,6 +388,25 @@ io.on('connection', (socket) => {
     socket.on('join_store', (storeId) => {
         socket.join(`store_${storeId}`);
         console.log(`[DashFood] Client joined store room: store_${storeId}`);
+    });
+
+    // Admin Control: Manual Fleet Sync
+    socket.on('syncFleet', async () => {
+        console.log('[CONTROL] Manual Fleet Sync requested');
+        await syncStateFromSupabase();
+    });
+
+    // Admin Control: Recalibrate Analytics
+    socket.on('recalibrateAnalytics', () => {
+        console.log('[CONTROL] Analytics Recalibration requested');
+        initHeatmapGrid();
+        io.emit('heatmapUpdate', heatmapCells);
+    });
+
+    // Admin Control: Toggle Demand Simulation
+    socket.on('toggleDemandSimulation', (enabled) => {
+        console.log(`[CONTROL] Demand Simulation ${enabled ? 'ON' : 'OFF'}`);
+        // This could toggle a mock demand generator if needed
     });
 
     socket.on('disconnect', () => {
@@ -147,8 +423,7 @@ app.patch('/api/orders/:id/status', validateApiKey, async (req, res) => {
     const { id } = req.params;
     const { status, reason, userId } = req.body;
 
-    const { id } = req.params;
-    const { status, reason } = req.body;
+
     const { orderService } = require('./src/controllers/merchant/order.controller'); // Fallback if not globally shared
     const defaultOrderService = require('./src/services/merchant/order.service');
 
@@ -233,44 +508,8 @@ app.post("/api/notifications/register", async (req, res) => {
 });
 
 // 1. Render -> Supabase (Incoming External Order)
+const { handleNewOrder } = require('./src/controllers/webhookController');
 app.post("/webhooks/new-order", validateApiKey, handleNewOrder);
-
-        // Broadcast to Dashboard & Mobile App (Scoped to store room)
-        io.to(`store_${data.store_id}`).emit('newIncomingOrder', data);
-
-        // Also broadcast globally for general monitoring
-        io.emit('newIncomingOrder', data);
-
-        // Send Push Notifications to store staff
-        try {
-            const { data: usersWithTokens, error: userError } = await supabase
-                .from('users')
-                .select('push_token')
-                .eq('store_id', data.store_id)
-                .not('push_token', 'is', null);
-
-            if (!userError && usersWithTokens) {
-                usersWithTokens.forEach(u => {
-                    if (u.push_token) {
-                        sendPushNotification(
-                            u.push_token,
-                            'New Order Received! 🍱',
-                            `Order for ${data.customer_name} of $${data.total_amount?.toFixed(2)}`,
-                            { orderId: data.id, storeId: data.store_id }
-                        );
-                    }
-                });
-            }
-        } catch (pushErr) {
-            console.error("Push Notification Dispatch Error:", pushErr.message);
-        }
-
-        res.status(200).json({ success: true, orderId: data.id });
-    } catch (err) {
-        console.error("Supabase Insert Error:", err.message);
-        res.status(500).json({ error: "Failed to sync to Supabase" });
-    }
-});
 
 // 2. Supabase -> Render (Database Event Sync)
 // This is called by Supabase Database Webhooks

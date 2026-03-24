@@ -14,6 +14,15 @@ import { OperationsModule } from './modules/operations/operations.module';
 import { RidersModule } from './modules/riders/riders.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
 import { FintechModule } from './modules/fintech/fintech.module';
+import { PricingModule } from './modules/pricing/pricing.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { KycModule } from './modules/kyc/kyc.module';
+import { InsuranceModule } from './modules/insurance/insurance.module';
+import { LoansModule } from './modules/loans/loans.module';
+import { SupportModule } from './modules/support/support.module';
+import { AuditLogModule } from './modules/audit-log/audit-log.module';
+import { PromoModule } from './modules/promo/promo.module';
+import { ConfigModule as AdminConfigModule } from './modules/config/config.module';
 
 @Module({
   imports: [
@@ -26,6 +35,15 @@ import { FintechModule } from './modules/fintech/fintech.module';
     RidersModule,
     AlertsModule,
     FintechModule,
+    PricingModule,
+    NotificationsModule,
+    KycModule,
+    InsuranceModule,
+    LoansModule,
+    SupportModule,
+    AuditLogModule,
+    PromoModule,
+    AdminConfigModule,
     EventBusModule,
     RealTimeModule
   ],

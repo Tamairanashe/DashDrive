@@ -1,0 +1,18 @@
+﻿src/api/client.ts(3,30): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+src/api/client.ts(3,42): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/client.ts(4,33): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+src/api/client.ts(4,45): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/client.ts(5,34): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+src/api/client.ts(5,46): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/client.ts(6,32): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+src/api/client.ts(6,44): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/client.ts(46,49): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+src/api/client.ts(46,61): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/mapsApi.ts(3,29): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+src/api/mapsApi.ts(3,41): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/components/BaseMap.tsx(4,29): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+src/components/BaseMap.tsx(4,41): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/features/heatmap/components/HeatMapFiltersSider.tsx(30,34): error TS2322: Type '{ children: Element[]; size: "large"; wrap: true; block: true; style: { width: string; justifyContent: "space-between"; }; }' is not assignable to type 'IntrinsicAttributes & SpaceProps & RefAttributes<HTMLDivElement>'.
+  Property 'block' does not exist on type 'IntrinsicAttributes & SpaceProps & RefAttributes<HTMLDivElement>'.
+src/features/heatmap/services/weatherService.ts(2,36): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', or 'nodenext'.
+src/features/heatmap/services/weatherService.ts(2,48): error TS2339: Property 'env' does not exist on type 'ImportMeta'.

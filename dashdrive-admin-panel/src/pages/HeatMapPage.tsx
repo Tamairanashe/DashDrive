@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     App, Layout, Card, Row, Col, Divider, 
-    Drawer, Tabs, Input, List, Avatar, Space, 
-    Typography, Tag, Statistic, Calendar, Form, 
-    Select, Slider, TimePicker, InputNumber, Button, Switch, Table, Flex 
+    Drawer, Input, List, Space, 
+    Typography, Tag, Flex 
 } from 'antd';
 import { 
-    HistoryOutlined, PlusOutlined, TeamOutlined, 
-    StarFilled, ThunderboltOutlined, GlobalOutlined, 
-    FieldTimeOutlined, SyncOutlined 
+    HistoryOutlined, 
+    GlobalOutlined 
 } from '@ant-design/icons';
 
 // Feature Components
@@ -17,135 +15,102 @@ import { HeatMapTopBar } from '../features/heatmap/components/HeatMapTopBar';
 import { HeatMapFiltersSider } from '../features/heatmap/components/HeatMapFiltersSider';
 import { HeatMapCanvas } from '../features/heatmap/components/HeatMapCanvas';
 import { ZoneInsightDrawer } from '../features/heatmap/components/ZoneInsightDrawer';
-import { AiRecommendationCard } from '../features/heatmap/components/AiRecommendationCard';
-import { TrafficControl } from '../features/heatmap/components/TrafficControl';
-import { GoogleMapsSidebar } from '../features/heatmap/components/GoogleMapsSidebar';
-import { TrafficBar } from '../features/heatmap/components/TrafficBar';
+import { HeatMapSummaryBar } from '../features/heatmap/components/HeatMapSummaryBar';
+import { MarketAnalyticsDrawer } from '../features/heatmap/components/MarketAnalyticsDrawer';
+import { GlobalZoneExplorerDrawer } from '../features/heatmap/components/GlobalZoneExplorerDrawer';
+import { ZoneTelemetryList } from '../features/heatmap/components/ZoneTelemetryList';
 
-import { WeatherPanel } from '../features/heatmap/components/WeatherPanel';
-import { useWeather } from '../features/heatmap/hooks/useWeather';
+import { useSocket } from '../context/SocketContext';
+import { useMarketGrid, GridCell } from '../features/heatmap/hooks/useMarketGrid';
+import { LOCATION_COORDS } from '../features/heatmap/mocks/heatmapMocks';
+import { MarketplaceAction } from '../features/heatmap/types';
 
-// Hooks & Types
-import { 
-    Zone, 
-    EventCluster, 
-    MarketplaceAction, 
-    PeakHourConfig 
-} from '../features/heatmap/types';
-import { 
-    LOCATION_DATA, 
-    LOCATION_COORDS, 
-    SERVICE_TYPES, 
-    MOCK_EVENT_CLUSTERS, 
-    getMockZonesForService 
-} from '../features/heatmap/mocks/heatmapMocks';
-
-const { Content } = Layout;
 const { Text, Title } = Typography;
-const { Option } = Select;
 
 export const HeatMapPage: React.FC = () => {
     const navigate = useNavigate();
-    const { message } = App.useApp();
+    const { message, notification } = App.useApp();
+    const { socket, isConnected } = useSocket();
 
     // --- State Management ---
     const [selectedCountry, setSelectedCountry] = useState('Zimbabwe');
     const [selectedRegion, setSelectedRegion] = useState('Mashonaland');
     const [selectedCity, setSelectedCity] = useState('Harare');
-    const [service, setService] = useState('ALL');
+    const [serviceA, setServiceA] = useState('ALL');
+    const [serviceB, setServiceB] = useState('FOOD');
+    const [timeframe, setTimeframe] = useState('LIVE');
     const [loading, setLoading] = useState(false);
+    const [dateRangeA, setDateRangeA] = useState<any>(null);
+    const [dateRangeB, setDateRangeB] = useState<any>(null);
+    const [isSyncLocked, setIsSyncLocked] = useState(true);
     
     const [mapCenter, setMapCenter] = useState<[number, number]>([-17.8248, 31.0530]);
+    const [enabledLayers, setEnabledLayers] = useState<string[]>(['imbalance', 'demand']);
+    const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'OVERVIEW' | 'COMPARE'>('OVERVIEW');
     
-    // Live Weather Integration
-    const { current, forecast, alerts, legacyWeather, loading: weatherLoading } = useWeather(mapCenter[0], mapCenter[1]);
+    // Primary Data Stream (Map A)
+    const { cells: cellsA, globalMetrics: metricsA } = useMarketGrid(mapCenter, serviceA, dateRangeA);
     
-    const [traffic] = useState({ level: 'Heavy Congestion', delay: '+12 min', impact: '+25%' });
-    const [marketTemperament] = useState({ label: 'Evening Rush', status: 'Peak' });
-    const [enabledLayers, setEnabledLayers] = useState<string[]>([]);
-    
-    const [zones, setZones] = useState<Zone[]>([]);
-    const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
+    // Comparison Data Stream (Map B) - Only active if viewMode is COMPARE
+    const { cells: cellsB, globalMetrics: metricsB } = useMarketGrid(
+        mapCenter, 
+        isSyncLocked ? serviceA : serviceB, 
+        isSyncLocked ? dateRangeA : dateRangeB
+    );
+
+    // Use cellsA for overview, cellsA/cellsB for compare
+    const cells = cellsA;
+    const globalMetrics = metricsA;
+
+    const [selectedCell, setSelectedCell] = useState<GridCell | null>(null);
     const [isDrilldownActive, setIsDrilldownActive] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    
-    // Traffic Control State
-    const [trafficMode, setTrafficMode] = useState<'live' | 'typical'>('live');
     const [mapTypeId, setMapTypeId] = useState('roadmap');
-    const [typicalDay, setTypicalDay] = useState<string>('1'); // Monday
-    const [typicalTime, setTypicalTime] = useState<string>('09:00');
 
     // Drawers & UI State
     const [isZoneListVisible, setIsZoneListVisible] = useState(false);
-    const [isCalendarVisible, setIsCalendarVisible] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     
-    // Tactical State
+    // Tactical State (Specific to selected cell)
     const [surgeValue, setSurgeValue] = useState<number>(1.5);
     const [incentiveAmount, setIncentiveAmount] = useState<number>(5.00);
     const [broadcastMode, setBroadcastMode] = useState<'INCENTIVE' | 'MANUAL'>('INCENTIVE');
     const [manualBroadcastMessage, setManualBroadcastMessage] = useState<string>('');
-    const [events, setEvents] = useState<EventCluster[]>(MOCK_EVENT_CLUSTERS);
-    const [commandLog, setCommandLog] = useState<MarketplaceAction[]>([
-        { time: '17:45', msg: 'Peak Hour Alert sent to CBD Terminal', type: 'INCENTIVE' },
-        { time: '17:10', msg: 'Weather warning: Heavy rain in Avondale', type: 'MANUAL' }
-    ]);
+    const [commandLog, setCommandLog] = useState<MarketplaceAction[]>([]);
 
-    const [peakHours, setPeakHours] = useState<PeakHourConfig[]>([
-        { id: 1, day: 'Monday', zone: 'GLOBAL', startTime: '08:00', endTime: '12:00', multiplier: '1.5x' },
-        { id: 6, day: 'Sunday', zone: 'z-2', startTime: '16:00', endTime: '20:00', multiplier: '2.0x' },
-    ]);
-    const [isAutoBroadcastEnabled, setIsAutoBroadcastEnabled] = useState(false);
-
-    // --- Side Effects ---
     useEffect(() => {
-        const loadMarketData = async () => {
-            setLoading(true);
-            await new Promise(res => setTimeout(res, 600));
-            const newZones = getMockZonesForService(service.toLowerCase());
-            setZones(newZones);
-            if (!selectedZone) setSelectedZone(newZones[0]);
-            setLoading(false);
-        };
-        loadMarketData();
-    }, [selectedCity, service]);
+        if (LOCATION_COORDS[selectedCity]) {
+            setMapCenter([LOCATION_COORDS[selectedCity].lat, LOCATION_COORDS[selectedCity].lng]);
+            setSelectedCell(null);
+            setIsDrilldownActive(false);
+        }
+    }, [selectedCity]);
 
-    // --- Handlers ---
     const handleRefresh = () => {
         setLoading(true);
         setTimeout(() => setLoading(false), 500);
     };
 
-    const handleMapSearch = (val: string) => {
-        const found = zones.find(z => z.name.toLowerCase().includes(val.toLowerCase()));
-        if (found) {
-            setMapCenter([found.lat, found.lng]);
-            setIsDrilldownActive(true);
-            setSelectedZone(found);
-            message.success(`Navigating to ${found.name}`);
-        } else {
-            message.warning('Location or zone not found in current sector.');
-        }
-    };
-
     const handleDeploySurge = () => {
-        if (!selectedZone) return;
+        if (!selectedCell) return;
         message.loading('Deploying Surge Multiplier...', 1.5).then(() => {
-            message.success(`Global Surge: ${surgeValue}x Applied to ${selectedZone.name}`);
+            message.success(`Surge Active: ${surgeValue}x Applied to Cell ${selectedCell.id.substring(0,6)}`);
+            setCommandLog([{ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), msg: `Surge deployed: ${surgeValue}x`, type: 'MANUAL' }, ...commandLog]);
         });
     };
 
     const handleBroadcast = () => {
-        if (!selectedZone) return;
+        if (!selectedCell) return;
         const msg = broadcastMode === 'INCENTIVE' 
-            ? `Peak Hour Alert: High demand in ${selectedZone.name}! $${incentiveAmount.toFixed(2)} active.`
+            ? `Capacity Constrained in Cell! Drivers get +$${incentiveAmount.toFixed(2)} active incentive.`
             : manualBroadcastMessage;
             
         if (!msg.trim()) return message.warning('Please enter a message.');
         
-        message.loading('Targeting nearby drivers...', 1.2).then(() => {
+        message.loading('Targeting active driver supply...', 1.2).then(() => {
             setCommandLog([{ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), msg, type: broadcastMode }, ...commandLog]);
-            message.success('Broadcast Sent Successfully');
+            message.success('Incentive Broadcast Successfully Syncing');
         });
     };
 
@@ -161,9 +126,14 @@ export const HeatMapPage: React.FC = () => {
         }
     };
 
+    // Calculate generic temperament label based on total network
+    let networkTemperament = { label: 'Balanced Market', status: 'Healthy' };
+    if (globalMetrics.avgEta > 12) networkTemperament = { label: 'Severe Capacity Degradation', status: 'Critical' };
+    else if (globalMetrics.totalDemand > globalMetrics.totalIdle * 2) networkTemperament = { label: 'Supply Constrained', status: 'Warning' };
+
     return (
-        <Layout style={{ background: 'transparent', paddingBottom: 24 }}>
-            <Card variant="borderless" className="shadow-sm" style={{ marginBottom: 24, borderRadius: 12 }}>
+        <Layout style={{ background: 'transparent', paddingBottom: 16, position: 'relative' }}>
+            <Card variant="borderless" className="shadow-sm" style={{ marginBottom: 16, borderRadius: 12 }}>
                 <HeatMapTopBar 
                     selectedCountry={selectedCountry}
                     setSelectedCountry={setSelectedCountry}
@@ -171,97 +141,98 @@ export const HeatMapPage: React.FC = () => {
                     setSelectedRegion={setSelectedRegion}
                     selectedCity={selectedCity}
                     setSelectedCity={setSelectedCity}
-                    service={service}
-                    setService={setService}
+                    service={serviceA}
+                    setService={(val) => {
+                        setServiceA(val);
+                        if (isSyncLocked) setServiceB(val);
+                    }}
+                    timeframe={timeframe}
+                    setTimeframe={setTimeframe}
                     loading={loading}
                     handleRefresh={handleRefresh}
                     setIsZoneListVisible={setIsZoneListVisible}
+                    isConnected={isConnected} 
+                    onAnalyticsClick={() => setIsAnalyticsOpen(true)}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    dateRange={dateRangeA}
+                    setDateRange={(val) => {
+                        setDateRangeA(val);
+                        if (isSyncLocked) setDateRangeB(val);
+                    }}
+                    isSyncLocked={isSyncLocked}
+                    setIsSyncLocked={setIsSyncLocked}
+                    serviceB={serviceB}
+                    setServiceB={setServiceB}
+                    dateRangeB={dateRangeB}
+                    setDateRangeB={setDateRangeB}
                 />
-                <Divider style={{ margin: '16px 0' }} />
+                <Divider style={{ margin: '12px 0' }} />
+                <HeatMapSummaryBar 
+                    summary={{
+                        activeRequests: globalMetrics.totalDemand,
+                        availableDrivers: globalMetrics.totalIdle,
+                        demandSupplyRatio: parseFloat((globalMetrics.totalDemand / Math.max(1, globalMetrics.totalIdle)).toFixed(2)),
+                        activeSurgeZones: globalMetrics.totalActiveSurgeZones,
+                        avgPickupEta: `${Math.round(globalMetrics.avgEta)} min`,
+                        completionRate: parseFloat((100 - globalMetrics.networkCancelRate).toFixed(1))
+                    }} 
+                    loading={loading} 
+                />
+                <Divider style={{ margin: '12px 0' }} />
                 <HeatMapFiltersSider 
-                    weather={legacyWeather}
-                    traffic={traffic}
-                    marketTemperament={marketTemperament}
+                    marketTemperament={networkTemperament}
                     enabledLayers={enabledLayers}
                     setEnabledLayers={setEnabledLayers}
                 />
             </Card>
 
-            <Row gutter={[24, 24]}>
-                <Col xs={24} lg={16}>
-                    <Card 
-                        id="heatmap-container"
-                        variant="borderless" 
-                        className="shadow-sm" 
-                        style={{ height: isFullscreen ? '100vh' : 'auto', border: isFullscreen ? 'none' : undefined, borderRadius: isFullscreen ? 0 : 12 }}
-                        styles={{ 
-                            body: { 
-                                padding: 0, 
-                                height: isFullscreen ? '100vh' : 'calc(100vh - 180px)', 
-                                position: 'relative', 
-                                borderRadius: isFullscreen ? 0 : 12,
-                                transition: 'all 0.3s ease'
-                            } 
-                        }}
-                    >
-                        <HeatMapCanvas 
-                            selectedCity={selectedCity}
-                            mapCenter={mapCenter}
-                            isDrilldownActive={isDrilldownActive}
-                            enabledLayers={enabledLayers}
-                            zones={zones}
-                            service={service}
-                            events={events}
-                            setSelectedZone={setSelectedZone}
-                            setMapCenter={setMapCenter}
-                            setIsDrilldownActive={setIsDrilldownActive}
-                            handleMapSearch={handleMapSearch}
-                            handleDateChange={() => {}}
-                            setIsCalendarVisible={setIsCalendarVisible}
-                            isFullscreen={isFullscreen}
-                            toggleFullscreen={toggleFullscreen}
-                            trafficMode={trafficMode}
-                            mapId="330dd4d2eb9c8b55d0e41205"
-                            mapTypeId={mapTypeId}
-                        />
-                        <GoogleMapsSidebar 
-                            enabledLayers={enabledLayers}
-                            setEnabledLayers={setEnabledLayers}
-                            mapTypeId={mapTypeId}
-                            setMapTypeId={setMapTypeId}
-                            onMenuClick={() => setIsZoneListVisible(true)}
-                            isMinimized={!isFullscreen}
-                        />
+            {viewMode === 'OVERVIEW' ? (
+                <Row gutter={[24, 24]}>
+                    <Col span={24}>
+                        <Card 
+                            id="heatmap-container"
+                            variant="borderless" 
+                            className="shadow-sm" 
+                            style={{ height: isFullscreen ? '100vh' : 'calc(100vh - 420px)', minHeight: 400, border: isFullscreen ? 'none' : undefined, borderRadius: 12 }}
+                            styles={{ 
+                                body: { 
+                                    padding: 0, 
+                                    height: '100%', 
+                                    position: 'relative', 
+                                    borderRadius: isFullscreen ? 0 : 12,
+                                    transition: 'all 0.3s ease'
+                                } 
+                            }}
+                        >
+                            <HeatMapCanvas 
+                                mapCenter={mapCenter}
+                                enabledLayers={enabledLayers}
+                                cells={cells}
+                                selectedCell={selectedCell}
+                                setSelectedCell={(cell) => {
+                                    setSelectedCell(cell);
+                                    if (cell) {
+                                        setIsDrilldownActive(true);
+                                        setSurgeValue(parseFloat(cell.metrics.surgeSuggestion.toFixed(1)));
+                                    } else {
+                                        setIsDrilldownActive(false);
+                                    }
+                                }}
+                                setMapCenter={setMapCenter}
+                                isFullscreen={isFullscreen}
+                                toggleFullscreen={toggleFullscreen}
+                                mapId="330dd4d2eb9c8b55d0e41205"
+                                mapTypeId={mapTypeId}
+                            />
+                        </Card>
+                    </Col>
 
-
-                        <TrafficBar 
-                            mode={trafficMode}
-                            setMode={setTrafficMode}
-                            day={typicalDay}
-                            setDay={setTypicalDay}
-                            time={typicalTime}
-                            setTime={setTypicalTime}
-                            isVisible={enabledLayers.includes('traffic')}
-                        />
-                        <WeatherPanel 
-                            current={current}
-                            forecast={forecast}
-                            alerts={alerts}
-                            loading={weatherLoading}
-                            isVisible={enabledLayers.includes('rain')}
-                        />
-                    </Card>
-                </Col>
-
-                <Col xs={24} lg={8}>
-                    {selectedZone ? (
-                        <Flex vertical gap={16}>
+                    {selectedCell && (
+                        <Col span={24}>
                             <ZoneInsightDrawer 
-                                selectedZone={selectedZone}
-                                service={service}
-                                events={events}
-                                traffic={traffic}
-                                weather={legacyWeather}
+                                selectedCell={selectedCell}
+                                service={serviceA}
                                 surgeValue={surgeValue}
                                 setSurgeValue={setSurgeValue}
                                 incentiveAmount={incentiveAmount}
@@ -273,113 +244,99 @@ export const HeatMapPage: React.FC = () => {
                                 commandLog={commandLog}
                                 handleDeploySurge={handleDeploySurge}
                                 handleBroadcast={handleBroadcast}
-                                onResetSurge={() => setSurgeValue(selectedZone.surge)}
+                                onResetSurge={() => setSurgeValue(parseFloat(selectedCell?.metrics?.surgeSuggestion?.toFixed(1) || '1.0'))}
                                 navigate={navigate}
                             />
-                            <AiRecommendationCard 
-                                selectedZone={selectedZone}
-                                traffic={traffic}
-                                weather={legacyWeather}
-                                activeEvent={events.find(e => e.isGlobal || Math.abs(e.lat - selectedZone.lat) < 0.05)}
-                            />
-                        </Flex>
-                    ) : (
-                        <Card variant="borderless" className="shadow-sm" style={{ borderRadius: 12, textAlign: 'center', padding: '40px 0' }}>
-                           <GlobalOutlined style={{ fontSize: 40, color: '#bfdbfe', marginBottom: 16 }} />
-                           <Title level={5}>Target a zone for AI insights</Title>
-                           <Text type="secondary">Real-time marketplace data will appear here.</Text>
-                        </Card>
+                        </Col>
                     )}
-                </Col>
-            </Row>
+                </Row>
+            ) : (
+                <Row gutter={[20, 20]} style={{ height: 'calc(100vh - 400px)', minHeight: 450 }}>
+                    {/* Persistent Sidebar (Like Screenshot) */}
+                    <Col span={6} style={{ height: '100%', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 12, overflow: 'hidden' }}>
+                        <Title level={5} style={{ marginBottom: 16, paddingLeft: 8 }}>Cross-Service Telemetry</Title>
+                        <div style={{ height: 'calc(100% - 40px)', overflowY: 'auto' }}>
+                             <ZoneTelemetryList onSelectZone={(id, name, lat, lng) => {
+                                 setMapCenter([lat, lng]);
+                                 if (socket) socket.emit('subscribeToZone', { lat, lng });
+                             }} />
+                        </div>
+                    </Col>
+                    
+                    {/* Split View Maps */}
+                    <Col span={18} style={{ height: '100%' }}>
+                        <Row gutter={[16, 16]} style={{ height: '100%' }}>
+                            <Col span={12} style={{ height: '100%' }}>
+                                <Card 
+                                    title={<Text strong>Market A: Ride Hailing</Text>} 
+                                    styles={{ body: { padding: 0, height: 'calc(100% - 48px)' } }} 
+                                    style={{ height: '100%', borderRadius: 16, overflow: 'hidden', border: '2px solid #3b82f6' }}
+                                >
+                                    <HeatMapCanvas 
+                                        mapCenter={mapCenter}
+                                        enabledLayers={enabledLayers}
+                                        cells={cellsA}
+                                        selectedCell={selectedCell}
+                                        setSelectedCell={setSelectedCell}
+                                        setMapCenter={setMapCenter}
+                                        isFullscreen={isFullscreen}
+                                        toggleFullscreen={toggleFullscreen}
+                                        mapId="split_a"
+                                        mapTypeId={mapTypeId}
+                                    />
+                                </Card>
+                            </Col>
+                            <Col span={12} style={{ height: '100%' }}>
+                                <Card 
+                                    title={<Text strong>Market B: Food & Parcels</Text>} 
+                                    styles={{ body: { padding: 0, height: 'calc(100% - 48px)' } }} 
+                                    style={{ height: '100%', borderRadius: 16, overflow: 'hidden', border: '2px solid #ef4444' }}
+                                >
+                                    <HeatMapCanvas 
+                                        mapCenter={mapCenter}
+                                        enabledLayers={enabledLayers}
+                                        cells={cellsB}
+                                        selectedCell={selectedCell}
+                                        setSelectedCell={setSelectedCell}
+                                        setMapCenter={setMapCenter}
+                                        isFullscreen={isFullscreen}
+                                        toggleFullscreen={toggleFullscreen}
+                                        mapId="split_b"
+                                        mapTypeId={mapTypeId}
+                                    />
+                                </Card>
+                            </Col>
+                        </Row>
+                    </Col>
+                </Row>
+            )}
 
-            {/* Zone Market Explorer Drawer */}
-            <Drawer
-                title={<Space><HistoryOutlined /> Market Explorer</Space>}
-                placement="left"
+            <GlobalZoneExplorerDrawer
+                visible={isZoneListVisible}
                 onClose={() => setIsZoneListVisible(false)}
-                open={isZoneListVisible}
-                styles={{ body: { padding: 0 } }}
-                getContainer={() => document.getElementById('heatmap-container') || document.body}
-            >
+                onSelectZone={(zoneId, zoneName, lat, lng) => {
+                    message.loading(`Centering tracking systems on ${zoneName}...`, 1.0).then(() => {
+                        setMapCenter([lat, lng]);
+                        if (socket) {
+                            socket.emit('subscribeToZone', { lat, lng });
+                        }
+                        message.success(`Network metrics bound to ${zoneName}`);
+                    });
+                    setIsZoneListVisible(false);
+                }}
+            />
 
-                <div style={{ padding: 20 }}>
-                    <Input.Search 
-                        placeholder="Search zones..." 
-                        style={{ marginBottom: 20 }} 
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                    />
-                    <List
-                        dataSource={zones.filter(z => z.name.toLowerCase().includes(searchQuery.toLowerCase()))}
-                        renderItem={item => (
-                            <List.Item
-                                onClick={() => { setSelectedZone(item); setMapCenter([item.lat, item.lng]); setIsZoneListVisible(false); }}
-                                style={{ cursor: 'pointer', padding: '12px', borderRadius: 8, marginBottom: 8, border: '1px solid #f1f5f9' }}
-                            >
-                                <List.Item.Meta title={item.name} description={`${item.drivers} Drivers • Surge: ${item.surge}x`} />
-                                <Tag color={item.demand === 'critical' ? 'purple' : item.demand === 'high' ? 'red' : 'green'}>{item.demand}</Tag>
-                            </List.Item>
-                        )}
-                    />
-                </div>
-            </Drawer>
-
-            {/* Operations Calendar Drawer */}
-            <Drawer
-                title="Market Operations Calendar"
-                placement="right"
-                width={500}
-                onClose={() => setIsCalendarVisible(false)}
-                open={isCalendarVisible}
-                getContainer={() => document.getElementById('heatmap-container') || document.body}
-            >
-
-                <Tabs items={[
-                    {
-                        key: '1',
-                        label: 'Scheduled Events',
-                        children: (
-                            <div style={{ padding: 16 }}>
-                                <Calendar fullscreen={false} style={{ marginBottom: 24, border: '1px solid #f1f5f9', borderRadius: 12, padding: 8 }} />
-                                <Form layout="vertical" onFinish={(v) => {
-                                    setEvents([...events, { id: `ev-${Date.now()}`, name: v.name, type: 'Manual', impact: '+20%', lat: -17.82, lng: 31.05, attendees: '10k' }]);
-                                    message.success('Event scheduled');
-                                }}>
-                                    <Form.Item name="name" label="Event Name"><Input placeholder="Starlight Concert" /></Form.Item>
-                                    <Button type="primary" block htmlType="submit">Schedule Intelligence</Button>
-                                </Form>
-                                <Divider />
-                                <List dataSource={events} renderItem={e => <List.Item><List.Item.Meta title={e.name} description={e.impact} /></List.Item>} />
-                            </div>
-                        )
-                    },
-                    {
-                        key: '2',
-                        label: 'Peak Config',
-                        children: (
-                            <div style={{ padding: 16 }}>
-                                <div style={{ background: '#f0fdf4', padding: 12, borderRadius: 8, marginBottom: 16 }}>
-                                    <Row justify="space-between" align="middle">
-                                        <Text strong>AI Auto-Broadcast</Text>
-                                        <Switch checked={isAutoBroadcastEnabled} onChange={setIsAutoBroadcastEnabled} />
-                                    </Row>
-                                </div>
-                                <Table 
-                                    dataSource={peakHours} 
-                                    size="small" 
-                                    pagination={false}
-                                    columns={[
-                                        { title: 'Day', dataIndex: 'day' },
-                                        { title: 'Window', render: (_, r) => `${r.startTime}-${r.endTime}` },
-                                        { title: 'Multiplier', dataIndex: 'multiplier' }
-                                    ]}
-                                />
-                            </div>
-                        )
-                    }
-                ]} />
-            </Drawer>
+            <MarketAnalyticsDrawer 
+                open={isAnalyticsOpen} 
+                onClose={() => setIsAnalyticsOpen(false)} 
+                cells={cells}
+                globalMetrics={globalMetrics}
+                onSelectCell={(cell) => {
+                    setSelectedCell(cell);
+                    setIsDrilldownActive(true);
+                    setMapCenter([cell.center.lat, cell.center.lng]);
+                }}
+            />
 
             <style>{`
                 .pulse-marker { animation: pulse 2s infinite; }

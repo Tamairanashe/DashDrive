@@ -171,4 +171,109 @@ export class RoadsInsightsExportService {
 
     return { success: true };
   }
+
+  async getMapData(dto: any, user: AuthUser) {
+    this.logger.log(`Fetching map data for user ${user.id}`);
+    
+    // In a real app, this would query a database or external API
+    // For now, we return mock data that matches the frontend type expectation
+    return {
+      mapData: {
+        center: { lat: -17.8292, lng: 31.0522 },
+        zoom: 13,
+        roads: [
+          {
+            id: 'road_1',
+            name: 'Samora Machel Ave',
+            classification: 'Primary',
+            path: [
+              { lat: -17.828, lng: 31.04 },
+              { lat: -17.829, lng: 31.05 },
+              { lat: -17.83, lng: 31.06 },
+            ],
+            congestionLevel: 'high',
+            reliabilityScore: 45,
+            averageSpeedKph: 22,
+            postedSpeedLimitKph: 60,
+          },
+          {
+            id: 'road_2',
+            name: 'Julius Nyerere Way',
+            classification: 'Primary',
+            path: [
+              { lat: -17.825, lng: 31.045 },
+              { lat: -17.835, lng: 31.045 },
+            ],
+            congestionLevel: 'medium',
+            reliabilityScore: 72,
+            averageSpeedKph: 35,
+            postedSpeedLimitKph: 60,
+          },
+        ],
+        corridors: [
+          {
+            id: 'corr_1',
+            name: 'West-East Corridor',
+            path: [
+              { lat: -17.82, lng: 31.02 },
+              { lat: -17.84, lng: 31.08 },
+            ],
+            congestionLevel: 'medium',
+            reliabilityScore: 68,
+          },
+        ],
+        incidents: [
+          {
+            id: 'inc_1',
+            title: 'Stalled Vehicle',
+            type: 'Breakdown',
+            severity: 'medium',
+            lat: -17.8295,
+            lng: 31.051,
+            status: 'Active',
+            startedAt: new Date().toISOString(),
+          },
+          {
+            id: 'inc_2',
+            title: 'Road Works',
+            type: 'Construction',
+            severity: 'high',
+            lat: -17.832,
+            lng: 31.055,
+            status: 'Active',
+            startedAt: new Date().toISOString(),
+          },
+        ],
+        routes: [
+          {
+            id: 'route_1',
+            name: 'Standard Route',
+            path: [
+              { lat: -17.81, lng: 31.03 },
+              { lat: -17.85, lng: 31.07 },
+            ],
+            etaMinutes: 24,
+            distanceKm: 8.5,
+            reliabilityScore: 82,
+            isPrimary: true,
+          },
+        ],
+        riskZones: [
+          {
+            id: 'risk_1',
+            name: 'High Pedestrian Volume',
+            polygon: [
+              { lat: -17.827, lng: 31.048 },
+              { lat: -17.827, lng: 31.052 },
+              { lat: -17.831, lng: 31.052 },
+              { lat: -17.831, lng: 31.048 },
+            ],
+            riskScore: 75,
+            severity: 'high',
+          },
+        ],
+        vehicleTraces: [],
+      },
+    };
+  }
 }

@@ -58,9 +58,9 @@ const ExportReportModal: React.FC<ExportReportModalProps> = ({
           </Button>
         </Space>
       }
-      destroyOnClose
+      destroyOnHidden
     >
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <Text type="secondary">
           Export the current roads intelligence view with selected analytics, tables, and map context.
         </Text>

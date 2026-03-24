@@ -22,6 +22,19 @@ export interface Zone {
     surge: number;
     prevOrders?: number;
     prevDemand?: string;
+    imbalanceScore?: number; // -100 (oversupply) to 100 (shortage)
+    cancellationRate?: number;
+    fulfillmentRisk?: 'low' | 'medium' | 'high';
+    avgEta?: string;
+}
+
+export interface MarketSummary {
+    activeRequests: number;
+    availableDrivers: number;
+    demandSupplyRatio: number;
+    activeSurgeZones: number;
+    avgPickupEta: string;
+    completionRate: number;
 }
 
 export interface WeatherCluster {

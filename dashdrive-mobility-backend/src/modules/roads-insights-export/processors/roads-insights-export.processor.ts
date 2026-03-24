@@ -149,7 +149,7 @@ export class RoadsInsightsExportProcessor extends WorkerHost {
       case RoadsExportFormat.PNG: return this.pngRenderer.render(context, dto);
       case RoadsExportFormat.PDF:
       default:
-        return this.pdfRenderer.render(context, dto);
+        return this.pdfRenderer.render(context);
     }
   }
 }

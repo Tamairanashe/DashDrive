@@ -35,10 +35,10 @@ import {
   LineChart, Line, Cell
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import { analyticsApi } from '../api/analyticsApi';
 import { BaseMap } from '../components/BaseMap';
 import { MarkerF, InfoWindowF, OverlayViewF, OverlayView } from '@react-google-maps/api';
 import carMarker from '../assets/car-marker-topview.png';
+import { useSocket } from '../context/SocketContext';
 
 const { Title, Text } = Typography;
 
@@ -71,10 +71,59 @@ export const DashboardPage: React.FC = () => {
   const [timeRange, setTimeRange] = useState('Today');
   const [stats, setStats] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const { socket, isConnected } = useSocket();
 
   useEffect(() => {
     fetchData();
   }, [selectedCity, timeRange]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('platform_event', (data: any) => {
+        const { event, payload, timestamp } = data;
+        
+        if (event === 'admin.entity.diff_updated') {
+            handleLiveUpdate(payload);
+        }
+    });
+
+    return () => {
+        socket.off('platform_event');
+    };
+  }, [socket]);
+
+  const handleLiveUpdate = (payload: any) => {
+    const { entityType, entityId, action, diff } = payload;
+
+    notification.info({
+        message: 'Live Update',
+        description: `New ${action.toLowerCase()} on ${entityType}: ${entityId}`,
+        placement: 'bottomRight',
+        duration: 3,
+    });
+
+    if (entityType === 'ORDER') {
+        // Update stats
+        setStats(prev => prev.map(s => {
+            if (s.title === 'Active Orders') {
+                return { ...s, value: (parseInt(s.value) + 1).toString(), trend: '+1' };
+            }
+            return s;
+        }));
+
+        // Add to log
+        const newLogEntry = {
+            id: entityId,
+            service: 'Ride', // Simplified for demo
+            amount: '$0.00',
+            status: diff.status || 'Updated',
+            city: selectedCity,
+            time: 'Just now'
+        };
+        setRecentActivity(prev => [newLogEntry, ...prev.slice(0, 9)]);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -206,6 +255,7 @@ export const DashboardPage: React.FC = () => {
                 <Select.Option value="30D">Last 30 Days</Select.Option>
               </Select>
               <Button icon={<SyncOutlined spin={loading} />} onClick={fetchData} />
+              <Badge status={isConnected ? 'success' : 'error'} text={isConnected ? 'Live' : 'Offline'} />
               <Button icon={<HistoryOutlined />} onClick={() => navigate('/enterprise/audit-logs')}>View Global Logs</Button>
             </Space>
           </Col>

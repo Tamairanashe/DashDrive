@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { MarkerF, InfoWindowF, PolylineF, OverlayViewF, OverlayView, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
 import { BaseMap, useBaseMap } from '../components/BaseMap';
-import { useAdminSocketStore } from '../lib/adminSocketStore';
+import { useSocket } from '../context/SocketContext';
 import { useMarkerClusterer, ClusterableMarker } from '../hooks/useMarkerClusterer';
 import carMarker from '../assets/car-marker-topview.png';
 import carMarkerHandicap from '../assets/car-marker-WAV.png';
@@ -172,7 +172,7 @@ const MOCK_TRIPS = [
 ];
 
 export const LiveTrackingPage: React.FC = () => {
-    const { socket, isConnected } = useAdminSocketStore();
+    const { socket, isConnected } = useSocket();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTrip, setActiveTrip] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
@@ -380,8 +380,7 @@ export const LiveTrackingPage: React.FC = () => {
                                                 options={{
                                                     strokeColor: '#2ECC71',
                                                     strokeWeight: 6,
-                                                    strokeOpacity: 0.8,
-                                                    lineJoin: 'round'
+                                                    strokeOpacity: 0.8
                                                 }}
                                             />
                                         )}

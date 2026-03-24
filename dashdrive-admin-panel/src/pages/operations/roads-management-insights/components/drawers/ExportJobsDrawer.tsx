@@ -50,7 +50,7 @@ export const ExportJobsDrawer: React.FC<ExportJobsDrawerProps> = ({
       placement="right"
       onClose={onClose}
       open={visible}
-      width={400}
+      size={400 as any}
     >
       <List
         dataSource={jobs}
