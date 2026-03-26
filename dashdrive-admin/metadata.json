@@ -1,0 +1,5 @@
+{
+  "name": "DashDrive Admin",
+  "description": "Enterprise admin panel for DashDrive super app",
+  "requestFramePermissions": []
+}

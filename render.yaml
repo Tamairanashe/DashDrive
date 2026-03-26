@@ -153,9 +153,9 @@ services:
 
   # 6. Frontends (Static Sites)
   - type: web
-    name: dashdrive-admin-panel
+    name: dashdrive-admin
     runtime: static
-    rootDir: dashdrive-admin-panel
+    rootDir: dashdrive-admin
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:

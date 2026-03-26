@@ -97,33 +97,86 @@ app.get('/api/market/historical', async (req, res) => {
 let drivers = [];
 let activeTrips = [];
 
-// Helper to fetch state from Supabase
+// Helper to fetch and enrich state from Supabase
 const syncStateFromSupabase = async () => {
     try {
         const { data: driverData } = await supabase.from('drivers').select('*');
-        const { data: tripData } = await supabase.from('trips').select('*').in('status', ['negotiating', 'matched']);
+        const { data: tripData } = await supabase.from('trips').select('*'); // Fetch all for historical calc
+        const { data: userData } = await supabase.from('users').select('*').limit(20);
 
-        if (driverData) drivers = driverData;
-        if (tripData) activeTrips = tripData;
+        if (!driverData) return;
+
+        // Optimized Historical Aggregation
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        const enrichedDrivers = driverData.map(d => {
+            const driverTrips = (tripData || []).filter(t => t.driver_id === d.id);
+            const completedTrips = driverTrips.filter(t => t.status === 'completed');
+            const cancelledTrips = driverTrips.filter(t => t.status === 'cancelled');
+            
+            const tripsToday = completedTrips.filter(t => new Date(t.created_at) >= today).length;
+            const earningsToday = completedTrips
+                .filter(t => new Date(t.created_at) >= today)
+                .reduce((sum, t) => sum + Number(t.final_price || 0), 0);
+
+            const successRate = driverTrips.length > 0 
+                ? Math.round((completedTrips.length / driverTrips.length) * 100) 
+                : 100;
+            
+            const cancellationRate = driverTrips.length > 0
+                ? Math.round((cancelledTrips.length / driverTrips.length) * 100)
+                : 0;
+
+            return {
+                ...d,
+                tripsToday,
+                earningsPerDay: earningsToday,
+                successRate,
+                cancellationRate,
+                // Wallet proxy (in prod this would be a separate table)
+                wallet: {
+                    withdrawable: earningsToday * 0.8,
+                    pending: earningsToday * 0.2,
+                    withdrawn: 1200.50, // mock legacy
+                    total: 1200.50 + earningsToday
+                }
+            };
+        });
+
+        drivers = enrichedDrivers;
+        activeTrips = (tripData || []).filter(t => ['negotiating', 'matched'].includes(t.status));
+
+        // format demand points for the map (derived from active trips)
+        const demandPoints = activeTrips.map(t => {
+            const origin = typeof t.origin === 'string' ? JSON.parse(t.origin) : t.origin;
+            return {
+                id: t.id,
+                lat: origin.lat,
+                lng: origin.lng,
+                radius: 1000,
+                intensity: 0.5,
+                label: 'Active Request'
+            };
+        });
 
         // 5. Emit Fleet-wide synchronization event for Fleet View
         const fleetStats = {
             online: drivers.filter(d => d.status === 'online').length,
             busy: drivers.filter(d => d.status === 'busy').length,
             offline: drivers.filter(d => d.status === 'offline').length,
-            available: drivers.filter(d => d.status === 'online').length // Available = Online & not busy
+            available: drivers.filter(d => d.status === 'online').length
         };
 
         io.emit('fleetUpdate', {
             drivers,
             activeTrips,
+            demandPoints,
+            customers: userData || [],
             stats: fleetStats
         });
 
-        // 6. Push fresh heatmap grid to all clients (optional sync here, but handled by 3s interval)
-        // io.emit('heatmapUpdate', heatmapCells);
-
-        console.log(`[STATE SYNC] Drivers: ${drivers.length}, Trips: ${activeTrips.length}, Online: ${fleetStats.online}`);
+        console.log(`[STATE SYNC] Drivers: ${enrichedDrivers.length}, Trips: ${activeTrips.length}, Online: ${fleetStats.online}`);
     } catch (error) {
         console.error('[STATE SYNC ERROR]', error);
     }

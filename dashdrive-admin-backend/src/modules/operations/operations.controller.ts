@@ -1,35 +1,39 @@
-import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
-import { OperationsService } from './operations.service';
-import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
-import { RolesGuard } from '../../auth/roles.guard';
-import { Roles } from '../../auth/roles.decorator';
-import { AdminRole } from '@prisma/client';
+// modules/operations/operations.controller.ts
+import { Body, Controller, Post, UseGuards } from "@nestjs/common";
+import { OperationsService } from "./operations.service";
+import { ApplySurgeDto } from "./dto/apply-surge.dto";
+import { NotifyFleetDto } from "./dto/notify-fleet.dto";
+import { WidenRadiusDto } from "./dto/widen-radius.dto";
+import { BroadcastIncentiveDto } from "./dto/broadcast-incentive.dto";
+import { HeatMapFilterDto } from "./dto/heatmap-filter.dto";
+import { Get, Query } from "@nestjs/common";
 
-@Controller('admin/operations')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller("api/admin/operations")
 export class OperationsController {
   constructor(private readonly operationsService: OperationsService) {}
 
-  @Get('live-orders')
-  async getLiveOrders() {
-    return this.operationsService.getLiveOrders();
+  @Post("surge/apply")
+  async applySurge(@Body() dto: ApplySurgeDto) {
+    return this.operationsService.applySurge(dto);
   }
 
-  @Patch('reassign/:orderId')
-  @Roles(AdminRole.SUPER_ADMIN, AdminRole.FLEET_MANAGER)
-  async reassignRider(
-    @Param('orderId') orderId: string,
-    @Body('riderId') riderId: string,
-  ) {
-    return this.operationsService.reassignRider(orderId, riderId);
+  @Post("notifications/fleet")
+  async notifyFleet(@Body() dto: NotifyFleetDto) {
+    return this.operationsService.notifyFleet(dto);
   }
 
-  @Patch('cancel/:orderId')
-  @Roles(AdminRole.SUPER_ADMIN, AdminRole.SUPPORT_AGENT)
-  async cancelOrder(
-    @Param('orderId') orderId: string,
-    @Body('reason') reason: string,
-  ) {
-    return this.operationsService.cancelOrder(orderId, reason);
+  @Post("radius/widen")
+  async applyWidenRadius(@Body() dto: WidenRadiusDto) {
+    return this.operationsService.widenRadius(dto);
+  }
+
+  @Post("incentives/broadcast")
+  async broadcastIncentive(@Body() dto: BroadcastIncentiveDto) {
+    return this.operationsService.broadcastIncentive(dto);
+  }
+
+  @Get("heatmap")
+  async getHeatMapData(@Query() filters: HeatMapFilterDto) {
+    return this.operationsService.getHeatMapData(filters);
   }
 }

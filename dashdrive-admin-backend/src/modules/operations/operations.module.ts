@@ -1,12 +1,11 @@
-import { Module } from '@nestjs/common';
-import { OperationsService } from './operations.service';
-import { OperationsController } from './operations.controller';
-import { RealTimeModule } from '../real-time/real-time.module';
+// modules/operations/operations.module.ts
+import { Module } from "@nestjs/common";
+import { OperationsController } from "./operations.controller";
+import { OperationsService } from "./operations.service";
 
 @Module({
-  imports: [RealTimeModule],
-  providers: [OperationsService],
   controllers: [OperationsController],
+  providers: [OperationsService],
   exports: [OperationsService],
 })
 export class OperationsModule {}

@@ -7,7 +7,7 @@ A comprehensive mobility and logistics platform built for production, featuring 
 - **`/dashdrive-mobility-backend`**: NestJS + Prisma + PostgreSQL (The core engine).
 - **`/mobile-user`**: React Native (Expo) - Passenger experience.
 - **`/mobile-host`**: React Native (Expo) - Driver Supply Hub & Execution.
-- **`/dashdrive-admin-panel`**: React + Ant Design - Live operations & Finance management.
+- **`/dashdrive-admin`**: React + Shadcn UI - Live operations & Finance management.
 - **`/infra`**: Docker Compose and Kubernetes manifests for scaling.
 
 ## 🚀 Quick Start (Docker)
@@ -23,7 +23,7 @@ docker-compose up --build
 
 - **Backend**: NestJS, Prisma, Socket.io (Real-time).
 - **Mobile**: React Native, NativeWind (Tailwind), Expo.
-- **Admin**: React, Framer Motion, Ant Design.
+- **Admin**: React, Framer Motion, Shadcn UI.
 - **Cloud**: Docker, Kubernetes, Nginx.
 
 ## 🧪 Modules
