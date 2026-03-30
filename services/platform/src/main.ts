@@ -32,9 +32,9 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   const port = process.env.PORT ?? 3004;
-  await app.listen(port);
-  console.log(`🚀 DashDrive Platform Backend running on: http://localhost:${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/docs`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 DashDrive Platform Backend running on: http://0.0.0.0:${port}`);
+  console.log(`📚 API Documentation: http://0.0.0.0:${port}/docs`);
 }
 bootstrap().catch((err) => {
   console.error('💥 Bootstrap error:', err);

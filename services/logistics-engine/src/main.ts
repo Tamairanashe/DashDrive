@@ -36,11 +36,11 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(
-    `🚀 Dashdrive Mart Backend running on: http://localhost:${port}/api/v1`,
+    `🚀 Dashdrive Mart Backend running on: http://0.0.0.0:${port}/api/v1`,
   );
-  console.log(`📚 API Documentation: http://localhost:${port}/docs`);
+  console.log(`📚 API Documentation: http://0.0.0.0:${port}/docs`);
 }
 bootstrap().catch((err) => {
   console.error('💥 Error during bootstrap:', err);

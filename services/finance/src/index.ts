@@ -54,8 +54,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-app.listen(port, () => {
-  console.log(`Finance backend running at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Finance backend running at http://0.0.0.0:${port}`);
 });
 
 export { prisma };
