@@ -1,5 +1,5 @@
 {
-  "name": "dash-marketplace",
+  "name": "@dashdrive/web-marketplace",
   "private": true,
   "version": "0.0.0",
   "type": "module",

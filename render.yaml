@@ -128,6 +128,22 @@ services:
     buildCommand: pnpm install --filter @dashdrive/web-fintech... && pnpm --filter @dashdrive/web-fintech run build
     staticPublishPath: apps/web/fintech-admin/dist
 
+  # Marketplace Portal (Vite Static)
+  - type: web
+    name: dashdrive-web-marketplace
+    runtime: static
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-marketplace... && pnpm --filter @dashdrive/web-marketplace run build
+    staticPublishPath: apps/web/marketplace/dist
+
+  # Merchant Portal (Vite Static)
+  - type: web
+    name: dashdrive-web-merchant
+    runtime: static
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-merchant... && pnpm --filter @dashdrive/web-merchant run build
+    staticPublishPath: apps/web/merchant-portal/dist
+
   # Events Dashboard (Fullstack/Express)
   - type: web
     name: dashdrive-web-events
@@ -161,3 +177,19 @@ services:
         value: 3011
       - key: NODE_VERSION
         value: 22
+
+  # Food Manager (Vite Static)
+  - type: web
+    name: dashdrive-web-food
+    runtime: static
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-food... && pnpm --filter @dashdrive/web-food run build
+    staticPublishPath: apps/web/food-manager/dist
+
+  # Car Hire Portal (Vite Static)
+  - type: web
+    name: dashdrive-web-car-hire
+    runtime: static
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-car-hire... && pnpm --filter @dashdrive/web-car-hire run build
+    staticPublishPath: apps/web/car-hire-portal/dist
