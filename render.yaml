@@ -8,7 +8,7 @@ services:
     name: dashdrive-backend
     runtime: node
     plan: free
-    rootDir: backend
+    rootDir: services/core-deprecated
     buildCommand: npm install
     startCommand: node src/server.js
     envVars:
@@ -40,7 +40,7 @@ services:
     name: dashdrive-logistics-engine
     runtime: node
     plan: starter
-    rootDir: dashdrive-logistics-engine
+    rootDir: services/logistics-engine
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
@@ -66,7 +66,7 @@ services:
     name: dashdrive-admin-backend
     runtime: node
     plan: free
-    rootDir: dashdrive-admin-backend
+    rootDir: services/admin-api
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
@@ -104,7 +104,7 @@ services:
     name: dashdrive-mobility-backend
     runtime: node
     repo: https://github.com/Tamairanashe/DashDrive
-    rootDir: dashdrive-mobility-backend
+    rootDir: services/mobility
     plan: free
     region: ohio
     buildCommand: npm install && npx prisma generate && npm run build
@@ -130,7 +130,7 @@ services:
     name: dashdrive-platform-backend
     runtime: node
     repo: https://github.com/Tamairanashe/DashDrive
-    rootDir: dashdrive-platform-backend
+    rootDir: services/platform
     plan: free
     region: ohio
     buildCommand: npm install && npx prisma generate && npm run build
@@ -155,7 +155,7 @@ services:
   - type: web
     name: dashdrive-admin
     runtime: static
-    rootDir: dashdrive-admin
+    rootDir: apps/web/admin
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
@@ -171,7 +171,7 @@ services:
   - type: web
     name: mart-merchant-portal
     runtime: static
-    rootDir: mart-merchant-portal
+    rootDir: apps/web/merchant-portal
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
@@ -181,7 +181,7 @@ services:
   - type: web
     name: dash-marketplace
     runtime: static
-    rootDir: dash-marketplace
+    rootDir: apps/web/marketplace
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
