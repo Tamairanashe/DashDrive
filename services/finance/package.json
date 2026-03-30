@@ -24,7 +24,7 @@
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "prisma generate && tsc",
+    "build": "tsc",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev"
   }
