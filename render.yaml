@@ -1,189 +1,163 @@
-# Render Blueprint for DashDrive Backend Stack
-# This file defines the infrastructure for all backend services.
-# Render should automatically detect this file at the repository root.
+# Render Blueprint for DashDrive Monorepo
+# This file defines the infrastructure for the entire DashDrive stack.
+# Render automatically detects this file at the repository root.
 
 services:
-  # 1. Main Shared Backend (Legacy Node.js)
+  # ==========================================
+  # 1. BACKEND SERVICES
+  # ==========================================
+
+  # Main Shared Backend (Legacy Node.js)
   - type: web
     name: dashdrive-backend
     runtime: node
     plan: free
     rootDir: services/core-deprecated
-    buildCommand: npm install
+    buildCommand: pnpm install && pnpm run build
     startCommand: node src/server.js
     envVars:
       - key: PORT
         value: 8000
       - key: NODE_VERSION
         value: 22
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: BACKEND_API_KEY
-        sync: false
-      - key: SYSTEM_API_KEY
-        sync: false
-      - key: FRONTEND_URL
-        sync: false
-      - key: RESEND_API_KEY
-        sync: false
-      - key: LOGISTICS_API_URL
-        value: https://dashdrive-logistics-engine.onrender.com/api/v1
-      - key: LOGISTICS_API_KEY
-        sync: false
 
-  # 2. Logistics Engine (NestJS + Prisma)
+  # Logistics Engine (NestJS + Prisma)
   - type: web
     name: dashdrive-logistics-engine
     runtime: node
     plan: starter
     rootDir: services/logistics-engine
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start:prod
+    buildCommand: pnpm install && npx prisma generate && pnpm run build
+    startCommand: pnpm run start:prod
     envVars:
       - key: PORT
         value: 3000
       - key: NODE_VERSION
         value: 22
-      - key: DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: FIREBASE_PROJECT_ID
-        sync: false
-      - key: INTERNAL_API_KEY
-        sync: false
-      - key: SYSTEM_API_KEY
-        sync: false
-      - key: REDIS_HOST
-        value: localhost
 
-  # 3. Admin Backend (NestJS + Prisma)
+  # Admin Backend (NestJS + Prisma)
   - type: web
-    name: dashdrive-admin-backend
+    name: dashdrive-admin-api
     runtime: node
     plan: free
     rootDir: services/admin-api
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start:prod
+    buildCommand: pnpm install && npx prisma generate && pnpm run build
+    startCommand: pnpm run start:prod
     envVars:
       - key: PORT
         value: 3001
       - key: NODE_VERSION
         value: 22
-      - key: DATABASE_URL
-        sync: false
-      - key: DashdriveMart_DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: FIREBASE_PROJECT_ID
-        sync: false
-      - key: INTERNAL_API_KEY
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: PAYNOW_ID_USD
-        sync: false
-      - key: PAYNOW_KEY_USD
-        sync: false
-      - key: PAYNOW_ID_ZIG
-        sync: false
-      - key: PAYNOW_KEY_ZIG
-        sync: false
-      - key: SYSTEM_API_KEY
-        sync: false
 
-  # 4. Mobility Backend (Firebase + Prisma)
+  # Mobility Backend (Firebase + Prisma)
   - type: web
     name: dashdrive-mobility-backend
     runtime: node
-    repo: https://github.com/Tamairanashe/DashDrive
     rootDir: services/mobility
     plan: free
-    region: ohio
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start:prod
+    buildCommand: pnpm install && npx prisma generate && pnpm run build
+    startCommand: pnpm run start:prod
     envVars:
       - key: PORT
         value: 3003
       - key: NODE_VERSION
         value: 22
-      - key: DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: FIREBASE_PROJECT_ID
-        sync: false
-      - key: FIREBASE_CLIENT_EMAIL
-        sync: false
-      - key: FIREBASE_PRIVATE_KEY
-        sync: false
 
-  # 5. Platform Backend (Super-App Engine)
+  # Platform Backend (Super-App Engine)
   - type: web
     name: dashdrive-platform-backend
     runtime: node
-    repo: https://github.com/Tamairanashe/DashDrive
     rootDir: services/platform
     plan: free
-    region: ohio
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start:prod
+    buildCommand: pnpm install && npx prisma generate && pnpm run build
+    startCommand: pnpm run start:prod
     envVars:
       - key: PORT
         value: 3004
       - key: NODE_VERSION
         value: 22
-      - key: DATABASE_URL
-        sync: false
-      - key: DashdriveMart_DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: SYSTEM_API_KEY
-        sync: false
-      - key: LOGISTICS_ENGINE_URL
-        value: https://dashdrive-logistics-engine.onrender.com/api/v1
 
-  # 6. Frontends (Static Sites)
+  # Finance Backend (New)
   - type: web
-    name: dashdrive-admin
+    name: dashdrive-finance-backend
+    runtime: node
+    rootDir: services/finance
+    plan: free
+    buildCommand: pnpm install && npx prisma generate && pnpm run build
+    startCommand: node dist/index.js
+    envVars:
+      - key: PORT
+        value: 3005
+      - key: NODE_VERSION
+        value: 22
+
+  # POS Integration Service (New)
+  - type: web
+    name: dashdrive-pos-integration
+    runtime: node
+    rootDir: services/pos-integration
+    plan: free
+    buildCommand: pnpm install && npx prisma generate && pnpm run build
+    startCommand: pnpm run start:prod
+    envVars:
+      - key: PORT
+        value: 3006
+      - key: NODE_VERSION
+        value: 22
+
+  # ==========================================
+  # 2. FRONTEND SERVICES (NON-VERCEL)
+  # ==========================================
+
+  # Admin Dashboard (Vite Static)
+  - type: web
+    name: dashdrive-web-admin
     runtime: static
     rootDir: apps/web/admin
-    buildCommand: npm install && npm run build
+    buildCommand: pnpm install && pnpm run build
     staticPublishPath: dist
     envVars:
       - key: VITE_ADMIN_API_URL
-        value: https://dashdrive-admin-backend.onrender.com/api
-      - key: VITE_MOBILITY_API_URL
-        value: https://dashdrive-mobility-backend.onrender.com/api
-      - key: VITE_LOGISTICS_API_URL
-        value: https://dashdrive-logistics-engine.onrender.com/api/v1
-      - key: VITE_PLATFORM_API_URL
-        value: https://dashdrive-platform-backend.onrender.com/api/v1
+        value: https://dashdrive-admin-api.onrender.com/api
 
+  # Fintech Admin (New)
   - type: web
-    name: mart-merchant-portal
+    name: dashdrive-fintech-admin
     runtime: static
-    rootDir: apps/web/merchant-portal
-    buildCommand: npm install && npm run build
+    rootDir: apps/web/fintech-admin
+    buildCommand: pnpm install && pnpm run build
     staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://dashdrive-logistics-engine.onrender.com/api/v1
 
+  # Events Dashboard (New - Fullstack/Express)
   - type: web
-    name: dash-marketplace
-    runtime: static
-    rootDir: apps/web/marketplace
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    name: dashdrive-events-dashboard
+    runtime: node
+    rootDir: apps/web/events-dashboard
+    buildCommand: pnpm install && pnpm run build
+    startCommand: pnpm start
     envVars:
-      - key: VITE_API_URL
-        value: https://dashdrive-platform-backend.onrender.com/api/v1
+      - key: PORT
+        value: 3010
+      - key: NODE_VERSION
+        value: 22
+
+  # Landing Page (New)
+  - type: web
+    name: dashdrive-landing-page
+    runtime: static
+    rootDir: apps/web/landing-page
+    buildCommand: pnpm install && pnpm run build
+    staticPublishPath: dist
+
+  # Rental Portal (New)
+  - type: web
+    name: dashdrive-rental-portal
+    runtime: node
+    rootDir: apps/web/rental
+    buildCommand: pnpm install && pnpm run build
+    startCommand: pnpm start
+    envVars:
+      - key: PORT
+        value: 3011
+      - key: NODE_VERSION
+        value: 22
