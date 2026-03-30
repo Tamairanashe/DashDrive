@@ -55,7 +55,7 @@ services:
     runtime: node
     rootDir: .
     plan: free
-    buildCommand: pnpm install --filter @dashdrive/svc-mobility... && pnpm --filter @dashdrive/svc-mobility exec prisma generate && pnpm --filter @dashdrive/svc-mobility run build
+    buildCommand: pnpm install --filter @dashdrive/svc-mobility... && pnpm --filter @dashdrive/svc-mobility exec prisma generate && pnpm --filter @dashdrive/svc-mobility rebuild canvas && pnpm --filter @dashdrive/svc-mobility run build
     startCommand: pnpm --filter @dashdrive/svc-mobility run start:prod
     envVars:
       - key: PORT
