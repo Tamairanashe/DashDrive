@@ -27,7 +27,7 @@ services:
     runtime: node
     plan: starter
     rootDir: services/logistics-engine
-    buildCommand: pnpm install && pnpm prisma generate && pnpm run build
+    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
     startCommand: pnpm run start:prod
     envVars:
       - key: PORT
@@ -41,7 +41,7 @@ services:
     runtime: node
     plan: free
     rootDir: services/admin-api
-    buildCommand: pnpm install && pnpm prisma generate && pnpm run build
+    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
     startCommand: pnpm run start:prod
     envVars:
       - key: PORT
@@ -55,7 +55,7 @@ services:
     runtime: node
     rootDir: services/mobility
     plan: free
-    buildCommand: pnpm install && pnpm prisma generate && pnpm run build
+    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
     startCommand: pnpm run start:prod
     envVars:
       - key: PORT
@@ -69,7 +69,7 @@ services:
     runtime: node
     rootDir: services/platform
     plan: free
-    buildCommand: pnpm install && pnpm prisma generate && pnpm run build
+    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
     startCommand: pnpm run start:prod
     envVars:
       - key: PORT
@@ -83,7 +83,7 @@ services:
     runtime: node
     rootDir: services/finance
     plan: free
-    buildCommand: pnpm install && pnpm prisma generate && pnpm run build
+    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
     startCommand: node dist/index.js
     envVars:
       - key: PORT
@@ -97,7 +97,7 @@ services:
     runtime: node
     rootDir: services/pos-integration
     plan: free
-    buildCommand: pnpm install && pnpm prisma generate && pnpm run build
+    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
     startCommand: pnpm run start:prod
     envVars:
       - key: PORT
