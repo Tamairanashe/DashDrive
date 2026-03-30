@@ -13,7 +13,7 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/svc-core... && pnpm --filter @dashdrive/svc-core run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/svc-core... && pnpm --filter @dashdrive/svc-core run build
     startCommand: pnpm --filter @dashdrive/svc-core run start
     envVars:
       - key: PORT
@@ -27,7 +27,7 @@ services:
     runtime: node
     plan: starter
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/svc-logistics... && pnpm --filter @dashdrive/svc-logistics exec prisma generate && pnpm --filter @dashdrive/svc-logistics run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/svc-logistics... && pnpm --filter @dashdrive/svc-logistics exec prisma generate && pnpm --filter @dashdrive/svc-logistics run build
     startCommand: pnpm --filter @dashdrive/svc-logistics run start:prod
     envVars:
       - key: PORT
@@ -41,7 +41,7 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/svc-admin... && pnpm --filter @dashdrive/svc-admin exec prisma generate && pnpm --filter @dashdrive/svc-admin run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/svc-admin... && pnpm --filter @dashdrive/svc-admin exec prisma generate && pnpm --filter @dashdrive/svc-admin run build
     startCommand: pnpm --filter @dashdrive/svc-admin run start:prod
     envVars:
       - key: PORT
@@ -55,7 +55,7 @@ services:
     runtime: node
     rootDir: .
     plan: free
-    buildCommand: pnpm install --filter @dashdrive/svc-mobility... && pnpm --filter @dashdrive/svc-mobility exec prisma generate && pnpm --filter @dashdrive/svc-mobility rebuild canvas && pnpm --filter @dashdrive/svc-mobility run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/svc-mobility... && pnpm --filter @dashdrive/svc-mobility exec prisma generate && pnpm --filter @dashdrive/svc-mobility rebuild canvas && pnpm --filter @dashdrive/svc-mobility run build
     startCommand: pnpm --filter @dashdrive/svc-mobility run start:prod
     envVars:
       - key: PORT
@@ -69,7 +69,7 @@ services:
     runtime: node
     rootDir: .
     plan: free
-    buildCommand: pnpm install --filter @dashdrive/svc-platform... && pnpm --filter @dashdrive/svc-platform exec prisma generate && pnpm --filter @dashdrive/svc-platform run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/svc-platform... && pnpm --filter @dashdrive/svc-platform exec prisma generate && pnpm --filter @dashdrive/svc-platform run build
     startCommand: pnpm --filter @dashdrive/svc-platform run start:prod
     envVars:
       - key: PORT
@@ -83,7 +83,7 @@ services:
     runtime: node
     rootDir: .
     plan: free
-    buildCommand: pnpm install --filter @dashdrive/svc-finance... && pnpm --filter @dashdrive/svc-finance exec prisma generate && pnpm --filter @dashdrive/svc-finance run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/svc-finance... && pnpm --filter @dashdrive/svc-finance exec prisma generate && pnpm --filter @dashdrive/svc-finance run build
     startCommand: pnpm --filter @dashdrive/svc-finance run start
     envVars:
       - key: PORT
@@ -97,7 +97,7 @@ services:
     runtime: node
     rootDir: .
     plan: free
-    buildCommand: pnpm install --filter @dashdrive/svc-pos... && pnpm --filter @dashdrive/svc-pos exec prisma generate && pnpm --filter @dashdrive/svc-pos run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/svc-pos... && pnpm --filter @dashdrive/svc-pos exec prisma generate && pnpm --filter @dashdrive/svc-pos run build
     startCommand: pnpm --filter @dashdrive/svc-pos run start:prod
     envVars:
       - key: PORT
@@ -114,7 +114,7 @@ services:
     name: dashdrive-web-admin
     runtime: static
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-admin... && pnpm --filter @dashdrive/web-admin run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-admin... && pnpm --filter @dashdrive/web-admin run build
     staticPublishPath: apps/web/admin/dist
     envVars:
       - key: VITE_ADMIN_API_URL
@@ -125,7 +125,7 @@ services:
     name: dashdrive-web-fintech
     runtime: static
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-fintech... && pnpm --filter @dashdrive/web-fintech run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-fintech... && pnpm --filter @dashdrive/web-fintech run build
     staticPublishPath: apps/web/fintech-admin/dist
 
   # Marketplace Portal (Vite Static)
@@ -133,7 +133,7 @@ services:
     name: dashdrive-web-marketplace
     runtime: static
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-marketplace... && pnpm --filter @dashdrive/web-marketplace run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-marketplace... && pnpm --filter @dashdrive/web-marketplace run build
     staticPublishPath: apps/web/marketplace/dist
 
   # Merchant Portal (Vite Static)
@@ -141,7 +141,7 @@ services:
     name: dashdrive-web-merchant
     runtime: static
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-merchant... && pnpm --filter @dashdrive/web-merchant run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-merchant... && pnpm --filter @dashdrive/web-merchant run build
     staticPublishPath: apps/web/merchant-portal/dist
 
   # Events Dashboard (Fullstack/Express)
@@ -149,7 +149,7 @@ services:
     name: dashdrive-web-events
     runtime: node
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-events... && pnpm --filter @dashdrive/web-events run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-events... && pnpm --filter @dashdrive/web-events run build
     startCommand: pnpm --filter @dashdrive/web-events run start
     envVars:
       - key: PORT
@@ -162,7 +162,7 @@ services:
     name: dashdrive-web-landing
     runtime: static
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-landing... && pnpm --filter @dashdrive/web-landing run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-landing... && pnpm --filter @dashdrive/web-landing run build
     staticPublishPath: apps/web/landing-page/dist
 
   # Rental Portal (Fullstack/Express)
@@ -170,7 +170,7 @@ services:
     name: dashdrive-web-rental
     runtime: node
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-rental... && pnpm --filter @dashdrive/web-rental run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-rental... && pnpm --filter @dashdrive/web-rental run build
     startCommand: pnpm --filter @dashdrive/web-rental run start
     envVars:
       - key: PORT
@@ -183,7 +183,7 @@ services:
     name: dashdrive-web-food
     runtime: static
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-food... && pnpm --filter @dashdrive/web-food run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-food... && pnpm --filter @dashdrive/web-food run build
     staticPublishPath: apps/web/food-manager/dist
 
   # Car Hire Portal (Vite Static)
@@ -191,5 +191,5 @@ services:
     name: dashdrive-web-car-hire
     runtime: static
     rootDir: .
-    buildCommand: pnpm install --filter @dashdrive/web-car-hire... && pnpm --filter @dashdrive/web-car-hire run build
+    buildCommand: pnpm install --no-frozen-lockfile --filter @dashdrive/web-car-hire... && pnpm --filter @dashdrive/web-car-hire run build
     staticPublishPath: apps/web/car-hire-portal/dist
