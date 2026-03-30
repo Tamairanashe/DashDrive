@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package",
-  "name": "server",
+  "name": "@dashdrive/svc-core",
   "version": "1.0.0",
   "description": "",
   "main": "src/server.js",

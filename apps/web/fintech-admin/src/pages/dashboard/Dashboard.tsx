@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Statistic, Typography, Table, Tag } from 'antd';
+import { Row, Col, Card, Statistic, Typography, Table, Tag, Badge } from 'antd';
 import { 
   ArrowUpOutlined, 
   ArrowDownOutlined,

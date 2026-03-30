@@ -50,16 +50,16 @@ export class WebbookController {
     const useBypass = this.configService.get('MOCK_REDIS') === 'true';
 
     if (useBypass) {
-        console.log(`[Webhook Ingress] Bypassing queue for sync: ${eventType}`);
+        console.log(`[Webhook Ingress] Bypassing queue for sync: ${eventType || 'UNKNOWN_EVENT'}`);
         // Mimic background processing
-        this.processDirectly(connection, eventType, normalizedData);
+        this.processDirectly(connection, eventType || 'UNKNOWN_EVENT', normalizedData || {});
     } else {
         await this.syncQueue.add('process-sync', {
             connectionId: connection.id,
             merchantId: connection.merchantId,
             provider: connection.provider,
-            eventType,
-            data: normalizedData
+            eventType: eventType || 'UNKNOWN_EVENT',
+            data: normalizedData || {}
         });
     }
 

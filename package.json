@@ -22,6 +22,7 @@
       "@prisma/engines",
       "better-sqlite3",
       "canvas",
+      "@img/sharp-linux-x64",
       "esbuild",
       "msgpackr-extract",
       "protobufjs"

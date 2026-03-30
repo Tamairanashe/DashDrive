@@ -1,20 +1,20 @@
 # Render Blueprint for DashDrive Monorepo
 # This file defines the infrastructure for the entire DashDrive stack.
-# Render automatically detects this file at the repository root.
+# All services use the repository root (.) as the Root Directory for pnpm workspace compatibility.
 
 services:
   # ==========================================
-  # 1. BACKEND SERVICES
+  # 1. BACKEND SERVICES (Node.js)
   # ==========================================
 
   # Main Shared Backend (Legacy Node.js)
   - type: web
-    name: dashdrive-backend
+    name: dashdrive-svc-core
     runtime: node
     plan: free
-    rootDir: services/core-deprecated
-    buildCommand: pnpm install && pnpm run build
-    startCommand: node src/server.js
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/svc-core... && pnpm --filter @dashdrive/svc-core run build
+    startCommand: pnpm --filter @dashdrive/svc-core run start
     envVars:
       - key: PORT
         value: 8000
@@ -23,12 +23,12 @@ services:
 
   # Logistics Engine (NestJS + Prisma)
   - type: web
-    name: dashdrive-logistics-engine
+    name: dashdrive-svc-logistics
     runtime: node
     plan: starter
-    rootDir: services/logistics-engine
-    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
-    startCommand: pnpm run start:prod
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/svc-logistics... && pnpm --filter @dashdrive/svc-logistics exec prisma generate && pnpm --filter @dashdrive/svc-logistics run build
+    startCommand: pnpm --filter @dashdrive/svc-logistics run start:prod
     envVars:
       - key: PORT
         value: 3000
@@ -37,26 +37,26 @@ services:
 
   # Admin Backend (NestJS + Prisma)
   - type: web
-    name: dashdrive-admin-api
+    name: dashdrive-svc-admin
     runtime: node
     plan: free
-    rootDir: services/admin-api
-    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
-    startCommand: pnpm run start:prod
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/svc-admin... && pnpm --filter @dashdrive/svc-admin exec prisma generate && pnpm --filter @dashdrive/svc-admin run build
+    startCommand: pnpm --filter @dashdrive/svc-admin run start:prod
     envVars:
       - key: PORT
         value: 3001
       - key: NODE_VERSION
         value: 22
 
-  # Mobility Backend (Firebase + Prisma)
+  # Mobility Backend (Firebase + Prisma + Canvas)
   - type: web
-    name: dashdrive-mobility-backend
+    name: dashdrive-svc-mobility
     runtime: node
-    rootDir: services/mobility
+    rootDir: .
     plan: free
-    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
-    startCommand: pnpm run start:prod
+    buildCommand: pnpm install --filter @dashdrive/svc-mobility... && pnpm --filter @dashdrive/svc-mobility exec prisma generate && pnpm --filter @dashdrive/svc-mobility run build
+    startCommand: pnpm --filter @dashdrive/svc-mobility run start:prod
     envVars:
       - key: PORT
         value: 3003
@@ -65,40 +65,40 @@ services:
 
   # Platform Backend (Super-App Engine)
   - type: web
-    name: dashdrive-platform-backend
+    name: dashdrive-svc-platform
     runtime: node
-    rootDir: services/platform
+    rootDir: .
     plan: free
-    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
-    startCommand: pnpm run start:prod
+    buildCommand: pnpm install --filter @dashdrive/svc-platform... && pnpm --filter @dashdrive/svc-platform exec prisma generate && pnpm --filter @dashdrive/svc-platform run build
+    startCommand: pnpm --filter @dashdrive/svc-platform run start:prod
     envVars:
       - key: PORT
         value: 3004
       - key: NODE_VERSION
         value: 22
 
-  # Finance Backend (New)
+  # Finance Backend (Express + Prisma)
   - type: web
-    name: dashdrive-finance-backend
+    name: dashdrive-svc-finance
     runtime: node
-    rootDir: services/finance
+    rootDir: .
     plan: free
-    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
-    startCommand: node dist/index.js
+    buildCommand: pnpm install --filter @dashdrive/svc-finance... && pnpm --filter @dashdrive/svc-finance exec prisma generate && pnpm --filter @dashdrive/svc-finance run build
+    startCommand: pnpm --filter @dashdrive/svc-finance run start
     envVars:
       - key: PORT
         value: 3005
       - key: NODE_VERSION
         value: 22
 
-  # POS Integration Service (New)
+  # POS Integration Service (NestJS + Prisma)
   - type: web
-    name: dashdrive-pos-integration
+    name: dashdrive-svc-pos
     runtime: node
-    rootDir: services/pos-integration
+    rootDir: .
     plan: free
-    buildCommand: pnpm install && pnpm exec prisma generate && pnpm run build
-    startCommand: pnpm run start:prod
+    buildCommand: pnpm install --filter @dashdrive/svc-pos... && pnpm --filter @dashdrive/svc-pos exec prisma generate && pnpm --filter @dashdrive/svc-pos run build
+    startCommand: pnpm --filter @dashdrive/svc-pos run start:prod
     envVars:
       - key: PORT
         value: 3006
@@ -106,56 +106,56 @@ services:
         value: 22
 
   # ==========================================
-  # 2. FRONTEND SERVICES (NON-VERCEL)
+  # 2. FRONTEND SERVICES (Static & Fullstack)
   # ==========================================
 
   # Admin Dashboard (Vite Static)
   - type: web
     name: dashdrive-web-admin
     runtime: static
-    rootDir: apps/web/admin
-    buildCommand: pnpm install && pnpm run build
-    staticPublishPath: dist
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-admin... && pnpm --filter @dashdrive/web-admin run build
+    staticPublishPath: apps/web/admin/dist
     envVars:
       - key: VITE_ADMIN_API_URL
-        value: https://dashdrive-admin-api.onrender.com/api
+        value: https://dashdrive-svc-admin.onrender.com/api
 
-  # Fintech Admin (New)
+  # Fintech Admin (Vite Static)
   - type: web
-    name: dashdrive-fintech-admin
+    name: dashdrive-web-fintech
     runtime: static
-    rootDir: apps/web/fintech-admin
-    buildCommand: pnpm install && pnpm run build
-    staticPublishPath: dist
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-fintech... && pnpm --filter @dashdrive/web-fintech run build
+    staticPublishPath: apps/web/fintech-admin/dist
 
-  # Events Dashboard (New - Fullstack/Express)
+  # Events Dashboard (Fullstack/Express)
   - type: web
-    name: dashdrive-events-dashboard
+    name: dashdrive-web-events
     runtime: node
-    rootDir: apps/web/events-dashboard
-    buildCommand: pnpm install && pnpm run build
-    startCommand: pnpm start
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-events... && pnpm --filter @dashdrive/web-events run build
+    startCommand: pnpm --filter @dashdrive/web-events run start
     envVars:
       - key: PORT
         value: 3010
       - key: NODE_VERSION
         value: 22
 
-  # Landing Page (New)
+  # Landing Page (Vite Static)
   - type: web
-    name: dashdrive-landing-page
+    name: dashdrive-web-landing
     runtime: static
-    rootDir: apps/web/landing-page
-    buildCommand: pnpm install && pnpm run build
-    staticPublishPath: dist
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-landing... && pnpm --filter @dashdrive/web-landing run build
+    staticPublishPath: apps/web/landing-page/dist
 
-  # Rental Portal (New)
+  # Rental Portal (Fullstack/Express)
   - type: web
-    name: dashdrive-rental-portal
+    name: dashdrive-web-rental
     runtime: node
-    rootDir: apps/web/rental
-    buildCommand: pnpm install && pnpm run build
-    startCommand: pnpm start
+    rootDir: .
+    buildCommand: pnpm install --filter @dashdrive/web-rental... && pnpm --filter @dashdrive/web-rental run build
+    startCommand: pnpm --filter @dashdrive/web-rental run start
     envVars:
       - key: PORT
         value: 3011

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package",
-  "name": "dashdrive-logistics-engine",
+  "name": "@dashdrive/svc-logistics",
   "version": "0.0.1",
   "description": "",
   "author": "",
